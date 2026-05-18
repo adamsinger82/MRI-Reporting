@@ -95,7 +95,7 @@ export default function Dashboard() {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5",
+          model: "claude-sonnet-4-6",
           max_tokens: 200,
           system: `You are a radiology assistant. From the dictation text, detect: bodyPart (one of: shoulder, spine, hip, knee, elbow, wrist, hand, pelvis, ankle), spineRegion (one of: Cervical Spine, Thoracic Spine, Lumbar Spine — only if spine), laterality (Right, Left, Bilateral, or null). Return ONLY raw JSON: {"bodyPart":"string","spineRegion":"string|null","laterality":"string|null"}`,
           messages:[{ role:"user", content: text.substring(0, 500) }],
@@ -138,7 +138,7 @@ ${dictation}`;
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5",
+          model: "claude-sonnet-4-6",
           max_tokens: 4000,
           system: systemPrompt,
           messages:[{ role:"user", content: userMsg }],
