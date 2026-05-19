@@ -475,7 +475,7 @@ const JOINT_DATA = {
 const DIAGRAM_SVGS = {
   // KNEE
   'knee-meniscal-extrusion': (
-    <svg viewBox="0 0 320 220" className={styles.wFull} aria-label="Meniscal extrusion measurement diagram">
+    <svg viewBox="0 0 320 220" style={{width:"100%"}} aria-label="Meniscal extrusion measurement diagram">
       {/* Tibial plateau */}
       <rect x="40" y="110" width="240" height="18" rx="3" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5"/>
       <text x="160" y="122" textAnchor="middle" fontSize="10" fill="#2a5a7a">Tibial plateau</text>
