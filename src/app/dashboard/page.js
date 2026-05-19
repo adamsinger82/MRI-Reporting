@@ -323,7 +323,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, padding: 16, boxSizing: 'border-box' }}>
+      <div className="msk-grid">
 
         <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ background: 'linear-gradient(135deg,#1d4ed8,#2563eb)', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -356,7 +356,7 @@ export default function DashboardPage() {
             </div>
             <div style={{ padding: '9px 12px', background: 'linear-gradient(135deg,#eff6ff,#f0f9ff)', borderRadius: 8, border: '1px solid #bfdbfe', fontSize: 12, color: '#1d4ed8', fontStyle: 'italic', lineHeight: 1.5 }}>{technique}</div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}><label style={lbl}>Findings</label>
-              <textarea style={{ ...inp, flex: 1, minHeight: 160, resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', border: isListening ? '1.5px solid #ef4444' : '1px solid #dde3ed', boxShadow: isListening ? '0 0 0 3px rgba(239,68,68,0.1)' : 'none', transition: 'all 0.15s' }}
+              <textarea className="msk-textarea" style={{ ...inp, flex: 1, minHeight: 160, resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', border: isListening ? '1.5px solid #ef4444' : '1px solid #dde3ed', boxShadow: isListening ? '0 0 0 3px rgba(239,68,68,0.1)' : 'none', transition: 'all 0.15s' }}
                 value={dictationText} onChange={e => setDictationText(e.target.value)} placeholder="Type or dictate findings here…" />
             </div>
             {micError && <div style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 7, padding: '7px 10px', lineHeight: 1.5 }}>{micError}</div>}
@@ -377,7 +377,7 @@ export default function DashboardPage() {
             <span style={{ fontSize: 15 }}>📄</span><span style={{ color: 'white', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Generated Report</span>
           </div>
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-            <div style={{ flex: 1, padding: '14px 16px', border: '1px solid #e8edf5', borderRadius: 10, overflowY: 'auto', minHeight: 340, maxHeight: '65vh', background: generatedReport ? 'white' : '#f8fafc' }}>
+            <div className="msk-report-box" style={{ flex: 1, padding: '14px 16px', border: '1px solid #e8edf5', borderRadius: 10, overflowY: 'auto', minHeight: 340, maxHeight: '65vh', background: generatedReport ? 'white' : '#f8fafc' }}>
               {isGenerating
                 ? <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height: 9, background: `rgba(37,99,235,${0.06+i*0.02})`, borderRadius: 4, width: w+'%' }} />)}</div>
                 : generatedReport
@@ -396,13 +396,39 @@ export default function DashboardPage() {
           <div style={{ background: 'linear-gradient(135deg,#0e7490,#0891b2)', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 15 }}>📐</span><span style={{ color: 'white', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Reference Panel</span>
           </div>
-          <div style={{ padding: 16, flex: 1, overflowY: 'auto' }}>
+          <div className="msk-ref-panel" style={{ padding: 16, flex: 1, overflowY: 'auto' }}>
             <ReferencePanel selectedBodyPart={selectedBodyPart} />
           </div>
         </div>
 
       </div>
-      <style>{`@media(max-width:900px){div[style*="repeat(3,1fr)"]{grid-template-columns:1fr!important;}}`}</style>
+      <style>{`
+        .msk-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          padding: 16px;
+          box-sizing: border-box;
+        }
+        @media (max-width: 900px) {
+          .msk-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px;
+            padding: 10px;
+          }
+          .msk-report-box {
+            min-height: 200px !important;
+            max-height: 50vh !important;
+          }
+          .msk-textarea {
+            min-height: 120px !important;
+          }
+          .msk-ref-panel {
+            max-height: 400px;
+            overflow-y: auto;
+          }
+        }
+      `}</style>
     </div>
   );
 }
