@@ -71,7 +71,7 @@ function formatReport(txt) {
     if (isSubheader) {
       const label = t.slice(0, colonIdx + 1);
       const value = t.slice(colonIdx + 1).trim();
-      const isNeg = /^intact\.?$/i.test(value);
+      const isNeg = /^intact\.?$/i.test(value) || /^no significant canal or foraminal narrowing\.?$/i.test(value);
       return (
         <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{label} </span>
@@ -107,7 +107,10 @@ function ReferencePanel({ selectedBodyPart }) {
         <select style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, background: 'white', cursor: 'pointer', color: '#1e293b', boxSizing: 'border-box' }}
           value={selectedMeasurementId} onChange={e => setSelectedMeasurementId(e.target.value)}>
           <option value="">— Select a measurement —</option>
-          {jointData.measurements.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+          {jointData.measurements.slice(0, 5).map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+          {Array.from({ length: Math.max(0, 5 - jointData.measurements.length) }).map((_, i) => (
+            <option key={`empty-${i}`} disabled value="">── slot {jointData.measurements.length + i + 1} ──</option>
+          ))}
         </select>
         {selectedMeasurement ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
