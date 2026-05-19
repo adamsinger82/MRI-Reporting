@@ -334,5 +334,5 @@ export default function DashboardPage() {
       </div>
       <style>{`@media(max-width:900px){div[style*="repeat(3,1fr)"]{grid-template-columns:1fr!important;}}`}</style>
     </div>
-  );
+  ); 
 }
