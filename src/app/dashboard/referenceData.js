@@ -1,4 +1,3 @@
-'use client';
 // Joint measurement data and SVG diagrams for MSK MRI Reference Panel
 
 const JOINT_DATA = {
@@ -1229,6 +1228,5 @@ const BODY_PARTS = [
   { id: 'foot', label: 'Foot' },
 ];
 
-// ─── REFERENCE PANEL COMPONENT ───────────────────────────────────────────────
 
 export { JOINT_DATA, DIAGRAM_SVGS };
