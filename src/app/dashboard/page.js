@@ -20,6 +20,12 @@ const ANATOMY = {
 function buildPrompt(part, lat, con, spineRegion) {
   return `You are a subspecialty MSK radiologist generating a structured MRI report.
 
+CRITICAL FORMATTING RULES — these override everything:
+- NEVER use markdown. No asterisks, no bold (**text**), no dashes (---), no bullet points, no underscores.
+- Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) appear on their own line in ALL CAPS followed by a colon. Nothing else on that line.
+- Subheadings appear as: "Structure Name: finding text" — Title Case, colon, then the finding on the same line.
+- Do not add any separators, horizontal rules, or extra formatting.
+
 ANATOMY TO COVER for ${part}: ${ANATOMY[part]}
 Generate a subheading for EVERY structure listed above.
 
@@ -31,47 +37,76 @@ FINDINGS RULES:
 
 IMPRESSION RULES:
 - Synthesize positive findings into a clinically meaningful, concise impression.
-- Group related findings under a unifying diagnosis where appropriate (e.g. multiple findings from a pivot shift injury grouped together, impingement syndrome findings grouped, etc).
+- Group related findings under a unifying diagnosis where appropriate.
 - Number each impression item. Most important first.
 - Use concise MSK radiology impression language.
 - If entirely normal: "No significant MRI findings of the ${lat ? lat + ' ' : ''}${part}."
 
-FORMAT:
+FORMAT — use exactly this structure:
 
 TECHNIQUE:
 Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part} ${con} IV contrast.
 
 FINDINGS:
-[Title Case subheading: finding]
+Structure Name: finding
 ${part === 'spine' ? `
 LEVELS:
-List each relevant intervertebral level on its own line in format "L1-L2:" or "C3-C4:" or "T6-T7:" etc.
-- If a level is NOT specifically mentioned in the dictation: write "No significant canal or foraminal narrowing."
-- If a positive finding IS mentioned for a level: write ONLY exactly what was dictated, nothing more.
-- Cover all levels appropriate for the ${spineRegion} spine.
+List each intervertebral level as: "L1-L2: finding" — one per line.
+If a level is NOT mentioned in dictation write exactly: "No significant canal or foraminal narrowing."
+If a positive finding IS mentioned write ONLY exactly what was dictated.
+Cover all levels for the ${spineRegion} spine.
 ` : ''}
 IMPRESSION:
-[Synthesized numbered list]`;
+1. Finding one
+2. Finding two`;
 }
 
 function formatReport(txt) {
   if (!txt) return null;
-  const cleaned = txt.replace(/\bunremarkable\b/gi, 'intact');
+  // Strip markdown artifacts and normalize
+  const cleaned = txt
+    .replace(/\bunremarkable\b/gi, 'intact')
+    .replace(/\*\*/g, '')           // remove all ** bold markers
+    .replace(/^---+$/gm, '')        // remove horizontal rule lines
+    .replace(/^\s*[-•]\s+/gm, '');  // remove bullet points
+
+  // Track whether we're inside IMPRESSION section
+  let inImpression = false;
+
   return cleaned.split('\n').map((line, i) => {
     const t = line.trim();
+    if (!t) return <div key={i} style={{ height: 5 }} />;
+
     const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
-    const colonIdx = t.indexOf(':');
-    const isSubheader = !isHeader && colonIdx > 0 && colonIdx < 60 && /^[A-Z]/.test(t) && t.length < 100;
+    if (isHeader) {
+      inImpression = t.startsWith('IMPRESSION');
+      return (
+        <div key={i} style={{ marginTop: i > 0 ? 20 : 0, marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#1e3a5f', borderBottom: '2px solid #2563eb', paddingBottom: 3, display: 'inline-block' }}>{t}</span>
+        </div>
+      );
+    }
+
+    // Numbered impression items — black not red
     const isNumbered = /^\d+\./.test(t);
-    if (isHeader) return (
-      <div key={i} style={{ marginTop: i > 0 ? 20 : 0, marginBottom: 6 }}>
-        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#1e3a5f', borderBottom: '2px solid #2563eb', paddingBottom: 3, display: 'inline-block' }}>{t}</span>
-      </div>
-    );
+    if (isNumbered || inImpression) {
+      const num = t.match(/^\d+\./)?.[0];
+      return (
+        <div key={i} style={{ marginTop: 5, paddingLeft: 4, fontSize: 13, lineHeight: 1.7, display: 'flex', gap: 6 }}>
+          {num && <span style={{ fontWeight: 700, color: '#2563eb', flexShrink: 0 }}>{num}</span>}
+          <span style={{ color: '#1e293b', fontWeight: 400 }}>{num ? t.slice(num.length).trim() : t}</span>
+        </div>
+      );
+    }
+
+    // Subheadings: "Structure: value" — colon must be within first 60 chars
+    const colonIdx = t.indexOf(':');
+    const isSubheader = colonIdx > 0 && colonIdx < 60 && /^[A-Z]/.test(t);
     if (isSubheader) {
       const label = t.slice(0, colonIdx + 1);
       const value = t.slice(colonIdx + 1).trim();
-      const isNeg = /^intact\.?$/i.test(value) || /^no significant canal or foraminal narrowing\.?$/i.test(value);
+      const isNeg = /^intact\.?$/i.test(value) ||
+                    /^no significant canal or foraminal narrowing\.?$/i.test(value);
       return (
         <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{label} </span>
@@ -79,17 +114,9 @@ function formatReport(txt) {
         </div>
       );
     }
-    if (isNumbered) {
-      const num = t.match(/^\d+\./)[0];
-      return (
-        <div key={i} style={{ marginTop: 5, paddingLeft: 4, fontSize: 13, lineHeight: 1.7, display: 'flex', gap: 6 }}>
-          <span style={{ fontWeight: 700, color: '#2563eb', flexShrink: 0 }}>{num}</span>
-          <span style={{ color: '#dc2626', fontWeight: 500 }}>{t.slice(num.length).trim()}</span>
-        </div>
-      );
-    }
-    if (!t) return <div key={i} style={{ height: 5 }} />;
-    return <div key={i} style={{ fontSize: 13, color: '#374151', lineHeight: 1.8, paddingLeft: 4 }}>{t}</div>;
+
+    // Plain continuation text (e.g. wrapped long finding lines)
+    return <div key={i} style={{ fontSize: 13, color: inImpression ? '#1e293b' : '#dc2626', fontWeight: inImpression ? 400 : 500, lineHeight: 1.8, paddingLeft: 4 }}>{t}</div>;
   });
 }
 
