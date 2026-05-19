@@ -140,6 +140,7 @@ export default function DashboardPage() {
     }
 
     setMicError('');
+    const finalTranscriptRef = { current: '' };
 
     try {
       const recognition = new SpeechRecognitionAPI();
@@ -147,8 +148,6 @@ export default function DashboardPage() {
       recognition.interimResults = true;
       recognition.lang = 'en-US';
       recognition.maxAlternatives = 1;
-
-      let finalTranscript = '';
 
       recognition.onstart = () => {
         setIsListening(true);
@@ -163,12 +162,12 @@ export default function DashboardPage() {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
+            finalTranscriptRef.current += transcript + ' ';
           } else {
             interim += transcript;
           }
         }
-        setDictationText(finalTranscript + interim);
+        setDictationText(finalTranscriptRef.current + interim);
       };
 
       recognition.onerror = (event) => {
@@ -181,9 +180,29 @@ export default function DashboardPage() {
       };
 
       recognition.onend = () => {
-        // Restart automatically — this is what kept it running in Edge
+        // Must create a NEW instance — cannot call .start() on an ended recognition
         if (recognitionRef.current === recognition) {
-          try { recognition.start(); } catch (e) { setIsListening(false); }
+          const SpeechRecognitionAPI2 =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition ||
+            window.mozSpeechRecognition ||
+            window.msSpeechRecognition;
+          try {
+            const rec2 = new SpeechRecognitionAPI2();
+            rec2.continuous = true;
+            rec2.interimResults = true;
+            rec2.lang = 'en-US';
+            rec2.maxAlternatives = 1;
+            rec2.onstart = recognition.onstart;
+            rec2.onaudiostart = recognition.onaudiostart;
+            rec2.onresult = recognition.onresult;
+            rec2.onerror = recognition.onerror;
+            rec2.onend = recognition.onend;
+            rec2.start();
+            recognitionRef.current = rec2;
+          } catch (e) {
+            setIsListening(false);
+          }
         }
       };
 
