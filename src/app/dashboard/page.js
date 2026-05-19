@@ -11,26 +11,31 @@ const[side,setSide]=useState('left');
 const[contrast,setContrast]=useState('without');
 const[copied,setCopied]=useState(false);
 const[micError,setMicError]=useState('');
-const recRef=useRef(null);
-const shouldRestartRef=useRef(false);
-const accumulatedRef=useRef('');
+const recognitionRef=useRef(null);
 
 const bodies=['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot'];
 const bilateralParts=['spine','pelvis'];
 const showSide=!bilateralParts.includes(body);
+const technique=`Multiplanar multisequence MRI of the${showSide?' '+side:''} ${body} ${contrast} IV contrast.`;
 
-const technique=`Multiplanar multisequence MRI of the ${showSide?side+' ':''} ${body} ${contrast} IV contrast.`;
+const SYSTEM_PROMPT=(part,lat,con)=>`You are a subspecialty MSK radiologist generating a structured MRI report.
 
-const SYSTEM_PROMPT=(part,lat,con)=>`You are a subspecialty MSK radiologist generating a structured MRI report. Use precise radiology terminology. Format exactly as shown with section headers in ALL CAPS followed by a colon on their own line.
+CRITICAL RULES:
+- Report ONLY what is explicitly stated in the dictated findings. Do NOT add, infer, or speculate about any additional findings, characteristics, measurements, tear patterns, grades, or associated findings that were not specifically mentioned.
+- If the radiologist says "tear of the medial meniscus" do not add tear type, location within meniscus, extrusion, or any other detail not stated.
+- If the radiologist says a structure is normal or unremarkable, just state "unremarkable."
+- Do not add clinical recommendations or suggestions.
+
+FORMAT — use these exact section headers on their own lines:
 
 TECHNIQUE:
 Multiplanar multisequence MRI of the ${lat?lat+' ':''}${part} ${con} IV contrast.
 
 FINDINGS:
-[Organize by anatomical structure with subheadings in Title Case followed by colon. State findings concisely per structure. Use "unremarkable" for normal. Be specific about signal intensity, morphology, size, and location of abnormalities.]
+Organize by anatomical structure using Title Case subheadings followed by a colon. Report only what was dictated for each structure.
 
 IMPRESSION:
-[Number each significant finding, most important first. If normal write: Unremarkable MRI of the ${lat?lat+' ':''}${part}.]`;
+Number each significant finding. Most important first. If normal: "Unremarkable MRI of the ${lat?lat+' ':''}${part}."`;
 
 const generate=async()=>{
   if(!text.trim())return;
@@ -44,7 +49,7 @@ const generate=async()=>{
         model:'claude-sonnet-4-6',
         max_tokens:1500,
         system:SYSTEM_PROMPT(body,lat,contrast),
-        messages:[{role:'user',content:`Generate an MRI report for a ${lat?lat+' ':''}${body} MRI (${contrast} IV contrast) based on these dictated findings:\n\n${text}`}]
+        messages:[{role:'user',content:`Dictated findings for ${lat?lat+' ':''}${body} MRI (${contrast} IV contrast). Report ONLY what I say, nothing more:\n\n${text}`}]
       })
     });
     const d=await r.json();
@@ -54,104 +59,84 @@ const generate=async()=>{
   setLoading(false);
 };
 
-// ── Mic: non-continuous mode with manual restart (most compatible with Edge) ──
-const stopMic=()=>{
-  shouldRestartRef.current=false;
-  try{recRef.current?.stop();}catch(e){}
-  recRef.current=null;
-  setListening(false);
-};
+// ── Mic — exact implementation from working version ──────────────────────
+const toggleMic=()=>{
+  if(listening){
+    recognitionRef.current?.stop();
+    setListening(false);
+    return;
+  }
 
-const startMic=()=>{
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){
+  const SpeechRecognitionAPI=
+    window.SpeechRecognition||
+    window.webkitSpeechRecognition||
+    window.mozSpeechRecognition||
+    window.msSpeechRecognition;
+
+  if(!SpeechRecognitionAPI){
     setMicError('Speech recognition not supported. Please use Chrome or Edge.');
     return;
   }
-  setMicError('');
-  try{
-    const rec=new SR();
-    // Non-continuous is more reliable in Edge — we restart manually on onend
-    rec.continuous=false;
-    rec.interimResults=false;
-    rec.lang='en-US';
-    rec.maxAlternatives=1;
 
-    rec.onstart=()=>{
+  setMicError('');
+
+  try{
+    const recognition=new SpeechRecognitionAPI();
+    recognition.continuous=true;
+    recognition.interimResults=true;
+    recognition.lang='en-US';
+    recognition.maxAlternatives=1;
+
+    let finalTranscript='';
+
+    recognition.onstart=()=>{
       setListening(true);
     };
 
-    rec.onspeechstart=()=>{
-      setMicError('');
+    recognition.onaudiostart=()=>{
+      setListening(true);
     };
 
-    rec.onresult=(e)=>{
-      for(let i=0;i<e.results.length;i++){
-        if(e.results[i].isFinal){
-          accumulatedRef.current+=e.results[i][0].transcript+' ';
-        }
+    recognition.onresult=(event)=>{
+      let interim='';
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        const t=event.results[i][0].transcript;
+        if(event.results[i].isFinal)finalTranscript+=t+' ';
+        else interim+=t;
       }
-      setText(accumulatedRef.current.trim());
+      setText(finalTranscript+interim);
     };
 
-    rec.onerror=(e)=>{
-      if(e.error==='not-allowed'){
-        setMicError('Microphone access denied. Click the lock icon in your browser address bar and allow microphone.');
-        stopMic();
-        return;
-      }
-      if(e.error==='no-speech'||e.error==='audio-capture'){
-        // non-fatal — just restart
-        return;
-      }
-      console.warn('Speech error:',e.error);
-    };
-
-    rec.onend=()=>{
-      // Auto-restart as long as shouldRestartRef is true
-      if(shouldRestartRef.current){
-        try{
-          const rec2=new SR();
-          rec2.continuous=false;
-          rec2.interimResults=false;
-          rec2.lang='en-US';
-          rec2.maxAlternatives=1;
-          rec2.onstart=rec.onstart;
-          rec2.onspeechstart=rec.onspeechstart;
-          rec2.onresult=rec.onresult;
-          rec2.onerror=rec.onerror;
-          rec2.onend=rec.onend;
-          rec2.start();
-          recRef.current=rec2;
-        }catch(err){
-          setListening(false);
-          shouldRestartRef.current=false;
-        }
+    recognition.onerror=(event)=>{
+      console.error('Speech recognition error:',event.error);
+      setListening(false);
+      if(event.error==='not-allowed'){
+        setMicError('Microphone access denied. Click the lock icon in your browser address bar and allow microphone access.');
+      }else if(event.error==='no-speech'){
+        // silent — user just paused
       }else{
-        setListening(false);
+        setMicError('Speech recognition error: '+event.error+'. Please try again.');
       }
     };
 
-    rec.start();
-    recRef.current=rec;
-  }catch(e){
-    setMicError('Could not start microphone: '+e.message);
+    recognition.onend=()=>{
+      setListening(false);
+      // Edge stops automatically after silence — restart if user hasn't stopped
+      if(recognitionRef.current===recognition&&listening){
+        try{recognition.start();}catch(e){}
+      }
+    };
+
+    recognition.start();
+    recognitionRef.current=recognition;
+  }catch(err){
+    console.error('Failed to start speech recognition:',err);
     setListening(false);
+    setMicError('Could not start microphone. Please check permissions.');
   }
 };
 
-const toggleMic=()=>{
-  if(listening){
-    stopMic();
-  }else{
-    accumulatedRef.current=text?text+' ':'';
-    shouldRestartRef.current=true;
-    startMic();
-  }
-};
-
-// cleanup on unmount
-useEffect(()=>()=>stopMic(),[]);
+useEffect(()=>()=>{recognitionRef.current?.stop();},[]);
 
 const copyReport=()=>{
   if(!report)return;
@@ -190,15 +175,13 @@ const formatReport=(txt)=>{
   });
 };
 
-// ── Styles ──
 const grid={display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'16px',padding:'16px',minHeight:'100vh',background:'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#0f172a 100%)',fontFamily:"'Segoe UI',system-ui,sans-serif",boxSizing:'border-box'};
 const col=()=>({background:'white',borderRadius:'14px',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,0.25)',border:'1px solid rgba(255,255,255,0.08)'});
-const hdr=(c)=>({background:`linear-gradient(135deg,${c}ee,${c}bb)`,padding:'13px 16px',display:'flex',alignItems:'center',gap:'8px'});
+const hdr=(c)=>({background:`linear-gradient(135deg,${c}ee,${c}aa)`,padding:'13px 16px',display:'flex',alignItems:'center',gap:'8px'});
 const htxt={color:'white',fontWeight:'700',fontSize:'11px',textTransform:'uppercase',letterSpacing:'0.12em',margin:0};
 const bod={padding:'16px',display:'flex',flexDirection:'column',gap:'12px',flex:1};
 const inp={width:'100%',padding:'9px 12px',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'14px',boxSizing:'border-box',color:'#1e293b',outline:'none',background:'white'};
 const lbl={fontSize:11,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:5};
-const row={display:'flex',gap:8};
 
 return(
 <div style={grid}>
@@ -208,7 +191,7 @@ return(
     <div style={hdr('#1d4ed8')}><span style={{fontSize:16}}>📝</span><p style={htxt}>Dictation Input</p></div>
     <div style={bod}>
 
-      <div style={row}>
+      <div style={{display:'flex',gap:8}}>
         <div style={{flex:2}}>
           <label style={lbl}>Body Part</label>
           <select style={inp} value={body} onChange={e=>setBody(e.target.value)}>
@@ -243,14 +226,18 @@ return(
       <div style={{flex:1,display:'flex',flexDirection:'column'}}>
         <label style={lbl}>Findings</label>
         <textarea
-          style={{...inp,flex:1,minHeight:180,resize:'vertical',lineHeight:1.65,fontFamily:'inherit',border:listening?'1.5px solid #ef4444':'1px solid #e2e8f0',boxShadow:listening?'0 0 0 3px rgba(239,68,68,0.1)':'none',transition:'border 0.15s,box-shadow 0.15s'}}
+          style={{...inp,flex:1,minHeight:180,resize:'vertical',lineHeight:1.65,fontFamily:'inherit',border:listening?'1.5px solid #ef4444':'1px solid #e2e8f0',boxShadow:listening?'0 0 0 3px rgba(239,68,68,0.1)':'none',transition:'border 0.15s'}}
           value={text}
           onChange={e=>setText(e.target.value)}
           placeholder="Type or dictate findings here…"
         />
       </div>
 
-      {micError&&<div style={{fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:6,padding:'6px 10px',lineHeight:1.5}}>{micError}</div>}
+      {micError&&(
+        <div style={{fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:6,padding:'6px 10px',lineHeight:1.5}}>
+          {micError}
+        </div>
+      )}
 
       <button
         onClick={toggleMic}
@@ -277,9 +264,8 @@ return(
         {loading
           ?<div style={{display:'flex',flexDirection:'column',gap:10,paddingTop:4}}>
               {[60,85,70,90,55,75].map((w,i)=>(
-                <div key={i} style={{height:10,background:'#e2e8f0',borderRadius:4,width:w+'%',opacity:0.6+i*0.05}}/>
+                <div key={i} style={{height:10,background:'#e2e8f0',borderRadius:4,width:w+'%'}}/>
               ))}
-              <style>{`@keyframes shimmer{0%,100%{opacity:0.4}50%{opacity:1}}`}</style>
             </div>
           :report
             ?<div style={{fontFamily:"Georgia,'Times New Roman',serif"}}>{formatReport(report)}</div>
