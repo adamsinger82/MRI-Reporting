@@ -12,30 +12,55 @@ const[contrast,setContrast]=useState('without');
 const[copied,setCopied]=useState(false);
 const[micError,setMicError]=useState('');
 const recognitionRef=useRef(null);
+const listeningRef=useRef(false);
 
 const bodies=['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot'];
 const bilateralParts=['spine','pelvis'];
 const showSide=!bilateralParts.includes(body);
 const technique=`Multiplanar multisequence MRI of the${showSide?' '+side:''} ${body} ${contrast} IV contrast.`;
 
+const ANATOMY={
+  knee:`For a knee MRI, always cover ALL of these structures with a subheading for each:
+Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Soft Tissues`,
+  shoulder:`For a shoulder MRI, always cover ALL of these structures:
+Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon (Long Head), Acromioclavicular Joint, Glenohumeral Joint, Glenoid Labrum, Articular Cartilage, Bones, Joint Effusion, Soft Tissues`,
+  hip:`For a hip MRI, always cover ALL of these structures:
+Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Soft Tissues`,
+  wrist:`For a wrist MRI, always cover ALL of these structures:
+Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve, Articular Cartilage, Bones, Soft Tissues`,
+  elbow:`For an elbow MRI, always cover ALL of these structures:
+Ulnar Collateral Ligament, Radial Collateral Ligament Complex, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Triceps Tendon, Ulnar Nerve, Articular Cartilage, Bones, Joint Effusion, Soft Tissues`,
+  ankle:`For an ankle MRI, always cover ALL of these structures:
+Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Soft Tissues`,
+  spine:`For a spine MRI, always cover ALL of these structures:
+Vertebral Alignment, Vertebral Bodies, Intervertebral Discs (each level), Spinal Canal, Conus Medullaris (if lumbar), Neural Foramina, Facet Joints, Paraspinal Soft Tissues`,
+  pelvis:`For a pelvis/SI joint MRI, always cover ALL of these structures:
+Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues`,
+  foot:`For a foot MRI, always cover ALL of these structures:
+Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues`,
+};
+
 const SYSTEM_PROMPT=(part,lat,con)=>`You are a subspecialty MSK radiologist generating a structured MRI report.
 
-CRITICAL RULES:
-- Report ONLY what is explicitly stated in the dictated findings. Do NOT add, infer, or speculate about any additional findings, characteristics, measurements, tear patterns, grades, or associated findings that were not specifically mentioned.
-- If the radiologist says "tear of the medial meniscus" do not add tear type, location within meniscus, extrusion, or any other detail not stated.
-- If the radiologist says a structure is normal or unremarkable, just state "unremarkable."
-- Do not add clinical recommendations or suggestions.
+STRUCTURE RULES:
+${ANATOMY[part]||'Cover all relevant anatomical structures for this joint.'}
 
-FORMAT — use these exact section headers on their own lines:
+CRITICAL REPORTING RULES:
+1. For structures NOT mentioned in the dictation: write "unremarkable" — nothing more.
+2. For structures mentioned as NORMAL in the dictation: write "unremarkable."
+3. For POSITIVE findings: report EXACTLY what was dictated — do not add morphology, signal characteristics, measurements, tear patterns, grades, associated findings, or any detail not explicitly stated by the radiologist. If the radiologist says "tear of the medial meniscus" write only "Tear of the medial meniscus." Nothing else.
+4. Do not add clinical recommendations or suggestions.
+
+FORMAT — use these exact section headers on their own lines in ALL CAPS:
 
 TECHNIQUE:
 Multiplanar multisequence MRI of the ${lat?lat+' ':''}${part} ${con} IV contrast.
 
 FINDINGS:
-Organize by anatomical structure using Title Case subheadings followed by a colon. Report only what was dictated for each structure.
+[One subheading per anatomical structure in Title Case followed by colon. Apply rules above strictly.]
 
 IMPRESSION:
-Number each significant finding. Most important first. If normal: "Unremarkable MRI of the ${lat?lat+' ':''}${part}."`;
+[Number each significant finding, most important first. If entirely normal: "Unremarkable MRI of the ${lat?lat+' ':''}${part}."]`;
 
 const generate=async()=>{
   if(!text.trim())return;
@@ -49,7 +74,7 @@ const generate=async()=>{
         model:'claude-sonnet-4-6',
         max_tokens:1500,
         system:SYSTEM_PROMPT(body,lat,contrast),
-        messages:[{role:'user',content:`Dictated findings for ${lat?lat+' ':''}${body} MRI (${contrast} IV contrast). Report ONLY what I say, nothing more:\n\n${text}`}]
+        messages:[{role:'user',content:`Dictated findings for ${lat?lat+' ':''}${body} MRI:\n\n${text}\n\nRemember: cover ALL anatomical structures for this joint. For any structure not mentioned above, write "unremarkable." For positive findings, use ONLY the exact words I dictated with no added detail.`}]
       })
     });
     const d=await r.json();
@@ -59,11 +84,13 @@ const generate=async()=>{
   setLoading(false);
 };
 
-// ── Mic — exact implementation from working version ──────────────────────
+// ── Mic ───────────────────────────────────────────────────────────────────
 const toggleMic=()=>{
-  if(listening){
+  if(listeningRef.current){
+    listeningRef.current=false;
     recognitionRef.current?.stop();
     setListening(false);
+    setMicError('');
     return;
   }
 
@@ -79,64 +106,68 @@ const toggleMic=()=>{
   }
 
   setMicError('');
+  listeningRef.current=true;
 
-  try{
-    const recognition=new SpeechRecognitionAPI();
-    recognition.continuous=true;
-    recognition.interimResults=true;
-    recognition.lang='en-US';
-    recognition.maxAlternatives=1;
+  const startRec=(accumulated)=>{
+    if(!listeningRef.current)return;
+    try{
+      const rec=new SpeechRecognitionAPI();
+      rec.continuous=true;
+      rec.interimResults=true;
+      rec.lang='en-US';
+      rec.maxAlternatives=1;
 
-    let finalTranscript='';
+      let finalTranscript=accumulated||'';
 
-    recognition.onstart=()=>{
-      setListening(true);
-    };
+      rec.onstart=()=>setListening(true);
+      rec.onaudiostart=()=>{setListening(true);setMicError('');};
 
-    recognition.onaudiostart=()=>{
-      setListening(true);
-    };
+      rec.onresult=(event)=>{
+        let interim='';
+        for(let i=event.resultIndex;i<event.results.length;i++){
+          const t=event.results[i][0].transcript;
+          if(event.results[i].isFinal)finalTranscript+=t+' ';
+          else interim+=t;
+        }
+        setText(finalTranscript+interim);
+      };
 
-    recognition.onresult=(event)=>{
-      let interim='';
-      for(let i=event.resultIndex;i<event.results.length;i++){
-        const t=event.results[i][0].transcript;
-        if(event.results[i].isFinal)finalTranscript+=t+' ';
-        else interim+=t;
-      }
-      setText(finalTranscript+interim);
-    };
+      rec.onerror=(event)=>{
+        // network and no-speech are non-fatal in Edge — restart silently
+        if(event.error==='network'||event.error==='no-speech'||event.error==='audio-capture'){
+          return;
+        }
+        if(event.error==='not-allowed'){
+          setMicError('Microphone access denied. Click the lock icon in your address bar and allow microphone access.');
+          listeningRef.current=false;
+          setListening(false);
+          return;
+        }
+        console.warn('Speech error:',event.error);
+      };
 
-    recognition.onerror=(event)=>{
-      console.error('Speech recognition error:',event.error);
+      rec.onend=()=>{
+        if(listeningRef.current){
+          // restart — pass accumulated finals so text is preserved
+          setTimeout(()=>startRec(finalTranscript),100);
+        }else{
+          setListening(false);
+        }
+      };
+
+      rec.start();
+      recognitionRef.current=rec;
+    }catch(err){
+      setMicError('Could not start microphone: '+err.message);
+      listeningRef.current=false;
       setListening(false);
-      if(event.error==='not-allowed'){
-        setMicError('Microphone access denied. Click the lock icon in your browser address bar and allow microphone access.');
-      }else if(event.error==='no-speech'){
-        // silent — user just paused
-      }else{
-        setMicError('Speech recognition error: '+event.error+'. Please try again.');
-      }
-    };
+    }
+  };
 
-    recognition.onend=()=>{
-      setListening(false);
-      // Edge stops automatically after silence — restart if user hasn't stopped
-      if(recognitionRef.current===recognition&&listening){
-        try{recognition.start();}catch(e){}
-      }
-    };
-
-    recognition.start();
-    recognitionRef.current=recognition;
-  }catch(err){
-    console.error('Failed to start speech recognition:',err);
-    setListening(false);
-    setMicError('Could not start microphone. Please check permissions.');
-  }
+  startRec(text?text+' ':'');
 };
 
-useEffect(()=>()=>{recognitionRef.current?.stop();},[]);
+useEffect(()=>()=>{listeningRef.current=false;recognitionRef.current?.stop();},[]);
 
 const copyReport=()=>{
   if(!report)return;
@@ -149,7 +180,7 @@ const formatReport=(txt)=>{
   if(!txt)return null;
   return txt.split('\n').map((line,i)=>{
     const isHeader=/^(TECHNIQUE|FINDINGS|IMPRESSION):?/.test(line.trim());
-    const isSubheader=/^[A-Z][A-Za-z\s\/\-]+:/.test(line.trim())&&!isHeader&&line.trim().length<60;
+    const isSubheader=/^[A-Z][A-Za-z\s\/\-\(\)]+:/.test(line.trim())&&!isHeader&&line.trim().length<80;
     const isNumbered=/^\d+\./.test(line.trim());
     if(isHeader)return(
       <div key={i} style={{marginTop:i>0?20:0,marginBottom:6}}>
@@ -239,17 +270,12 @@ return(
         </div>
       )}
 
-      <button
-        onClick={toggleMic}
-        style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:'10px',borderRadius:'8px',border:'1.5px solid '+(listening?'#fca5a5':'#e2e8f0'),background:listening?'#fef2f2':'white',fontSize:'14px',fontWeight:600,cursor:'pointer',color:listening?'#dc2626':'#475569',transition:'all 0.15s'}}>
+      <button onClick={toggleMic} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:'10px',borderRadius:'8px',border:'1.5px solid '+(listening?'#fca5a5':'#e2e8f0'),background:listening?'#fef2f2':'white',fontSize:'14px',fontWeight:600,cursor:'pointer',color:listening?'#dc2626':'#475569',transition:'all 0.15s'}}>
         <span style={{width:8,height:8,borderRadius:'50%',background:listening?'#ef4444':'#94a3b8',boxShadow:listening?'0 0 8px #ef4444':'none',transition:'all 0.3s',flexShrink:0}}/>
         {listening?'⏹ Stop Recording':'🎤 Start Dictation'}
       </button>
 
-      <button
-        onClick={generate}
-        disabled={loading||!text.trim()}
-        style={{width:'100%',padding:'11px',borderRadius:'8px',border:'none',background:(loading||!text.trim())?'#cbd5e1':'linear-gradient(135deg,#2563eb,#1d4ed8)',color:'white',fontSize:'14px',fontWeight:700,cursor:(loading||!text.trim())?'not-allowed':'pointer',boxShadow:(loading||!text.trim())?'none':'0 4px 14px rgba(37,99,235,0.35)',letterSpacing:'0.02em'}}>
+      <button onClick={generate} disabled={loading||!text.trim()} style={{width:'100%',padding:'11px',borderRadius:'8px',border:'none',background:(loading||!text.trim())?'#cbd5e1':'linear-gradient(135deg,#2563eb,#1d4ed8)',color:'white',fontSize:'14px',fontWeight:700,cursor:(loading||!text.trim())?'not-allowed':'pointer',boxShadow:(loading||!text.trim())?'none':'0 4px 14px rgba(37,99,235,0.35)',letterSpacing:'0.02em'}}>
         {loading?'Generating…':'✨ Generate Report'}
       </button>
 
@@ -263,19 +289,14 @@ return(
       <div style={{flex:1,padding:'14px 16px',border:'1px solid #e2e8f0',borderRadius:'10px',overflowY:'auto',minHeight:340,maxHeight:'68vh',background:report?'white':'#f8fafc'}}>
         {loading
           ?<div style={{display:'flex',flexDirection:'column',gap:10,paddingTop:4}}>
-              {[60,85,70,90,55,75].map((w,i)=>(
-                <div key={i} style={{height:10,background:'#e2e8f0',borderRadius:4,width:w+'%'}}/>
-              ))}
+              {[60,85,70,90,55,75].map((w,i)=>(<div key={i} style={{height:10,background:'#e2e8f0',borderRadius:4,width:w+'%'}}/>))}
             </div>
           :report
             ?<div style={{fontFamily:"Georgia,'Times New Roman',serif"}}>{formatReport(report)}</div>
             :<div style={{color:'#94a3b8',fontStyle:'italic',fontSize:13,paddingTop:4,lineHeight:1.7}}>Report will appear here after generation.</div>
         }
       </div>
-      <button
-        onClick={copyReport}
-        disabled={!report}
-        style={{width:'100%',padding:'10px',borderRadius:'8px',border:'1.5px solid '+(copied?'#86efac':'#e2e8f0'),background:copied?'#f0fdf4':(!report?'#f8fafc':'white'),fontSize:'13px',fontWeight:600,cursor:!report?'not-allowed':'pointer',color:copied?'#16a34a':'#475569',transition:'all 0.2s'}}>
+      <button onClick={copyReport} disabled={!report} style={{width:'100%',padding:'10px',borderRadius:'8px',border:'1.5px solid '+(copied?'#86efac':'#e2e8f0'),background:copied?'#f0fdf4':(!report?'#f8fafc':'white'),fontSize:'13px',fontWeight:600,cursor:!report?'not-allowed':'pointer',color:copied?'#16a34a':'#475569',transition:'all 0.2s'}}>
         {copied?'✓ Copied to Clipboard':'📋 Copy for PowerScribe'}
       </button>
     </div>
