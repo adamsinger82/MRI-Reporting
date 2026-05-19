@@ -12,12 +12,12 @@ const ANATOMY = {
   wrist: 'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve, Articular Cartilage, Bones, Soft Tissues',
   elbow: 'Ulnar Collateral Ligament, Radial Collateral Ligament Complex, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Triceps Tendon, Ulnar Nerve, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
   ankle: 'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
-  spine: 'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Spinal Canal, Conus Medullaris, Neural Foramina, Facet Joints, Paraspinal Soft Tissues',
+  spine: 'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs (each level), Spinal Canal, Neural Foramina, Facet Joints, Paraspinal Soft Tissues',
   pelvis: 'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues',
   foot: 'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
 };
 
-function buildPrompt(part, lat, con) {
+function buildPrompt(part, lat, con, spineRegion) {
   return `You are a subspecialty MSK radiologist generating a structured MRI report.
 
 ANATOMY TO COVER for ${part}: ${ANATOMY[part]}
@@ -43,7 +43,13 @@ Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part} ${con} IV co
 
 FINDINGS:
 [Title Case subheading: finding]
-
+${part === 'spine' ? `
+LEVELS:
+List each relevant intervertebral level on its own line in format "L1-L2:" or "C3-C4:" or "T6-T7:" etc.
+- If a level is NOT specifically mentioned in the dictation: write "No significant canal or foraminal narrowing."
+- If a positive finding IS mentioned for a level: write ONLY exactly what was dictated, nothing more.
+- Cover all levels appropriate for the ${spineRegion} spine.
+` : ''}
 IMPRESSION:
 [Synthesized numbered list]`;
 }
@@ -53,7 +59,7 @@ function formatReport(txt) {
   const cleaned = txt.replace(/\bunremarkable\b/gi, 'intact');
   return cleaned.split('\n').map((line, i) => {
     const t = line.trim();
-    const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION):?$/.test(t);
+    const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
     const colonIdx = t.indexOf(':');
     const isSubheader = !isHeader && colonIdx > 0 && colonIdx < 60 && /^[A-Z]/.test(t) && t.length < 100;
     const isNumbered = /^\d+\./.test(t);
@@ -132,7 +138,7 @@ function ReferencePanel({ selectedBodyPart }) {
             </tbody>
           </table>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, overflowY: 'auto', maxHeight: 220 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, overflowY: 'auto', maxHeight: 320 }}>
             {jointData.measurements.map(m => (
               <div key={m.id} onClick={() => setSelectedMeasurementId(m.id)}
                 style={{ padding: '7px 10px', background: '#f8fafc', borderRadius: 7, border: '1px solid #f1f5f9', cursor: 'pointer' }}>
@@ -157,10 +163,11 @@ export default function DashboardPage() {
   const [isListening, setIsListening] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [micError, setMicError] = useState('');
+  const [spineRegion, setSpineRegion] = useState('lumbar');
   const recognitionRef = useRef(null);
 
   const showSide = !BILATERAL.includes(selectedBodyPart);
-  const technique = `Multiplanar multisequence MRI of the${showSide ? ' ' + side : ''} ${selectedBodyPart} ${contrast} IV contrast.`;
+  const technique = `Multiplanar multisequence MRI of the${showSide ? ' ' + side : ''}${selectedBodyPart === 'spine' ? ' ' + spineRegion : ''} ${selectedBodyPart} ${contrast} IV contrast.`;
 
   const generateReport = async () => {
     if (!dictationText.trim()) return;
@@ -174,7 +181,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 1500,
-          system: buildPrompt(selectedBodyPart, lat, contrast),
+          system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion),
           messages: [{ role: 'user', content: `Dictated findings:\n\n${dictationText}` }],
         }),
       });
@@ -252,7 +259,7 @@ export default function DashboardPage() {
         <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#2563eb,#7c3aed)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🦴</div>
         <div>
           <div style={{ color: 'white', fontWeight: 700, fontSize: 16, letterSpacing: '0.02em' }}>MSK MRI Reporting</div>
-          <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>AI-Powered Radiology Report Generator</div>
+          <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>Advanced MSK Radiology Tools</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 999, padding: '4px 10px' }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
@@ -276,6 +283,13 @@ export default function DashboardPage() {
               {showSide && <div style={{ flex: 1 }}><label style={lbl}>Side</label>
                 <select style={inp} value={side} onChange={e => setSide(e.target.value)}>
                   <option value="left">Left</option><option value="right">Right</option><option value="bilateral">Bilateral</option>
+                </select>
+              </div>}
+              {selectedBodyPart === 'spine' && <div style={{ flex: 1 }}><label style={lbl}>Region</label>
+                <select style={inp} value={spineRegion} onChange={e => setSpineRegion(e.target.value)}>
+                  <option value="cervical">Cervical</option>
+                  <option value="thoracic">Thoracic</option>
+                  <option value="lumbar">Lumbar</option>
                 </select>
               </div>}
             </div>
