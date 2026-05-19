@@ -1246,97 +1246,94 @@ function ReferencePanel({ selectedBodyPart }) {
     (m) => m.id === selectedMeasurementId
   );
 
+  const accent = '#0891b2';
+
   if (!jointData) {
     return (
-      <div className={styles.referencePanelEmpty}>
-        <p>Select a body part to view measurements and reference values.</p>
+      <div style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center', padding: '20px' }}>
+        Select a body part to view measurements.
       </div>
     );
   }
 
   return (
-    <div className={styles.referencePanel}>
-      {/* ── Top half: Measurements ── */}
-      <div className={styles.referenceTop}>
-        <h3 className={styles.refSectionTitle}>
-          <span className={styles.refSectionIcon}>📐</span>
-          Measurements — {jointData.label}
-        </h3>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0', height: '100%' }}>
+
+      {/* ── Top: Measurements ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: accent, margin: '0' }}>
+          {jointData.label} — Select Measurement
+        </p>
 
         <select
-          className={styles.measurementSelect}
+          style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', background: 'white', cursor: 'pointer', color: '#1e293b', boxSizing: 'border-box' }}
           value={selectedMeasurementId}
           onChange={(e) => setSelectedMeasurementId(e.target.value)}
         >
           <option value="">— Select a measurement —</option>
           {jointData.measurements.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label}
-            </option>
+            <option key={m.id} value={m.id}>{m.label}</option>
           ))}
         </select>
 
         {selectedMeasurement ? (
-          <div className={styles.measurementDetail}>
-            <div className={styles.measurementMeta}>
-              <span className={styles.metaBadge}>{selectedMeasurement.plane}</span>
-              <p className={styles.measurementDescription}>{selectedMeasurement.description}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ display: 'inline-block', padding: '2px 8px', background: '#e0f2fe', color: '#0369a1', borderRadius: '999px', fontSize: '11px', fontWeight: '600', width: 'fit-content' }}>
+                {selectedMeasurement.plane}
+              </span>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '0', lineHeight: '1.5' }}>
+                {selectedMeasurement.description}
+              </p>
             </div>
-            <div className={styles.diagramContainer}>
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#fafbfc', padding: '8px' }}>
               {DIAGRAM_SVGS[selectedMeasurement.diagram] || (
-                <div className={styles.diagramPlaceholder}>
-                  <span>Diagram: {selectedMeasurement.diagram}</span>
-                  <small>Upload your image to replace this placeholder</small>
+                <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>
+                  Diagram coming soon
                 </div>
               )}
             </div>
           </div>
         ) : (
-          <div className={styles.measurementEmpty}>
-            <p>Select a measurement above to see the technique diagram.</p>
+          <div style={{ padding: '12px', background: '#f0f9ff', borderRadius: '8px', color: '#64748b', fontSize: '12px', textAlign: 'center', border: '1px dashed #bae6fd' }}>
+            Select a measurement to see the technique diagram
           </div>
         )}
       </div>
 
       {/* ── Divider ── */}
-      <div className={styles.refDivider} />
+      <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, #e2e8f0, transparent)', margin: '14px 0', flexShrink: '0' }} />
 
-      {/* ── Bottom half: Normal Values ── */}
-      <div className={styles.referenceBottom}>
-        <h3 className={styles.refSectionTitle}>
-          <span className={styles.refSectionIcon}>📊</span>
-          Normal Values
-        </h3>
+      {/* ── Bottom: Normal Values ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: accent, margin: '0' }}>
+          📊 Normal Values
+        </p>
 
         {selectedMeasurement ? (
-          <table className={styles.normalValuesTable}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
             <tbody>
               {selectedMeasurement.normalValues.map((nv, i) => (
-                <tr key={i} className={styles.nvRow}>
-                  <td className={styles.nvLabel}>{nv.label}</td>
-                  <td className={styles.nvValue}>{nv.value}</td>
+                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '5px 4px', color: '#64748b', width: '45%', verticalAlign: 'top' }}>{nv.label}</td>
+                  <td style={{ padding: '5px 4px', color: '#1e293b', fontWeight: '600', fontFamily: "'Courier New', monospace" }}>{nv.value}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <div className={styles.normalValuesAll}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', maxHeight: '220px' }}>
             {jointData.measurements.map((m) => (
-              <div key={m.id} className={styles.nvSummaryRow}>
-                <button
-                  className={styles.nvSummaryName}
-                  onClick={() => setSelectedMeasurementId(m.id)}
-                >
-                  {m.label}
-                </button>
-                <span className={styles.nvSummaryFirst}>
-                  {m.normalValues[0]?.label}: {m.normalValues[0]?.value}
-                </span>
+              <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '7px 10px', background: '#f8fafc', borderRadius: '7px', border: '1px solid #f1f5f9', cursor: 'pointer' }}
+                onClick={() => setSelectedMeasurementId(m.id)}>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#0891b2' }}>{m.label}</span>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>{m.normalValues[0]?.label}: {m.normalValues[0]?.value}</span>
               </div>
             ))}
           </div>
         )}
       </div>
+
     </div>
   );
 }
@@ -1504,92 +1501,325 @@ export default function DashboardPage() {
     });
   };
 
+  // ── Inline style objects (immune to global CSS overrides) ──────────────
+  const S = {
+    page: {
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)',
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
+      padding: '0',
+    },
+    header: {
+      background: 'rgba(255,255,255,0.05)',
+      backdropFilter: 'blur(10px)',
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
+      padding: '12px 24px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    },
+    headerIcon: {
+      fontSize: '24px',
+    },
+    headerTitle: {
+      color: 'white',
+      fontSize: '18px',
+      fontWeight: '700',
+      margin: '0',
+      letterSpacing: '0.02em',
+    },
+    headerSub: {
+      color: 'rgba(255,255,255,0.5)',
+      fontSize: '12px',
+      margin: '0',
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr',
+      gap: '16px',
+      padding: '16px',
+      boxSizing: 'border-box',
+    },
+    col: (accentColor) => ({
+      background: 'rgba(255,255,255,0.97)',
+      borderRadius: '14px',
+      border: `1px solid ${accentColor}30`,
+      boxShadow: `0 4px 24px rgba(0,0,0,0.15), 0 1px 0 ${accentColor}40 inset`,
+      padding: '0',
+      display: 'flex',
+      flexDirection: 'column',
+      minWidth: '0',
+      overflow: 'hidden',
+    }),
+    colHeader: (accentColor) => ({
+      background: `linear-gradient(135deg, ${accentColor}18, ${accentColor}08)`,
+      borderBottom: `2px solid ${accentColor}30`,
+      padding: '12px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+    }),
+    colTitle: (accentColor) => ({
+      fontSize: '11px',
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: '0.1em',
+      color: accentColor,
+      margin: '0',
+    }),
+    colBody: {
+      padding: '16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+      flex: '1',
+    },
+    label: {
+      fontSize: '11px',
+      fontWeight: '600',
+      color: '#64748b',
+      marginBottom: '5px',
+      display: 'block',
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    },
+    select: {
+      width: '100%',
+      padding: '9px 12px',
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
+      fontSize: '14px',
+      background: 'white',
+      cursor: 'pointer',
+      color: '#1e293b',
+      boxSizing: 'border-box',
+    },
+    textarea: (listening) => ({
+      width: '100%',
+      minHeight: '180px',
+      padding: '12px',
+      border: `1.5px solid ${listening ? '#ef4444' : '#e2e8f0'}`,
+      borderRadius: '8px',
+      fontSize: '14px',
+      lineHeight: '1.6',
+      resize: 'vertical',
+      fontFamily: 'inherit',
+      color: '#1e293b',
+      boxSizing: 'border-box',
+      outline: 'none',
+      boxShadow: listening ? '0 0 0 3px rgba(239,68,68,0.12)' : 'none',
+      transition: 'border-color 0.15s, box-shadow 0.15s',
+    }),
+    btnMic: (listening) => ({
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
+      width: '100%',
+      padding: '10px',
+      borderRadius: '8px',
+      border: `1.5px solid ${listening ? '#fca5a5' : '#e2e8f0'}`,
+      background: listening ? '#fef2f2' : 'white',
+      fontSize: '14px',
+      cursor: 'pointer',
+      color: listening ? '#dc2626' : '#475569',
+      fontWeight: '500',
+      transition: 'all 0.15s',
+    }),
+    btnGenerate: (disabled) => ({
+      width: '100%',
+      padding: '11px',
+      borderRadius: '8px',
+      border: 'none',
+      background: disabled
+        ? '#94a3b8'
+        : 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+      color: 'white',
+      fontSize: '14px',
+      fontWeight: '600',
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      boxShadow: disabled ? 'none' : '0 4px 12px rgba(37,99,235,0.35)',
+      transition: 'all 0.15s',
+      letterSpacing: '0.02em',
+    }),
+    reportBox: {
+      flex: '1',
+      padding: '14px',
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
+      fontSize: '13px',
+      lineHeight: '1.8',
+      whiteSpace: 'pre-wrap',
+      overflowY: 'auto',
+      minHeight: '300px',
+      maxHeight: '65vh',
+      color: '#1e293b',
+      background: '#f8fafc',
+      fontFamily: "'Courier New', monospace",
+    },
+    reportPlaceholder: {
+      color: '#94a3b8',
+      fontStyle: 'italic',
+      fontSize: '13px',
+    },
+    btnCopy: (success) => ({
+      width: '100%',
+      padding: '10px',
+      borderRadius: '8px',
+      border: `1.5px solid ${success ? '#86efac' : '#e2e8f0'}`,
+      background: success ? '#f0fdf4' : 'white',
+      fontSize: '13px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      color: success ? '#16a34a' : '#475569',
+      transition: 'all 0.15s',
+    }),
+    micPulse: {
+      display: 'inline-block',
+      width: '8px',
+      height: '8px',
+      borderRadius: '50%',
+      background: '#ef4444',
+      marginRight: '4px',
+      animation: 'pulse 1s infinite',
+    },
+  };
+
   return (
-    <>
-      <div className={styles.dashboardLayout}>
+    <div style={S.page}>
+
+      {/* ── Header ── */}
+      <div style={S.header}>
+        <span style={S.headerIcon}>🦴</span>
+        <div>
+          <p style={S.headerTitle}>MSK MRI Reporting</p>
+          <p style={S.headerSub}>AI-Powered Radiology Report Generator</p>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            padding: '4px 10px',
+            background: 'rgba(34,197,94,0.15)',
+            border: '1px solid rgba(34,197,94,0.3)',
+            borderRadius: '999px',
+            color: '#4ade80',
+            fontSize: '11px',
+            fontWeight: '600',
+          }}>
+            ● LIVE
+          </span>
+        </div>
+      </div>
+
+      {/* ── 3-Column Grid — inline styles guarantee rendering ── */}
+      <div style={S.grid}>
 
         {/* ─── COL 1: INPUT ─── */}
-        <div className={styles.col}>
-          <p className={styles.colTitle}>Input</p>
+        <div style={S.col('#2563eb')}>
+          <div style={S.colHeader('#2563eb')}>
+            <span>📝</span>
+            <p style={S.colTitle('#2563eb')}>Dictation Input</p>
+          </div>
+          <div style={S.colBody}>
 
-          <div>
-            <label style={{ fontSize: 12, color: '#64748b', marginBottom: 4, display: 'block' }}>Body part</label>
-            <select
-              className={styles.bodyPartSelect}
-              value={selectedBodyPart}
-              onChange={(e) => setSelectedBodyPart(e.target.value)}
+            <div>
+              <label style={S.label}>Body Part</label>
+              <select
+                style={S.select}
+                value={selectedBodyPart}
+                onChange={(e) => setSelectedBodyPart(e.target.value)}
+              >
+                {BODY_PARTS.map((b) => (
+                  <option key={b.id} value={b.id}>{b.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={S.label}>Findings</label>
+              <textarea
+                style={S.textarea(isListening)}
+                value={dictationText}
+                onChange={(e) => {
+                  setDictationText(e.target.value);
+                  autoDetectBodyPart(e.target.value);
+                }}
+                placeholder="Type or dictate your findings here…"
+              />
+            </div>
+
+            <button style={S.btnMic(isListening)} onClick={toggleListening}>
+              {isListening
+                ? <><span style={S.micPulse}/> Stop Recording</>
+                : <>🎤 Start Dictation</>}
+            </button>
+
+            <button
+              style={S.btnGenerate(isGenerating || !dictationText.trim())}
+              onClick={generateReport}
+              disabled={isGenerating || !dictationText.trim()}
             >
-              {BODY_PARTS.map((b) => (
-                <option key={b.id} value={b.id}>{b.label}</option>
-              ))}
-            </select>
+              {isGenerating ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <span className={styles.loadingDots}><span/><span/><span/></span>
+                  Generating…
+                </span>
+              ) : '✨ Generate Report'}
+            </button>
+
           </div>
-
-          <div>
-            <label style={{ fontSize: 12, color: '#64748b', marginBottom: 4, display: 'block' }}>
-              Dictation / findings
-            </label>
-            <textarea
-              className={`${styles.dictationArea} ${isListening ? styles.dictationAreaListening : ''}`}
-              value={dictationText}
-              onChange={(e) => {
-                setDictationText(e.target.value);
-                autoDetectBodyPart(e.target.value);
-              }}
-              placeholder="Type or dictate your findings here…"
-            />
-          </div>
-
-          <button className={`${styles.btnMic} ${isListening ? styles.btnMicActive : ''}`} onClick={toggleListening}>
-            🎤 {isListening ? 'Stop Recording' : 'Start Dictation'}
-          </button>
-
-          <button
-            className={styles.btnGenerate}
-            onClick={generateReport}
-            disabled={isGenerating || !dictationText.trim()}
-          >
-            {isGenerating ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <span className={styles.loadingDots}><span/><span/><span/></span>
-                Generating…
-              </span>
-            ) : '✨ Generate Report'}
-          </button>
         </div>
 
         {/* ─── COL 2: REPORT ─── */}
-        <div className={styles.col}>
-          <p className={styles.colTitle}>Generated Report</p>
-
-          <div className={styles.reportOutput}>
-            {isGenerating ? (
-              <span className={styles.reportPlaceholder}>Generating report…</span>
-            ) : generatedReport ? (
-              generatedReport
-            ) : (
-              <span className={styles.reportPlaceholder}>
-                Your structured MRI report will appear here after clicking Generate Report.
-              </span>
-            )}
+        <div style={S.col('#7c3aed')}>
+          <div style={S.colHeader('#7c3aed')}>
+            <span>📄</span>
+            <p style={S.colTitle('#7c3aed')}>Generated Report</p>
           </div>
+          <div style={S.colBody}>
 
-          <button
-            className={`${styles.btnCopy} ${copySuccess ? styles.btnCopySuccess : ''}`}
-            onClick={copyToClipboard}
-            disabled={!generatedReport}
-          >
-            {copySuccess ? '✓ Copied to Clipboard (PowerScribe)' : '📋 Copy for PowerScribe'}
-          </button>
+            <div style={S.reportBox}>
+              {isGenerating ? (
+                <span style={S.reportPlaceholder}>Generating report…</span>
+              ) : generatedReport ? (
+                generatedReport
+              ) : (
+                <span style={S.reportPlaceholder}>
+                  Your structured MRI report will appear here after clicking Generate Report.
+                </span>
+              )}
+            </div>
+
+            <button
+              style={S.btnCopy(copySuccess)}
+              onClick={copyToClipboard}
+              disabled={!generatedReport}
+            >
+              {copySuccess ? '✓ Copied to Clipboard (PowerScribe)' : '📋 Copy for PowerScribe'}
+            </button>
+
+          </div>
         </div>
 
         {/* ─── COL 3: REFERENCE ─── */}
-        <div className={styles.col}>
-          <p className={styles.colTitle}>Reference</p>
-          <ReferencePanel selectedBodyPart={selectedBodyPart} />
+        <div style={S.col('#0891b2')}>
+          <div style={S.colHeader('#0891b2')}>
+            <span>📐</span>
+            <p style={S.colTitle('#0891b2')}>Reference</p>
+          </div>
+          <div style={S.colBody}>
+            <ReferencePanel selectedBodyPart={selectedBodyPart} />
+          </div>
         </div>
 
       </div>
-    </>
+
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @media (max-width: 900px) {
+          .mri-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+    </div>
   );
 }
