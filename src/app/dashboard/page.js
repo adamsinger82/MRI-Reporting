@@ -1419,21 +1419,79 @@ export default function DashboardPage() {
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
-    } else {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) { alert('Speech recognition not supported in this browser.'); return; }
-      const recognition = new SpeechRecognition();
+      return;
+    }
+
+    // Edge uses window.SpeechRecognition; Chrome/Safari use webkitSpeechRecognition
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition ||
+      window.mozSpeechRecognition ||
+      window.msSpeechRecognition;
+
+    if (!SpeechRecognitionAPI) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognitionAPI();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results).map((r) => r[0].transcript).join(' ');
-        setDictationText(transcript);
+      recognition.maxAlternatives = 1;
+
+      // Accumulate final transcripts separately so interim results don't overwrite
+      let finalTranscript = '';
+
+      recognition.onstart = () => {
+        setIsListening(true);
       };
-      recognition.onend = () => setIsListening(false);
+
+      recognition.onaudiostart = () => {
+        // Audio capture confirmed — mic is working
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interim += transcript;
+          }
+        }
+        setDictationText(finalTranscript + interim);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          alert('Microphone access denied. Please allow microphone access in your browser settings and try again.');
+        } else if (event.error === 'no-speech') {
+          // Silently ignore — user just didn't speak
+        } else {
+          alert(`Speech recognition error: ${event.error}. Please try again.`);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+        // Edge sometimes stops automatically — restart if user hasn't manually stopped
+        if (recognitionRef.current === recognition && isListening) {
+          try { recognition.start(); } catch(e) { /* already stopped */ }
+        }
+      };
+
       recognition.start();
       recognitionRef.current = recognition;
-      setIsListening(true);
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      setIsListening(false);
+      alert('Could not start speech recognition. Please check microphone permissions.');
     }
   };
 
