@@ -34,6 +34,13 @@ FINDINGS RULES:
 2. Structures mentioned as normal: write "intact."
 3. Positive findings: use ONLY the exact words dictated. No added morphology, signal, measurements, tear type, grade, or any unstated detail.
 4. No clinical recommendations.
+5. BONES RULE — special rule for any subheading that is "Bones:" or contains "Bone": Always address all three of the following, positive or negative:
+   - Fracture/contusion: state what was dictated, or "No fracture or contusion."
+   - Osteonecrosis/AVN: state what was dictated, or "No osteonecrosis."
+   - Marrow signal: state what was dictated, or "No marrow infiltration or bone lesion."
+   Write these as three separate sentences on the same line after the "Bones:" subheading.
+   Example if normal: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion."
+   Example if fracture only dictated: "Bones: Fracture [exactly as dictated]. No osteonecrosis. No marrow infiltration or bone lesion."
 
 IMPRESSION RULES:
 - Synthesize positive findings into a clinically meaningful, concise impression.
@@ -105,12 +112,31 @@ function formatReport(txt) {
     if (isSubheader) {
       const label = t.slice(0, colonIdx + 1);
       const value = t.slice(colonIdx + 1).trim();
-      const isNeg = /^intact\.?$/i.test(value) ||
-                    /^no significant canal or foraminal narrowing\.?$/i.test(value);
+      // Negative if: intact, no significant canal/foraminal narrowing, or all-negative bones text
+      const isAllNeg = /^intact\.?$/i.test(value) ||
+                       /^no significant canal or foraminal narrowing\.?$/i.test(value) ||
+                       /^no fracture or contusion\. no osteonecrosis\. no marrow infiltration or bone lesion\.?$/i.test(value);
+      // Mixed bones: has both positive and negative components — split and color individually
+      const isBones = /^bones/i.test(label);
+      if (isBones && !isAllNeg) {
+        // Split into sentences and color each
+        const sentences = value.match(/[^.!?]+[.!?]*/g) || [value];
+        const negPattern = /^(no fracture|no osteonecrosis|no marrow|no avascular|no bone lesion)/i;
+        return (
+          <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{label} </span>
+            {sentences.map((s, si) => {
+              const st = s.trim();
+              const sentNeg = negPattern.test(st);
+              return <span key={si} style={{ fontSize: 13, color: sentNeg ? '#6b7280' : '#dc2626', fontWeight: sentNeg ? 400 : 600 }}>{st}{si < sentences.length - 1 ? ' ' : ''}</span>;
+            })}
+          </div>
+        );
+      }
       return (
         <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{label} </span>
-          <span style={{ fontSize: 13, color: isNeg ? '#6b7280' : '#dc2626', fontWeight: isNeg ? 400 : 600 }}>{value}</span>
+          <span style={{ fontSize: 13, color: isAllNeg ? '#6b7280' : '#dc2626', fontWeight: isAllNeg ? 400 : 600 }}>{value}</span>
         </div>
       );
     }
