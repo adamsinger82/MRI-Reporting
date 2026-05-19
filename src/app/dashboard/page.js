@@ -46,8 +46,8 @@ STRUCTURE RULES:
 ${ANATOMY[part]||'Cover all relevant anatomical structures for this joint.'}
 
 CRITICAL REPORTING RULES:
-1. For structures NOT mentioned in the dictation: write "unremarkable" — nothing more.
-2. For structures mentioned as NORMAL in the dictation: write "unremarkable."
+1. For structures NOT mentioned in the dictation: write "intact" — nothing more.
+2. For structures mentioned as NORMAL in the dictation: write "intact."
 3. For POSITIVE findings: report EXACTLY what was dictated — do not add morphology, signal characteristics, measurements, tear patterns, grades, associated findings, or any detail not explicitly stated by the radiologist. If the radiologist says "tear of the medial meniscus" write only "Tear of the medial meniscus." Nothing else.
 4. Do not add clinical recommendations or suggestions.
 
@@ -60,7 +60,7 @@ FINDINGS:
 [One subheading per anatomical structure in Title Case followed by colon. Apply rules above strictly.]
 
 IMPRESSION:
-[Number each significant finding, most important first. If entirely normal: "Unremarkable MRI of the ${lat?lat+' ':''}${part}."]`;
+[Number each significant finding, most important first. If entirely normal: "No significant MRI findings of the ${lat?lat+' ':''}${part}."]`;
 
 const generate=async()=>{
   if(!text.trim())return;
@@ -74,7 +74,7 @@ const generate=async()=>{
         model:'claude-sonnet-4-6',
         max_tokens:1500,
         system:SYSTEM_PROMPT(body,lat,contrast),
-        messages:[{role:'user',content:`Dictated findings for ${lat?lat+' ':''}${body} MRI:\n\n${text}\n\nRemember: cover ALL anatomical structures for this joint. For any structure not mentioned above, write "unremarkable." For positive findings, use ONLY the exact words I dictated with no added detail.`}]
+        messages:[{role:'user',content:`Dictated findings for ${lat?lat+' ':''}${body} MRI:\n\n${text}\n\nRemember: cover ALL anatomical structures for this joint. For any structure not mentioned above, write "intact." For positive findings, use ONLY the exact words I dictated with no added detail.`}]
       })
     });
     const d=await r.json();
@@ -176,33 +176,64 @@ const copyReport=()=>{
   setTimeout(()=>setCopied(false),2500);
 };
 
+// A line is "negative" if its finding portion is just "intact" (or was "unremarkable")
+const isNegativeFinding=(content)=>{
+  const c=content.toLowerCase().trim();
+  return c==='intact'||c==='intact.'||c==='unremarkable'||c==='unremarkable.';
+};
+
+// Split a subheading line like "Medial Meniscus: tear" into {label, value}
+const splitSubheaderLine=(line)=>{
+  const idx=line.indexOf(':');
+  if(idx===-1)return{label:line,value:''};
+  return{label:line.slice(0,idx+1),value:line.slice(idx+1).trim()};
+};
+
 const formatReport=(txt)=>{
   if(!txt)return null;
-  return txt.split('\n').map((line,i)=>{
-    const isHeader=/^(TECHNIQUE|FINDINGS|IMPRESSION):?/.test(line.trim());
-    const isSubheader=/^[A-Z][A-Za-z\s\/\-\(\)]+:/.test(line.trim())&&!isHeader&&line.trim().length<80;
-    const isNumbered=/^\d+\./.test(line.trim());
+  // Replace any "unremarkable" with "intact" in the raw text
+  const cleaned=txt.replace(/\bunremarkable\b/gi,'intact');
+  return cleaned.split('\n').map((line,i)=>{
+    const trimmed=line.trim();
+    const isHeader=/^(TECHNIQUE|FINDINGS|IMPRESSION):?/.test(trimmed);
+    const isSubheader=/^[A-Z][A-Za-z\s\/\-\(\)]+:/.test(trimmed)&&!isHeader&&trimmed.length<80;
+    const isNumbered=/^\d+\./.test(trimmed);
+
     if(isHeader)return(
       <div key={i} style={{marginTop:i>0?20:0,marginBottom:6}}>
-        <span style={{fontSize:11,fontWeight:800,letterSpacing:'0.14em',color:'#1e3a5f',borderBottom:'2px solid #2563eb',paddingBottom:3,display:'inline-block'}}>{line.trim()}</span>
+        <span style={{fontSize:11,fontWeight:800,letterSpacing:'0.14em',color:'#1e3a5f',borderBottom:'2px solid #2563eb',paddingBottom:3,display:'inline-block'}}>{trimmed}</span>
       </div>
     );
-    if(isSubheader)return(
-      <div key={i} style={{marginTop:10,marginBottom:2}}>
-        <span style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{line.trim()}</span>
-      </div>
-    );
-    if(isNumbered){
-      const num=line.match(/^\d+\./)[0];
+
+    if(isSubheader){
+      const{label,value}=splitSubheaderLine(trimmed);
+      const negative=isNegativeFinding(value);
+      const valueColor=negative?'#4b5563':'#dc2626'; // dark gray vs red
       return(
-        <div key={i} style={{marginTop:5,paddingLeft:4,fontSize:13,color:'#1e293b',lineHeight:1.7,display:'flex',gap:6}}>
-          <span style={{fontWeight:700,color:'#2563eb',flexShrink:0}}>{num}</span>
-          <span>{line.slice(num.length).trim()}</span>
+        <div key={i} style={{marginTop:10,marginBottom:2,paddingLeft:4}}>
+          <span style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{label} </span>
+          {value&&<span style={{fontSize:13,fontWeight:negative?400:600,color:valueColor}}>{value}</span>}
         </div>
       );
     }
-    if(!line.trim())return<div key={i} style={{height:5}}/>;
-    return<div key={i} style={{fontSize:13,color:'#374151',lineHeight:1.8,paddingLeft:4}}>{line}</div>;
+
+    if(isNumbered){
+      const num=line.match(/^\d+\./)[0];
+      const content=line.slice(num.length).trim();
+      // Impression items are always positive findings — red
+      return(
+        <div key={i} style={{marginTop:5,paddingLeft:4,fontSize:13,lineHeight:1.7,display:'flex',gap:6}}>
+          <span style={{fontWeight:700,color:'#2563eb',flexShrink:0}}>{num}</span>
+          <span style={{color:'#dc2626',fontWeight:500}}>{content}</span>
+        </div>
+      );
+    }
+
+    if(!trimmed)return<div key={i} style={{height:5}}/>;
+
+    // Plain lines — check if negative
+    const negative=isNegativeFinding(trimmed);
+    return<div key={i} style={{fontSize:13,color:negative?'#4b5563':'#dc2626',fontWeight:negative?400:500,lineHeight:1.8,paddingLeft:4}}>{trimmed}</div>;
   });
 };
 
