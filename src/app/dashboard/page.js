@@ -128,9 +128,10 @@ export default function DashboardPage() {
       return;
     }
 
+    // webkit must come first — window.SpeechRecognition is broken in Edge
     const SpeechRecognitionAPI =
-      window.SpeechRecognition ||
       window.webkitSpeechRecognition ||
+      window.SpeechRecognition ||
       window.mozSpeechRecognition ||
       window.msSpeechRecognition;
 
@@ -181,10 +182,13 @@ export default function DashboardPage() {
 
       recognition.onend = () => {
         // Must create a NEW instance — cannot call .start() on an ended recognition
+        // Small delay required for Edge before creating new instance
         if (recognitionRef.current === recognition) {
+          setTimeout(() => {
+          if (recognitionRef.current !== recognition) return; // stopped during delay
           const SpeechRecognitionAPI2 =
-            window.SpeechRecognition ||
             window.webkitSpeechRecognition ||
+            window.SpeechRecognition ||
             window.mozSpeechRecognition ||
             window.msSpeechRecognition;
           try {
@@ -203,6 +207,7 @@ export default function DashboardPage() {
           } catch (e) {
             setIsListening(false);
           }
+          }, 150); // end setTimeout
         }
       };
 
