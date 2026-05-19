@@ -12,7 +12,6 @@ const[contrast,setContrast]=useState('without');
 const[copied,setCopied]=useState(false);
 const[micError,setMicError]=useState('');
 const recognitionRef=useRef(null);
-const listeningRef=useRef(false);
 
 const bodies=['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot'];
 const bilateralParts=['spine','pelvis'];
@@ -84,13 +83,11 @@ const generate=async()=>{
   setLoading(false);
 };
 
-// ── Mic ───────────────────────────────────────────────────────────────────
+// ── Mic — exact working version ─────────────────────────────────────────
 const toggleMic=()=>{
-  if(listeningRef.current){
-    listeningRef.current=false;
+  if(listening){
     recognitionRef.current?.stop();
     setListening(false);
-    setMicError('');
     return;
   }
 
@@ -106,68 +103,56 @@ const toggleMic=()=>{
   }
 
   setMicError('');
-  listeningRef.current=true;
 
-  const startRec=(accumulated)=>{
-    if(!listeningRef.current)return;
-    try{
-      const rec=new SpeechRecognitionAPI();
-      rec.continuous=true;
-      rec.interimResults=true;
-      rec.lang='en-US';
-      rec.maxAlternatives=1;
+  try{
+    const recognition=new SpeechRecognitionAPI();
+    recognition.continuous=true;
+    recognition.interimResults=true;
+    recognition.lang='en-US';
+    recognition.maxAlternatives=1;
 
-      let finalTranscript=accumulated||'';
+    let finalTranscript='';
 
-      rec.onstart=()=>setListening(true);
-      rec.onaudiostart=()=>{setListening(true);setMicError('');};
+    recognition.onstart=()=>setListening(true);
 
-      rec.onresult=(event)=>{
-        let interim='';
-        for(let i=event.resultIndex;i<event.results.length;i++){
-          const t=event.results[i][0].transcript;
-          if(event.results[i].isFinal)finalTranscript+=t+' ';
-          else interim+=t;
-        }
-        setText(finalTranscript+interim);
-      };
+    recognition.onaudiostart=()=>setListening(true);
 
-      rec.onerror=(event)=>{
-        // network and no-speech are non-fatal in Edge — restart silently
-        if(event.error==='network'||event.error==='no-speech'||event.error==='audio-capture'){
-          return;
-        }
-        if(event.error==='not-allowed'){
-          setMicError('Microphone access denied. Click the lock icon in your address bar and allow microphone access.');
-          listeningRef.current=false;
-          setListening(false);
-          return;
-        }
-        console.warn('Speech error:',event.error);
-      };
+    recognition.onresult=(event)=>{
+      let interim='';
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        const t=event.results[i][0].transcript;
+        if(event.results[i].isFinal)finalTranscript+=t+' ';
+        else interim+=t;
+      }
+      setText(finalTranscript+interim);
+    };
 
-      rec.onend=()=>{
-        if(listeningRef.current){
-          // restart — pass accumulated finals so text is preserved
-          setTimeout(()=>startRec(finalTranscript),100);
-        }else{
-          setListening(false);
-        }
-      };
+    recognition.onerror=(event)=>{
+      console.error('Speech recognition error:',event.error);
+      if(event.error==='not-allowed'){
+        setMicError('Microphone access denied. Click the lock icon in your address bar and allow microphone access.');
+        setListening(false);
+      }
+      // all other errors (network, no-speech, audio-capture) — do not stop, let onend restart
+    };
 
-      rec.start();
-      recognitionRef.current=rec;
-    }catch(err){
-      setMicError('Could not start microphone: '+err.message);
-      listeningRef.current=false;
-      setListening(false);
-    }
-  };
+    recognition.onend=()=>{
+      // Always restart unless user explicitly stopped
+      if(recognitionRef.current===recognition){
+        try{recognition.start();}catch(e){setListening(false);}
+      }
+    };
 
-  startRec(text?text+' ':'');
+    recognition.start();
+    recognitionRef.current=recognition;
+  }catch(err){
+    console.error('Failed to start:',err);
+    setListening(false);
+    setMicError('Could not start microphone: '+err.message);
+  }
 };
 
-useEffect(()=>()=>{listeningRef.current=false;recognitionRef.current?.stop();},[]);
+useEffect(()=>()=>{recognitionRef.current?.stop();},[]);
 
 const copyReport=()=>{
   if(!report)return;
