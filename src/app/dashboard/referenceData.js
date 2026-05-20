@@ -2042,9 +2042,6 @@ const DIAGRAM_SVGS = {
     </svg>
   ),
 
-};
-
-
   // Sanders calcaneal fracture classification
   'ankle-sanders': (
     <svg viewBox="0 0 320 240" style={{width:'100%'}} aria-label="Sanders calcaneal fracture classification">
