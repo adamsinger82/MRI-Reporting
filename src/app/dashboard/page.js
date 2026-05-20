@@ -379,7 +379,6 @@ function AtlasModal({ onClose }) {
                   onError={() => { setImgError(true); setImgLoaded(false); }}
                   style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',display:imgLoaded?'block':'none',borderRadius:4 }}
                   alt={`VHP axial section ${currentSlice}`}
-                  crossOrigin="anonymous"
                 />
               )}
               {/* SVG label overlay — positioned absolutely over image */}
