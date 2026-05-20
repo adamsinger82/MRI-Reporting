@@ -274,7 +274,7 @@ function AtlasModal({ onClose }) {
   const [userLabels, setUserLabels] = useState({});
   const [pendingClick, setPendingClick] = useState(null);
   const [pendingText, setPendingText] = useState('');
-  const imgContainerRef = React.useRef(null);
+  const imgContainerRef = useRef(null);
 
   const regionJoints = ATLAS_REGIONS_MAP[selectedRegion] || {};
   const jointData = ATLAS_JOINTS[selectedJoint];
