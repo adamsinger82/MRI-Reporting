@@ -2076,14 +2076,10 @@ const DIAGRAM_SVGS = {
   'pelvis-young-burgess': (
     <svg viewBox="0 0 320 260" style={{width:'100%'}} aria-label="Young-Burgess pelvic fracture classification">
       {[
-        {label:'LC', x:20, y:30, desc:'Lateral
-Compression', color:'#fde68a', border:'#d97706', arrow:'→'},
-        {label:'APC', x:175, y:30, desc:'Ant-Post
-Compression', color:'#fca5a5', border:'#dc2626', arrow:'↕'},
-        {label:'VS', x:20, y:155, desc:'Vertical
-Shear', color:'#c4b5fd', border:'#7c3aed', arrow:'↑'},
-        {label:'CM', x:175, y:155, desc:'Combined
-Mechanism', color:'#bbf7d0', border:'#16a34a', arrow:'✕'},
+        {label:'LC', x:20, y:30, desc:'Lateral Compression', color:'#fde68a', border:'#d97706', arrow:'LC'},
+        {label:'APC', x:175, y:30, desc:'Ant-Post Compression', color:'#fca5a5', border:'#dc2626', arrow:'APC'},
+        {label:'VS', x:20, y:155, desc:'Vertical Shear', color:'#c4b5fd', border:'#7c3aed', arrow:'VS'},
+        {label:'CM', x:175, y:155, desc:'Combined Mechanism', color:'#bbf7d0', border:'#16a34a', arrow:'CM'},
       ].map(({label,x,y,desc,color,border,arrow}) => (
         <g key={label}>
           <rect x={x} y={y} width={125} height={100} rx={8} fill={color} stroke={border} strokeWidth="2" opacity="0.8"/>
@@ -2098,10 +2094,7 @@ Mechanism', color:'#bbf7d0', border:'#16a34a', arrow:'✕'},
           {/* Force arrow */}
           <text x={x+62} y={y+18} textAnchor="middle" fontSize="16" fill={border}>{arrow}</text>
           <text x={x+62} y={y+105} textAnchor="middle" fontSize="10" fill="#333" fontWeight="700">{label}</text>
-          <text x={x+62} y={y+116} textAnchor="middle" fontSize="8" fill="#555">{desc.split('
-')[0]}</text>
-          <text x={x+62} y={y+126} textAnchor="middle" fontSize="8" fill="#555">{desc.split('
-')[1]}</text>
+          <text x={x+62} y={y+116} textAnchor="middle" fontSize="8" fill="#555">{desc}</text>
         </g>
       ))}
       <text x="160" y="250" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Young-Burgess — injury mechanism types</text>
