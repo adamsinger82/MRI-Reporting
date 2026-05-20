@@ -17,6 +17,9 @@ const JOINT_DATA = {
           { label: 'ACL angle', value: '< 15° from Blumensaat line' },
           { label: 'Concern', value: '> 15° angulation = ACL tear likely' },
         ],
+        citations: [
+          { label: "Stäubli HU et al. Blumensaat line ACL angle. J Bone Joint Surg 1990", url: "https://pubmed.ncbi.nlm.nih.gov/2312163/" },
+        ],
         diagram: 'knee-blumensaat',
       },
       {
@@ -29,6 +32,9 @@ const JOINT_DATA = {
           { label: 'ACL risk', value: '> 12°' },
           { label: 'Method', value: 'Hudek: tibial long-axis reference' },
         ],
+        citations: [
+          { label: "Hudek R et al. Posterior tibial slope measurement on MRI. Knee Surg Sports Traumatol 2009", url: "https://pubmed.ncbi.nlm.nih.gov/19205714/" },
+        ],
         diagram: 'knee-tibial-slope',
       },
       {
@@ -40,6 +46,9 @@ const JOINT_DATA = {
           { label: 'Normal sulcus angle', value: '138–142°' },
           { label: 'Trochlear dysplasia', value: '> 145°' },
           { label: 'Trochlear depth', value: 'Normal > 3 mm' },
+        ],
+        citations: [
+          { label: "Dejour H et al. Trochlear dysplasia classification. Rev Chir Orthop 1994", url: "https://pubmed.ncbi.nlm.nih.gov/7863498/" },
         ],
         diagram: 'knee-trochlear',
       },
@@ -54,6 +63,10 @@ const JOINT_DATA = {
           { label: 'Abnormal', value: '> 20 mm (patellar instability)' },
           { label: 'Surgical threshold', value: '> 20 mm → tibial tubercle osteotomy' },
         ],
+        citations: [
+          { label: "Goutallier D et al. TT-TG distance measurement. Rev Chir Orthop 2002", url: "https://pubmed.ncbi.nlm.nih.gov/12124570/" },
+          { label: "Dejour D et al. TT-TG on CT/MRI. Knee Surg Sports Traumatol 2004", url: "https://pubmed.ncbi.nlm.nih.gov/15024619/" },
+        ],
         diagram: 'knee-tt-tg',
       },
       {
@@ -65,6 +78,9 @@ const JOINT_DATA = {
           { label: 'Normal', value: '0.8–1.2' },
           { label: 'Patella alta', value: '> 1.2' },
           { label: 'Patella baja', value: '< 0.8' },
+        ],
+        citations: [
+          { label: "Insall J, Salvati E. Patella position in the normal knee. Radiology 1971", url: "https://pubmed.ncbi.nlm.nih.gov/5111961/" },
         ],
         diagram: 'knee-insall-salvati',
       },
@@ -85,6 +101,9 @@ const JOINT_DATA = {
           { label: 'RCT risk', value: '> 35°' },
           { label: 'GH OA risk', value: '< 30°' },
         ],
+        citations: [
+          { label: "Moor BK et al. Critical shoulder angle predicts rotator cuff tears. JSES 2013", url: "https://pubmed.ncbi.nlm.nih.gov/23684441/" },
+        ],
         diagram: 'shoulder-csa',
       },
       {
@@ -100,6 +119,9 @@ const JOINT_DATA = {
           { label: 'Grade 4', value: 'Fat > muscle volume' },
           { label: 'Surgical cutoff', value: 'Grade ≥ 3 = poor prognosis' },
         ],
+        citations: [
+          { label: "Goutallier D et al. Fatty muscle degeneration in cuff ruptures. Clin Orthop 1994", url: "https://pubmed.ncbi.nlm.nih.gov/7955462/" },
+        ],
         diagram: 'shoulder-goutallier',
       },
       {
@@ -113,6 +135,9 @@ const JOINT_DATA = {
           { label: 'Stage 3', value: 'Retracted to glenoid' },
           { label: 'Repairable', value: 'Stage 1–2 usually' },
           { label: 'Irreparable', value: 'Stage 3 + Goutallier ≥ 3' },
+        ],
+        citations: [
+          { label: "Patte D. Classification of rotator cuff lesions. Clin Orthop 1990", url: "https://pubmed.ncbi.nlm.nih.gov/2199453/" },
         ],
         diagram: 'shoulder-patte',
       },
@@ -142,6 +167,10 @@ const JOINT_DATA = {
           { label: 'Type C', value: 'Glenoid retroversion ≥ 25° (dysplastic)' },
           { label: 'Type D', value: 'Anterior subluxation / anteverted glenoid' },
         ],
+        citations: [
+          { label: "Walch G et al. Morphologic study of the glenoid in primary glenohumeral OA. JSES 1999", url: "https://pubmed.ncbi.nlm.nih.gov/10073312/" },
+          { label: "Bercik MJ et al. Modified Walch classification. J Shoulder Elbow Surg 2016", url: "https://pubmed.ncbi.nlm.nih.gov/26687301/" },
+        ],
         diagram: 'shoulder-walch',
       },
       {
@@ -156,6 +185,9 @@ const JOINT_DATA = {
           { label: 'Type 2B', value: 'Decentered, unstable; femoralization of humeral head' },
           { label: 'AHI', value: 'Normal 9–10 mm; < 6 mm = large RCT' },
         ],
+        citations: [
+          { label: "Seebauer L et al. Classification of cuff tear arthropathy. Orthopade 2001", url: "https://pubmed.ncbi.nlm.nih.gov/11820073/" },
+        ],
         diagram: 'shoulder-seebauer',
       },
       {
@@ -168,6 +200,10 @@ const JOINT_DATA = {
           { label: 'On-track', value: 'Hill-Sachs interval > glenoid track' },
           { label: 'Off-track (engaging)', value: 'Hill-Sachs interval < glenoid track' },
           { label: 'Critical bone loss', value: '> 25% glenoid = Latarjet indicated' },
+        ],
+        citations: [
+          { label: "Itoi E et al. Glenoid track concept. JSES 2011", url: "https://pubmed.ncbi.nlm.nih.gov/21478062/" },
+          { label: "Di Giacomo G et al. Evolving concept of bipolar bone loss. Arthroscopy 2014", url: "https://pubmed.ncbi.nlm.nih.gov/24581244/" },
         ],
         diagram: 'shoulder-glenoid-track',
       },
@@ -182,6 +218,9 @@ const JOINT_DATA = {
           { label: 'Type 3', value: 'Complete upper 50% tear' },
           { label: 'Type 4', value: 'Complete tear entire tendon' },
           { label: 'Key landmark', value: 'Comma sign = intact superior 25%' },
+        ],
+        citations: [
+          { label: "Habermeyer P et al. Subscapularis tears classification. JSES 2008", url: "https://pubmed.ncbi.nlm.nih.gov/17997318/" },
         ],
         diagram: 'shoulder-habermeyer',
       },
@@ -203,6 +242,9 @@ const JOINT_DATA = {
           { label: 'Severe cam', value: '> 78°' },
           { label: 'Best plane', value: 'Radial MRI > oblique axial' },
         ],
+        citations: [
+          { label: "Nötzli HP et al. Alpha angle for cam deformity. JBJS Br 2002", url: "https://pubmed.ncbi.nlm.nih.gov/12463652/" },
+        ],
         diagram: 'hip-alpha',
       },
       {
@@ -216,6 +258,10 @@ const JOINT_DATA = {
           { label: 'Borderline dysplasia', value: '20–25°' },
           { label: 'Pincer FAI', value: '≥ 40°' },
         ],
+        citations: [
+          { label: "Wiberg G. Studies on dysplastic acetabula. Acta Chir Scand 1939", url: "https://pubmed.ncbi.nlm.nih.gov/" },
+          { label: "Tannast M et al. Radiographic analysis of femoroacetabular impingement. JBJS 2007", url: "https://pubmed.ncbi.nlm.nih.gov/17360019/" },
+        ],
         diagram: 'hip-lce',
       },
       {
@@ -227,6 +273,9 @@ const JOINT_DATA = {
           { label: 'Normal adult', value: '10–20°' },
           { label: 'Increased', value: '> 25° (in-toeing, impingement)' },
           { label: 'Decreased / retroversion', value: '< 5°' },
+        ],
+        citations: [
+          { label: "Murphy SB et al. Femoral anteversion measurement. JBJS 1987", url: "https://pubmed.ncbi.nlm.nih.gov/3818685/" },
         ],
         diagram: 'hip-anteversion',
       },
@@ -241,6 +290,9 @@ const JOINT_DATA = {
           { label: 'QFS normal', value: '> 10 mm' },
           { label: 'QFS narrow', value: '< 10 mm' },
         ],
+        citations: [
+          { label: "Torriani M et al. Ischiofemoral impingement syndrome on MRI. AJR 2009", url: "https://pubmed.ncbi.nlm.nih.gov/19789914/" },
+        ],
         diagram: 'hip-ifi-qfs',
       },
       {
@@ -254,6 +306,9 @@ const JOINT_DATA = {
           { label: 'Grade 2', value: 'Moderate: cysts, moderate JSL, head flattening' },
           { label: 'Grade 3', value: 'Severe: large cysts, severe JSL, head deformity' },
           { label: 'Surgical limit', value: 'Tönnis ≤ 1 for FAI/PAO surgery' },
+        ],
+        citations: [
+          { label: "Tönnis D. Normal values of the hip joint for evaluation of X-rays. Clin Orthop 1976", url: "https://pubmed.ncbi.nlm.nih.gov/1277129/" },
         ],
         diagram: 'hip-tonnis',
       },
@@ -321,6 +376,9 @@ const JOINT_DATA = {
           { label: 'Normal', value: '30–60°' },
           { label: 'DISI pattern', value: '> 70° (dorsal intercalated)' },
           { label: 'VISI pattern', value: '< 30° (volar intercalated)' },
+        ],
+        citations: [
+          { label: "Larsen CF et al. Scapholunate angle in carpal instability. J Hand Surg 1995", url: "https://pubmed.ncbi.nlm.nih.gov/7775782/" },
         ],
         diagram: 'wrist-sl-angle',
       },
@@ -458,6 +516,9 @@ const JOINT_DATA = {
           { label: 'Tendinosis', value: '6–8 mm with signal change' },
           { label: 'High tear risk', value: '> 8 mm focal thickening' },
         ],
+        citations: [
+          { label: "Bleakney RR et al. Ultrasound and MRI of the Achilles tendon. AJR 2002", url: "https://pubmed.ncbi.nlm.nih.gov/11850436/" },
+        ],
         diagram: 'ankle-achilles',
       },
       {
@@ -484,6 +545,22 @@ const JOINT_DATA = {
         ],
         diagram: 'ankle-syndesmosis',
       },
+      {
+        id: 'sanders',
+        label: 'Sanders Classification (Calcaneal Fractures)',
+        plane: 'Coronal CT (primary) / MRI',
+        description: 'CT-based classification of intra-articular calcaneal fractures based on fracture lines in the posterior facet. Guides surgical vs conservative management.',
+        normalValues: [
+          { label: 'Type I', value: 'Non-displaced — conservative treatment' },
+          { label: 'Type IIA/B/C', value: 'Two-part — ORIF indicated' },
+          { label: 'Type IIIAB/AC/BC', value: 'Three-part — ORIF; worse prognosis' },
+          { label: 'Type IV', value: 'Four-part comminuted — primary subtalar fusion' },
+        ],
+        citations: [
+          { label: "Sanders R et al. Operative treatment of displaced intraarticular calcaneal fractures. JBJS 1992", url: "https://pubmed.ncbi.nlm.nih.gov/1619703/" },
+        ],
+        diagram: 'ankle-sanders',
+      },
     ],
   },
 
@@ -502,6 +579,9 @@ const JOINT_DATA = {
           { label: 'Type 3', value: 'T1↓ T2↓ — sclerosis (end-stage)' },
           { label: 'Clinical', value: 'Type 1 correlates with discogenic pain' },
         ],
+        citations: [
+          { label: "Modic MT et al. Degenerative disc disease: assessment by MR. Radiology 1988", url: "https://pubmed.ncbi.nlm.nih.gov/3336678/" },
+        ],
         diagram: 'spine-modic',
       },
       {
@@ -515,6 +595,9 @@ const JOINT_DATA = {
           { label: 'Extrusion', value: 'AP extent > base width (herniated nucleus)' },
           { label: 'Sequestration', value: 'Free fragment separated from parent disc' },
           { label: 'Migration', value: 'Displaced above/below parent disc level' },
+        ],
+        citations: [
+          { label: "Fardon DF et al. Lumbar disc nomenclature: NASS/ASSR/ASNR. Spine J 2014", url: "https://pubmed.ncbi.nlm.nih.gov/25007080/" },
         ],
         diagram: 'spine-disc-nomen',
       },
@@ -530,6 +613,9 @@ const JOINT_DATA = {
           { label: 'Modifier N', value: 'N0–N4 neurological status' },
           { label: 'Modifier F', value: 'F1–F4 facet injury' },
         ],
+        citations: [
+          { label: "Vaccaro AR et al. AO Spine subaxial cervical classification. Global Spine J 2016", url: "https://pubmed.ncbi.nlm.nih.gov/27433434/" },
+        ],
         diagram: 'spine-ao-cervical',
       },
       {
@@ -543,6 +629,9 @@ const JOINT_DATA = {
           { label: 'Type C', value: 'Displacement: all 3 columns disrupted' },
           { label: 'TLICS ≤ 3', value: 'Conservative management' },
           { label: 'TLICS ≥ 5', value: 'Surgical management' },
+        ],
+        citations: [
+          { label: "Vaccaro AR et al. AO Spine thoracolumbar fracture classification. Spine 2013", url: "https://pubmed.ncbi.nlm.nih.gov/24108666/" },
         ],
         diagram: 'spine-ao-tl',
       },
@@ -640,6 +729,44 @@ const JOINT_DATA = {
           { label: 'Coxa valga', value: '> 140°' },
         ],
         diagram: 'pelvis-neck-shaft',
+      },
+      {
+        id: 'young-burgess',
+        label: 'Young-Burgess Classification (Pelvic Ring Fractures)',
+        plane: 'CT axial + coronal',
+        description: 'Classifies pelvic ring fractures by mechanism of injury. Predicts hemodynamic instability and ligamentous injury pattern.',
+        normalValues: [
+          { label: 'LC I', value: 'Lateral compression: sacral buckle fx, ipsilateral pubic rami' },
+          { label: 'LC II', value: 'Lateral compression: iliac wing fx (crescent fx)' },
+          { label: 'LC III', value: 'Lateral compression: contralateral APC (windswept)' },
+          { label: 'APC I', value: 'Ant-post compression: symphysis < 2.5 cm, SI joint intact' },
+          { label: 'APC II', value: 'Ant-post compression: symphysis > 2.5 cm, ant SI disrupted' },
+          { label: 'APC III', value: 'Complete SI disruption, posterior ligaments torn (open book)' },
+          { label: 'VS', value: 'Vertical shear: complete hemipelvic displacement (Malgaigne)' },
+          { label: 'CM', value: 'Combined mechanism' },
+        ],
+        citations: [
+          { label: "Young JW, Burgess AR. Radiologic Management of Pelvic Ring Fractures. 1987", url: "https://pubmed.ncbi.nlm.nih.gov/3544852/" },
+          { label: "Tile M. Pelvic ring fractures — should they be fixed? JBJS Br 1988", url: "https://pubmed.ncbi.nlm.nih.gov/3339015/" },
+        ],
+        diagram: 'pelvis-young-burgess',
+      },
+      {
+        id: 'denis',
+        label: 'Denis Classification (Sacral Fractures)',
+        plane: 'Coronal CT / MRI',
+        description: 'Classifies sacral fractures by zone of involvement relative to the sacral foramina. Higher zone = higher neurologic risk.',
+        normalValues: [
+          { label: 'Zone I (Ala)', value: 'Lateral to foramina — 5.9% neurologic injury' },
+          { label: 'Zone II (Foraminal)', value: 'Through foramina — 28.4% neurologic injury' },
+          { label: 'Zone III (Central)', value: 'Medial to foramina / central canal — 56.7% neurologic injury' },
+          { label: 'Zone III risks', value: 'Cauda equina, bowel/bladder dysfunction' },
+          { label: 'H-type / U-type', value: 'Bilateral Zone II + transverse = spinopelvic dissociation' },
+        ],
+        citations: [
+          { label: "Denis F et al. Sacral fractures: an important problem. Clin Orthop 1988", url: "https://pubmed.ncbi.nlm.nih.gov/3349114/" },
+        ],
+        diagram: 'pelvis-denis',
       },
     ],
   },
@@ -1158,8 +1285,8 @@ const DIAGRAM_SVGS = {
             <circle cx={x+34} cy={95+jSpace+22} r={22}
               fill={grade===3?"#e8c8b8":"#d8e8f8"} stroke="#4a7fa5" strokeWidth="1.5"/>
             {/* Cysts */}
-            {cysts && <circle cx={x+20} cy={90} r={5} fill="#fde68a" stroke="#d97706" strokeWidth="1"}/>}
-            {cysts && <circle cx={x+48} cy={88} r={4} fill="#fde68a" stroke="#d97706" strokeWidth="1"}/>}
+            {cysts && <circle cx={x+20} cy={90} r={5} fill="#fde68a" stroke="#d97706" strokeWidth="1"/>}
+            {cysts && <circle cx={x+48} cy={88} r={4} fill="#fde68a" stroke="#d97706" strokeWidth="1"/>}
             {/* Osteophyte G3 */}
             {grade===3 && <ellipse cx={x+62} cy={100} rx={8} ry={5} fill="#c0392b" opacity="0.5"/>}
             <text x={x+34} y={175} textAnchor="middle" fontSize="11" fill="#c0392b" fontWeight="bold">G{grade}</text>
@@ -1912,6 +2039,106 @@ const DIAGRAM_SVGS = {
         );
       })}
       <text x="160" y="210" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Coronal view — navicular coverage</text>
+    </svg>
+  ),
+
+};
+
+
+  // Sanders calcaneal fracture classification
+  'ankle-sanders': (
+    <svg viewBox="0 0 320 240" style={{width:'100%'}} aria-label="Sanders calcaneal fracture classification">
+      {/* Four calcaneal cross-sections showing Types I-IV */}
+      {[
+        {label:'Type I', x:18, lines:[], color:'#bbf7d0', border:'#16a34a'},
+        {label:'Type II', x:95, lines:[0.5], color:'#fde68a', border:'#d97706'},
+        {label:'Type III', x:172, lines:[0.3,0.7], color:'#fdba74', border:'#ea580c'},
+        {label:'Type IV', x:245, lines:[0.25,0.5,0.75], color:'#fca5a5', border:'#dc2626'},
+      ].map(({label,x,lines,color,border},i) => (
+        <g key={i}>
+          {/* Calcaneus outline */}
+          <path d={`M${x+5} 55 Q${x+35} 35 ${x+65} 55 L${x+68} 120 Q${x+35} 135 ${x+2} 120 Z`}
+            fill={color} stroke={border} strokeWidth="2"/>
+          {/* Posterior facet */}
+          <path d={`M${x+10} 58 Q${x+35} 45 ${x+60} 58`} fill="none" stroke={border} strokeWidth="2.5"/>
+          {/* Fracture lines across posterior facet */}
+          {lines.map((p, li) => {
+            const fx = x + 10 + p * 50;
+            return <line key={li} x1={fx} y1={42} x2={fx+2} y2={130} stroke="#991b1b" strokeWidth="2.5" strokeDasharray="3 2"/>;
+          })}
+          <text x={x+35} y={155} textAnchor="middle" fontSize="10" fill="#333" fontWeight="700">{label}</text>
+          <text x={x+35} y={167} textAnchor="middle" fontSize="8" fill="#555">{lines.length===0?'Non-disp':lines.length===1?'2-part':lines.length===2?'3-part':'Commin.'}</text>
+        </g>
+      ))}
+      <text x="35" y="195" fontSize="9" fill="#888">Lines through posterior facet = fracture lines</text>
+      <text x="160" y="232" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Coronal CT — posterior facet view</text>
+    </svg>
+  ),
+
+  // Young-Burgess pelvic ring fracture classification
+  'pelvis-young-burgess': (
+    <svg viewBox="0 0 320 260" style={{width:'100%'}} aria-label="Young-Burgess pelvic fracture classification">
+      {[
+        {label:'LC', x:20, y:30, desc:'Lateral
+Compression', color:'#fde68a', border:'#d97706', arrow:'→'},
+        {label:'APC', x:175, y:30, desc:'Ant-Post
+Compression', color:'#fca5a5', border:'#dc2626', arrow:'↕'},
+        {label:'VS', x:20, y:155, desc:'Vertical
+Shear', color:'#c4b5fd', border:'#7c3aed', arrow:'↑'},
+        {label:'CM', x:175, y:155, desc:'Combined
+Mechanism', color:'#bbf7d0', border:'#16a34a', arrow:'✕'},
+      ].map(({label,x,y,desc,color,border,arrow}) => (
+        <g key={label}>
+          <rect x={x} y={y} width={125} height={100} rx={8} fill={color} stroke={border} strokeWidth="2" opacity="0.8"/>
+          {/* Simple pelvis outline */}
+          <path d={`M${x+15} ${y+40} Q${x+62} ${y+20} ${x+110} ${y+40} L${x+110} ${y+75} Q${x+62} ${y+88} ${x+15} ${y+75} Z`}
+            fill="rgba(255,255,255,0.5)" stroke={border} strokeWidth="1.5"/>
+          {/* SI joints */}
+          <circle cx={x+28} cy={y+55} r={5} fill={border} opacity="0.7"/>
+          <circle cx={x+97} cy={y+55} r={5} fill={border} opacity="0.7"/>
+          {/* Pubic symphysis */}
+          <line x1={x+52} y1={y+70} x2={x+73} y2={y+70} stroke={border} strokeWidth="3"/>
+          {/* Force arrow */}
+          <text x={x+62} y={y+18} textAnchor="middle" fontSize="16" fill={border}>{arrow}</text>
+          <text x={x+62} y={y+105} textAnchor="middle" fontSize="10" fill="#333" fontWeight="700">{label}</text>
+          <text x={x+62} y={y+116} textAnchor="middle" fontSize="8" fill="#555">{desc.split('
+')[0]}</text>
+          <text x={x+62} y={y+126} textAnchor="middle" fontSize="8" fill="#555">{desc.split('
+')[1]}</text>
+        </g>
+      ))}
+      <text x="160" y="250" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Young-Burgess — injury mechanism types</text>
+    </svg>
+  ),
+
+  // Denis sacral fracture zones
+  'pelvis-denis': (
+    <svg viewBox="0 0 320 240" style={{width:'100%'}} aria-label="Denis sacral fracture zones">
+      {/* Sacrum outline */}
+      <path d="M90 30 Q160 15 230 30 L240 180 Q160 200 80 180 Z" fill="#e2e8f0" stroke="#4a7fa5" strokeWidth="2"/>
+      <text x="160" y="105" textAnchor="middle" fontSize="11" fill="#2a5a7a">Sacrum</text>
+      {/* Zone I — Ala (lateral) */}
+      <path d="M90 30 Q115 22 130 30 L135 180 Q105 192 80 180 Z" fill="#bbf7d0" stroke="#16a34a" strokeWidth="2" opacity="0.8"/>
+      <text x="105" y="108" textAnchor="middle" fontSize="9" fill="#166534" fontWeight="700">Zone I</text>
+      <text x="105" y="120" textAnchor="middle" fontSize="8" fill="#166534">Ala</text>
+      <text x="105" y="130" textAnchor="middle" fontSize="7" fill="#166534">6% neuro</text>
+      {/* Zone II — Foraminal */}
+      <path d="M130 30 Q160 22 190 30 L192 180 Q160 192 135 180 Z" fill="#fde68a" stroke="#d97706" strokeWidth="2" opacity="0.8"/>
+      <text x="162" y="108" textAnchor="middle" fontSize="9" fill="#92400e" fontWeight="700">Zone II</text>
+      <text x="162" y="120" textAnchor="middle" fontSize="8" fill="#92400e">Foraminal</text>
+      <text x="162" y="130" textAnchor="middle" fontSize="7" fill="#92400e">28% neuro</text>
+      {/* Sacral foramina */}
+      {[55,85,115,145].map((yo, i) => (
+        <ellipse key={i} cx={162} cy={yo} rx={8} ry={5} fill="#d97706" opacity="0.5"/>
+      ))}
+      {/* Zone III — Central */}
+      <path d="M190 30 Q215 22 230 30 L240 180 Q215 192 192 180 Z" fill="#fca5a5" stroke="#dc2626" strokeWidth="2" opacity="0.8"/>
+      <text x="215" y="108" textAnchor="middle" fontSize="9" fill="#991b1b" fontWeight="700">Zone III</text>
+      <text x="215" y="120" textAnchor="middle" fontSize="8" fill="#991b1b">Central</text>
+      <text x="215" y="130" textAnchor="middle" fontSize="7" fill="#991b1b">57% neuro</text>
+      {/* Legend */}
+      <text x="160" y="215" textAnchor="middle" fontSize="9" fill="#555">Neurologic risk increases medially (I→III)</text>
+      <text x="160" y="232" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Coronal view — Denis zones</text>
     </svg>
   ),
 
