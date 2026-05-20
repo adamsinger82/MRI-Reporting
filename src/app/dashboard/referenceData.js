@@ -298,10 +298,10 @@ const JOINT_DATA = {
         plane: 'Axial / coronal',
         description: 'Ischiofemoral interval (IFI): narrowest space between ischium and lesser trochanter. Quadratus femoris space (QFS): space available for quadratus femoris muscle.',
         normalValues: [
-          { label: 'IFI normal', value: '> 15 mm (Singer 2015)' },
-          { label: 'IFI narrow', value: '< 10 mm (Singer meta-analysis cutoff)' },
+          { label: 'IFI normal', value: '> 15 mm' },
+          { label: 'IFI narrow', value: '< 10 mm' },
           { label: 'QFS normal', value: '> 10 mm' },
-          { label: 'QFS narrow', value: '< 10 mm (Singer meta-analysis cutoff)' },
+          { label: 'QFS narrow', value: '< 10 mm' },
           { label: 'IFI borderline', value: '10–15 mm' },
         ],
         citations: [
