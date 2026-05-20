@@ -322,48 +322,22 @@ function AtlasModal({ onClose }) {
     return () => el.removeEventListener('wheel', handleWheel);
   }, [jointData]);
 
-  // Preload full stack when joint or sequence changes
+  // Preload full stack immediately when joint or sequence changes
   useEffect(() => {
     if (!jointData) return;
-    const src = seqData || (jointData.useLocalMRI ? jointData : null);
+    const sq = jointData?.sequences?.[sequenceRef.current] || null;
+    const src = sq || (jointData.useLocalMRI ? jointData : null);
     if (!src) return;
-    const sliceArr = seqData ? seqData.slices : jointData.slices;
-    const pathFn = seqData
-      ? (i) => `${seqData.path}${String(sliceArr[i]).padStart(3,'0')}${seqData.ext}`
+    const sliceArr = sq ? sq.slices : jointData.slices;
+    const pathFn = sq
+      ? (i) => `${sq.path}${String(sliceArr[i]).padStart(3,'0')}${sq.ext}`
       : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
-    // Preload all slices in batches to avoid overwhelming the browser
-    let idx = 0;
-    const batchSize = 20;
-    const loadBatch = () => {
-      const end = Math.min(idx + batchSize, sliceArr.length);
-      for (let i = idx; i < end; i++) {
-        const img = new Image();
-        img.src = pathFn(i);
-      }
-      idx = end;
-      if (idx < sliceArr.length) setTimeout(loadBatch, 100);
-    };
-    loadBatch();
+    // Fire all preloads immediately — browser will queue and prioritize
+    sliceArr.forEach((_, i) => {
+      const img = new Image();
+      img.src = pathFn(i);
+    });
   }, [selectedJoint, sequence]);
-
-  // Also preload ±15 around current slice for immediate neighbors
-  useEffect(() => {
-    if (!jointData) return;
-    const src = seqData || (jointData.useLocalMRI ? jointData : null);
-    if (!src) return;
-    const sliceArr = seqData ? seqData.slices : jointData.slices;
-    const pathFn = seqData
-      ? (i) => `${seqData.path}${String(sliceArr[i]).padStart(3,'0')}${seqData.ext}`
-      : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
-    for (let offset = -15; offset <= 15; offset++) {
-      if (offset === 0) continue;
-      const i = sliceIdx + offset;
-      if (i >= 0 && i < sliceArr.length) {
-        const img = new Image();
-        img.src = pathFn(i);
-      }
-    }
-  }, [sliceIdx, jointData, sequence]);
 
   useEffect(() => {
     setSliceIdx(0);
