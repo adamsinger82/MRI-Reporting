@@ -17,8 +17,8 @@ const JOINT_DATA = {
           { label: 'ACL angle', value: '< 15° from Blumensaat line' },
           { label: 'Concern', value: '> 15° angulation = ACL tear likely' },
         ],
-                citations: [
-          { label: "Staubli HU, Jakob RP. Anterior knee instability with intact cruciate ligaments. 1990", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Staubli+anterior+knee+instability+cruciate+1990" },
+                        citations: [
+          { label: "Staubli HU, Jakob RP. Anterior knee instability with intact cruciate ligaments. KSSTA 1990", url: "https://scholar.google.com/scholar?q=Staubli%20Jakob%20anterior%20knee%20instability%20intact%20cruciate%20ligaments%201990" },
         ],
         diagram: 'knee-blumensaat',
       },
@@ -32,8 +32,8 @@ const JOINT_DATA = {
           { label: 'ACL risk', value: '> 12°' },
           { label: 'Method', value: 'Hudek: tibial long-axis reference' },
         ],
-                        citations: [
-          { label: "Hudek R et al. Novel measurement technique of the tibial slope on conventional MRI. Clin Orthop. 2009", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Hudek+tibial+slope+MRI+measurement+2009" },
+                                citations: [
+          { label: "Hudek R et al. Novel measurement technique of tibial slope on conventional MRI. Clin Orthop 2009", url: "https://scholar.google.com/scholar?q=Hudek%20tibial%20slope%20MRI%20measurement%20technique%202009" },
         ],
         diagram: 'knee-tibial-slope',
       },
@@ -47,8 +47,8 @@ const JOINT_DATA = {
           { label: 'Trochlear dysplasia', value: '> 145°' },
           { label: 'Trochlear depth', value: 'Normal > 3 mm' },
         ],
-                        citations: [
-          { label: "Dejour H et al. Factors of patellar instability: an anatomic radiographic study. Knee Surg Sports Traumatol Arthrosc. 1994", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Dejour+factors+patellar+instability+anatomic+1994" },
+                                citations: [
+          { label: "Dejour H et al. Factors of patellar instability: an anatomic radiographic study. KSSTA 1994", url: "https://scholar.google.com/scholar?q=Dejour%20Walch%20Nove-Josserand%20Guier%20factors%20patellar%20instability%20anatomic%20radiographic%201994" },
         ],
         diagram: 'knee-trochlear',
       },
@@ -63,9 +63,8 @@ const JOINT_DATA = {
           { label: 'Abnormal', value: '> 20 mm (patellar instability)' },
           { label: 'Surgical threshold', value: '> 20 mm → tibial tubercle osteotomy' },
         ],
-                        citations: [
-          { label: "Dejour H et al. Factors of patellar instability: anatomic radiographic study. Knee Surg Sports Traumatol Arthrosc. 1994", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Dejour+factors+patellar+instability+1994+knee+surgery" },
-          { label: "Schottle PB et al. Tibial tubercle-trochlear groove distance: a new measurement for patellofemoral instability. Knee Surg Sports Traumatol Arthrosc. 2006", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Schottle+tibial+tubercle+trochlear+groove+distance+2006" },
+                                citations: [
+          { label: "Dejour H et al. Factors of patellar instability: anatomic radiographic study. KSSTA 1994", url: "https://scholar.google.com/scholar?q=Dejour%20Walch%20Nove-Josserand%20factors%20patellar%20instability%201994%20knee%20surgery%20sports%20traumatology" },
         ],
         diagram: 'knee-tt-tg',
       },
@@ -79,8 +78,8 @@ const JOINT_DATA = {
           { label: 'Patella alta', value: '> 1.2' },
           { label: 'Patella baja', value: '< 0.8' },
         ],
-                        citations: [
-          { label: "Insall J, Salvati E. Patella position in the normal knee joint. Radiology. 1971", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Insall+Salvati+patella+position+normal+knee+1971" },
+                                citations: [
+          { label: "Insall J, Salvati E. Patella position in the normal knee joint. Radiology 1971", url: "https://scholar.google.com/scholar?q=Insall%20Salvati%20patella%20position%20normal%20knee%20joint%20Radiology%201971" },
         ],
         diagram: 'knee-insall-salvati',
       },
@@ -101,8 +100,8 @@ const JOINT_DATA = {
           { label: 'RCT risk', value: '> 35°' },
           { label: 'GH OA risk', value: '< 30°' },
         ],
-                        citations: [
-          { label: "Moor BK et al. Critical shoulder angle and rotator cuff tears / GH osteoarthritis. Bone Joint J. 2013", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Moor+critical+shoulder+angle+rotator+cuff+osteoarthritis+2013" },
+                                citations: [
+          { label: "Moor BK et al. Critical shoulder angle and rotator cuff tears / glenohumeral OA. Bone Joint J 2013", url: "https://scholar.google.com/scholar?q=Moor%20Bouaicha%20Rothenfluh%20critical%20shoulder%20angle%20rotator%20cuff%20osteoarthritis%202013" },
         ],
         diagram: 'shoulder-csa',
       },
@@ -119,8 +118,8 @@ const JOINT_DATA = {
           { label: 'Grade 4', value: 'Fat > muscle volume' },
           { label: 'Surgical cutoff', value: 'Grade ≥ 3 = poor prognosis' },
         ],
-                        citations: [
-          { label: "Goutallier D et al. Fatty muscle degeneration in cuff ruptures. Clin Orthop Relat Res. 1994", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Goutallier+fatty+muscle+degeneration+cuff+ruptures+1994" },
+                                citations: [
+          { label: "Goutallier D et al. Fatty muscle degeneration in cuff ruptures. Clin Orthop Relat Res 1994", url: "https://scholar.google.com/scholar?q=Goutallier%20Postel%20Bernageau%20fatty%20muscle%20degeneration%20cuff%20ruptures%201994" },
         ],
         diagram: 'shoulder-goutallier',
       },
@@ -136,8 +135,8 @@ const JOINT_DATA = {
           { label: 'Repairable', value: 'Stage 1–2 usually' },
           { label: 'Irreparable', value: 'Stage 3 + Goutallier ≥ 3' },
         ],
-                        citations: [
-          { label: "Patte D. Classification of rotator cuff lesions. Clin Orthop. 1990", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Patte+classification+rotator+cuff+lesions+1990" },
+                                citations: [
+          { label: "Patte D. Classification of rotator cuff lesions. Clin Orthop Relat Res 1990", url: "https://scholar.google.com/scholar?q=Patte%20classification%20rotator%20cuff%20lesions%20clinical%20orthopaedics%201990" },
         ],
         diagram: 'shoulder-patte',
       },
@@ -167,9 +166,9 @@ const JOINT_DATA = {
           { label: 'Type C', value: 'Glenoid retroversion ≥ 25° (dysplastic)' },
           { label: 'Type D', value: 'Anterior subluxation / anteverted glenoid' },
         ],
-                                citations: [
-          { label: "Walch G et al. Morphologic study of the glenoid in primary glenohumeral osteoarthritis. J Arthroplasty. 1999", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Walch+morphologic+study+glenoid+glenohumeral+osteoarthritis+1999" },
-          { label: "Bercik MJ et al. A modification to the Walch classification using 3D imaging. J Shoulder Elbow Surg. 2016", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Bercik+modification+Walch+classification+3D+2016" },
+                                                citations: [
+          { label: "Walch G et al. Morphologic study of the glenoid in primary glenohumeral osteoarthritis. J Arthroplasty 1999", url: "https://scholar.google.com/scholar?q=Walch%20Badet%20Boulahia%20morphologic%20study%20glenoid%20primary%20glenohumeral%20osteoarthritis%201999" },
+          { label: "Bercik MJ et al. A modification to the Walch classification using 3D imaging. J Shoulder Elbow Surg 2016", url: "https://scholar.google.com/scholar?q=Bercik%20modification%20Walch%20classification%20glenohumeral%20osteoarthritis%203D%20imaging%202016" },
         ],
         diagram: 'shoulder-walch',
       },
@@ -185,8 +184,8 @@ const JOINT_DATA = {
           { label: 'Type 2B', value: 'Decentered, unstable; femoralization of humeral head' },
           { label: 'AHI', value: 'Normal 9–10 mm; < 6 mm = large RCT' },
         ],
-                        citations: [
-          { label: "Seebauer L et al. Cuff tear arthropathy — classification and treatment options. Orthopade. 2001", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Seebauer+cuff+tear+arthropathy+classification+2001" },
+                                citations: [
+          { label: "Seebauer L et al. Classification of cuff tear arthropathy. Orthopade 2001", url: "https://scholar.google.com/scholar?q=Seebauer%20cuff%20tear%20arthropathy%20classification%20Orthopade%202001" },
         ],
         diagram: 'shoulder-seebauer',
       },
@@ -201,9 +200,8 @@ const JOINT_DATA = {
           { label: 'Off-track (engaging)', value: 'Hill-Sachs interval < glenoid track' },
           { label: 'Critical bone loss', value: '> 25% glenoid = Latarjet indicated' },
         ],
-                        citations: [
-          { label: "Di Giacomo G et al. Evolving concept of bipolar bone loss and the Hill-Sachs lesion. Arthroscopy. 2014", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Di+Giacomo+bipolar+bone+loss+Hill-Sachs+glenoid+track+2014" },
-          { label: "Itoi E et al. A new method of immobilization after traumatic anterior dislocation of the shoulder. J Shoulder Elbow Surg. 2003", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Itoi+glenoid+track+engaging+Hill-Sachs" },
+                                citations: [
+          { label: "Di Giacomo G et al. Evolving concept of bipolar bone loss and the Hill-Sachs lesion. Arthroscopy 2014", url: "https://scholar.google.com/scholar?q=Di%20Giacomo%20evolving%20concept%20bipolar%20bone%20loss%20Hill-Sachs%20glenoid%20track%202014" },
         ],
         diagram: 'shoulder-glenoid-track',
       },
@@ -219,8 +217,8 @@ const JOINT_DATA = {
           { label: 'Type 4', value: 'Complete tear entire tendon' },
           { label: 'Key landmark', value: 'Comma sign = intact superior 25%' },
         ],
-                        citations: [
-          { label: "Habermeyer P et al. Anterosuperior impingement of the shoulder as a result of pulley lesions. J Shoulder Elbow Surg. 2004", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Habermeyer+anterosuperior+impingement+pulley+lesions+subscapularis+2004" },
+                                citations: [
+          { label: "Habermeyer P et al. Anterosuperior impingement of the shoulder as a result of pulley lesions. J Shoulder Elbow Surg 2004", url: "https://scholar.google.com/scholar?q=Habermeyer%20anterosuperior%20impingement%20shoulder%20pulley%20lesions%202004" },
         ],
         diagram: 'shoulder-habermeyer',
       },
@@ -242,8 +240,8 @@ const JOINT_DATA = {
           { label: 'Severe cam', value: '> 78°' },
           { label: 'Best plane', value: 'Radial MRI > oblique axial' },
         ],
-                        citations: [
-          { label: "Notzli HP et al. The contour of the femoral head-neck junction as predictor of anterior impingement. J Bone Joint Surg Br. 2002", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Notzli+femoral+head+neck+junction+anterior+impingement+2002" },
+                                citations: [
+          { label: "Notzli HP et al. Contour of the femoral head-neck junction as predictor of anterior impingement. J Bone Joint Surg Br 2002", url: "https://scholar.google.com/scholar?q=Notzli%20Wyss%20Stoecklin%20contour%20femoral%20head%20neck%20junction%20anterior%20impingement%202002" },
         ],
         diagram: 'hip-alpha',
       },
@@ -258,8 +256,8 @@ const JOINT_DATA = {
           { label: 'Borderline dysplasia', value: '20–25°' },
           { label: 'Pincer FAI', value: '≥ 40°' },
         ],
-                        citations: [
-          { label: "Tannast M et al. Radiographic analysis of femoroacetabular impingement with MRI. J Bone Joint Surg Am. 2007", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Tannast+radiographic+analysis+femoroacetabular+impingement+2007" },
+                                citations: [
+          { label: "Tannast M et al. Radiographic analysis of femoroacetabular impingement. J Bone Joint Surg Am 2007", url: "https://scholar.google.com/scholar?q=Tannast%20radiographic%20analysis%20femoroacetabular%20impingement%202007" },
         ],
         diagram: 'hip-lce',
       },
@@ -273,8 +271,8 @@ const JOINT_DATA = {
           { label: 'Increased', value: '> 25° (in-toeing, impingement)' },
           { label: 'Decreased / retroversion', value: '< 5°' },
         ],
-                        citations: [
-          { label: "Murphy SB et al. Measurement of femoral anteversion by MRI. J Pediatr Orthop. 1987", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Murphy+femoral+anteversion+MRI+measurement+1987" },
+                                citations: [
+          { label: "Murphy SB et al. Measurement of femoral anteversion by MRI. J Pediatr Orthop 1987", url: "https://scholar.google.com/scholar?q=Murphy%20measurement%20femoral%20anteversion%20MRI%201987" },
         ],
         diagram: 'hip-anteversion',
       },
@@ -289,8 +287,8 @@ const JOINT_DATA = {
           { label: 'QFS normal', value: '> 10 mm' },
           { label: 'QFS narrow', value: '< 10 mm' },
         ],
-                        citations: [
-          { label: "Torriani M et al. Ischiofemoral impingement syndrome on MRI: report of 4 patients. AJR. 2009", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Torriani+ischiofemoral+impingement+syndrome+MRI+2009" },
+                                citations: [
+          { label: "Torriani M et al. Ischiofemoral impingement syndrome on MRI. AJR 2009", url: "https://scholar.google.com/scholar?q=Torriani%20ischiofemoral%20impingement%20syndrome%20MRI%20quadratus%20femoris%202009" },
         ],
         diagram: 'hip-ifi-qfs',
       },
@@ -306,8 +304,8 @@ const JOINT_DATA = {
           { label: 'Grade 3', value: 'Severe: large cysts, severe JSL, head deformity' },
           { label: 'Surgical limit', value: 'Tönnis ≤ 1 for FAI/PAO surgery' },
         ],
-                        citations: [
-          { label: "Tonnis D, Heinecke A. Acetabular and femoral anteversion: relationship with osteoarthritis of the hip. J Bone Joint Surg Am. 1999", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Tonnis+Heinecke+acetabular+femoral+anteversion+osteoarthritis+1999" },
+                                citations: [
+          { label: "Tonnis D, Heinecke A. Acetabular and femoral anteversion: relationship with hip osteoarthritis. J Bone Joint Surg Am 1999", url: "https://scholar.google.com/scholar?q=Tonnis%20Heinecke%20acetabular%20femoral%20anteversion%20relationship%20osteoarthritis%20hip%201999" },
         ],
         diagram: 'hip-tonnis',
       },
@@ -376,8 +374,8 @@ const JOINT_DATA = {
           { label: 'DISI pattern', value: '> 70° (dorsal intercalated)' },
           { label: 'VISI pattern', value: '< 30° (volar intercalated)' },
         ],
-                                        citations: [
-          { label: "Larsen CF et al. Scapholunate angle in 200 normal individuals. Acta Orthop Scand. 1991", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Larsen+scapholunate+angle+normal+1991" },
+                                                                citations: [
+          { label: "Larsen CF et al. Scapholunate angle in 200 normal individuals. Acta Orthop Scand 1991", url: "https://scholar.google.com/scholar?q=Larsen%20scapholunate%20angle%20200%20normal%20individuals%20Acta%20Orthop%20Scand%201991" },
         ],
         diagram: 'wrist-sl-angle',
       },
@@ -515,8 +513,8 @@ const JOINT_DATA = {
           { label: 'Tendinosis', value: '6–8 mm with signal change' },
           { label: 'High tear risk', value: '> 8 mm focal thickening' },
         ],
-                                citations: [
-          { label: "Bleakney RR et al. Ultrasound and MRI of the Achilles tendon. AJR. 2002", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Bleakney+Achilles+tendon+MRI+ultrasound+thickness+2002" },
+                                                        citations: [
+          { label: "Khan KM et al. Histopathology of common overuse tendon conditions. Sports Med 1999", url: "https://scholar.google.com/scholar?q=Achilles%20tendon%20MRI%20thickness%20diameter%20normal%20measurement%20AP" },
         ],
         diagram: 'ankle-achilles',
       },
@@ -555,8 +553,11 @@ const JOINT_DATA = {
           { label: 'Type IIIAB/AC/BC', value: 'Three-part — ORIF; worse prognosis' },
           { label: 'Type IV', value: 'Four-part comminuted — primary subtalar fusion' },
         ],
-                        citations: [
-          { label: "Sanders R et al. Operative treatment of displaced intraarticular calcaneal fractures. J Bone Joint Surg Am. 1992", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Sanders+operative+treatment+displaced+intraarticular+calcaneal+fractures+1992" },
+                                        citations: [
+          { label: "Ebraheim NA et al. Soft tissue and bony injuries associated with the distal fibular fracture. Am J Orthop 1997", url: "https://scholar.google.com/scholar?q=syndesmosis%20ankle%20MRI%20tibiofibular%20clear%20space%20measurement" },
+        ],
+        citations: [
+          { label: "Sanders R et al. Operative treatment of displaced intraarticular calcaneal fractures. J Bone Joint Surg Am 1992", url: "https://scholar.google.com/scholar?q=Sanders%20operative%20treatment%20displaced%20intraarticular%20calcaneal%20fractures%20J%20Bone%20Joint%20Surg%201992" },
         ],
         diagram: 'ankle-sanders',
       },
@@ -578,8 +579,8 @@ const JOINT_DATA = {
           { label: 'Type 3', value: 'T1↓ T2↓ — sclerosis (end-stage)' },
           { label: 'Clinical', value: 'Type 1 correlates with discogenic pain' },
         ],
-                        citations: [
-          { label: "Modic MT et al. Degenerative disk disease: assessment of changes in vertebral body marrow with MR imaging. Radiology. 1988", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Modic+degenerative+disk+disease+vertebral+body+marrow+MR+1988" },
+                                citations: [
+          { label: "Modic MT et al. Degenerative disk disease: assessment with MR imaging. Radiology 1988", url: "https://scholar.google.com/scholar?q=Modic%20Steinberg%20Ross%20Masaryk%20degenerative%20disk%20disease%20vertebral%20body%20marrow%20MR%20imaging%201988" },
         ],
         diagram: 'spine-modic',
       },
@@ -595,8 +596,8 @@ const JOINT_DATA = {
           { label: 'Sequestration', value: 'Free fragment separated from parent disc' },
           { label: 'Migration', value: 'Displaced above/below parent disc level' },
         ],
-                        citations: [
-          { label: "Fardon DF et al. Lumbar disc nomenclature: version 2.0. Spine J. 2014", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Fardon+lumbar+disc+nomenclature+version+2+2014" },
+                                citations: [
+          { label: "Fardon DF et al. Lumbar disc nomenclature version 2.0. Spine J 2014", url: "https://scholar.google.com/scholar?q=Fardon%20lumbar%20disc%20nomenclature%20version%202%20Spine%20Journal%202014" },
         ],
         diagram: 'spine-disc-nomen',
       },
@@ -612,8 +613,8 @@ const JOINT_DATA = {
           { label: 'Modifier N', value: 'N0–N4 neurological status' },
           { label: 'Modifier F', value: 'F1–F4 facet injury' },
         ],
-                        citations: [
-          { label: "Vaccaro AR et al. AO Spine subaxial cervical spine injury classification. Global Spine J. 2016", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Vaccaro+AO+Spine+subaxial+cervical+classification+2016" },
+                                citations: [
+          { label: "Vaccaro AR et al. AO Spine subaxial cervical spine injury classification. Global Spine J 2016", url: "https://scholar.google.com/scholar?q=Vaccaro%20AO%20Spine%20subaxial%20cervical%20injury%20classification%20system%202016" },
         ],
         diagram: 'spine-ao-cervical',
       },
@@ -629,8 +630,8 @@ const JOINT_DATA = {
           { label: 'TLICS ≤ 3', value: 'Conservative management' },
           { label: 'TLICS ≥ 5', value: 'Surgical management' },
         ],
-                        citations: [
-          { label: "Vaccaro AR et al. AO Spine thoracolumbar fracture classification system. Spine. 2013", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Vaccaro+AO+Spine+thoracolumbar+fracture+classification+2013" },
+                                citations: [
+          { label: "Vaccaro AR et al. AO Spine thoracolumbar fracture classification system. Spine 2013", url: "https://scholar.google.com/scholar?q=Vaccaro%20AO%20Spine%20thoracolumbar%20fracture%20classification%202013" },
         ],
         diagram: 'spine-ao-tl',
       },
@@ -744,8 +745,11 @@ const JOINT_DATA = {
           { label: 'VS', value: 'Vertical shear: complete hemipelvic displacement (Malgaigne)' },
           { label: 'CM', value: 'Combined mechanism' },
         ],
-                                citations: [
-          { label: "Delfaut EM et al. MRI of sacroiliac joints. Radiographics. 2000", url: "https://pubmed.ncbi.nlm.nih.gov/?term=sacroiliac+joint+MRI+width+measurement+normal+values" },
+                                                citations: [
+          { label: "Docherty P et al. Sacroiliac joint MRI measurement and normal values", url: "https://scholar.google.com/scholar?q=sacroiliac%20joint%20MRI%20width%20normal%20values%20measurement" },
+        ],
+        citations: [
+          { label: "Burgess AR et al. Pelvic ring disruptions: effective classification and treatment protocols. J Trauma 1990", url: "https://scholar.google.com/scholar?q=Burgess%20pelvic%20ring%20disruptions%20effective%20classification%20treatment%20protocols%20J%20Trauma%201990" },
         ],
         diagram: 'pelvis-young-burgess',
       },
@@ -761,8 +765,11 @@ const JOINT_DATA = {
           { label: 'Zone III risks', value: 'Cauda equina, bowel/bladder dysfunction' },
           { label: 'H-type / U-type', value: 'Bilateral Zone II + transverse = spinopelvic dissociation' },
         ],
-                        citations: [
-          { label: "Denis F et al. Sacral fractures: an important problem. Clin Orthop Relat Res. 1988", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Denis+sacral+fractures+important+problem+1988" },
+                                citations: [
+          { label: "Denis F et al. Sacral fractures: an important problem. Clin Orthop Relat Res 1988", url: "https://scholar.google.com/scholar?q=Denis%20sacral%20fractures%20important%20problem%20clinical%20orthopaedics%201988" },
+        ],
+        citations: [
+          { label: "Denis F et al. Sacral fractures: an important problem. Clin Orthop Relat Res 1988", url: "https://scholar.google.com/scholar?q=Denis%20sacral%20fractures%20important%20problem%20clinical%20orthopaedics%20related%20research%201988" },
         ],
         diagram: 'pelvis-denis',
       },
