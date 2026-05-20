@@ -240,8 +240,8 @@ const ATLAS_JOINTS = {
     label: 'Pelvis / SI',
     region: 'Pelvis & Spine',
     folder: 'pelvis',
-    slices: Array.from({length:120},(_,i)=>i+1),
-    defaultSlice: 40,
+    slices: Array.from({length:100},(_,i)=>i+1),
+    defaultSlice: 35,
     useLocalMRI: true,
     localPath: '/atlas/pelvis/pelvis_',
     view: 'Axial T2 MRI — pelvis without contrast',
@@ -316,7 +316,7 @@ function AtlasModal({ onClose }) {
 
   useEffect(() => {
     if (!jointData || !jointData.useLocalMRI) return;
-    [-3,-2,-1,1,2,3].forEach(offset => {
+    [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9,10].forEach(offset => {
       const idx = sliceIdx + offset;
       if (idx >= 0 && idx < jointData.slices.length) {
         const url = `${jointData.localPath}${String(jointData.slices[idx]).padStart(3,'0')}.jpg`;
