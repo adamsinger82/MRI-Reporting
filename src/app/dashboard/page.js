@@ -522,6 +522,9 @@ function DdxModal({ onClose }) {
   const [mriT2, setMriT2] = useState('');
   const [mriContrast, setMriContrast] = useState('');
   const [adcValue, setAdcValue] = useState('');
+  const [gender, setGender] = useState('');
+  const [ctDensity, setCtDensity] = useState('');
+  const [macroFat, setMacroFat] = useState(false);
   const [ddxResult, setDdxResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -534,22 +537,32 @@ function DdxModal({ onClose }) {
     const ctFindings = [ctLytic&&'lytic',ctSclerotic&&'sclerotic/blastic',ctGroundGlass&&'ground glass',ctChondroid&&'chondroid matrix'].filter(Boolean).join(', ');
     const prompt = `You are a subspecialty MSK radiologist. Generate a prioritized differential diagnosis.
 
-Patient: Age ${age||'unknown'}, Location: ${location||'not specified'}
+Patient: Age ${age||'unknown'}, Gender: ${gender||'not specified'}, Location: ${location||'not specified'}
 Tissue type: ${tissueType}
 ${tissueType==='bone' ? `Bone location (epiphysis/metaphysis/diaphysis): ${boneLocation}` : `Depth: ${depth} to fascia`}
 ${ctFindings ? `CT matrix/density: ${ctFindings}` : ''}
+${ctDensity ? `CT density relative to muscle: ${ctDensity}` : ''}
+${macroFat ? 'Macroscopic fat present (T1 bright, drops on fat-sat)' : ''}
 ${mriT1 ? `MRI T1: ${mriT1}` : ''}
 ${mriT2 ? `MRI T2: ${mriT2}` : ''}
 ${mriContrast ? `MRI enhancement: ${mriContrast}` : ''}
 ${adcValue ? `ADC value: ${adcValue} x10-3 mm2/s` : ''}
 
-Provide:
-1. TOP 5 DIFFERENTIAL DIAGNOSES in order of likelihood with brief rationale for each
-2. KEY DISTINGUISHING FEATURES for the top diagnosis
-3. RECOMMENDED NEXT STEPS (additional imaging or biopsy guidance)
-4. RED FLAGS that would suggest malignancy
+Provide a ranked differential with CONFIDENCE LEVELS:
 
-Format clearly with headers. Be concise and clinically actionable. Use established MSK radiology criteria (WHO classification, Kransdorf/Murphey, ACR criteria).`;
+TOP DIFFERENTIAL DIAGNOSES (ranked by likelihood):
+For each diagnosis provide:
+- Diagnosis name
+- Confidence level: HIGH / MODERATE / LOW
+- Key supporting features from the given data
+- Distinguishing features from next diagnosis
+
+Then provide:
+KEY DISTINGUISHING FEATURES for top diagnosis
+RECOMMENDED NEXT STEPS
+RED FLAGS suggesting malignancy
+
+Be concise and clinically actionable. Use WHO 2020 bone tumor classification, Kransdorf/Murphey criteria.`;
 
     try {
       const res = await fetch('/api/generate', {
@@ -607,9 +620,22 @@ Format clearly with headers. Be concise and clinically actionable. Use establish
                 ))}
               </div>
             </div>
-            <div>
-              <label style={lbl}>Patient Age</label>
-              <input style={inp} type="number" placeholder="e.g. 45" value={age} onChange={e=>setAge(e.target.value)}/>
+            <div style={{ display:'flex',gap:8 }}>
+              <div style={{ flex:1 }}>
+                <label style={lbl}>Age</label>
+                <input style={inp} type="number" placeholder="e.g. 45" value={age} onChange={e=>setAge(e.target.value)}/>
+              </div>
+              <div style={{ flex:1 }}>
+                <label style={lbl}>Gender</label>
+                <div style={{ display:'flex',gap:5 }}>
+                  {['M','F'].map(g => (
+                    <button key={g} onClick={() => setGender(gender===g?'':g)}
+                      style={{ flex:1,padding:'8px 0',borderRadius:8,border:'2px solid '+(gender===g?'#2563eb':'#e2e8f0'),background:gender===g?'#eff6ff':'white',color:gender===g?'#2563eb':'#64748b',fontSize:13,fontWeight:gender===g?700:400,cursor:'pointer' }}>
+                      {g==='M'?'Male':'Female'}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             <div>
               <label style={lbl}>Anatomic Location</label>
@@ -631,12 +657,24 @@ Format clearly with headers. Be concise and clinically actionable. Use establish
               </div>
             )}
             <div>
-              <label style={lbl}>CT Matrix / Density</label>
+              <label style={lbl}>CT Matrix / Morphology</label>
               <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
                 {chk('Lytic', ctLytic, setCtLytic)}
                 {chk('Sclerotic / blastic', ctSclerotic, setCtSclerotic)}
                 {chk('Ground glass', ctGroundGlass, setCtGroundGlass)}
                 {chk('Chondroid matrix', ctChondroid, setCtChondroid)}
+              </div>
+            </div>
+            <div>
+              <label style={lbl}>CT Density (vs Muscle)</label>
+              <div style={{ display:'flex',flexWrap:'wrap',gap:5 }}>
+                {['Hypodense','Isodense','Hyperdense'].map(v => tog(v, setCtDensity, ctDensity))}
+              </div>
+            </div>
+            <div>
+              <label style={lbl}>Macroscopic Fat</label>
+              <div style={{ display:'flex',gap:6 }}>
+                {chk('Fat present (T1 bright / CT -50 to -150 HU)', macroFat, setMacroFat)}
               </div>
             </div>
             <div>
@@ -669,15 +707,25 @@ Format clearly with headers. Be concise and clinically actionable. Use establish
           {/* Right — results */}
           <div style={{ flex:1,padding:16,overflowY:'auto',background:'#f8fafc' }}>
             {ddxResult ? (
-              <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif",fontSize:13,lineHeight:1.7,color:'#1e293b',whiteSpace:'pre-wrap' }}>
+              <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif",fontSize:13,lineHeight:1.7,color:'#1e293b' }}>
                 {ddxResult.split('\n').map((line, i) => {
-                  const isH = /^#{1,3}\s|^[A-Z][A-Z\s]+:/.test(line.trim());
-                  const isNum = /^\d+\./.test(line.trim());
+                  const t = line.trim();
+                  const isH = /^#{1,3}\s|^[A-Z][A-Z\s]{2,}:/.test(t);
+                  const isNum = /^\d+\./.test(t);
+                  const isHigh = /\bHIGH\b/.test(t);
+                  const isMod = /\bMODERATE\b/.test(t);
+                  const isLow = /\bLOW\b/.test(t);
+                  const confColor = isHigh ? '#dc2626' : isMod ? '#d97706' : isLow ? '#6b7280' : null;
                   return (
                     <div key={i} style={{ marginTop: isH ? 14 : isNum ? 8 : 2 }}>
-                      {isH ? <span style={{ fontSize:12,fontWeight:800,color:'#4f46e5',textTransform:'uppercase',letterSpacing:'0.08em',borderBottom:'1px solid #e0e7ff',display:'block',paddingBottom:3 }}>{line.replace(/^#+\s/,'')}</span>
-                           : isNum ? <span style={{ color:'#1e293b',fontWeight:600 }}>{line}</span>
-                           : <span style={{ color:'#374151' }}>{line}</span>}
+                      {isH
+                        ? <span style={{ fontSize:11,fontWeight:800,color:'#4f46e5',textTransform:'uppercase',letterSpacing:'0.08em',borderBottom:'1px solid #e0e7ff',display:'block',paddingBottom:3 }}>{t.replace(/^#+\s/,'')}</span>
+                        : isNum
+                          ? <span style={{ color:'#1e293b',fontWeight:700 }}>{t}</span>
+                          : confColor
+                            ? <span style={{ display:'inline-block',padding:'2px 8px',borderRadius:6,background:isHigh?'#fef2f2':isMod?'#fffbeb':'#f9fafb',color:confColor,fontWeight:700,fontSize:11,marginBottom:2 }}>{t}</span>
+                            : <span style={{ color:'#374151' }}>{t}</span>
+                      }
                     </div>
                   );
                 })}
@@ -893,7 +941,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Center: MRI/CT toggle + tool buttons */}
-        <div style={{ display:'flex',alignItems:'center',gap:10,margin:'0 auto' }}>
+        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-evenly',gap:16,flex:1,margin:'0 20px' }}>
           {/* MRI/CT toggle */}
           <div style={{ display:'flex',alignItems:'center',background:'rgba(255,255,255,0.08)',borderRadius:10,padding:3,gap:2 }}>
             {['MRI','CT'].map(m => (
@@ -921,7 +969,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right: user + logout */}
-        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0,marginLeft:'auto' }}>
+        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0 }}>
           <div style={{ display:'flex',alignItems:'center',gap:7,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:9,padding:'6px 12px' }}>
             <div style={{ width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'white',fontWeight:700 }}>A</div>
             <span style={{ color:'rgba(255,255,255,0.8)',fontSize:12,fontWeight:600 }}>adamsinger82</span>
