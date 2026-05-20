@@ -1158,8 +1158,8 @@ const DIAGRAM_SVGS = {
             <circle cx={x+34} cy={95+jSpace+22} r={22}
               fill={grade===3?"#e8c8b8":"#d8e8f8"} stroke="#4a7fa5" strokeWidth="1.5"/>
             {/* Cysts */}
-            {cysts && <circle cx={x+20} cy={90} r={5} fill="#fde68a" stroke="#d97706" strokeWidth="1"}/>}
-            {cysts && <circle cx={x+48} cy={88} r={4} fill="#fde68a" stroke="#d97706" strokeWidth="1"}/>}
+            {cysts && <circle cx={x+20} cy={90} r={5} fill="#fde68a" stroke="#d97706" strokeWidth="1"/>}
+            {cysts && <circle cx={x+48} cy={88} r={4} fill="#fde68a" stroke="#d97706" strokeWidth="1"/>}
             {/* Osteophyte G3 */}
             {grade===3 && <ellipse cx={x+62} cy={100} rx={8} ry={5} fill="#c0392b" opacity="0.5"/>}
             <text x={x+34} y={175} textAnchor="middle" fontSize="11" fill="#c0392b" fontWeight="bold">G{grade}</text>
