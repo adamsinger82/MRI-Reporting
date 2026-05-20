@@ -149,359 +149,283 @@ function formatReport(txt) {
   });
 }
 
-// ─── ANATOMY ATLAS DATA ────────────────────────────────────────────────────
-const ATLAS_REGIONS = {
-  'Upper Extremity': {
-    shoulder: {
-      label: 'Shoulder',
-      layers: {
-        bones: { color: '#c8d8e8', stroke: '#4a7fa5', label: 'Bones' },
-        tendons: { color: '#8bb8a8', stroke: '#2d7a5a', label: 'Tendons' },
-        muscles: { color: '#f0c0a0', stroke: '#c07040', label: 'Muscles' },
-        nerves: { color: '#fde68a', stroke: '#d97706', label: 'Nerves' },
-        arteries: { color: '#fca5a5', stroke: '#dc2626', label: 'Arteries' },
-        veins: { color: '#c4b5fd', stroke: '#7c3aed', label: 'Veins' },
-      },
-      svgFn: (layers) => (
-        <svg viewBox="0 0 400 380" style={{width:'100%',height:'100%'}}>
-          {layers.bones && <>
-            <ellipse cx="220" cy="180" rx="85" ry="80" fill="#d8e8f8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="220" y="183" textAnchor="middle" fontSize="11" fill="#2a5a7a">Humeral head</text>
-            <ellipse cx="90" cy="175" rx="22" ry="65" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="90" y="178" textAnchor="middle" fontSize="9" fill="#2a5a7a">Glenoid</text>
-            <rect x="55" y="60" width="180" height="28" rx="6" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="145" y="78" textAnchor="middle" fontSize="10" fill="#2a5a7a">Acromion / Clavicle</text>
-            <rect x="290" y="130" width="80" height="25" rx="6" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2" transform="rotate(15 290 130)"/>
-            <text x="330" y="145" textAnchor="middle" fontSize="8" fill="#2a5a7a">Coracoid</text>
-          </>}
-          {layers.tendons && <>
-            <path d="M113 115 Q160 100 225 110 L225 128 Q160 115 113 130 Z" fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1.5" opacity="0.85"/>
-            <text x="170" y="122" textAnchor="middle" fontSize="9" fill="#1a4a3a">Supraspinatus</text>
-            <path d="M113 130 Q160 122 225 128 L225 145 Q160 138 113 145 Z" fill="#6a9888" stroke="#2d7a5a" strokeWidth="1.5" opacity="0.85"/>
-            <text x="170" y="140" textAnchor="middle" fontSize="8" fill="#1a4a3a">Infraspinatus</text>
-            <path d="M113 200 Q145 195 175 200 L175 215 Q145 210 113 215 Z" fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1.5" opacity="0.8"/>
-            <text x="145" y="210" textAnchor="middle" fontSize="8" fill="#1a4a3a">Subscapularis</text>
-            <path d="M180 88 L195 155" stroke="#8bb8a8" strokeWidth="7" strokeLinecap="round" opacity="0.85"/>
-            <text x="205" y="122" fontSize="8" fill="#1a4a3a">Biceps LHT</text>
-          </>}
-          {layers.muscles && <>
-            <ellipse cx="220" cy="310" rx="70" ry="35" fill="#f0c0a0" stroke="#c07040" strokeWidth="1.5" opacity="0.7"/>
-            <text x="220" y="313" textAnchor="middle" fontSize="9" fill="#7a4020">Deltoid</text>
-            <path d="M55 100 Q70 150 65 220" fill="none" stroke="#c07040" strokeWidth="12" strokeLinecap="round" opacity="0.5"/>
-            <text x="42" y="165" fontSize="8" fill="#7a4020" transform="rotate(-10 42 165)">Trap</text>
-          </>}
-          {layers.nerves && <>
-            <path d="M310 120 Q290 160 275 220" fill="none" stroke="#d97706" strokeWidth="3" strokeDasharray="6 3" opacity="0.9"/>
-            <text x="315" y="170" fontSize="8" fill="#d97706">Ax. n.</text>
-            <path d="M270 140 Q255 200 250 270" fill="none" stroke="#d97706" strokeWidth="2.5" strokeDasharray="6 3" opacity="0.9"/>
-            <text x="258" y="210" fontSize="8" fill="#d97706">Radial n.</text>
-          </>}
-          {layers.arteries && <>
-            <path d="M295 100 Q280 150 270 230" fill="none" stroke="#dc2626" strokeWidth="3" opacity="0.8"/>
-            <text x="300" y="145" fontSize="8" fill="#dc2626">Ax. a.</text>
-          </>}
-          {layers.veins && <>
-            <path d="M285 100 Q272 152 262 232" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeDasharray="4 2" opacity="0.7"/>
-            <text x="262" y="148" fontSize="8" fill="#7c3aed">Ax. v.</text>
-          </>}
-          <text x="200" y="368" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Shoulder — Coronal oblique</text>
-        </svg>
-      ),
-    },
-    knee: {
-      label: 'Knee',
-      layers: {
-        bones: { color: '#c8d8e8', stroke: '#4a7fa5', label: 'Bones' },
-        tendons: { color: '#8bb8a8', stroke: '#2d7a5a', label: 'Tendons / Ligaments' },
-        muscles: { color: '#f0c0a0', stroke: '#c07040', label: 'Muscles' },
-        nerves: { color: '#fde68a', stroke: '#d97706', label: 'Nerves' },
-        arteries: { color: '#fca5a5', stroke: '#dc2626', label: 'Arteries' },
-        veins: { color: '#c4b5fd', stroke: '#7c3aed', label: 'Veins' },
-      },
-      svgFn: (layers) => (
-        <svg viewBox="0 0 400 400" style={{width:'100%',height:'100%'}}>
-          {layers.bones && <>
-            <rect x="140" y="20" width="120" height="140" rx="12" fill="#d8e8f8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="200" y="95" textAnchor="middle" fontSize="11" fill="#2a5a7a">Femur</text>
-            <ellipse cx="162" cy="165" rx="45" ry="30" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <ellipse cx="238" cy="165" rx="45" ry="30" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <rect x="140" y="195" width="120" height="130" rx="10" fill="#d8e8f8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="200" y="265" textAnchor="middle" fontSize="11" fill="#2a5a7a">Tibia</text>
-            <ellipse cx="200" cy="120" rx="22" ry="18" fill="#e8f0e0" stroke="#6a9060" strokeWidth="1.5"/>
-            <text x="200" y="123" textAnchor="middle" fontSize="8" fill="#3a5030">Patella</text>
-          </>}
-          {layers.tendons && <>
-            <path d="M165 190 Q200 175 235 190 L238 210 Q200 195 162 210 Z" fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1.5" opacity="0.85"/>
-            <text x="200" y="204" textAnchor="middle" fontSize="8" fill="#1a4a3a">Med/Lat Menisci</text>
-            <line x1="178" y1="165" x2="222" y2="195" stroke="#2d7a5a" strokeWidth="4" opacity="0.9"/>
-            <text x="188" y="185" fontSize="8" fill="#1a4a3a">ACL</text>
-            <line x1="222" y1="165" x2="178" y2="195" stroke="#1a5a3a" strokeWidth="4" opacity="0.9"/>
-            <text x="214" y="178" fontSize="8" fill="#1a4a3a">PCL</text>
-            <path d="M195" y="138 L198 195" stroke="#8bb8a8" strokeWidth="8" strokeLinecap="round" opacity="0.85"/>
-            <text x="210" y="165" fontSize="8" fill="#1a4a3a">Pat. ten.</text>
-            <line x1="118" y1="155" x2="118" y2="215" stroke="#2d7a5a" strokeWidth="5" strokeLinecap="round" opacity="0.8"/>
-            <text x="88" y="188" fontSize="8" fill="#1a4a3a">MCL</text>
-            <line x1="282" y1="155" x2="282" y2="215" stroke="#2d7a5a" strokeWidth="5" strokeLinecap="round" opacity="0.8"/>
-            <text x="287" y="188" fontSize="8" fill="#1a4a3a">LCL</text>
-          </>}
-          {layers.muscles && <>
-            <rect x="60" y="20" width="55" height="140" rx="10" fill="#f0c0a0" stroke="#c07040" strokeWidth="1.5" opacity="0.7"/>
-            <text x="87" y="92" textAnchor="middle" fontSize="8" fill="#7a4020">Quad</text>
-            <rect x="285" y="20" width="55" height="140" rx="10" fill="#f0c0a0" stroke="#c07040" strokeWidth="1.5" opacity="0.7"/>
-            <text x="312" y="92" textAnchor="middle" fontSize="8" fill="#7a4020">Hamstring</text>
-          </>}
-          {layers.nerves && <>
-            <path d="M325 80 Q320 165 318 270" fill="none" stroke="#d97706" strokeWidth="3" strokeDasharray="6 3" opacity="0.9"/>
-            <text x="330" y="175" fontSize="8" fill="#d97706">Peroneal n.</text>
-            <path d="M75" y="80 Q78 165 80 270" fill="none" stroke="#d97706" strokeWidth="3" strokeDasharray="6 3" opacity="0.9"/>
-            <text x="40" y="175" fontSize="8" fill="#d97706">Tib. n.</text>
-          </>}
-          {layers.arteries && <>
-            <path d="M200" y="20 L200 380" stroke="#dc2626" strokeWidth="3" opacity="0.7"/>
-            <text x="207" y="185" fontSize="8" fill="#dc2626">Pop. a.</text>
-          </>}
-          {layers.veins && <>
-            <path d="M193" y="20 L193 380" stroke="#7c3aed" strokeWidth="2.5" strokeDasharray="4 2" opacity="0.7"/>
-            <text x="168" y="185" fontSize="8" fill="#7c3aed">Pop. v.</text>
-          </>}
-          <text x="200" y="392" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Knee — Coronal view</text>
-        </svg>
-      ),
+// ─── ANATOMY ATLAS DATA (Visible Human Project) ──────────────────────────────
+const VHP_BASE = 'https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Male-Images/PNG_format';
+
+// Each joint defines: folder, slices array (axial cross-sections), 
+// view label, and label overlays per anatomy layer
+const ATLAS_JOINTS = {
+  shoulder: {
+    label: 'Shoulder',
+    region: 'Upper Extremity',
+    folder: 'thorax',
+    slices: [1388, 1393, 1398, 1403, 1408, 1413],
+    defaultSlice: 1398,
+    view: 'Axial cryosection — glenohumeral joint level',
+    // SVG overlay labels [x%, y%, text, layerKey, color]
+    labels: {
+      bones:    [[72,44,'Humeral head','#1e3a8a'],[27,44,'Glenoid','#1e3a8a'],[50,20,'Clavicle','#1e3a8a'],[50,60,'Scapula','#1e3a8a']],
+      tendons:  [[62,38,'Supraspinatus','#14532d'],[68,55,'Infraspinatus','#14532d'],[38,52,'Subscapularis','#14532d']],
+      muscles:  [[78,38,'Deltoid','#7c2d12'],[20,38,'Trap/Rhomboid','#7c2d12']],
+      nerves:   [[82,62,'Brachial plexus','#92400e']],
+      arteries: [[80,55,'Axillary a.','#991b1b']],
+      veins:    [[78,60,'Axillary v.','#4c1d95']],
     },
   },
-  'Lower Extremity': {
-    hip: {
-      label: 'Hip',
-      layers: {
-        bones: { color: '#c8d8e8', stroke: '#4a7fa5', label: 'Bones' },
-        tendons: { color: '#8bb8a8', stroke: '#2d7a5a', label: 'Tendons' },
-        muscles: { color: '#f0c0a0', stroke: '#c07040', label: 'Muscles' },
-        nerves: { color: '#fde68a', stroke: '#d97706', label: 'Nerves' },
-        arteries: { color: '#fca5a5', stroke: '#dc2626', label: 'Arteries' },
-        veins: { color: '#c4b5fd', stroke: '#7c3aed', label: 'Veins' },
-      },
-      svgFn: (layers) => (
-        <svg viewBox="0 0 400 380" style={{width:'100%',height:'100%'}}>
-          {layers.bones && <>
-            <path d="M55 50 Q200 20 340 50 L340 160 Q290 185 200 188 Q110 185 55 160 Z" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="200" y="105" textAnchor="middle" fontSize="10" fill="#2a5a7a">Acetabulum / Ilium</text>
-            <circle cx="200" cy="175" r="55" fill="#d8e8f8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="200" y="178" textAnchor="middle" fontSize="11" fill="#2a5a7a">Femoral head</text>
-            <path d="M242 205 L290 300" stroke="#4a7fa5" strokeWidth="18" strokeLinecap="round" fill="none"/>
-            <text x="280" y="260" fontSize="9" fill="#2a5a7a">Fem. neck</text>
-          </>}
-          {layers.tendons && <>
-            <path d="M120 122 Q160 112 200 120 Q200 120 200 138 Q160 128 120 138 Z" fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1.5" opacity="0.85"/>
-            <text x="160" y="132" textAnchor="middle" fontSize="8" fill="#1a4a3a">Labrum</text>
-            <path d="M55 200 Q80 220 100 250" fill="none" stroke="#8bb8a8" strokeWidth="7" strokeLinecap="round" opacity="0.85"/>
-            <text x="55" y="235" fontSize="8" fill="#1a4a3a">Iliopsoas</text>
-            <path d="M310 160 Q330 200 335 250" fill="none" stroke="#6a9888" strokeWidth="6" strokeLinecap="round" opacity="0.8"/>
-            <text x="338" y="210" fontSize="8" fill="#1a4a3a">Glut. med.</text>
-          </>}
-          {layers.muscles && <>
-            <path d="M55 80 Q75 160 70 250" fill="none" stroke="#c07040" strokeWidth="14" strokeLinecap="round" opacity="0.5"/>
-            <text x="38" y="168" fontSize="8" fill="#7a4020">Iliopsoas m.</text>
-            <path d="M340 80 Q320 160 325 250" fill="none" stroke="#c07040" strokeWidth="14" strokeLinecap="round" opacity="0.5"/>
-            <text x="330" y="168" fontSize="8" fill="#7a4020">Glut. m.</text>
-          </>}
-          {layers.nerves && <>
-            <path d="M90 170 Q110 230 115 310" fill="none" stroke="#d97706" strokeWidth="3" strokeDasharray="6 3" opacity="0.9"/>
-            <text x="95" y="250" fontSize="8" fill="#d97706">Femoral n.</text>
-            <path d="M270 170 Q260 240 255 310" fill="none" stroke="#d97706" strokeWidth="3" strokeDasharray="6 3" opacity="0.9"/>
-            <text x="262" y="250" fontSize="8" fill="#d97706">Sciatic n.</text>
-          </>}
-          {layers.arteries && <>
-            <path d="M100 160 Q108 235 110 310" fill="none" stroke="#dc2626" strokeWidth="3" opacity="0.8"/>
-            <text x="112" y="238" fontSize="8" fill="#dc2626">Fem. a.</text>
-          </>}
-          {layers.veins && <>
-            <path d="M92 160 Q100 235 102 310" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeDasharray="4 2" opacity="0.7"/>
-            <text x="72" y="238" fontSize="8" fill="#7c3aed">Fem. v.</text>
-          </>}
-          <text x="200" y="368" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Hip — Coronal view</text>
-        </svg>
-      ),
-    },
-    ankle: {
-      label: 'Ankle',
-      layers: {
-        bones: { color: '#c8d8e8', stroke: '#4a7fa5', label: 'Bones' },
-        tendons: { color: '#8bb8a8', stroke: '#2d7a5a', label: 'Tendons / Ligaments' },
-        muscles: { color: '#f0c0a0', stroke: '#c07040', label: 'Muscles' },
-        nerves: { color: '#fde68a', stroke: '#d97706', label: 'Nerves' },
-        arteries: { color: '#fca5a5', stroke: '#dc2626', label: 'Arteries' },
-        veins: { color: '#c4b5fd', stroke: '#7c3aed', label: 'Veins' },
-      },
-      svgFn: (layers) => (
-        <svg viewBox="0 0 400 380" style={{width:'100%',height:'100%'}}>
-          {layers.bones && <>
-            <rect x="130" y="20" width="90" height="140" rx="8" fill="#d8e8f8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="175" y="92" textAnchor="middle" fontSize="10" fill="#2a5a7a">Tibia</text>
-            <rect x="238" y="35" width="45" height="128" rx="6" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="260" y="98" textAnchor="middle" fontSize="8" fill="#2a5a7a">Fibula</text>
-            <path d="M115 160 Q175 150 260 160 L255 220 Q195 235 140 220 Z" fill="#d8e8f8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="190" y="195" textAnchor="middle" fontSize="10" fill="#2a5a7a">Talus</text>
-            <ellipse cx="148" cy="270" rx="60" ry="35" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="148" y="273" textAnchor="middle" fontSize="9" fill="#2a5a7a">Calcaneus</text>
-          </>}
-          {layers.tendons && <>
-            <path d="M155" y="20 L158 160" stroke="#8bb8a8" strokeWidth="10" strokeLinecap="round" opacity="0.85"/>
-            <text x="130" y="88" fontSize="8" fill="#1a4a3a">Tib. post.</text>
-            <path d="M175 20 L178 160" stroke="#8bb8a8" strokeWidth="8" strokeLinecap="round" opacity="0.8"/>
-            <text x="182" y="88" fontSize="8" fill="#1a4a3a">FHL</text>
-            <path d="M238 30 Q225 100 220 165" fill="none" stroke="#6a9888" strokeWidth="8" strokeLinecap="round" opacity="0.85"/>
-            <text x="225" y="60" fontSize="8" fill="#1a4a3a">Peroneal</text>
-            <path d="M120 130 Q160 148 220 135" fill="none" stroke="#2d7a5a" strokeWidth="5" opacity="0.8"/>
-            <text x="158" y="130" fontSize="8" fill="#1a4a3a">ATFL</text>
-            <path d="M170 300 Q200 310 240 300" fill="none" stroke="#2d7a5a" strokeWidth="7" strokeLinecap="round" opacity="0.85"/>
-            <text x="200" y="325" textAnchor="middle" fontSize="9" fill="#1a4a3a">Achilles</text>
-          </>}
-          {layers.nerves && <>
-            <path d="M163 20 Q165 100 162 165" fill="none" stroke="#d97706" strokeWidth="2.5" strokeDasharray="5 3" opacity="0.9"/>
-            <text x="120" y="115" fontSize="8" fill="#d97706">Tib. n.</text>
-          </>}
-          {layers.arteries && <>
-            <path d="M170 20 Q172 100 168 165" fill="none" stroke="#dc2626" strokeWidth="2.5" opacity="0.8"/>
-            <text x="175" y="115" fontSize="8" fill="#dc2626">Post. tib. a.</text>
-          </>}
-          {layers.veins && <>
-            <path d="M178 20 Q180 100 176 165" fill="none" stroke="#7c3aed" strokeWidth="2" strokeDasharray="4 2" opacity="0.7"/>
-          </>}
-          <text x="200" y="368" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Ankle — Sagittal / lateral view</text>
-        </svg>
-      ),
+  elbow: {
+    label: 'Elbow',
+    region: 'Upper Extremity',
+    folder: 'thorax',
+    slices: [1668, 1673, 1678, 1683, 1688],
+    defaultSlice: 1678,
+    view: 'Axial cryosection — distal arm / elbow region',
+    labels: {
+      bones:    [[65,50,'Humerus','#1e3a8a'],[25,50,'Humerus (L)','#1e3a8a']],
+      tendons:  [[70,40,'Biceps tendon','#14532d'],[60,60,'Triceps tendon','#14532d']],
+      muscles:  [[78,50,'Brachialis','#7c2d12'],[22,50,'Brachialis (L)','#7c2d12']],
+      nerves:   [[72,65,'Ulnar n.','#92400e'],[68,35,'Radial n.','#92400e']],
+      arteries: [[67,52,'Brachial a.','#991b1b']],
+      veins:    [[65,55,'Brachial v.','#4c1d95']],
     },
   },
-  'Pelvis & Spine': {
-    pelvis: {
-      label: 'Pelvis',
-      layers: {
-        bones: { color: '#c8d8e8', stroke: '#4a7fa5', label: 'Bones' },
-        tendons: { color: '#8bb8a8', stroke: '#2d7a5a', label: 'Tendons / Ligaments' },
-        muscles: { color: '#f0c0a0', stroke: '#c07040', label: 'Muscles' },
-        nerves: { color: '#fde68a', stroke: '#d97706', label: 'Nerves' },
-        arteries: { color: '#fca5a5', stroke: '#dc2626', label: 'Arteries' },
-        veins: { color: '#c4b5fd', stroke: '#7c3aed', label: 'Veins' },
-      },
-      svgFn: (layers) => (
-        <svg viewBox="0 0 400 380" style={{width:'100%',height:'100%'}}>
-          {layers.bones && <>
-            <path d="M55 80 Q200 40 345 80 L355 180 Q280 230 200 235 Q120 230 45 180 Z" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="200" y="130" textAnchor="middle" fontSize="10" fill="#2a5a7a">Ilium / Acetabulum</text>
-            <path d="M155 175 L170 175 L165 220 L160 220 Z" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5"/>
-            <path d="M230 175 L245 175 L240 220 L235 220 Z" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5"/>
-            <ellipse cx="170" cy="230" rx="28" ry="28" fill="#d8e8f8" stroke="#4a7fa5" strokeWidth="2"/>
-            <ellipse cx="230" cy="230" rx="28" ry="28" fill="#d8e8f8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="170" y="233" textAnchor="middle" fontSize="8" fill="#2a5a7a">FH</text>
-            <text x="230" y="233" textAnchor="middle" fontSize="8" fill="#2a5a7a">FH</text>
-            <path d="M160 195 L240 195 L240 210 L160 210 Z" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5" rx="4"/>
-            <text x="200" y="206" textAnchor="middle" fontSize="8" fill="#2a5a7a">Pubic symphysis</text>
-            <ellipse cx="200" cy="100" rx="35" ry="50" fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="2"/>
-            <text x="200" y="103" textAnchor="middle" fontSize="9" fill="#2a5a7a">Sacrum</text>
-          </>}
-          {layers.tendons && <>
-            <path d="M80 155 Q120 148 155 155" fill="none" stroke="#2d7a5a" strokeWidth="5" opacity="0.8"/>
-            <text x="112" y="148" fontSize="7" fill="#1a4a3a">SI lig.</text>
-            <path d="M165 210 Q200 215 235 210" fill="none" stroke="#2d7a5a" strokeWidth="4" opacity="0.8"/>
-            <text x="200" y="225" textAnchor="middle" fontSize="7" fill="#1a4a3a">Pub. sym.</text>
-          </>}
-          {layers.muscles && <>
-            <ellipse cx="110" cy="148" rx="42" ry="30" fill="#f0c0a0" stroke="#c07040" strokeWidth="1.5" opacity="0.6"/>
-            <text x="110" y="151" textAnchor="middle" fontSize="8" fill="#7a4020">Iliopsoas</text>
-            <ellipse cx="290" cy="148" rx="42" ry="30" fill="#f0c0a0" stroke="#c07040" strokeWidth="1.5" opacity="0.6"/>
-            <text x="290" y="151" textAnchor="middle" fontSize="8" fill="#7a4020">Gluteus</text>
-          </>}
-          {layers.nerves && <>
-            <path d="M150 160 Q148 240 145 310" fill="none" stroke="#d97706" strokeWidth="3" strokeDasharray="6 3" opacity="0.9"/>
-            <text x="118" y="240" fontSize="8" fill="#d97706">Femoral n.</text>
-            <path d="M250 160 Q252 240 255 310" fill="none" stroke="#d97706" strokeWidth="3" strokeDasharray="6 3" opacity="0.9"/>
-            <text x="258" y="240" fontSize="8" fill="#d97706">Sciatic n.</text>
-          </>}
-          {layers.arteries && <>
-            <path d="M200" y="50 L205 150" stroke="#dc2626" strokeWidth="3" opacity="0.8"/>
-            <path d="M205 150 Q175 165 155 190" stroke="#dc2626" strokeWidth="2.5" opacity="0.8" fill="none"/>
-            <path d="M205 150 Q225 165 245 190" stroke="#dc2626" strokeWidth="2.5" opacity="0.8" fill="none"/>
-            <text x="215" y="138" fontSize="8" fill="#dc2626">Iliac a.</text>
-          </>}
-          {layers.veins && <>
-            <path d="M195 50 L192 150" stroke="#7c3aed" strokeWidth="2.5" strokeDasharray="4 2" opacity="0.7"/>
-            <text x="168" y="138" fontSize="8" fill="#7c3aed">Iliac v.</text>
-          </>}
-          <text x="200" y="368" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Pelvis — Coronal view</text>
-        </svg>
-      ),
+  hip: {
+    label: 'Hip',
+    region: 'Lower Extremity',
+    folder: 'pelvis',
+    slices: [1760, 1770, 1780, 1790, 1800, 1810],
+    defaultSlice: 1780,
+    view: 'Axial cryosection — femoral head level',
+    labels: {
+      bones:    [[70,50,'Femoral head','#1e3a8a'],[30,50,'Femoral head (L)','#1e3a8a'],[50,30,'Sacrum','#1e3a8a'],[22,38,'Ilium (L)','#1e3a8a'],[78,38,'Ilium (R)','#1e3a8a']],
+      tendons:  [[65,60,'Iliopsoas tendon','#14532d'],[35,60,'Iliopsoas (L)','#14532d'],[72,45,'Labrum','#14532d']],
+      muscles:  [[80,50,'Gluteus max','#7c2d12'],[20,50,'Gluteus max (L)','#7c2d12'],[65,42,'Gluteus med','#7c2d12']],
+      nerves:   [[62,68,'Sciatic n.','#92400e'],[38,68,'Sciatic n. (L)','#92400e'],[67,35,'Femoral n.','#92400e']],
+      arteries: [[68,56,'Femoral a.','#991b1b'],[32,56,'Femoral a. (L)','#991b1b']],
+      veins:    [[70,60,'Femoral v.','#4c1d95'],[30,60,'Femoral v. (L)','#4c1d95']],
+    },
+  },
+  knee: {
+    label: 'Knee',
+    region: 'Lower Extremity',
+    folder: 'thighs',
+    slices: [2095, 2105, 2115, 2125, 2135, 2145],
+    defaultSlice: 2115,
+    view: 'Axial cryosection — distal femur / knee joint',
+    labels: {
+      bones:    [[68,50,'Distal femur','#1e3a8a'],[32,50,'Distal femur (L)','#1e3a8a'],[72,38,'Patella','#1e3a8a']],
+      tendons:  [[74,35,'Patellar tendon','#14532d'],[55,55,'ACL/PCL','#14532d'],[65,62,'Meniscus','#14532d']],
+      muscles:  [[80,40,'Biceps fem.','#7c2d12'],[74,55,'Gastroc.','#7c2d12'],[20,40,'Biceps fem. (L)','#7c2d12']],
+      nerves:   [[78,55,'Peroneal n.','#92400e'],[78,65,'Tibial n.','#92400e']],
+      arteries: [[62,65,'Popliteal a.','#991b1b']],
+      veins:    [[64,68,'Popliteal v.','#4c1d95']],
+    },
+  },
+  ankle: {
+    label: 'Ankle',
+    region: 'Lower Extremity',
+    folder: 'legs',
+    slices: [2680, 2690, 2700, 2710, 2720],
+    defaultSlice: 2700,
+    view: 'Axial cryosection — tibiotalar / ankle level',
+    labels: {
+      bones:    [[65,45,'Tibia','#1e3a8a'],[35,45,'Tibia (L)','#1e3a8a'],[72,50,'Fibula','#1e3a8a'],[28,50,'Fibula (L)','#1e3a8a']],
+      tendons:  [[60,35,'Post. tibial t.','#14532d'],[68,38,'FHL','#14532d'],[72,40,'Peroneal t.','#14532d'],[65,60,'Achilles','#14532d']],
+      muscles:  [[62,28,'Ant. compart.','#7c2d12'],[78,38,'Peroneal m.','#7c2d12']],
+      nerves:   [[63,35,'Post. tibial n.','#92400e'],[62,32,'Sural n.','#92400e']],
+      arteries: [[64,33,'Post. tibial a.','#991b1b']],
+      veins:    [[66,36,'Post. tibial v.','#4c1d95']],
+    },
+  },
+  pelvis: {
+    label: 'Pelvis / SI',
+    region: 'Pelvis & Spine',
+    folder: 'pelvis',
+    slices: [1840, 1850, 1860, 1870, 1880, 1890],
+    defaultSlice: 1860,
+    view: 'Axial cryosection — sacroiliac joint / acetabulum level',
+    labels: {
+      bones:    [[50,35,'Sacrum','#1e3a8a'],[22,38,'Ilium (L)','#1e3a8a'],[78,38,'Ilium (R)','#1e3a8a'],[72,55,'Acetabulum','#1e3a8a']],
+      tendons:  [[50,52,'SI ligaments','#14532d'],[55,68,'Inguinal lig.','#14532d']],
+      muscles:  [[65,45,'Iliacus','#7c2d12'],[35,45,'Iliacus (L)','#7c2d12'],[72,55,'Piriformis','#7c2d12']],
+      nerves:   [[62,62,'Sciatic n.','#92400e'],[38,62,'Sciatic n. (L)','#92400e']],
+      arteries: [[62,45,'Iliac a.','#991b1b'],[38,45,'Iliac a. (L)','#991b1b']],
+      veins:    [[60,48,'Iliac v.','#4c1d95'],[40,48,'Iliac v. (L)','#4c1d95']],
     },
   },
 };
+
+// Group joints by region for the dropdown
+const ATLAS_REGIONS_MAP = {};
+Object.entries(ATLAS_JOINTS).forEach(([k, v]) => {
+  if (!ATLAS_REGIONS_MAP[v.region]) ATLAS_REGIONS_MAP[v.region] = {};
+  ATLAS_REGIONS_MAP[v.region][k] = v;
+});
 
 // ─── ANATOMY ATLAS MODAL ───────────────────────────────────────────────────
 function AtlasModal({ onClose }) {
   const [selectedRegion, setSelectedRegion] = useState('Upper Extremity');
   const [selectedJoint, setSelectedJoint] = useState('shoulder');
-  const [layers, setLayers] = useState({ bones:true, tendons:true, muscles:true, nerves:true, arteries:true, veins:true });
+  const [layers, setLayers] = useState({ bones:true, tendons:false, muscles:false, nerves:false, arteries:false, veins:false });
+  const [sliceIdx, setSliceIdx] = useState(0);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
-  const regionJoints = ATLAS_REGIONS[selectedRegion] || {};
-  const jointData = regionJoints[selectedJoint] || Object.values(regionJoints)[0];
+  const regionJoints = ATLAS_REGIONS_MAP[selectedRegion] || {};
+  const jointData = ATLAS_JOINTS[selectedJoint];
 
   useEffect(() => {
-    const keys = Object.keys(ATLAS_REGIONS[selectedRegion] || {});
-    if (keys.length > 0) setSelectedJoint(keys[0]);
+    const keys = Object.keys(ATLAS_REGIONS_MAP[selectedRegion] || {});
+    if (keys.length > 0) {
+      setSelectedJoint(keys[0]);
+      const j = ATLAS_JOINTS[keys[0]];
+      setSliceIdx(j ? j.slices.indexOf(j.defaultSlice) : 0);
+    }
   }, [selectedRegion]);
+
+  useEffect(() => {
+    if (jointData) {
+      setSliceIdx(jointData.slices.indexOf(jointData.defaultSlice));
+      setImgLoaded(false);
+      setImgError(false);
+    }
+  }, [selectedJoint]);
+
+  const currentSlice = jointData ? jointData.slices[sliceIdx] : null;
+  const imgUrl = jointData && currentSlice ? `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png` : null;
 
   const toggleLayer = (k) => setLayers(prev => ({ ...prev, [k]: !prev[k] }));
   const allOn = Object.values(layers).every(Boolean);
   const toggleAll = () => { const v = !allOn; setLayers({bones:v,tendons:v,muscles:v,nerves:v,arteries:v,veins:v}); };
 
   const layerColors = { bones:'#4a7fa5', tendons:'#2d7a5a', muscles:'#c07040', nerves:'#d97706', arteries:'#dc2626', veins:'#7c3aed' };
+  const layerBg = { bones:'#dbeafe', tendons:'#d1fae5', muscles:'#ffedd5', nerves:'#fef3c7', arteries:'#fee2e2', veins:'#ede9fe' };
 
   return (
-    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}>
-      <div style={{ background:'white',borderRadius:16,width:'min(92vw,900px)',maxHeight:'90vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 25px 60px rgba(0,0,0,0.4)' }}>
-        <div style={{ background:'linear-gradient(135deg,#1e3a5f,#2563eb)',padding:'14px 20px',display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}>
+      <div style={{ background:'#0f172a',borderRadius:16,width:'min(96vw,1100px)',maxHeight:'92vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
+
+        {/* Header */}
+        <div style={{ background:'linear-gradient(135deg,#1e3a5f,#1d4ed8)',padding:'12px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
           <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-            <span style={{ fontSize:20 }}>🫁</span>
-            <span style={{ color:'white',fontWeight:800,fontSize:15,letterSpacing:'0.06em' }}>MSK ANATOMY ATLAS</span>
+            <span style={{ fontSize:18 }}>🔬</span>
+            <span style={{ color:'white',fontWeight:800,fontSize:14,letterSpacing:'0.08em' }}>VISIBLE HUMAN ATLAS</span>
+            <span style={{ background:'rgba(255,255,255,0.15)',color:'#bfdbfe',fontSize:10,padding:'2px 8px',borderRadius:20,fontWeight:600 }}>NLM Cryosection • Public Domain</span>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.15)',border:'none',color:'white',borderRadius:8,padding:'6px 14px',cursor:'pointer',fontSize:13,fontWeight:600 }}>✕ Close</button>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'5px 14px',cursor:'pointer',fontSize:13,fontWeight:600 }}>✕</button>
         </div>
+
         <div style={{ display:'flex',flex:1,overflow:'hidden',minHeight:0 }}>
-          {/* Col 1 — region/joint selector */}
-          <div style={{ width:160,borderRight:'1px solid #e2e8f0',padding:14,display:'flex',flexDirection:'column',gap:8,overflowY:'auto',background:'#f8fafc',flexShrink:0 }}>
-            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:0 }}>Region</p>
+
+          {/* Col 1 — joint selector */}
+          <div style={{ width:150,borderRight:'1px solid #1e293b',padding:12,display:'flex',flexDirection:'column',gap:6,overflowY:'auto',background:'#0f172a',flexShrink:0 }}>
+            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 4px' }}>Region</p>
             <select value={selectedRegion} onChange={e => setSelectedRegion(e.target.value)}
-              style={{ width:'100%',padding:'7px 8px',border:'1px solid #e2e8f0',borderRadius:7,fontSize:12,background:'white',color:'#1e293b' }}>
-              {Object.keys(ATLAS_REGIONS).map(r => <option key={r} value={r}>{r}</option>)}
+              style={{ width:'100%',padding:'6px 8px',border:'1px solid #334155',borderRadius:6,fontSize:11,background:'#1e293b',color:'#e2e8f0' }}>
+              {Object.keys(ATLAS_REGIONS_MAP).map(r => <option key={r} value={r}>{r}</option>)}
             </select>
-            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'8px 0 0' }}>Joint / Region</p>
+            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'10px 0 4px' }}>Joint</p>
             {Object.entries(regionJoints).map(([k, v]) => (
               <button key={k} onClick={() => setSelectedJoint(k)}
-                style={{ padding:'8px 10px',borderRadius:8,border:'1px solid ' + (selectedJoint===k ? '#2563eb' : '#e2e8f0'),background:selectedJoint===k ? '#eff6ff' : 'white',color:selectedJoint===k ? '#2563eb' : '#475569',fontSize:12,fontWeight:selectedJoint===k ? 700 : 400,cursor:'pointer',textAlign:'left' }}>
+                style={{ padding:'7px 10px',borderRadius:7,border:'1px solid '+(selectedJoint===k?'#3b82f6':'#334155'),background:selectedJoint===k?'#1e3a5f':'#1e293b',color:selectedJoint===k?'#93c5fd':'#94a3b8',fontSize:12,fontWeight:selectedJoint===k?700:400,cursor:'pointer',textAlign:'left',transition:'all 0.12s' }}>
                 {v.label}
               </button>
             ))}
           </div>
-          {/* Col 2 — SVG anatomy image */}
-          <div style={{ flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:16,overflowY:'auto',background:'white' }}>
-            {jointData ? jointData.svgFn(layers) : <div style={{ color:'#94a3b8',fontSize:13 }}>Select a joint</div>}
+
+          {/* Col 2 — image + overlays */}
+          <div style={{ flex:1,display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
+
+            {/* Slice navigator bar */}
+            {jointData && (
+              <div style={{ display:'flex',alignItems:'center',gap:8,padding:'8px 14px',background:'#0f172a',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
+                <button onClick={() => { setSliceIdx(i => Math.max(0,i-1)); setImgLoaded(false); }}
+                  disabled={sliceIdx===0}
+                  style={{ background:sliceIdx===0?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===0?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===0?0.4:1 }}>‹</button>
+                <div style={{ flex:1,display:'flex',gap:4,alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
+                  {jointData.slices.map((s,i) => (
+                    <button key={s} onClick={() => { setSliceIdx(i); setImgLoaded(false); }}
+                      style={{ padding:'3px 8px',borderRadius:5,border:'1px solid '+(i===sliceIdx?'#3b82f6':'#334155'),background:i===sliceIdx?'#1d4ed8':'#1e293b',color:i===sliceIdx?'white':'#64748b',fontSize:11,fontWeight:i===sliceIdx?700:400,cursor:'pointer',flexShrink:0 }}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => { setSliceIdx(i => Math.min(jointData.slices.length-1,i+1)); setImgLoaded(false); }}
+                  disabled={sliceIdx===jointData.slices.length-1}
+                  style={{ background:sliceIdx===jointData.slices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===jointData.slices.length-1?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===jointData.slices.length-1?0.4:1 }}>›</button>
+                <span style={{ color:'#475569',fontSize:10,whiteSpace:'nowrap',flexShrink:0 }}>Slice {currentSlice} • 1mm intervals</span>
+              </div>
+            )}
+
+            {/* Image + SVG overlay */}
+            <div style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
+              {!imgLoaded && !imgError && (
+                <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:'#475569',zIndex:2 }}>
+                  <div style={{ width:36,height:36,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
+                  <span style={{ fontSize:12 }}>Loading cryosection…</span>
+                </div>
+              )}
+              {imgError && (
+                <div style={{ color:'#ef4444',fontSize:13,textAlign:'center',padding:20 }}>
+                  <div style={{ fontSize:32,marginBottom:8 }}>⚠️</div>
+                  <div>Image unavailable</div>
+                  <div style={{ fontSize:11,color:'#64748b',marginTop:4 }}>Slice {currentSlice} — {imgUrl}</div>
+                </div>
+              )}
+              {imgUrl && (
+                <img
+                  key={imgUrl}
+                  src={imgUrl}
+                  onLoad={() => setImgLoaded(true)}
+                  onError={() => { setImgError(true); setImgLoaded(false); }}
+                  style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',display:imgLoaded?'block':'none',borderRadius:4 }}
+                  alt={`VHP axial section ${currentSlice}`}
+                  crossOrigin="anonymous"
+                />
+              )}
+              {/* SVG label overlay — positioned absolutely over image */}
+              {imgLoaded && jointData && (
+                <svg style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none' }} viewBox="0 0 100 100" preserveAspectRatio="none">
+                  {Object.entries(jointData.labels).map(([layerKey, labelList]) =>
+                    layers[layerKey] ? labelList.map(([x, y, text], li) => (
+                      <g key={layerKey+li}>
+                        <circle cx={x} cy={y} r="0.8" fill={layerColors[layerKey]} opacity="0.9"/>
+                        <rect x={x+1} y={y-2.2} width={text.length*1.55+2} height="4.5" rx="0.8" fill="rgba(0,0,0,0.72)"/>
+                        <text x={x+2} y={y+0.9} fontSize="3.2" fill={layerColors[layerKey]} fontFamily="monospace" fontWeight="700">{text}</text>
+                      </g>
+                    )) : null
+                  )}
+                </svg>
+              )}
+            </div>
+
+            {/* Bottom info bar */}
+            {jointData && (
+              <div style={{ padding:'6px 14px',background:'#0f172a',borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0 }}>
+                <span style={{ fontSize:10,color:'#64748b',fontStyle:'italic' }}>{jointData.view}</span>
+                <span style={{ fontSize:10,color:'#334155' }}>Source: NLM Visible Human Project (public domain)</span>
+              </div>
+            )}
           </div>
+
           {/* Col 3 — layer toggles */}
-          <div style={{ width:148,borderLeft:'1px solid #e2e8f0',padding:14,display:'flex',flexDirection:'column',gap:8,background:'#f8fafc',flexShrink:0 }}>
-            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:0 }}>Layers</p>
+          <div style={{ width:140,borderLeft:'1px solid #1e293b',padding:12,display:'flex',flexDirection:'column',gap:6,background:'#0f172a',flexShrink:0,overflowY:'auto' }}>
+            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 4px' }}>Label Layers</p>
             <button onClick={toggleAll}
-              style={{ padding:'7px 10px',borderRadius:8,border:'1px solid #e2e8f0',background:allOn ? '#1e293b' : 'white',color:allOn ? 'white' : '#475569',fontSize:11,fontWeight:700,cursor:'pointer' }}>
+              style={{ padding:'6px 10px',borderRadius:7,border:'1px solid #334155',background:allOn?'#1d4ed8':'#1e293b',color:'white',fontSize:11,fontWeight:700,cursor:'pointer' }}>
               {allOn ? '⊗ All Off' : '⊕ All On'}
             </button>
             {Object.entries(layers).map(([k, on]) => (
               <button key={k} onClick={() => toggleLayer(k)}
-                style={{ padding:'8px 10px',borderRadius:8,border:'2px solid ' + (on ? layerColors[k] : '#e2e8f0'),background:on ? layerColors[k]+'18' : 'white',color:on ? layerColors[k] : '#94a3b8',fontSize:11,fontWeight:on ? 700 : 400,cursor:'pointer',textAlign:'left',transition:'all 0.15s' }}>
+                style={{ padding:'7px 10px',borderRadius:7,border:'1px solid '+(on?layerColors[k]:'#334155'),background:on?layerColors[k]+'22':'#1e293b',color:on?layerColors[k]:'#64748b',fontSize:11,fontWeight:on?700:400,cursor:'pointer',textAlign:'left',transition:'all 0.12s' }}>
                 {on ? '● ' : '○ '}{k.charAt(0).toUpperCase()+k.slice(1)}
               </button>
             ))}
-            <div style={{ marginTop:'auto',padding:'10px 8px',background:'#f0f9ff',borderRadius:8,border:'1px solid #bae6fd' }}>
-              <p style={{ fontSize:9,color:'#0369a1',margin:0,lineHeight:1.5 }}>Toggle layers to isolate anatomy. More joints coming soon.</p>
+            <div style={{ marginTop:'auto',padding:'10px 8px',background:'#1e293b',borderRadius:8,border:'1px solid #334155' }}>
+              <p style={{ fontSize:9,color:'#94a3b8',margin:0,lineHeight:1.6 }}>Real axial cryosections at 1mm intervals. Toggle labels to identify structures. Slices navigable with ‹ › buttons.</p>
             </div>
           </div>
         </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     </div>
   );
