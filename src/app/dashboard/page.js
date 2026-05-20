@@ -275,6 +275,7 @@ function AtlasModal({ onClose }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [sequence, setSequence] = useState('t1');
+  const sequenceRef = useRef('t1');
   const [labelMode, setLabelMode] = useState(false);
   const [userLabels, setUserLabels] = useState({});
   const [pendingClick, setPendingClick] = useState(null);
@@ -310,7 +311,7 @@ function AtlasModal({ onClose }) {
       e.preventDefault();
       if (!jointData) return;
       setSliceIdx(i => {
-        const seqD = jointData?.sequences?.[sequence] || null;
+        const seqD = jointData?.sequences?.[sequenceRef.current] || null;
         const slices = seqD ? seqD.slices : jointData.slices;
         const next = e.deltaY > 0 ? Math.min(slices.length-1, i+1) : Math.max(0, i-1);
         if (next !== i) setImgLoaded(false);
@@ -455,7 +456,7 @@ function AtlasModal({ onClose }) {
               <div style={{ display:'flex',gap:4,padding:'6px 14px',background:'#0a0f1a',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
                 <span style={{ fontSize:10,color:'#475569',fontWeight:600,alignSelf:'center',marginRight:4 }}>SEQUENCE:</span>
                 {Object.entries(jointData.sequences).map(([key, sq]) => (
-                  <button key={key} onClick={() => setSequence(key)}
+                  <button key={key} onClick={() => { setSequence(key); sequenceRef.current = key; }}
                     style={{ padding:'4px 12px',borderRadius:6,border:'1px solid '+(sequence===key?'#3b82f6':'#334155'),background:sequence===key?'#1d4ed8':'#1e293b',color:sequence===key?'white':'#64748b',fontSize:11,fontWeight:sequence===key?700:400,cursor:'pointer',transition:'all 0.1s' }}>
                     {sq.label}
                   </button>
@@ -491,7 +492,7 @@ function AtlasModal({ onClose }) {
                 <button onClick={() => { setSliceIdx(i => Math.min(activeSlices.length-1,i+1)); setImgLoaded(false); }}
                   disabled={sliceIdx===activeSlices.length-1}
                   style={{ background:sliceIdx===activeSlices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===activeSlices.length-1?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===activeSlices.length-1?0.4:1,flexShrink:0 }}>›</button>
-                <span style={{ color:'#475569',fontSize:10,whiteSpace:'nowrap',flexShrink:0 }}>{jointData.useLocalMRI ? 'T2 MRI' : '1mm intervals'}</span>
+
               </div>
             )}
 
@@ -563,7 +564,7 @@ function AtlasModal({ onClose }) {
             {jointData && (
               <div style={{ padding:'6px 14px',background:'#0f172a',borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0 }}>
                 <span style={{ fontSize:10,color:'#64748b',fontStyle:'italic' }}>{jointData.view}</span>
-                <span style={{ fontSize:10,color:'#334155' }}>{jointData.useLocalMRI ? 'T2 MRI — de-identified' : 'NLM Visible Human Project'}</span>
+                <span style={{ fontSize:10,color:'#334155' }}>''</span>
               </div>
             )}
           </div>
