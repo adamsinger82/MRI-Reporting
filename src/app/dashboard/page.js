@@ -243,10 +243,10 @@ const ATLAS_JOINTS = {
     slices: Array.from({length:100},(_,i)=>i+1),
     defaultSlice: 35,
     useLocalMRI: true,
-    localPath: '/atlas/pelvis/pelvis_',
+    localPath: '/atlas/pelvis/pelvis_', localExt: '.webp',
     sequences: {
-      t1: { label:'T1', path:'/atlas/pelvis/pelvis_', slices:Array.from({length:100},(_,i)=>i+1), ext:'.jpg' },
-      dess: { label:'DESS', path:'/atlas/pelvis_dess/dess_', slices:Array.from({length:206},(_,i)=>i+25), ext:'.jpg' },
+      t1: { label:'T1', path:'/atlas/pelvis/pelvis_', slices:Array.from({length:100},(_,i)=>i+1), ext:'.webp' },
+      dess: { label:'DESS', path:'/atlas/pelvis_dess/dess_', slices:Array.from({length:206},(_,i)=>i+25), ext:'.webp' },
     },
     view: 'Axial MRI — pelvis without contrast',
     labels: {
@@ -310,7 +310,9 @@ function AtlasModal({ onClose }) {
       e.preventDefault();
       if (!jointData) return;
       setSliceIdx(i => {
-        const next = e.deltaY > 0 ? Math.min(jointData.slices.length-1, i+1) : Math.max(0, i-1);
+        const seqD = jointData?.sequences?.[sequence] || null;
+        const slices = seqD ? seqD.slices : jointData.slices;
+        const next = e.deltaY > 0 ? Math.min(slices.length-1, i+1) : Math.max(0, i-1);
         if (next !== i) setImgLoaded(false);
         return next;
       });
@@ -319,6 +321,7 @@ function AtlasModal({ onClose }) {
     return () => el.removeEventListener('wheel', handleWheel);
   }, [jointData]);
 
+  // Preload full stack when joint or sequence changes
   useEffect(() => {
     if (!jointData) return;
     const src = seqData || (jointData.useLocalMRI ? jointData : null);
@@ -326,14 +329,39 @@ function AtlasModal({ onClose }) {
     const sliceArr = seqData ? seqData.slices : jointData.slices;
     const pathFn = seqData
       ? (i) => `${seqData.path}${String(sliceArr[i]).padStart(3,'0')}${seqData.ext}`
-      : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}.jpg`;
-    [-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].forEach(offset => {
-      const idx = sliceIdx + offset;
-      if (idx >= 0 && idx < sliceArr.length) {
+      : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
+    // Preload all slices in batches to avoid overwhelming the browser
+    let idx = 0;
+    const batchSize = 20;
+    const loadBatch = () => {
+      const end = Math.min(idx + batchSize, sliceArr.length);
+      for (let i = idx; i < end; i++) {
         const img = new Image();
-        img.src = pathFn(idx);
+        img.src = pathFn(i);
       }
-    });
+      idx = end;
+      if (idx < sliceArr.length) setTimeout(loadBatch, 100);
+    };
+    loadBatch();
+  }, [selectedJoint, sequence]);
+
+  // Also preload ±15 around current slice for immediate neighbors
+  useEffect(() => {
+    if (!jointData) return;
+    const src = seqData || (jointData.useLocalMRI ? jointData : null);
+    if (!src) return;
+    const sliceArr = seqData ? seqData.slices : jointData.slices;
+    const pathFn = seqData
+      ? (i) => `${seqData.path}${String(sliceArr[i]).padStart(3,'0')}${seqData.ext}`
+      : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
+    for (let offset = -15; offset <= 15; offset++) {
+      if (offset === 0) continue;
+      const i = sliceIdx + offset;
+      if (i >= 0 && i < sliceArr.length) {
+        const img = new Image();
+        img.src = pathFn(i);
+      }
+    }
   }, [sliceIdx, jointData, sequence]);
 
   useEffect(() => {
@@ -349,7 +377,7 @@ function AtlasModal({ onClose }) {
     ? seqData
       ? `${seqData.path}${String(currentSlice).padStart(3,'0')}${seqData.ext}`
       : jointData.useLocalMRI
-        ? `${jointData.localPath}${String(currentSlice).padStart(3,'0')}.jpg`
+        ? `${jointData.localPath}${String(currentSlice).padStart(3,'0')}${jointData.localExt||'.webp'}`
         : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
     : null;
 
@@ -441,7 +469,7 @@ function AtlasModal({ onClose }) {
                 <button onClick={() => { setSliceIdx(i => Math.max(0,i-1)); setImgLoaded(false); }}
                   disabled={sliceIdx===0}
                   style={{ background:sliceIdx===0?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===0?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===0?0.4:1,flexShrink:0 }}>‹</button>
-                {jointData.slices.length > 10 ? (
+                {activeSlices.length > 10 ? (
                   <div style={{ flex:1,display:'flex',alignItems:'center',gap:8 }}>
                     <input type="range" min={0} max={activeSlices.length-1} value={sliceIdx}
                       onChange={e => { setSliceIdx(Number(e.target.value)); setImgLoaded(false); }}
@@ -452,7 +480,7 @@ function AtlasModal({ onClose }) {
                   </div>
                 ) : (
                   <div style={{ flex:1,display:'flex',gap:4,alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
-                    {jointData.slices.map((s,i) => (
+                    {activeSlices.map((s,i) => (
                       <button key={s} onClick={() => { setSliceIdx(i); setImgLoaded(false); }}
                         style={{ padding:'3px 8px',borderRadius:5,border:'1px solid '+(i===sliceIdx?'#3b82f6':'#334155'),background:i===sliceIdx?'#1d4ed8':'#1e293b',color:i===sliceIdx?'white':'#64748b',fontSize:11,fontWeight:i===sliceIdx?700:400,cursor:'pointer',flexShrink:0 }}>
                         {s}
@@ -462,7 +490,7 @@ function AtlasModal({ onClose }) {
                 )}
                 <button onClick={() => { setSliceIdx(i => Math.min(activeSlices.length-1,i+1)); setImgLoaded(false); }}
                   disabled={sliceIdx===activeSlices.length-1}
-                  style={{ background:sliceIdx===activeSlices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===jointData.slices.length-1?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===jointData.slices.length-1?0.4:1,flexShrink:0 }}>›</button>
+                  style={{ background:sliceIdx===activeSlices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===activeSlices.length-1?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===activeSlices.length-1?0.4:1,flexShrink:0 }}>›</button>
                 <span style={{ color:'#475569',fontSize:10,whiteSpace:'nowrap',flexShrink:0 }}>{jointData.useLocalMRI ? 'T2 MRI' : '1mm intervals'}</span>
               </div>
             )}
