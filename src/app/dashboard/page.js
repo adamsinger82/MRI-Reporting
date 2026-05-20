@@ -6,19 +6,33 @@ const BODY_PARTS = ['knee','shoulder','hip','wrist','elbow','ankle','spine','pel
 const BILATERAL = ['spine','pelvis'];
 
 const ANATOMY = {
-  knee: 'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Soft Tissues',
-  shoulder: 'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenohumeral Joint, Glenoid Labrum, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
-  hip: 'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Soft Tissues',
-  wrist: 'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve, Articular Cartilage, Bones, Soft Tissues',
-  elbow: 'Ulnar Collateral Ligament, Radial Collateral Ligament Complex, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Triceps Tendon, Ulnar Nerve, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
-  ankle: 'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
-  spine: 'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs (each level), Spinal Canal, Neural Foramina, Facet Joints, Paraspinal Soft Tissues',
-  pelvis: 'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues',
-  foot: 'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
+  knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Soft Tissues',
+  shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenohumeral Joint, Glenoid Labrum, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
+  hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Soft Tissues',
+  wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve, Articular Cartilage, Bones, Soft Tissues',
+  elbow:'Ulnar Collateral Ligament, Radial Collateral Ligament Complex, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Triceps Tendon, Ulnar Nerve, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
+  ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
+  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs (each level), Spinal Canal, Neural Foramina, Facet Joints, Paraspinal Soft Tissues',
+  pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues',
+  foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
 };
 
-function buildPrompt(part, lat, con, spineRegion) {
-  return `You are a subspecialty MSK radiologist generating a structured MRI report.
+function buildPrompt(part, lat, con, spineRegion, modality) {
+  const isCT = modality === 'CT';
+  const modalityName = isCT ? 'CT' : 'MRI';
+  const techniqueText = isCT
+    ? `CT scan of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast. Multiplanar reformats were created. One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.`
+    : `Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast.`;
+
+  const findingsRules = isCT
+    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern. No T1/T2/STIR/marrow signal language. 4. BONES RULE — address all three: Fracture/cortical disruption (or "No fracture or cortical disruption."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion.") — three sentences on same line. Example: "Bones: No fracture or cortical disruption. No osteonecrosis. No aggressive osseous lesion."`
+    : `FINDINGS RULES: 1. Not mentioned: write "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — address all three: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion."`;
+
+  const normalImpressionText = isCT
+    ? `If entirely normal: "No significant CT findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`
+    : `If entirely normal: "No significant MRI findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`;
+
+  return `You are a subspecialty MSK radiologist generating a structured ${modalityName} report.
 
 CRITICAL FORMATTING RULES — these override everything:
 - NEVER use markdown. No asterisks, no bold (**text**), no dashes (---), no bullet points, no underscores.
@@ -28,31 +42,18 @@ CRITICAL FORMATTING RULES — these override everything:
 
 ANATOMY TO COVER for ${part}: ${ANATOMY[part]}
 Generate a subheading for EVERY structure listed above.
-
-FINDINGS RULES:
-1. Structures not mentioned in dictation: write "intact" only.
-2. Structures mentioned as normal: write "intact."
-3. Positive findings: use ONLY the exact words dictated. No added morphology, signal, measurements, tear type, grade, or any unstated detail.
-4. No clinical recommendations.
-5. BONES RULE — special rule for any subheading that is "Bones:" or contains "Bone": Always address all three of the following, positive or negative:
-   - Fracture/contusion: state what was dictated, or "No fracture or contusion."
-   - Osteonecrosis/AVN: state what was dictated, or "No osteonecrosis."
-   - Marrow signal: state what was dictated, or "No marrow infiltration or bone lesion."
-   Write these as three separate sentences on the same line after the "Bones:" subheading.
-   Example if normal: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion."
-   Example if fracture only dictated: "Bones: Fracture [exactly as dictated]. No osteonecrosis. No marrow infiltration or bone lesion."
-
+${findingsRules}
 IMPRESSION RULES:
 - Synthesize positive findings into a clinically meaningful, concise impression.
 - Group related findings under a unifying diagnosis where appropriate.
 - Number each impression item. Most important first.
 - Use concise MSK radiology impression language.
-- If entirely normal: "No significant MRI findings of the ${lat ? lat + ' ' : ''}${part}."
+- ${normalImpressionText}
 
 FORMAT — use exactly this structure:
 
 TECHNIQUE:
-Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part} ${con} IV contrast.
+${techniqueText}
 
 FINDINGS:
 Structure Name: finding
@@ -70,14 +71,12 @@ IMPRESSION:
 
 function formatReport(txt) {
   if (!txt) return null;
-  // Strip markdown artifacts and normalize
   const cleaned = txt
     .replace(/\bunremarkable\b/gi, 'intact')
-    .replace(/\*\*/g, '')           // remove all ** bold markers
-    .replace(/^---+$/gm, '')        // remove horizontal rule lines
-    .replace(/^\s*[-•]\s+/gm, '');  // remove bullet points
+    .replace(/\*\*/g, '')
+    .replace(/^---+$/gm, '')
+    .replace(/^\s*[-•]\s+/gm, '');
 
-  // Track whether we're inside IMPRESSION section
   let inImpression = false;
 
   return cleaned.split('\n').map((line, i) => {
@@ -94,7 +93,6 @@ function formatReport(txt) {
       );
     }
 
-    // Numbered impression items — black not red
     const isNumbered = /^\d+\./.test(t);
     if (isNumbered || inImpression) {
       const num = t.match(/^\d+\./)?.[0];
@@ -106,22 +104,19 @@ function formatReport(txt) {
       );
     }
 
-    // Subheadings: "Structure: value" — colon must be within first 60 chars
     const colonIdx = t.indexOf(':');
     const isSubheader = colonIdx > 0 && colonIdx < 60 && /^[A-Z]/.test(t);
     if (isSubheader) {
       const label = t.slice(0, colonIdx + 1);
       const value = t.slice(colonIdx + 1).trim();
-      // Negative if: intact, no significant canal/foraminal narrowing, or all-negative bones text
       const isAllNeg = /^intact\.?$/i.test(value) ||
                        /^no significant canal or foraminal narrowing\.?$/i.test(value) ||
-                       /^no fracture or contusion\. no osteonecrosis\. no marrow infiltration or bone lesion\.?$/i.test(value);
-      // Mixed bones: has both positive and negative components — split and color individually
+                       /^no fracture or contusion\. no osteonecrosis\. no marrow infiltration or bone lesion\.?$/i.test(value) ||
+                       /^no fracture or cortical disruption\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value);
       const isBones = /^bones/i.test(label);
       if (isBones && !isAllNeg) {
-        // Split into sentences and color each
         const sentences = value.match(/[^.!?]+[.!?]*/g) || [value];
-        const negPattern = /^(no fracture|no osteonecrosis|no marrow|no avascular|no bone lesion)/i;
+        const negPattern = /^(no fracture|no osteonecrosis|no marrow|no avascular|no bone lesion|no aggressive|no cortical)/i;
         return (
           <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{label} </span>
@@ -141,7 +136,6 @@ function formatReport(txt) {
       );
     }
 
-    // Plain continuation text (e.g. wrapped long finding lines)
     return <div key={i} style={{ fontSize: 13, color: inImpression ? '#1e293b' : '#dc2626', fontWeight: inImpression ? 400 : 500, lineHeight: 1.8, paddingLeft: 4 }}>{t}</div>;
   });
 }
@@ -160,10 +154,7 @@ function ReferencePanel({ selectedBodyPart }) {
         <select style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, background: 'white', cursor: 'pointer', color: '#1e293b', boxSizing: 'border-box' }}
           value={selectedMeasurementId} onChange={e => setSelectedMeasurementId(e.target.value)}>
           <option value="">— Select a measurement —</option>
-          {jointData.measurements.slice(0, 5).map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-          {Array.from({ length: Math.max(0, 5 - jointData.measurements.length) }).map((_, i) => (
-            <option key={`empty-${i}`} disabled value="">── slot {jointData.measurements.length + i + 1} ──</option>
-          ))}
+          {jointData.measurements.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
         </select>
         {selectedMeasurement ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -213,6 +204,7 @@ export default function DashboardPage() {
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
   const [side, setSide] = useState('left');
   const [contrast, setContrast] = useState('without');
+  const [modality, setModality] = useState('MRI');
   const [dictationText, setDictationText] = useState('');
   const [generatedReport, setGeneratedReport] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -223,7 +215,15 @@ export default function DashboardPage() {
   const recognitionRef = useRef(null);
 
   const showSide = !BILATERAL.includes(selectedBodyPart);
-  const technique = `Multiplanar multisequence MRI of the${showSide ? ' ' + side : ''}${selectedBodyPart === 'spine' ? ' ' + spineRegion : ''} ${selectedBodyPart} ${contrast} IV contrast.`;
+  const isCT = modality === 'CT';
+
+  const partLabel = selectedBodyPart === 'spine' ? `${spineRegion} spine` : selectedBodyPart;
+  const sideLabel = showSide ? `${side} ` : '';
+  const contrastLabel = contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without';
+
+  const technique = isCT
+    ? `CT scan of the ${sideLabel}${partLabel} ${contrastLabel} IV contrast. Multiplanar reformats were created. One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.`
+    : `Multiplanar multisequence MRI of the ${sideLabel}${partLabel} ${contrastLabel} IV contrast.`;
 
   const generateReport = async () => {
     if (!dictationText.trim()) return;
@@ -237,7 +237,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 1500,
-          system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion),
+          system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality),
           messages: [{ role: 'user', content: `Dictated findings:\n\n${dictationText}` }],
         }),
       });
@@ -278,7 +278,6 @@ export default function DashboardPage() {
         setDictationText(finalTranscriptRef.current + interim);
       };
       recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
         if (event.error === 'not-allowed') { setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
       };
       recognition.onend = () => {
@@ -308,15 +307,35 @@ export default function DashboardPage() {
   const inp = { width: '100%', padding: '9px 12px', border: '1px solid #dde3ed', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', color: '#1e293b', outline: 'none', background: 'white' };
   const lbl = { fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 5 };
 
+  // CT toggle colors
+  const mriActive = !isCT;
+  const toggleBg = isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#1d4ed8,#4f46e5)';
+
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg,#0d1b2a 0%,#1a3a5c 45%,#0d1b2a 100%)', fontFamily: "'Segoe UI',system-ui,sans-serif" }}>
 
       <div style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#2563eb,#7c3aed)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🦴</div>
         <div>
-          <div style={{ color: 'white', fontWeight: 700, fontSize: 16, letterSpacing: '0.02em' }}>MSK MRI Reporting</div>
+          <div style={{ color: 'white', fontWeight: 700, fontSize: 16, letterSpacing: '0.02em' }}>MSK Reporting</div>
           <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>Advanced MSK Radiology Tools</div>
         </div>
+
+        {/* MRI / CT Toggle */}
+        <div style={{ marginLeft: 16, display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 3, gap: 2 }}>
+          {['MRI','CT'].map(m => (
+            <button key={m} onClick={() => setModality(m)}
+              style={{
+                padding: '6px 18px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', transition: 'all 0.2s',
+                background: modality === m ? (m === 'CT' ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#1d4ed8,#4f46e5)') : 'transparent',
+                color: modality === m ? 'white' : 'rgba(255,255,255,0.45)',
+                boxShadow: modality === m ? '0 2px 8px rgba(0,0,0,0.25)' : 'none',
+              }}>
+              {m}
+            </button>
+          ))}
+        </div>
+
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 999, padding: '4px 10px' }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
           <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>LIVE</span>
@@ -326,8 +345,11 @@ export default function DashboardPage() {
       <div className="msk-grid">
 
         <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ background: 'linear-gradient(135deg,#1d4ed8,#2563eb)', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 15 }}>📝</span><span style={{ color: 'white', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Dictation Input</span>
+          <div style={{ background: isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#1d4ed8,#2563eb)', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 15 }}>{isCT ? '🔬' : '📝'}</span>
+            <span style={{ color: 'white', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+              {isCT ? 'CT' : 'MRI'} Dictation Input
+            </span>
           </div>
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -351,13 +373,17 @@ export default function DashboardPage() {
             </div>
             <div><label style={lbl}>Contrast</label>
               <select style={inp} value={contrast} onChange={e => setContrast(e.target.value)}>
-                <option value="without">Without IV contrast</option><option value="with">With IV contrast</option><option value="with and without">With and without IV contrast</option>
+                <option value="without">Without IV contrast</option>
+                <option value="with">With IV contrast</option>
+                <option value="with and without">With and without IV contrast</option>
               </select>
             </div>
-            <div style={{ padding: '9px 12px', background: 'linear-gradient(135deg,#eff6ff,#f0f9ff)', borderRadius: 8, border: '1px solid #bfdbfe', fontSize: 12, color: '#1d4ed8', fontStyle: 'italic', lineHeight: 1.5 }}>{technique}</div>
+            <div style={{ padding: '9px 12px', background: isCT ? 'linear-gradient(135deg,#ecfeff,#f0f9ff)' : 'linear-gradient(135deg,#eff6ff,#f0f9ff)', borderRadius: 8, border: isCT ? '1px solid #a5f3fc' : '1px solid #bfdbfe', fontSize: 12, color: isCT ? '#0e7490' : '#1d4ed8', fontStyle: 'italic', lineHeight: 1.6 }}>
+              {technique}
+            </div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}><label style={lbl}>Findings</label>
               <textarea className="msk-textarea" style={{ ...inp, flex: 1, minHeight: 160, resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', border: isListening ? '1.5px solid #ef4444' : '1px solid #dde3ed', boxShadow: isListening ? '0 0 0 3px rgba(239,68,68,0.1)' : 'none', transition: 'all 0.15s' }}
-                value={dictationText} onChange={e => setDictationText(e.target.value)} placeholder="Type or dictate findings here…" />
+                value={dictationText} onChange={e => setDictationText(e.target.value)} placeholder={`Type or dictate ${isCT ? 'CT' : 'MRI'} findings here…`} />
             </div>
             {micError && <div style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 7, padding: '7px 10px', lineHeight: 1.5 }}>{micError}</div>}
             <button onClick={isListening ? stopListening : toggleListening}
@@ -366,8 +392,8 @@ export default function DashboardPage() {
               {isListening ? '⏹ Stop Recording' : '🎤 Start Dictation'}
             </button>
             <button onClick={generateReport} disabled={isGenerating || !dictationText.trim()}
-              style={{ width: '100%', padding: 12, borderRadius: 9, border: 'none', background: (isGenerating || !dictationText.trim()) ? '#e2e8f0' : 'linear-gradient(135deg,#2563eb,#4f46e5)', color: (isGenerating || !dictationText.trim()) ? '#94a3b8' : 'white', fontSize: 14, fontWeight: 700, cursor: (isGenerating || !dictationText.trim()) ? 'not-allowed' : 'pointer', boxShadow: (isGenerating || !dictationText.trim()) ? 'none' : '0 4px 16px rgba(37,99,235,0.35)', letterSpacing: '0.02em' }}>
-              {isGenerating ? '⏳ Generating…' : '✨ Generate Report'}
+              style={{ width: '100%', padding: 12, borderRadius: 9, border: 'none', background: (isGenerating || !dictationText.trim()) ? '#e2e8f0' : (isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#2563eb,#4f46e5)'), color: (isGenerating || !dictationText.trim()) ? '#94a3b8' : 'white', fontSize: 14, fontWeight: 700, cursor: (isGenerating || !dictationText.trim()) ? 'not-allowed' : 'pointer', boxShadow: (isGenerating || !dictationText.trim()) ? 'none' : '0 4px 16px rgba(37,99,235,0.35)', letterSpacing: '0.02em' }}>
+              {isGenerating ? '⏳ Generating…' : `✨ Generate ${isCT ? 'CT' : 'MRI'} Report`}
             </button>
           </div>
         </div>
