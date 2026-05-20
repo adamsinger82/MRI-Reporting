@@ -333,9 +333,10 @@ function AtlasModal({ onClose }) {
       : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
     : null;
 
+  const imgRef = useRef(null);
   const handleImageClick = (e) => {
-    if (!labelMode || !imgContainerRef.current) return;
-    const rect = imgContainerRef.current.getBoundingClientRect();
+    if (!labelMode || !imgRef.current) return;
+    const rect = imgRef.current.getBoundingClientRect();
     const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
     const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
     setPendingClick({ x, y });
@@ -451,45 +452,45 @@ function AtlasModal({ onClose }) {
                 </div>
               )}
               {imgUrl && (
-                <img key={imgUrl} src={imgUrl}
+                <img key={imgUrl} src={imgUrl} ref={imgRef}
                   onLoad={() => setImgLoaded(true)}
                   onError={() => { setImgError(true); setImgLoaded(false); }}
                   style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',display:imgLoaded?'block':'none',borderRadius:4,userSelect:'none' }}
                   alt={`Axial MRI slice ${currentSlice}`}
                 />
               )}
-              {/* User label overlay */}
-              {imgLoaded && currentLabels.length > 0 && (
-                <svg style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none' }} viewBox="0 0 100 100" preserveAspectRatio="none">
-                  {currentLabels.map(([x, y, text], li) => (
-                    <g key={li}>
-                      <circle cx={x} cy={y} r="0.9" fill="#facc15" opacity="0.95"/>
-                      <rect x={x+1.2} y={y-2.5} width={text.length*1.5+2} height="4.8" rx="0.8" fill="rgba(0,0,0,0.82)"/>
-                      <text x={x+2.2} y={y+1} fontSize="3.2" fill="#facc15" fontFamily="monospace" fontWeight="700">{text}</text>
-                    </g>
-                  ))}
-                </svg>
-              )}
-              {/* Pending label dot */}
-              {pendingClick && imgLoaded && (
-                <div style={{ position:'absolute', left:`${pendingClick.x}%`, top:`${pendingClick.y}%`, transform:'translate(-50%,-50%)', zIndex:10 }}>
-                  <div style={{ width:10,height:10,borderRadius:'50%',background:'#facc15',border:'2px solid white',boxShadow:'0 0 6px rgba(250,204,21,0.8)' }}/>
-                </div>
-              )}
-              {/* Label input popup */}
-              {pendingClick && (
-                <div style={{ position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',background:'#1e293b',border:'1px solid #3b82f6',borderRadius:10,padding:14,zIndex:20,minWidth:220,boxShadow:'0 8px 32px rgba(0,0,0,0.7)' }}>
-                  <p style={{ margin:'0 0 8px',fontSize:11,color:'#93c5fd',fontWeight:700 }}>Label this structure</p>
-                  <input autoFocus value={pendingText} onChange={e => setPendingText(e.target.value)}
-                    onKeyDown={e => { if (e.key==='Enter') saveLabel(); if (e.key==='Escape') setPendingClick(null); }}
-                    placeholder="e.g. Right femoral head"
-                    style={{ width:'100%',padding:'6px 8px',background:'#0f172a',border:'1px solid #475569',borderRadius:6,color:'#e2e8f0',fontSize:12,outline:'none',boxSizing:'border-box' }}/>
-                  <div style={{ display:'flex',gap:6,marginTop:8 }}>
-                    <button onClick={saveLabel} style={{ flex:1,padding:'6px',background:'#1d4ed8',border:'none',borderRadius:6,color:'white',fontSize:11,fontWeight:700,cursor:'pointer' }}>Save</button>
-                    <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'6px',background:'#334155',border:'none',borderRadius:6,color:'#94a3b8',fontSize:11,cursor:'pointer' }}>Cancel</button>
+              {/* User label overlay — positioned over actual image using imgRef bounds */}
+              {imgLoaded && imgRef.current && currentLabels.length > 0 && (() => {
+                const ir = imgRef.current.getBoundingClientRect();
+                const cr = imgContainerRef.current.getBoundingClientRect();
+                const ol = ir.left - cr.left;
+                const ot = ir.top - cr.top;
+                const ow = ir.width;
+                const oh = ir.height;
+                return (
+                  <svg style={{ position:'absolute',left:ol,top:ot,width:ow,height:oh,pointerEvents:'none',overflow:'visible' }} viewBox="0 0 100 100" preserveAspectRatio="none">
+                    {currentLabels.map(([x, y, text], li) => (
+                      <g key={li}>
+                        <circle cx={x} cy={y} r="1.2" fill="#facc15" opacity="0.95"/>
+                        <rect x={x+1.5} y={y-2.8} width={text.length*1.8+2} height="5.2" rx="0.8" fill="rgba(0,0,0,0.85)"/>
+                        <text x={x+2.5} y={y+1.1} fontSize="2.8" fill="#facc15" fontFamily="monospace" fontWeight="700">{text}</text>
+                      </g>
+                    ))}
+                  </svg>
+                );
+              })()}
+              {/* Pending click dot — shows where user clicked */}
+              {pendingClick && imgLoaded && imgRef.current && (() => {
+                const ir = imgRef.current.getBoundingClientRect();
+                const cr = imgContainerRef.current.getBoundingClientRect();
+                const px = (ir.left - cr.left) + (pendingClick.x / 100 * ir.width);
+                const py = (ir.top - cr.top) + (pendingClick.y / 100 * ir.height);
+                return (
+                  <div style={{ position:'absolute',left:px,top:py,transform:'translate(-50%,-50%)',zIndex:10,pointerEvents:'none' }}>
+                    <div style={{ width:12,height:12,borderRadius:'50%',background:'#facc15',border:'2px solid white',boxShadow:'0 0 8px rgba(250,204,21,0.9)' }}/>
                   </div>
-                </div>
-              )}
+                );
+              })()}
               {/* Label mode hint */}
               {labelMode && imgLoaded && !pendingClick && (
                 <div style={{ position:'absolute',bottom:8,left:'50%',transform:'translateX(-50%)',background:'rgba(250,204,21,0.15)',border:'1px solid #facc15',borderRadius:6,padding:'4px 10px',pointerEvents:'none' }}>
@@ -514,6 +515,20 @@ function AtlasModal({ onClose }) {
               style={{ padding:'8px 10px',borderRadius:7,border:'1px solid '+(labelMode?'#facc15':'#334155'),background:labelMode?'rgba(250,204,21,0.12)':'#1e293b',color:labelMode?'#facc15':'#94a3b8',fontSize:11,fontWeight:700,cursor:'pointer' }}>
               {labelMode ? '✏️ Labeling ON' : '✏️ Label Mode'}
             </button>
+            {/* Label input — appears in panel after clicking image */}
+            {pendingClick && (
+              <div style={{ background:'#1e293b',border:'1px solid #3b82f6',borderRadius:8,padding:10 }}>
+                <p style={{ margin:'0 0 6px',fontSize:10,color:'#93c5fd',fontWeight:700 }}>Name this structure</p>
+                <input autoFocus value={pendingText} onChange={e => setPendingText(e.target.value)}
+                  onKeyDown={e => { if (e.key==='Enter') saveLabel(); if (e.key==='Escape') setPendingClick(null); }}
+                  placeholder="e.g. R femoral head"
+                  style={{ width:'100%',padding:'5px 7px',background:'#0f172a',border:'1px solid #475569',borderRadius:5,color:'#e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box' }}/>
+                <div style={{ display:'flex',gap:5,marginTop:6 }}>
+                  <button onClick={saveLabel} style={{ flex:1,padding:'5px',background:'#1d4ed8',border:'none',borderRadius:5,color:'white',fontSize:10,fontWeight:700,cursor:'pointer' }}>Save</button>
+                  <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'5px',background:'#334155',border:'none',borderRadius:5,color:'#94a3b8',fontSize:10,cursor:'pointer' }}>Cancel</button>
+                </div>
+              </div>
+            )}
             {totalLabels > 0 && (
               <button onClick={exportLabels}
                 style={{ padding:'7px 10px',borderRadius:7,border:'1px solid #22c55e',background:'rgba(34,197,94,0.1)',color:'#22c55e',fontSize:11,fontWeight:700,cursor:'pointer' }}>
