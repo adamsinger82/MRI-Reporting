@@ -267,10 +267,14 @@ Object.entries(ATLAS_JOINTS).forEach(([k, v]) => {
 function AtlasModal({ onClose }) {
   const [selectedRegion, setSelectedRegion] = useState('Upper Extremity');
   const [selectedJoint, setSelectedJoint] = useState('shoulder');
-  const [layers, setLayers] = useState({ bones:true, tendons:false, muscles:false, nerves:false, arteries:false, veins:false });
   const [sliceIdx, setSliceIdx] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [labelMode, setLabelMode] = useState(false);
+  const [userLabels, setUserLabels] = useState({});
+  const [pendingClick, setPendingClick] = useState(null);
+  const [pendingText, setPendingText] = useState('');
+  const imgContainerRef = React.useRef(null);
 
   const regionJoints = ATLAS_REGIONS_MAP[selectedRegion] || {};
   const jointData = ATLAS_JOINTS[selectedJoint];
@@ -294,6 +298,34 @@ function AtlasModal({ onClose }) {
     }
   }, [selectedJoint]);
 
+  useEffect(() => {
+    const el = imgContainerRef.current;
+    if (!el) return;
+    const handleWheel = (e) => {
+      e.preventDefault();
+      if (!jointData) return;
+      setSliceIdx(i => {
+        const next = e.deltaY > 0 ? Math.min(jointData.slices.length-1, i+1) : Math.max(0, i-1);
+        if (next !== i) setImgLoaded(false);
+        return next;
+      });
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [jointData]);
+
+  useEffect(() => {
+    if (!jointData || !jointData.useLocalMRI) return;
+    [-3,-2,-1,1,2,3].forEach(offset => {
+      const idx = sliceIdx + offset;
+      if (idx >= 0 && idx < jointData.slices.length) {
+        const url = `${jointData.localPath}${String(jointData.slices[idx]).padStart(3,'0')}.jpg`;
+        const img = new Image();
+        img.src = url;
+      }
+    });
+  }, [sliceIdx, jointData]);
+
   const currentSlice = jointData ? jointData.slices[sliceIdx] : null;
   const imgUrl = jointData && currentSlice
     ? jointData.useLocalMRI
@@ -301,12 +333,39 @@ function AtlasModal({ onClose }) {
       : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
     : null;
 
-  const toggleLayer = (k) => setLayers(prev => ({ ...prev, [k]: !prev[k] }));
-  const allOn = Object.values(layers).every(Boolean);
-  const toggleAll = () => { const v = !allOn; setLayers({bones:v,tendons:v,muscles:v,nerves:v,arteries:v,veins:v}); };
+  const handleImageClick = (e) => {
+    if (!labelMode || !imgContainerRef.current) return;
+    const rect = imgContainerRef.current.getBoundingClientRect();
+    const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
+    const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
+    setPendingClick({ x, y });
+    setPendingText('');
+  };
 
+  const saveLabel = () => {
+    if (!pendingClick || !pendingText.trim()) { setPendingClick(null); return; }
+    const key = `${selectedJoint}_${currentSlice}`;
+    setUserLabels(prev => ({ ...prev, [key]: [...(prev[key] || []), [pendingClick.x, pendingClick.y, pendingText.trim()]] }));
+    setPendingClick(null);
+    setPendingText('');
+  };
+
+  const deleteLabel = (key, i) => {
+    setUserLabels(prev => { const arr = [...(prev[key] || [])]; arr.splice(i, 1); return { ...prev, [key]: arr }; });
+  };
+
+  const exportLabels = () => {
+    const blob = new Blob([JSON.stringify(userLabels, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'atlas_labels.json'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const currentLabelKey = `${selectedJoint}_${currentSlice}`;
+  const currentLabels = userLabels[currentLabelKey] || [];
+  const totalLabels = Object.values(userLabels).reduce((s, arr) => s + arr.length, 0);
   const layerColors = { bones:'#4a7fa5', tendons:'#2d7a5a', muscles:'#c07040', nerves:'#d97706', arteries:'#dc2626', veins:'#7c3aed' };
-  const layerBg = { bones:'#dbeafe', tendons:'#d1fae5', muscles:'#ffedd5', nerves:'#fef3c7', arteries:'#fee2e2', veins:'#ede9fe' };
 
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}>
@@ -376,7 +435,8 @@ function AtlasModal({ onClose }) {
             )}
 
             {/* Image + SVG overlay */}
-            <div style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
+            <div ref={imgContainerRef} onClick={handleImageClick}
+              style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',cursor:labelMode?'crosshair':'default' }}>
               {!imgLoaded && !imgError && (
                 <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:'#475569',zIndex:2 }}>
                   <div style={{ width:36,height:36,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
@@ -387,32 +447,54 @@ function AtlasModal({ onClose }) {
                 <div style={{ color:'#ef4444',fontSize:13,textAlign:'center',padding:20 }}>
                   <div style={{ fontSize:32,marginBottom:8 }}>⚠️</div>
                   <div>Image unavailable</div>
-                  <div style={{ fontSize:11,color:'#64748b',marginTop:4 }}>Slice {currentSlice} — {imgUrl}</div>
+                  <div style={{ fontSize:11,color:'#64748b',marginTop:4 }}>Slice {currentSlice}</div>
                 </div>
               )}
               {imgUrl && (
-                <img
-                  key={imgUrl}
-                  src={imgUrl}
+                <img key={imgUrl} src={imgUrl}
                   onLoad={() => setImgLoaded(true)}
                   onError={() => { setImgError(true); setImgLoaded(false); }}
-                  style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',display:imgLoaded?'block':'none',borderRadius:4 }}
-                  alt={`VHP axial section ${currentSlice}`}
+                  style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',display:imgLoaded?'block':'none',borderRadius:4,userSelect:'none' }}
+                  alt={`Axial MRI slice ${currentSlice}`}
                 />
               )}
-              {/* SVG label overlay — positioned absolutely over image */}
-              {imgLoaded && jointData && (
+              {/* User label overlay */}
+              {imgLoaded && currentLabels.length > 0 && (
                 <svg style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none' }} viewBox="0 0 100 100" preserveAspectRatio="none">
-                  {Object.entries(jointData.labels).map(([layerKey, labelList]) =>
-                    layers[layerKey] ? labelList.map(([x, y, text], li) => (
-                      <g key={layerKey+li}>
-                        <circle cx={x} cy={y} r="0.8" fill={layerColors[layerKey]} opacity="0.9"/>
-                        <rect x={x+1} y={y-2.2} width={text.length*1.55+2} height="4.5" rx="0.8" fill="rgba(0,0,0,0.72)"/>
-                        <text x={x+2} y={y+0.9} fontSize="3.2" fill={layerColors[layerKey]} fontFamily="monospace" fontWeight="700">{text}</text>
-                      </g>
-                    )) : null
-                  )}
+                  {currentLabels.map(([x, y, text], li) => (
+                    <g key={li}>
+                      <circle cx={x} cy={y} r="0.9" fill="#facc15" opacity="0.95"/>
+                      <rect x={x+1.2} y={y-2.5} width={text.length*1.5+2} height="4.8" rx="0.8" fill="rgba(0,0,0,0.82)"/>
+                      <text x={x+2.2} y={y+1} fontSize="3.2" fill="#facc15" fontFamily="monospace" fontWeight="700">{text}</text>
+                    </g>
+                  ))}
                 </svg>
+              )}
+              {/* Pending label dot */}
+              {pendingClick && imgLoaded && (
+                <div style={{ position:'absolute', left:`${pendingClick.x}%`, top:`${pendingClick.y}%`, transform:'translate(-50%,-50%)', zIndex:10 }}>
+                  <div style={{ width:10,height:10,borderRadius:'50%',background:'#facc15',border:'2px solid white',boxShadow:'0 0 6px rgba(250,204,21,0.8)' }}/>
+                </div>
+              )}
+              {/* Label input popup */}
+              {pendingClick && (
+                <div style={{ position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',background:'#1e293b',border:'1px solid #3b82f6',borderRadius:10,padding:14,zIndex:20,minWidth:220,boxShadow:'0 8px 32px rgba(0,0,0,0.7)' }}>
+                  <p style={{ margin:'0 0 8px',fontSize:11,color:'#93c5fd',fontWeight:700 }}>Label this structure</p>
+                  <input autoFocus value={pendingText} onChange={e => setPendingText(e.target.value)}
+                    onKeyDown={e => { if (e.key==='Enter') saveLabel(); if (e.key==='Escape') setPendingClick(null); }}
+                    placeholder="e.g. Right femoral head"
+                    style={{ width:'100%',padding:'6px 8px',background:'#0f172a',border:'1px solid #475569',borderRadius:6,color:'#e2e8f0',fontSize:12,outline:'none',boxSizing:'border-box' }}/>
+                  <div style={{ display:'flex',gap:6,marginTop:8 }}>
+                    <button onClick={saveLabel} style={{ flex:1,padding:'6px',background:'#1d4ed8',border:'none',borderRadius:6,color:'white',fontSize:11,fontWeight:700,cursor:'pointer' }}>Save</button>
+                    <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'6px',background:'#334155',border:'none',borderRadius:6,color:'#94a3b8',fontSize:11,cursor:'pointer' }}>Cancel</button>
+                  </div>
+                </div>
+              )}
+              {/* Label mode hint */}
+              {labelMode && imgLoaded && !pendingClick && (
+                <div style={{ position:'absolute',bottom:8,left:'50%',transform:'translateX(-50%)',background:'rgba(250,204,21,0.15)',border:'1px solid #facc15',borderRadius:6,padding:'4px 10px',pointerEvents:'none' }}>
+                  <span style={{ fontSize:10,color:'#facc15',fontWeight:600 }}>Click on a structure to label it</span>
+                </div>
               )}
             </div>
 
@@ -420,26 +502,38 @@ function AtlasModal({ onClose }) {
             {jointData && (
               <div style={{ padding:'6px 14px',background:'#0f172a',borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0 }}>
                 <span style={{ fontSize:10,color:'#64748b',fontStyle:'italic' }}>{jointData.view}</span>
-                <span style={{ fontSize:10,color:'#334155' }}>{jointData.useLocalMRI ? 'Source: Clinical T2 MRI — de-identified' : 'Source: NLM Visible Human Project (public domain)'}</span>
+                <span style={{ fontSize:10,color:'#334155' }}>{jointData.useLocalMRI ? 'T2 MRI — de-identified' : 'NLM Visible Human Project'}</span>
               </div>
             )}
           </div>
 
-          {/* Col 3 — layer toggles */}
-          <div style={{ width:140,borderLeft:'1px solid #1e293b',padding:12,display:'flex',flexDirection:'column',gap:6,background:'#0f172a',flexShrink:0,overflowY:'auto' }}>
-            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 4px' }}>Label Layers</p>
-            <button onClick={toggleAll}
-              style={{ padding:'6px 10px',borderRadius:7,border:'1px solid #334155',background:allOn?'#1d4ed8':'#1e293b',color:'white',fontSize:11,fontWeight:700,cursor:'pointer' }}>
-              {allOn ? '⊗ All Off' : '⊕ All On'}
+          {/* Col 3 — label tools */}
+          <div style={{ width:155,borderLeft:'1px solid #1e293b',padding:12,display:'flex',flexDirection:'column',gap:8,background:'#0f172a',flexShrink:0,overflowY:'auto' }}>
+            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 2px' }}>Label Tools</p>
+            <button onClick={() => { setLabelMode(m => !m); setPendingClick(null); }}
+              style={{ padding:'8px 10px',borderRadius:7,border:'1px solid '+(labelMode?'#facc15':'#334155'),background:labelMode?'rgba(250,204,21,0.12)':'#1e293b',color:labelMode?'#facc15':'#94a3b8',fontSize:11,fontWeight:700,cursor:'pointer' }}>
+              {labelMode ? '✏️ Labeling ON' : '✏️ Label Mode'}
             </button>
-            {Object.entries(layers).map(([k, on]) => (
-              <button key={k} onClick={() => toggleLayer(k)}
-                style={{ padding:'7px 10px',borderRadius:7,border:'1px solid '+(on?layerColors[k]:'#334155'),background:on?layerColors[k]+'22':'#1e293b',color:on?layerColors[k]:'#64748b',fontSize:11,fontWeight:on?700:400,cursor:'pointer',textAlign:'left',transition:'all 0.12s' }}>
-                {on ? '● ' : '○ '}{k.charAt(0).toUpperCase()+k.slice(1)}
+            {totalLabels > 0 && (
+              <button onClick={exportLabels}
+                style={{ padding:'7px 10px',borderRadius:7,border:'1px solid #22c55e',background:'rgba(34,197,94,0.1)',color:'#22c55e',fontSize:11,fontWeight:700,cursor:'pointer' }}>
+                Export JSON ({totalLabels})
               </button>
-            ))}
-            <div style={{ marginTop:'auto',padding:'10px 8px',background:'#1e293b',borderRadius:8,border:'1px solid #334155' }}>
-              <p style={{ fontSize:9,color:'#94a3b8',margin:0,lineHeight:1.6 }}>Real axial cryosections at 1mm intervals. Toggle labels to identify structures. Slices navigable with ‹ › buttons.</p>
+            )}
+            {currentLabels.length > 0 && (
+              <div style={{ marginTop:4 }}>
+                <p style={{ fontSize:9,color:'#64748b',fontWeight:700,textTransform:'uppercase',margin:'0 0 4px' }}>Slice {currentSlice} labels</p>
+                {currentLabels.map(([x, y, text], i) => (
+                  <div key={i} style={{ display:'flex',alignItems:'center',gap:4,marginBottom:3 }}>
+                    <span style={{ flex:1,fontSize:10,color:'#facc15',background:'#1e293b',padding:'2px 6px',borderRadius:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{text}</span>
+                    <button onClick={() => deleteLabel(currentLabelKey, i)}
+                      style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:12,padding:'0 2px',lineHeight:1 }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ marginTop:'auto',padding:'8px',background:'#1e293b',borderRadius:8,border:'1px solid #334155' }}>
+              <p style={{ fontSize:9,color:'#94a3b8',margin:0,lineHeight:1.6 }}>Scroll to navigate slices. Enable label mode then click any structure to annotate. Export JSON when done.</p>
             </div>
           </div>
         </div>
