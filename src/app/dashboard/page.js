@@ -240,16 +240,18 @@ const ATLAS_JOINTS = {
     label: 'Pelvis / SI',
     region: 'Pelvis & Spine',
     folder: 'pelvis',
-    slices: [1840, 1850, 1860, 1870, 1880, 1890],
-    defaultSlice: 1860,
-    view: 'Axial cryosection — sacroiliac joint / acetabulum level',
+    slices: Array.from({length:120},(_,i)=>i+1),
+    defaultSlice: 40,
+    useLocalMRI: true,
+    localPath: '/atlas/pelvis/pelvis_',
+    view: 'Axial T2 MRI — pelvis without contrast',
     labels: {
-      bones:    [[50,35,'Sacrum','#1e3a8a'],[22,38,'Ilium (L)','#1e3a8a'],[78,38,'Ilium (R)','#1e3a8a'],[72,55,'Acetabulum','#1e3a8a']],
-      tendons:  [[50,52,'SI ligaments','#14532d'],[55,68,'Inguinal lig.','#14532d']],
-      muscles:  [[65,45,'Iliacus','#7c2d12'],[35,45,'Iliacus (L)','#7c2d12'],[72,55,'Piriformis','#7c2d12']],
-      nerves:   [[62,62,'Sciatic n.','#92400e'],[38,62,'Sciatic n. (L)','#92400e']],
-      arteries: [[62,45,'Iliac a.','#991b1b'],[38,45,'Iliac a. (L)','#991b1b']],
-      veins:    [[60,48,'Iliac v.','#4c1d95'],[40,48,'Iliac v. (L)','#4c1d95']],
+      bones:    [[50,32,'Sacrum','#1e3a8a'],[22,40,'Ilium (L)','#1e3a8a'],[78,40,'Ilium (R)','#1e3a8a'],[70,55,'Acetabulum (R)','#1e3a8a'],[30,55,'Acetabulum (L)','#1e3a8a'],[68,58,'Femoral head (R)','#1e3a8a'],[32,58,'Femoral head (L)','#1e3a8a']],
+      tendons:  [[50,48,'SI ligaments','#14532d'],[55,68,'Inguinal lig.','#14532d'],[66,62,'Iliopsoas t. (R)','#14532d'],[34,62,'Iliopsoas t. (L)','#14532d']],
+      muscles:  [[65,42,'Iliacus (R)','#7c2d12'],[35,42,'Iliacus (L)','#7c2d12'],[74,52,'Piriformis (R)','#7c2d12'],[26,52,'Piriformis (L)','#7c2d12'],[80,60,'Gluteus max (R)','#7c2d12'],[20,60,'Gluteus max (L)','#7c2d12']],
+      nerves:   [[64,65,'Sciatic n. (R)','#92400e'],[36,65,'Sciatic n. (L)','#92400e'],[68,38,'Femoral n. (R)','#92400e']],
+      arteries: [[63,45,'Iliac a. (R)','#991b1b'],[37,45,'Iliac a. (L)','#991b1b']],
+      veins:    [[61,48,'Iliac v. (R)','#4c1d95'],[39,48,'Iliac v. (L)','#4c1d95']],
     },
   },
 };
@@ -278,20 +280,26 @@ function AtlasModal({ onClose }) {
     if (keys.length > 0) {
       setSelectedJoint(keys[0]);
       const j = ATLAS_JOINTS[keys[0]];
-      setSliceIdx(j ? j.slices.indexOf(j.defaultSlice) : 0);
+      const idx = j ? (j.useLocalMRI ? j.defaultSlice-1 : j.slices.indexOf(j.defaultSlice)) : 0;
+      setSliceIdx(Math.max(0, idx));
     }
   }, [selectedRegion]);
 
   useEffect(() => {
     if (jointData) {
-      setSliceIdx(jointData.slices.indexOf(jointData.defaultSlice));
+      const idx = jointData.useLocalMRI ? jointData.defaultSlice-1 : jointData.slices.indexOf(jointData.defaultSlice);
+      setSliceIdx(Math.max(0, idx));
       setImgLoaded(false);
       setImgError(false);
     }
   }, [selectedJoint]);
 
   const currentSlice = jointData ? jointData.slices[sliceIdx] : null;
-  const imgUrl = jointData && currentSlice ? `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png` : null;
+  const imgUrl = jointData && currentSlice
+    ? jointData.useLocalMRI
+      ? `${jointData.localPath}${String(currentSlice).padStart(3,'0')}.jpg`
+      : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
+    : null;
 
   const toggleLayer = (k) => setLayers(prev => ({ ...prev, [k]: !prev[k] }));
   const allOn = Object.values(layers).every(Boolean);
@@ -340,19 +348,30 @@ function AtlasModal({ onClose }) {
               <div style={{ display:'flex',alignItems:'center',gap:8,padding:'8px 14px',background:'#0f172a',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
                 <button onClick={() => { setSliceIdx(i => Math.max(0,i-1)); setImgLoaded(false); }}
                   disabled={sliceIdx===0}
-                  style={{ background:sliceIdx===0?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===0?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===0?0.4:1 }}>‹</button>
-                <div style={{ flex:1,display:'flex',gap:4,alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
-                  {jointData.slices.map((s,i) => (
-                    <button key={s} onClick={() => { setSliceIdx(i); setImgLoaded(false); }}
-                      style={{ padding:'3px 8px',borderRadius:5,border:'1px solid '+(i===sliceIdx?'#3b82f6':'#334155'),background:i===sliceIdx?'#1d4ed8':'#1e293b',color:i===sliceIdx?'white':'#64748b',fontSize:11,fontWeight:i===sliceIdx?700:400,cursor:'pointer',flexShrink:0 }}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
+                  style={{ background:sliceIdx===0?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===0?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===0?0.4:1,flexShrink:0 }}>‹</button>
+                {jointData.slices.length > 10 ? (
+                  <div style={{ flex:1,display:'flex',alignItems:'center',gap:8 }}>
+                    <input type="range" min={0} max={jointData.slices.length-1} value={sliceIdx}
+                      onChange={e => { setSliceIdx(Number(e.target.value)); setImgLoaded(false); }}
+                      style={{ flex:1,accentColor:'#3b82f6',cursor:'pointer' }} />
+                    <span style={{ color:'#93c5fd',fontSize:11,fontWeight:700,whiteSpace:'nowrap',background:'#1e293b',padding:'3px 8px',borderRadius:5,border:'1px solid #3b82f6',minWidth:60,textAlign:'center' }}>
+                      {sliceIdx+1} / {jointData.slices.length}
+                    </span>
+                  </div>
+                ) : (
+                  <div style={{ flex:1,display:'flex',gap:4,alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
+                    {jointData.slices.map((s,i) => (
+                      <button key={s} onClick={() => { setSliceIdx(i); setImgLoaded(false); }}
+                        style={{ padding:'3px 8px',borderRadius:5,border:'1px solid '+(i===sliceIdx?'#3b82f6':'#334155'),background:i===sliceIdx?'#1d4ed8':'#1e293b',color:i===sliceIdx?'white':'#64748b',fontSize:11,fontWeight:i===sliceIdx?700:400,cursor:'pointer',flexShrink:0 }}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <button onClick={() => { setSliceIdx(i => Math.min(jointData.slices.length-1,i+1)); setImgLoaded(false); }}
                   disabled={sliceIdx===jointData.slices.length-1}
-                  style={{ background:sliceIdx===jointData.slices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===jointData.slices.length-1?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===jointData.slices.length-1?0.4:1 }}>›</button>
-                <span style={{ color:'#475569',fontSize:10,whiteSpace:'nowrap',flexShrink:0 }}>Slice {currentSlice} • 1mm intervals</span>
+                  style={{ background:sliceIdx===jointData.slices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===jointData.slices.length-1?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===jointData.slices.length-1?0.4:1,flexShrink:0 }}>›</button>
+                <span style={{ color:'#475569',fontSize:10,whiteSpace:'nowrap',flexShrink:0 }}>{jointData.useLocalMRI ? 'T2 MRI' : '1mm intervals'}</span>
               </div>
             )}
 
@@ -361,7 +380,7 @@ function AtlasModal({ onClose }) {
               {!imgLoaded && !imgError && (
                 <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:'#475569',zIndex:2 }}>
                   <div style={{ width:36,height:36,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
-                  <span style={{ fontSize:12 }}>Loading cryosection…</span>
+                  <span style={{ fontSize:12 }}>{jointData?.useLocalMRI ? 'Loading MRI…' : 'Loading cryosection…'}</span>
                 </div>
               )}
               {imgError && (
@@ -401,7 +420,7 @@ function AtlasModal({ onClose }) {
             {jointData && (
               <div style={{ padding:'6px 14px',background:'#0f172a',borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0 }}>
                 <span style={{ fontSize:10,color:'#64748b',fontStyle:'italic' }}>{jointData.view}</span>
-                <span style={{ fontSize:10,color:'#334155' }}>Source: NLM Visible Human Project (public domain)</span>
+                <span style={{ fontSize:10,color:'#334155' }}>{jointData.useLocalMRI ? 'Source: Clinical T2 MRI — de-identified' : 'Source: NLM Visible Human Project (public domain)'}</span>
               </div>
             )}
           </div>
