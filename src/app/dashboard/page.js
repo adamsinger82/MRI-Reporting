@@ -752,6 +752,7 @@ function AtlasModal({ onClose }) {
   const [sequence, setSequence] = useState('t1');
   const sequenceRef = useRef('t1');
   const [labelMode, setLabelMode] = useState(false);
+  const [visibleLayers, setVisibleLayers] = useState({ nerves:true, muscles:true, vessels:true, bones:true, ligaments:true });
   const [userLabels, setUserLabels] = useState({});
   const [pendingClick, setPendingClick] = useState(null);
   const [pendingText, setPendingText] = useState('');
@@ -867,10 +868,22 @@ function AtlasModal({ onClose }) {
   const layerColors = { bones:'#4a7fa5', tendons:'#2d7a5a', muscles:'#c07040', nerves:'#d97706', arteries:'#dc2626', veins:'#7c3aed' };
 
   // Permanent baked-in labels for current slice (T1 pelvis only)
-  // seqData is already computed above — use it directly, no need to recompute
-  const permanentLabels = (seqData?.permanentLabels && currentSlice != null)
+  const allPermanentLabels = (seqData?.permanentLabels && currentSlice != null)
     ? (seqData.permanentLabels[currentSlice] || [])
     : [];
+
+  // Layer categorization for filter toggles
+  const getLabelLayer = (name) => {
+    const n = name.toLowerCase();
+    if (/nerve|plexus|nvb|ganglion/.test(n)) return 'nerves';
+    if (/artery|vein|vessel|saphenous|femoral art|femoral vein|iliac a|iliac v|canal/.test(n)) return 'vessels';
+    if (/muscle|maximus|medius|minimus|psoas|iliacus|iliopsoas|sartorius|rectus fem|gracilis|semi|biceps|tensor|piriform|obturator int|hamstring|adductor/.test(n)) return 'muscles';
+    if (/sacrum|ilium|femur|acetabulum|trochanter|spine|coccyx|symphysis|ramus|tubercle|asis|aiis|iliac spine/.test(n)) return 'bones';
+    if (/ligament|ligamentous|synovial|sacrospinous|sacrotuberous/.test(n)) return 'ligaments';
+    return 'muscles'; // default
+  };
+
+  const permanentLabels = allPermanentLabels.filter(([,, name]) => visibleLayers[getLabelLayer(name)]);
 
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}>
@@ -975,35 +988,31 @@ function AtlasModal({ onClose }) {
                   alt={`Axial MRI slice ${currentSlice}`}
                 />
               )}
-              {/* Label overlay — permanent baked labels + user labels */}
-              {imgLoaded && imgRef.current && (permanentLabels.length > 0 || currentLabels.length > 0) && (() => {
-                const ir = imgRef.current.getBoundingClientRect();
-                const cr = imgContainerRef.current.getBoundingClientRect();
-                const ol = ir.left - cr.left;
-                const ot = ir.top - cr.top;
-                const ow = ir.width;
-                const oh = ir.height;
-                return (
-                  <svg style={{ position:'absolute',left:ol,top:ot,width:ow,height:oh,pointerEvents:'none',overflow:'visible' }} viewBox="0 0 100 100" preserveAspectRatio="none">
-                    {/* Permanent baked-in labels — white dots, white text */}
-                    {permanentLabels.map(([x, y, text], li) => (
-                      <g key={'p'+li}>
-                        <circle cx={x} cy={y} r="1.0" fill="white" opacity="0.9"/>
-                        <rect x={x+1.5} y={y-2.8} width={text.length*1.6+2} height="5.0" rx="0.8" fill="rgba(0,0,0,0.75)"/>
-                        <text x={x+2.5} y={y+1.0} fontSize="2.6" fill="white" fontFamily="monospace" fontWeight="600">{text}</text>
-                      </g>
-                    ))}
-                    {/* User labels — yellow dots (label mode additions) */}
-                    {currentLabels.map(([x, y, text], li) => (
-                      <g key={'u'+li}>
-                        <circle cx={x} cy={y} r="1.2" fill="#facc15" opacity="0.95"/>
-                        <rect x={x+1.5} y={y-2.8} width={text.length*1.8+2} height="5.2" rx="0.8" fill="rgba(0,0,0,0.85)"/>
-                        <text x={x+2.5} y={y+1.1} fontSize="2.8" fill="#facc15" fontFamily="monospace" fontWeight="700">{text}</text>
-                      </g>
-                    ))}
-                  </svg>
-                );
-              })()}
+              {/* Label overlay — covers image exactly using inset:0 + object-fit trick */}
+              {imgLoaded && (permanentLabels.length > 0 || currentLabels.length > 0) && (
+                <svg
+                  style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }}
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  {/* Permanent baked-in labels — white */}
+                  {permanentLabels.map(([x, y, text], li) => (
+                    <g key={'p'+li}>
+                      <circle cx={x} cy={y} r="0.8" fill="white" opacity="0.95"/>
+                      <rect x={x+1.2} y={y-2.4} width={Math.min(text.length*1.5+1.5, 35)} height="4.6" rx="0.6" fill="rgba(0,0,0,0.80)"/>
+                      <text x={x+2.0} y={y+0.9} fontSize="2.5" fill="white" fontFamily="monospace" fontWeight="600">{text}</text>
+                    </g>
+                  ))}
+                  {/* User labels — yellow */}
+                  {currentLabels.map(([x, y, text], li) => (
+                    <g key={'u'+li}>
+                      <circle cx={x} cy={y} r="1.0" fill="#facc15" opacity="0.95"/>
+                      <rect x={x+1.2} y={y-2.4} width={Math.min(text.length*1.6+1.5, 35)} height="4.6" rx="0.6" fill="rgba(0,0,0,0.85)"/>
+                      <text x={x+2.0} y={y+0.9} fontSize="2.5" fill="#facc15" fontFamily="monospace" fontWeight="700">{text}</text>
+                    </g>
+                  ))}
+                </svg>
+              )}
               {/* Pending click dot — shows where user clicked */}
               {pendingClick && imgLoaded && imgRef.current && (() => {
                 const ir = imgRef.current.getBoundingClientRect();
@@ -1033,8 +1042,37 @@ function AtlasModal({ onClose }) {
             )}
           </div>
 
-          {/* Col 3 — label tools */}
-          <div style={{ width:155,borderLeft:'1px solid #1e293b',padding:12,display:'flex',flexDirection:'column',gap:8,background:'#0f172a',flexShrink:0,overflowY:'auto' }}>
+          {/* Col 3 — label tools + layer toggles */}
+          <div style={{ width:165,borderLeft:'1px solid #1e293b',padding:12,display:'flex',flexDirection:'column',gap:8,background:'#0f172a',flexShrink:0,overflowY:'auto' }}>
+            {/* Layer visibility toggles — always shown */}
+            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 2px' }}>Show Labels</p>
+            <div style={{ display:'flex',flexWrap:'wrap',gap:4 }}>
+              {[
+                {key:'all', label:'All', color:'#e2e8f0'},
+                {key:'nerves', label:'Nerves', color:'#d97706'},
+                {key:'muscles', label:'Muscles', color:'#c07040'},
+                {key:'vessels', label:'Vessels', color:'#dc2626'},
+                {key:'bones', label:'Bones', color:'#4a7fa5'},
+                {key:'ligaments', label:'Ligaments', color:'#2d7a5a'},
+              ].map(({key, label, color}) => (
+                <button key={key}
+                  onClick={() => setVisibleLayers(prev =>
+                    key === 'all'
+                      ? { nerves:true, muscles:true, vessels:true, bones:true, ligaments:true }
+                      : { ...prev, [key]: !prev[key] }
+                  )}
+                  style={{
+                    padding:'3px 7px', borderRadius:5, fontSize:9, fontWeight:700,
+                    border:'1px solid '+(key==='all'?'#475569':color),
+                    background: key==='all' ? '#1e293b' : (visibleLayers[key] ? color+'33' : 'transparent'),
+                    color: key==='all' ? '#94a3b8' : (visibleLayers[key] ? color : '#475569'),
+                    cursor:'pointer', transition:'all 0.1s',
+                  }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div style={{ height:1, background:'#1e293b', margin:'2px 0' }}/>
             <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 2px' }}>Label Tools</p>
             <button onClick={() => { setLabelMode(m => !m); setPendingClick(null); }}
               style={{ padding:'8px 10px',borderRadius:7,border:'1px solid '+(labelMode?'#facc15':'#334155'),background:labelMode?'rgba(250,204,21,0.12)':'#1e293b',color:labelMode?'#facc15':'#94a3b8',fontSize:11,fontWeight:700,cursor:'pointer' }}>
