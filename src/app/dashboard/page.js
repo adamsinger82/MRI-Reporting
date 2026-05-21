@@ -25,6 +25,21 @@ const ANATOMY = {
   foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
 };
 
+
+// ─── GRADING CONTEXT BUILDER ─────────────────────────────────────────────────
+// Extracts grading scales from JOINT_DATA and formats them for Claude.
+// Only includes entries marked isGradingScale:true — skips pure measurements.
+function buildGradingContext(part) {
+  const jointData = JOINT_DATA[part];
+  if (!jointData?.measurements?.length) return '';
+  const scales = jointData.measurements.filter(m => m.isGradingScale);
+  if (!scales.length) return '';
+  return scales.map(m => {
+    const grades = m.normalValues.map(v => `  ${v.label}: ${v.value}`).join('\n');
+    return `${m.label}:\n${grades}`;
+  }).join('\n\n');
+}
+
 function buildPrompt(part, lat, con, spineRegion, modality) {
   const isCT = modality === 'CT';
   const modalityName = isCT ? 'CT' : 'MRI';
@@ -40,6 +55,11 @@ function buildPrompt(part, lat, con, spineRegion, modality) {
     ? `If entirely normal: "No significant CT findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`
     : `If entirely normal: "No significant MRI findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`;
 
+  const gradingContext = buildGradingContext(part);
+  const gradingBlock = gradingContext
+    ? `\n\nGRADING SCALES IN USE FOR THIS JOINT (apply these when grading is mentioned in dictation):\n${gradingContext}`
+    : '';
+
   return `You are a subspecialty MSK radiologist generating a structured ${modalityName} report.
 
 CRITICAL FORMATTING RULES:
@@ -54,6 +74,8 @@ IMPRESSION RULES:
 - Synthesize positive findings into clinically meaningful impression.
 - Number each item. Most important first.
 - ${normalImpressionText}
+- CARTILAGE / OA RULE (knee only): If Modified Outerbridge grading is mentioned in 2 or more compartments (medial, lateral, patellofemoral), do NOT list each compartment separately in the impression. Instead write a single impression line: "Osteoarthrosis, most notable in the [worst compartment] compartment with grade [X] chondromalacia, and [mild/moderate] involvement of the [other compartments] as above." If only 1 compartment involved, report it normally.
+- OSTEOCHONDRAL EXCEPTION: If an osteochondral lesion, OCD, or subchondral fracture is present, list it separately by name regardless of the OA rule above.${gradingBlock}
 
 FORMAT:
 TECHNIQUE:
