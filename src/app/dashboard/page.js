@@ -867,9 +867,9 @@ function AtlasModal({ onClose }) {
   const layerColors = { bones:'#4a7fa5', tendons:'#2d7a5a', muscles:'#c07040', nerves:'#d97706', arteries:'#dc2626', veins:'#7c3aed' };
 
   // Permanent baked-in labels for current slice (T1 pelvis only)
-  const seqDataForLabels = jointData?.sequences?.[sequence] || null;
-  const permanentLabels = (seqDataForLabels?.permanentLabels && currentSlice)
-    ? (seqDataForLabels.permanentLabels[currentSlice] || [])
+  // seqData is already computed above — use it directly, no need to recompute
+  const permanentLabels = (seqData?.permanentLabels && currentSlice != null)
+    ? (seqData.permanentLabels[currentSlice] || [])
     : [];
 
   return (
