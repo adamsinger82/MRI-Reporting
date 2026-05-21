@@ -29,6 +29,7 @@ const ANATOMY = {
 // ─── GRADING CONTEXT BUILDER ─────────────────────────────────────────────────
 // Extracts grading scales from JOINT_DATA and formats them for Claude.
 // Only includes entries marked isGradingScale:true — skips pure measurements.
+// Includes citation text so Claude can reproduce it accurately in REFERENCES.
 function buildGradingContext(part) {
   const jointData = JOINT_DATA[part];
   if (!jointData?.measurements?.length) return '';
@@ -36,7 +37,10 @@ function buildGradingContext(part) {
   if (!scales.length) return '';
   return scales.map(m => {
     const grades = m.normalValues.map(v => `  ${v.label}: ${v.value}`).join('\n');
-    return `${m.label}:\n${grades}`;
+    const citationText = m.citations?.length
+      ? `  Citation: ${m.citations[0].label}`
+      : '';
+    return `${m.label}:\n${grades}${citationText ? '\n' + citationText : ''}`;
   }).join('\n\n');
 }
 
@@ -70,12 +74,29 @@ CRITICAL FORMATTING RULES:
 ANATOMY TO COVER for ${part}: ${ANATOMY[part]}
 Generate a subheading for EVERY structure listed above.
 ${findingsRules}
+GRADING RULES (apply whenever a grade, classification, or severity is mentioned in dictation):
+- ALWAYS write the full classification system name when reporting a grade. Example: "Modified Outerbridge grade 2" not just "grade 2". "Universal ligament grade 3 tear" not just "complete tear".
+- ALWAYS add the grade descriptor in parentheses immediately after the grade. Example: "Modified Outerbridge grade 2 (partial thickness fissuring less than 50% of cartilage depth)" or "Modified Outerbridge grade 3 (deep fissuring greater than 50% depth with intact subchondral bone)".
+- MENISCUS TEARS: always specify ISAKOS tear type (vertical-longitudinal, horizontal, radial, oblique/flap, complex, root tear) and zone (red-red, red-white, white-white) if inferable from dictation. If zone not specified, omit zone.
+- LIGAMENT TEARS: always specify the universal grade (1/2/3) with descriptor. Grade 1 = intact fibers with periligamentous edema. Grade 2 = partial tear less than 50% fiber disruption. Grade 3 = complete tear with full fiber discontinuity.
+
 IMPRESSION RULES:
 - Synthesize positive findings into clinically meaningful impression.
 - Number each item. Most important first.
 - ${normalImpressionText}
-- CARTILAGE / OA RULE (knee only): If Modified Outerbridge grading is mentioned in 2 or more compartments (medial, lateral, patellofemoral), do NOT list each compartment separately in the impression. Instead write a single impression line: "Osteoarthrosis, most notable in the [worst compartment] compartment with grade [X] chondromalacia, and [mild/moderate] involvement of the [other compartments] as above." If only 1 compartment involved, report it normally.
-- OSTEOCHONDRAL EXCEPTION: If an osteochondral lesion, OCD, or subchondral fracture is present, list it separately by name regardless of the OA rule above.${gradingBlock}
+- CARTILAGE / OA RULE (knee only): If Modified Outerbridge grading is mentioned in 2 or more compartments (medial, lateral, patellofemoral), do NOT list each compartment separately in the impression. Instead write a single impression line: "Osteoarthrosis, most notable in the [worst compartment] compartment with Modified Outerbridge grade [X] chondromalacia, and [mild/moderate] involvement of the [other compartments] as above." If only 1 compartment involved, report it normally.
+- OSTEOCHONDRAL EXCEPTION: If an osteochondral lesion, OCD, or subchondral fracture is present, list it separately by name regardless of the OA rule above.
+
+REFERENCES SECTION RULES:
+- After the IMPRESSION, add a REFERENCES: section.
+- List ONLY the citations for grading scales you actually used in this report.
+- Format each reference as a numbered footnote on its own line: "1. [Citation text]"
+- If no grading scales were used, omit the REFERENCES section entirely.
+- Example format:
+REFERENCES:
+1. Modified Outerbridge Classification: Outerbridge RE. The etiology of chondromalacia patellae. J Bone Joint Surg Br 1961.
+2. Universal Ligament Grading: Stoller DW. MRI in Orthopaedics and Sports Medicine. 3rd ed. Lippincott Williams & Wilkins 2007.
+${gradingBlock}
 
 FORMAT:
 TECHNIQUE:
@@ -108,10 +129,32 @@ function formatReport(txt) {
     .replace(/^\s*[-•]\s+/gm, '');
 
   let inImpression = false;
+  let inReferences = false;
 
   return cleaned.split('\n').map((line, i) => {
     const t = line.trim();
     if (!t) return <div key={i} style={{ height: 5 }} />;
+
+    // REFERENCES header — render as small footnote divider
+    const isReferencesHeader = /^REFERENCES:?$/i.test(t);
+    if (isReferencesHeader) {
+      inReferences = true;
+      inImpression = false;
+      return (
+        <div key={i} style={{ marginTop: 16, marginBottom: 4, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#94a3b8', textTransform: 'uppercase' }}>References</span>
+        </div>
+      );
+    }
+
+    // Reference footnote lines — small grey text
+    if (inReferences) {
+      return (
+        <div key={i} style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.6, paddingLeft: 4, marginBottom: 2 }}>
+          {t}
+        </div>
+      );
+    }
 
     const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
     if (isHeader) {
