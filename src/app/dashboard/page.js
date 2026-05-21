@@ -624,6 +624,229 @@ const PELVIS_LABELS = {
   ],
 };
 
+
+// ─── INCIDENTAL FINDINGS RECOMMENDATIONS ─────────────────────────────────────
+
+function getFleischnerRec(type, size) {
+  const recs = {
+    solid: {
+      '<6mm':   { low: 'No routine follow-up recommended.', high: 'Optional CT at 12 months.' },
+      '6-8mm':  { low: 'CT at 6-12 months, then consider CT at 18-24 months if no change.', high: 'CT at 6-12 months, then CT at 18-24 months.' },
+      '>8mm':   { low: 'CT at 3 months, PET/CT, or tissue sampling depending on probability of malignancy.', high: 'CT at 3 months, PET/CT, or tissue sampling depending on probability of malignancy.' },
+    },
+    ggo: {
+      '<6mm':   { low: 'No routine follow-up recommended.', high: 'No routine follow-up recommended.' },
+      '>=6mm':  { low: 'CT at 6-12 months to confirm persistence, then CT every 2 years until 5 years.', high: 'CT at 6-12 months to confirm persistence, then CT every 2 years until 5 years.' },
+    },
+    partsolid: {
+      '<6mm':   { low: 'No routine follow-up recommended.', high: 'No routine follow-up recommended.' },
+      '>=6mm-solid<6mm': { low: 'CT at 3-6 months to confirm persistence. If unchanged and solid component remains <6mm, annual CT for 5 years.', high: 'CT at 3-6 months to confirm persistence. If unchanged and solid component remains <6mm, annual CT for 5 years.' },
+      '>=6mm-solid>=6mm':{ low: 'CT at 3-6 months. Subsequent management based on most suspicious component. Consider PET/CT or biopsy if solid component ≥8mm.', high: 'CT at 3-6 months. Subsequent management based on most suspicious component. Consider PET/CT or biopsy if solid component ≥8mm.' },
+    },
+  };
+  return recs[type]?.[size] || null;
+}
+
+function getRenalRec(finding) {
+  const recs = {
+    'Bosniak I — simple cyst':      { rec: 'Benign simple cyst. No follow-up recommended.' },
+    'Bosniak II':                   { rec: 'Likely benign. No follow-up recommended.' },
+    'Bosniak IIF':                  { rec: 'Recommend follow-up CT or MRI at 6 months, then annually for 5 years to ensure stability.' },
+    'Bosniak III':                  { rec: 'Indeterminate cystic mass. Surgical consultation recommended. Approximately 50% malignancy rate.' },
+    'Bosniak IV':                   { rec: 'Cystic malignancy until proven otherwise. Surgical consultation recommended.' },
+    'Solid renal mass <1cm':        { rec: 'Subcentimeter solid renal lesion. Recommend follow-up contrast-enhanced CT or MRI in 12 months.' },
+    'Solid renal mass 1-3cm':       { rec: 'Solid renal mass requiring further characterization. Recommend contrast-enhanced CT or MRI. Urology referral.' },
+    'Solid renal mass >3cm':        { rec: 'Solid renal mass >3cm. Recommend urology referral and contrast-enhanced CT or MRI for surgical planning.' },
+  };
+  return recs[finding] || null;
+}
+
+function getGynRec(finding, isPostmenopausal) {
+  const recs = {
+    'Simple cyst <3cm': {
+      pre: 'Likely physiologic. No follow-up recommended.',
+      post: 'Recommend follow-up pelvic ultrasound in 1 year.',
+    },
+    'Simple cyst 3-5cm': {
+      pre: 'Likely physiologic/follicular. Follow-up pelvic ultrasound in 6-12 months.',
+      post: 'Indeterminate. Recommend pelvic ultrasound. GYN consultation if persistent.',
+    },
+    'Simple cyst 5-7cm': {
+      pre: 'Recommend pelvic ultrasound for further evaluation. GYN referral if persistent >6 weeks.',
+      post: 'Recommend pelvic ultrasound. GYN consultation recommended.',
+    },
+    'Simple cyst >7cm': {
+      pre: 'Recommend pelvic ultrasound and GYN referral.',
+      post: 'Recommend pelvic ultrasound and GYN referral.',
+    },
+    'Complex / septated cyst': {
+      pre: 'Indeterminate adnexal lesion. Recommend pelvic ultrasound and GYN referral.',
+      post: 'Indeterminate adnexal lesion. Recommend pelvic ultrasound and GYN referral. CA-125 may be considered.',
+    },
+    'Solid or mixed mass': {
+      pre: 'Concerning adnexal lesion. Recommend pelvic ultrasound and GYN referral.',
+      post: 'Concerning adnexal lesion. Recommend pelvic ultrasound, GYN referral, and CA-125.',
+    },
+  };
+  return recs[finding] || null;
+}
+
+function getAortaRec(finding) {
+  const recs = {
+    'Normal (<3cm)':           { rec: 'Normal aortic caliber. No follow-up required.' },
+    '3.0-3.9cm':               { rec: 'Mild aortic dilatation. Recommend surveillance ultrasound in 3 years. Optimize cardiovascular risk factors.' },
+    '4.0-4.9cm':               { rec: 'Moderate abdominal aortic aneurysm. Recommend surveillance CT or ultrasound in 12 months. Vascular surgery referral.' },
+    '5.0-5.4cm':               { rec: 'Large abdominal aortic aneurysm approaching surgical threshold. Urgent vascular surgery referral recommended.' },
+    '>=5.5cm':                 { rec: 'Abdominal aortic aneurysm at or above surgical threshold (≥5.5cm). Urgent vascular surgery referral recommended.' },
+    'Rapid growth >0.5cm/6mo': { rec: 'Rapid aneurysm expansion (>0.5cm in 6 months). Urgent vascular surgery referral regardless of absolute size.' },
+  };
+  return recs[finding] || null;
+}
+
+// ─── INCIDENTAL FINDINGS PANEL COMPONENT ─────────────────────────────────────
+function IncidentalPanel({
+  showLung, showGU,
+  noduleType, setNoduleType, noduleSize, setNoduleSize,
+  renalFinding, setRenalFinding,
+  gynFinding, setGynFinding,
+  aortaFinding, setAortaFinding,
+  patientAge, setPatientAge,
+  patientSex, setPatientSex,
+  isPostmenopausal,
+}) {
+  const warnStyle = {
+    borderRadius: 8, padding: '8px 12px', marginBottom: 2,
+    display: 'flex', alignItems: 'center', gap: 8,
+    fontSize: 12, fontWeight: 800, letterSpacing: '0.04em',
+  };
+  const secTitle = { fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4, display: 'block' };
+  const optBtn = (label, val, current, setter) => (
+    <button key={label} onClick={() => setter(current === val ? '' : val)}
+      style={{ padding:'4px 9px', borderRadius:6, fontSize:11, fontWeight:current===val?700:400,
+        border:'1px solid '+(current===val?'#d97706':'#e2e8f0'),
+        background:current===val?'#fffbeb':'white',
+        color:current===val?'#d97706':'#64748b', cursor:'pointer', whiteSpace:'nowrap' }}>
+      {label}
+    </button>
+  );
+
+  // Nodule size options per type
+  const sizeOptions = {
+    solid:     ['<6mm','6-8mm','>8mm'],
+    ggo:       ['<6mm','>=6mm'],
+    partsolid: ['<6mm','>=6mm-solid<6mm','>=6mm-solid>=6mm'],
+  };
+  const sizeLabels = {
+    solid:     ['< 6mm','6–8mm','> 8mm'],
+    ggo:       ['< 6mm','≥ 6mm'],
+    partsolid: ['< 6mm','≥ 6mm (solid < 6mm)','≥ 6mm (solid ≥ 6mm)'],
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:8, borderRadius:10, border:'2px solid #fbbf24', background:'#fffbeb', padding:10 }}>
+
+      {/* Warning banner */}
+      {showLung && (
+        <div style={{ ...warnStyle, background:'#fef3c7', color:'#92400e' }}>
+          <span style={{ fontSize:16 }}>⚠️</span>
+          <span>DID YOU CHECK THE LUNG?</span>
+        </div>
+      )}
+      {showGU && (
+        <div style={{ ...warnStyle, background:'#fef3c7', color:'#92400e' }}>
+          <span style={{ fontSize:16 }}>⚠️</span>
+          <span>DID YOU CHECK THE GU SYSTEM?</span>
+        </div>
+      )}
+
+      {/* ── FLEISCHNER ── */}
+      {showLung && (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          <span style={secTitle}>🫁 Pulmonary Nodule (Optional)</span>
+          {/* Nodule type */}
+          <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+            {[['solid','Solid'],['ggo','Pure GGO'],['partsolid','Part-Solid']].map(([val,lbl]) =>
+              optBtn(lbl, val, noduleType, (v) => { setNoduleType(v); setNoduleSize(''); })
+            )}
+          </div>
+          {/* Size options */}
+          {noduleType && (
+            <div style={{ display:'flex', gap:5, flexWrap:'wrap', paddingLeft:4 }}>
+              {sizeOptions[noduleType].map((val, i) =>
+                optBtn(sizeLabels[noduleType][i], val, noduleSize, setNoduleSize)
+              )}
+            </div>
+          )}
+          {/* Preview recommendation */}
+          {noduleType && noduleSize && (() => {
+            const rec = getFleischnerRec(noduleType, noduleSize);
+            return rec ? (
+              <div style={{ fontSize:10, color:'#78350f', background:'#fef9c3', borderRadius:6, padding:'5px 8px', lineHeight:1.6 }}>
+                <strong>Low risk:</strong> {rec.low}<br/>
+                <strong>High risk:</strong> {rec.high}
+              </div>
+            ) : null;
+          })()}
+        </div>
+      )}
+
+      {/* ── GU INCIDENTALS ── */}
+      {showGU && (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {/* Patient demographics for GYN logic */}
+          <div style={{ display:'flex', gap:6 }}>
+            <div style={{ flex:1 }}>
+              <span style={secTitle}>Age (for GYN)</span>
+              <input type="number" placeholder="e.g. 45" value={patientAge}
+                onChange={e => setPatientAge(e.target.value)}
+                style={{ width:'100%', padding:'5px 8px', border:'1px solid #e2e8f0', borderRadius:6, fontSize:11, boxSizing:'border-box' }}/>
+            </div>
+            <div style={{ flex:1 }}>
+              <span style={secTitle}>Sex</span>
+              <div style={{ display:'flex', gap:4 }}>
+                {[['M','Male'],['F','Female']].map(([val,lbl]) =>
+                  optBtn(lbl, val, patientSex, setPatientSex)
+                )}
+              </div>
+            </div>
+          </div>
+          {patientSex === 'F' && patientAge && (
+            <div style={{ fontSize:10, color:'#64748b', fontStyle:'italic' }}>
+              {isPostmenopausal ? 'Postmenopausal guidelines applied (age ≥51)' : 'Premenopausal guidelines applied (age <51)'}
+            </div>
+          )}
+
+          {/* Renal */}
+          <span style={secTitle}>🫘 Renal Finding</span>
+          <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
+            {['Bosniak I — simple cyst','Bosniak II','Bosniak IIF','Bosniak III','Bosniak IV',
+              'Solid renal mass <1cm','Solid renal mass 1-3cm','Solid renal mass >3cm'].map(v =>
+              optBtn(v, v, renalFinding, setRenalFinding)
+            )}
+          </div>
+
+          {/* GYN */}
+          <span style={secTitle}>🩺 Gynecologic Finding</span>
+          <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
+            {['Simple cyst <3cm','Simple cyst 3-5cm','Simple cyst 5-7cm','Simple cyst >7cm',
+              'Complex / septated cyst','Solid or mixed mass'].map(v =>
+              optBtn(v, v, gynFinding, setGynFinding)
+            )}
+          </div>
+
+          {/* Aorta */}
+          <span style={secTitle}>🩸 Aorta</span>
+          <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
+            {['Normal (<3cm)','3.0-3.9cm','4.0-4.9cm','5.0-5.4cm','>=5.5cm','Rapid growth >0.5cm/6mo'].map(v =>
+              optBtn(v, v, aortaFinding, setAortaFinding)
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── ANATOMY ATLAS DATA (Visible Human Project) ──────────────────────────────
 const VHP_BASE = 'https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Male-Images/PNG_format';
 
@@ -1446,6 +1669,18 @@ export default function DashboardPage() {
   const [showDdx, setShowDdx] = useState(false);
   const recognitionRef = useRef(null);
 
+  // ── Incidental findings state ──────────────────────────────────────────────
+  // Fleischner (lung nodule)
+  const [noduleType, setNoduleType] = useState('');       // 'solid'|'ggo'|'partsolid'
+  const [noduleSize, setNoduleSize] = useState('');       // size bucket string
+  // GU incidentals
+  const [renalFinding, setRenalFinding] = useState('');
+  const [gynFinding, setGynFinding] = useState('');
+  const [aortaFinding, setAortaFinding] = useState('');
+  // Patient demographics (for GYN menopausal logic)
+  const [patientAge, setPatientAge] = useState('');
+  const [patientSex, setPatientSex] = useState('');
+
   const showSide = !BILATERAL.includes(selectedBodyPart);
   const isCT = modality === 'CT';
   const partLabel = selectedBodyPart === 'spine' ? `${spineRegion} spine` : selectedBodyPart;
@@ -1455,6 +1690,83 @@ export default function DashboardPage() {
   const technique = isCT
     ? `CT scan of the ${sideLabel}${partLabel} ${contrastLabel} IV contrast. Multiplanar reformats were created. One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.`
     : `Multiplanar multisequence MRI of the ${sideLabel}${partLabel} ${contrastLabel} IV contrast.`;
+
+
+  // ── Incidental trigger logic ──────────────────────────────────────────────
+  const showLungWarning = isCT && (
+    selectedBodyPart === 'shoulder' ||
+    (selectedBodyPart === 'spine' && ['cervical','thoracic'].includes(spineRegion))
+  );
+  const showGUWarning = (
+    selectedBodyPart === 'hip' ||
+    selectedBodyPart === 'pelvis' ||
+    (selectedBodyPart === 'spine' && spineRegion === 'lumbar')
+  );
+
+  // Menopausal status inference
+  const age = parseInt(patientAge) || null;
+  const isPostmenopausal = patientSex === 'F' && age !== null ? age >= 51 : null;
+  // null = unknown (show both tiers)
+
+  // Build incidental findings text for injection into prompt
+  const buildIncidentalBlock = () => {
+    const lines = [];
+
+    // Fleischner
+    if (showLungWarning && noduleType && noduleSize) {
+      const fleischner = getFleischnerRec(noduleType, noduleSize);
+      if (fleischner) {
+        lines.push(`INCIDENTAL PULMONARY NODULE — ${noduleType.toUpperCase()} — ${noduleSize}:`);
+        lines.push(`Low-risk patient: ${fleischner.low}`);
+        lines.push(`High-risk patient: ${fleischner.high}`);
+        lines.push(`Citation: MacMahon H et al. Guidelines for Management of Incidental Pulmonary Nodules Detected on CT Images: From the Fleischner Society 2017. Radiology 2017;284(1):228-243.`);
+      }
+    }
+
+    // Renal
+    if (showGUWarning && renalFinding) {
+      const renal = getRenalRec(renalFinding);
+      if (renal) {
+        lines.push(`INCIDENTAL RENAL FINDING — ${renalFinding}:`);
+        lines.push(renal.rec);
+        lines.push(`Citation: Herts BR et al. ACR Incidental Findings Committee Recommendation for CT and MRI of the Kidney. J Am Coll Radiol 2018;15(2):264-273.`);
+      }
+    }
+
+    // GYN
+    if (showGUWarning && gynFinding) {
+      const gyn = getGynRec(gynFinding, isPostmenopausal);
+      if (gyn) {
+        lines.push(`INCIDENTAL GYNECOLOGIC FINDING — ${gynFinding}:`);
+        if (isPostmenopausal === null) {
+          lines.push(`If premenopausal: ${gyn.pre}`);
+          lines.push(`If postmenopausal: ${gyn.post}`);
+        } else {
+          lines.push(isPostmenopausal ? gyn.post : gyn.pre);
+        }
+        lines.push(`Citation: Patel MD et al. ACR Appropriateness Criteria / SRU Consensus Guidelines on Management of Adnexal Cysts. J Am Coll Radiol 2020.`);
+      }
+    }
+
+    // Aorta
+    if (showGUWarning && aortaFinding) {
+      const aorta = getAortaRec(aortaFinding);
+      if (aorta) {
+        lines.push(`INCIDENTAL AORTIC FINDING — ${aortaFinding}:`);
+        lines.push(aorta.rec);
+        lines.push(`Citation: Khosa F et al. ACR Incidental Findings Committee Recommendations for Abdominal Aortic Aneurysm. J Am Coll Radiol 2013;10(8):575-579.`);
+      }
+    }
+
+    return lines.length ? lines.join('\n') : '';
+  };
+
+  // Reset incidentals when body part / modality / spine region changes
+  const resetIncidentals = () => {
+    setNoduleType(''); setNoduleSize('');
+    setRenalFinding(''); setGynFinding('');
+    setAortaFinding('');
+  };
 
   const generateReport = async () => {
     if (!dictationText.trim()) return;
@@ -1469,7 +1781,7 @@ export default function DashboardPage() {
           model:'claude-sonnet-4-6',
           max_tokens:1500,
           system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality),
-          messages:[{role:'user',content:`Dictated findings:\n\n${dictationText}`}],
+          messages:[{role:'user',content:`Dictated findings:\n\n${dictationText}${buildIncidentalBlock() ? '\n\nINCIDENTAL FINDINGS TO ADD TO IMPRESSION AND REFERENCES:\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
       const data = await res.json();
@@ -1601,7 +1913,7 @@ export default function DashboardPage() {
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
             <div style={{ display:'flex',gap:8 }}>
               <div style={{ flex:2 }}><label style={lbl}>Body Part</label>
-                <select style={inp} value={selectedBodyPart} onChange={e => setSelectedBodyPart(e.target.value)}>
+                <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetIncidentals(); }}>
                   {BODY_PARTS.map(b => <option key={b} value={b}>{b.charAt(0).toUpperCase()+b.slice(1)}</option>)}
                 </select>
               </div>
@@ -1626,6 +1938,21 @@ export default function DashboardPage() {
             <div style={{ padding:'9px 12px',background:isCT?'linear-gradient(135deg,#ecfeff,#f0f9ff)':'linear-gradient(135deg,#eff6ff,#f0f9ff)',borderRadius:8,border:isCT?'1px solid #a5f3fc':'1px solid #bfdbfe',fontSize:12,color:isCT?'#0e7490':'#1d4ed8',fontStyle:'italic',lineHeight:1.6 }}>
               {technique}
             </div>
+            {/* ── Incidental Findings Panel ── */}
+            {(showLungWarning || showGUWarning) && (
+              <IncidentalPanel
+                showLung={showLungWarning}
+                showGU={showGUWarning}
+                noduleType={noduleType} setNoduleType={setNoduleType}
+                noduleSize={noduleSize} setNoduleSize={setNoduleSize}
+                renalFinding={renalFinding} setRenalFinding={setRenalFinding}
+                gynFinding={gynFinding} setGynFinding={setGynFinding}
+                aortaFinding={aortaFinding} setAortaFinding={setAortaFinding}
+                patientAge={patientAge} setPatientAge={setPatientAge}
+                patientSex={patientSex} setPatientSex={setPatientSex}
+                isPostmenopausal={isPostmenopausal}
+              />
+            )}
             <div style={{ flex:1,display:'flex',flexDirection:'column' }}><label style={lbl}>Findings</label>
               <textarea className="msk-textarea" style={{ ...inp,flex:1,minHeight:160,resize:'vertical',lineHeight:1.7,fontFamily:'inherit',border:isListening?'1.5px solid #ef4444':'1px solid #dde3ed',boxShadow:isListening?'0 0 0 3px rgba(239,68,68,0.1)':'none',transition:'all 0.15s' }}
                 value={dictationText} onChange={e => setDictationText(e.target.value)} placeholder={`Type or dictate ${isCT?'CT':'MRI'} findings here…`} />
