@@ -29,7 +29,6 @@ const ANATOMY = {
 // ─── GRADING CONTEXT BUILDER ─────────────────────────────────────────────────
 // Extracts grading scales from JOINT_DATA and formats them for Claude.
 // Only includes entries marked isGradingScale:true — skips pure measurements.
-// Includes citation text so Claude can reproduce it accurately in REFERENCES.
 function buildGradingContext(part) {
   const jointData = JOINT_DATA[part];
   if (!jointData?.measurements?.length) return '';
@@ -37,10 +36,7 @@ function buildGradingContext(part) {
   if (!scales.length) return '';
   return scales.map(m => {
     const grades = m.normalValues.map(v => `  ${v.label}: ${v.value}`).join('\n');
-    const citationText = m.citations?.length
-      ? `  Citation: ${m.citations[0].label}`
-      : '';
-    return `${m.label}:\n${grades}${citationText ? '\n' + citationText : ''}`;
+    return `${m.label}:\n${grades}`;
   }).join('\n\n');
 }
 
@@ -74,29 +70,12 @@ CRITICAL FORMATTING RULES:
 ANATOMY TO COVER for ${part}: ${ANATOMY[part]}
 Generate a subheading for EVERY structure listed above.
 ${findingsRules}
-GRADING RULES (apply whenever a grade, classification, or severity is mentioned in dictation):
-- ALWAYS write the full classification system name when reporting a grade. Example: "Modified Outerbridge grade 2" not just "grade 2". "Universal ligament grade 3 tear" not just "complete tear".
-- ALWAYS add the grade descriptor in parentheses immediately after the grade. Example: "Modified Outerbridge grade 2 (partial thickness fissuring less than 50% of cartilage depth)" or "Modified Outerbridge grade 3 (deep fissuring greater than 50% depth with intact subchondral bone)".
-- MENISCUS TEARS: always specify ISAKOS tear type (vertical-longitudinal, horizontal, radial, oblique/flap, complex, root tear) and zone (red-red, red-white, white-white) if inferable from dictation. If zone not specified, omit zone.
-- LIGAMENT TEARS: always specify the universal grade (1/2/3) with descriptor. Grade 1 = intact fibers with periligamentous edema. Grade 2 = partial tear less than 50% fiber disruption. Grade 3 = complete tear with full fiber discontinuity.
-
 IMPRESSION RULES:
 - Synthesize positive findings into clinically meaningful impression.
 - Number each item. Most important first.
 - ${normalImpressionText}
-- CARTILAGE / OA RULE (knee only): If Modified Outerbridge grading is mentioned in 2 or more compartments (medial, lateral, patellofemoral), do NOT list each compartment separately in the impression. Instead write a single impression line: "Osteoarthrosis, most notable in the [worst compartment] compartment with Modified Outerbridge grade [X] chondromalacia, and [mild/moderate] involvement of the [other compartments] as above." If only 1 compartment involved, report it normally.
-- OSTEOCHONDRAL EXCEPTION: If an osteochondral lesion, OCD, or subchondral fracture is present, list it separately by name regardless of the OA rule above.
-
-REFERENCES SECTION RULES:
-- After the IMPRESSION, add a REFERENCES: section.
-- List ONLY the citations for grading scales you actually used in this report.
-- Format each reference as a numbered footnote on its own line: "1. [Citation text]"
-- If no grading scales were used, omit the REFERENCES section entirely.
-- Example format:
-REFERENCES:
-1. Modified Outerbridge Classification: Outerbridge RE. The etiology of chondromalacia patellae. J Bone Joint Surg Br 1961.
-2. Universal Ligament Grading: Stoller DW. MRI in Orthopaedics and Sports Medicine. 3rd ed. Lippincott Williams & Wilkins 2007.
-${gradingBlock}
+- CARTILAGE / OA RULE (knee only): If Modified Outerbridge grading is mentioned in 2 or more compartments (medial, lateral, patellofemoral), do NOT list each compartment separately in the impression. Instead write a single impression line: "Osteoarthrosis, most notable in the [worst compartment] compartment with grade [X] chondromalacia, and [mild/moderate] involvement of the [other compartments] as above." If only 1 compartment involved, report it normally.
+- OSTEOCHONDRAL EXCEPTION: If an osteochondral lesion, OCD, or subchondral fracture is present, list it separately by name regardless of the OA rule above.${gradingBlock}
 
 FORMAT:
 TECHNIQUE:
@@ -129,32 +108,10 @@ function formatReport(txt) {
     .replace(/^\s*[-•]\s+/gm, '');
 
   let inImpression = false;
-  let inReferences = false;
 
   return cleaned.split('\n').map((line, i) => {
     const t = line.trim();
     if (!t) return <div key={i} style={{ height: 5 }} />;
-
-    // REFERENCES header — render as small footnote divider
-    const isReferencesHeader = /^REFERENCES:?$/i.test(t);
-    if (isReferencesHeader) {
-      inReferences = true;
-      inImpression = false;
-      return (
-        <div key={i} style={{ marginTop: 16, marginBottom: 4, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#94a3b8', textTransform: 'uppercase' }}>References</span>
-        </div>
-      );
-    }
-
-    // Reference footnote lines — small grey text
-    if (inReferences) {
-      return (
-        <div key={i} style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.6, paddingLeft: 4, marginBottom: 2 }}>
-          {t}
-        </div>
-      );
-    }
 
     const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
     if (isHeader) {
@@ -214,6 +171,458 @@ function formatReport(txt) {
     return <div key={i} style={{ fontSize: 13, color: inImpression ? '#1e293b' : '#dc2626', fontWeight: inImpression ? 400 : 500, lineHeight: 1.8, paddingLeft: 4 }}>{t}</div>;
   });
 }
+
+// ─── PERMANENT PELVIS ATLAS LABELS (T1 sequence) ────────────────────────────
+// Generated from atlas_labels.json — 279 labels across 84 slices
+const PELVIS_LABELS = {
+  8: [
+    [55.4, 57.8, "S1"],
+  ],
+  10: [
+    [69.1, 49.2, "lateral femoral cutaneous nerve"],
+  ],
+  11: [
+    [56.8, 58.9, "S1"],
+    [63.7, 47, "psoas"],
+  ],
+  12: [
+    [60.7, 54, "L5"],
+    [70.3, 48.4, "lateral femoral cutaneous nerve"],
+    [52.3, 55.8, "Sacrum, S1"],
+    [64.3, 63.2, "SI joint, ligamentous"],
+  ],
+  13: [
+    [67.8, 56.4, "SI joint, synovial"],
+  ],
+  14: [
+    [53.6, 63, "Sacrum, S2"],
+    [64.9, 63.9, "SI joint, ligamentous"],
+  ],
+  15: [
+    [58.8, 58.2, "S1"],
+    [57.1, 65.4, "S2"],
+    [73.6, 45.3, "lateral femoral cutaneous nerve"],
+    [67.2, 58.2, "SI joint, synovial"],
+    [64.4, 68.3, "SI joint, ligamentous"],
+  ],
+  16: [
+    [62.1, 54.9, "L5"],
+    [53.7, 69.3, "Sacrum, S3"],
+  ],
+  17: [
+    [58.2, 65.2, "S2"],
+    [56.5, 70.9, "S3"],
+    [63, 52.5, "Obturator nerve"],
+    [75.4, 42.9, "lateral femoral cutaneous nerve"],
+    [68.8, 47.9, "femoral nerve"],
+    [64.9, 45.7, "psoas"],
+    [66.3, 58.9, "SI joint, synovial"],
+    [65.8, 64.5, "SI joint, synovial"],
+  ],
+  18: [
+    [61.2, 58.9, "S1"],
+    [76.2, 41.1, "lateral femoral cutaneous nerve"],
+  ],
+  19: [
+    [57.1, 71.1, "S3"],
+    [53.9, 72, "Sacrum, S4"],
+    [65.5, 58.8, "SI joint, synovial"],
+    [65.1, 65.9, "SI joint, synovial"],
+  ],
+  20: [
+    [63.8, 56.5, "L5"],
+    [60.1, 65.2, "S2"],
+    [63.8, 53.2, "Obturator nerve"],
+    [69.7, 45.5, "femoral nerve"],
+    [65.2, 68.5, "SI joint, synovial"],
+    [66, 59.9, "SI joint, synovial"],
+  ],
+  21: [
+    [63, 58.9, "S1"],
+    [77, 34.8, "lateral femoral cutaneous nerve"],
+    [69.9, 45.1, "femoral nerve"],
+    [64.9, 67.8, "SI joint, synovial"],
+    [65.7, 61.5, "SI joint, synovial"],
+    [65.7, 41.1, "genitofemoral nerve"],
+  ],
+  22: [
+    [80.9, 38.5, "gluteus minimus"],
+  ],
+  23: [
+    [65.1, 57.1, "L5"],
+    [61.8, 64.1, "S2"],
+    [59.9, 70.7, "S3"],
+    [64.3, 60, "S1"],
+    [65.2, 53.4, "Obturator nerve"],
+    [77.2, 31.9, "lateral femoral cutaneous nerve"],
+    [70.5, 43.8, "femoral nerve"],
+    [80.6, 69.1, "gluteus maximus"],
+    [80.1, 29.8, "anterior superior iliac spine"],
+    [66.6, 40.7, "genitofemoral nerve"],
+  ],
+  24: [
+    [75.3, 40.7, "iliacus"],
+    [54.3, 76.4, "Sacrum, S5"],
+  ],
+  25: [
+    [65.2, 61, "sciatic nerve"],
+    [77.9, 29.3, "lateral femoral cutaneous nerve"],
+    [71.1, 42, "femoral nerve"],
+    [64.1, 69.4, "piriformis"],
+  ],
+  26: [
+    [82.6, 50.6, "gluteus medius"],
+    [75.4, 29.6, "ilioinguinal nerve"],
+    [64.7, 68.5, "piriformis"],
+  ],
+  27: [
+    [67.1, 66.7, "piriformis"],
+    [67.2, 39.8, "genitofemoral nerve"],
+  ],
+  28: [
+    [66.6, 53, "Obturator nerve"],
+    [80.7, 40, "gluteus minimus"],
+    [66.8, 67, "SI joint, ligamentous"],
+  ],
+  29: [
+    [67.2, 61.5, "sciatic nerve"],
+    [79.3, 28.4, "lateral femoral cutaneous nerve"],
+    [71.6, 38.7, "femoral nerve"],
+    [79.3, 30.7, "sartorius"],
+  ],
+  30: [
+    [67.5, 61.5, "sciatic nerve"],
+    [69.2, 65.9, "piriformis"],
+  ],
+  31: [
+    [80.6, 68.3, "gluteus maximus"],
+    [74.5, 31.3, "ilioinguinal nerve"],
+    [70.8, 64.6, "piriformis"],
+  ],
+  32: [
+    [71.4, 37.4, "femoral nerve"],
+    [83.4, 31.1, "tensor fascia lata"],
+    [67.1, 40, "external iliac artery"],
+  ],
+  33: [
+    [66.9, 51.4, "Obturator nerve"],
+    [68.2, 62.8, "sciatic nerve"],
+    [79.5, 28, "lateral femoral cutaneous nerve"],
+    [81.2, 40.5, "gluteus minimus"],
+    [79.2, 30.9, "sartorius"],
+    [66.6, 37.4, "genitofemoral nerve"],
+  ],
+  34: [
+    [78.7, 30.6, "sartorius"],
+    [72.8, 31.9, "ilioinguinal nerve"],
+    [77, 39.6, "anterior inferior iliac spine"],
+    [73.6, 62.1, "piriformis"],
+  ],
+  35: [
+    [68.6, 63, "sciatic nerve"],
+  ],
+  36: [
+    [66, 50.6, "Obturator nerve"],
+    [71.1, 38.1, "femoral nerve"],
+    [81, 42.2, "gluteus minimus"],
+    [59.2, 24.7, "rectus abdominis"],
+    [54.3, 78.8, "coccyx"],
+    [63, 74.4, "sacrotuberus ligament"],
+    [66.4, 35.2, "genitofemoral nerve, genital branch"],
+    [68.5, 37.7, "external iliac artery"],
+  ],
+  37: [
+    [83.2, 55.6, "gluteus medius"],
+    [84.3, 50.5, "gluteus medius"],
+    [66, 67.4, "sacrospinous ligament"],
+  ],
+  38: [
+    [70.9, 63.7, "sciatic nerve"],
+    [79.9, 69.8, "gluteus maximus"],
+    [71.1, 33.3, "ilioinguinal nerve"],
+    [65.5, 72.4, "sacrotuberus ligament"],
+    [67.5, 32.6, "genitofemoral nerve, genital branch"],
+  ],
+  39: [
+    [71.4, 36.1, "femoral nerve"],
+    [81.8, 41.2, "gluteus minimus"],
+    [52.8, 75.3, "coccyx"],
+  ],
+  40: [
+    [64.9, 48.8, "Obturator nerve"],
+    [84.8, 32, "tensor fascia lata"],
+    [78.4, 40.7, "rectus femoris"],
+    [72.2, 40.5, "iliopsoas"],
+    [69.4, 33.9, "ilioinguinal nerve"],
+    [67.1, 66.9, "sacrospinous ligament"],
+    [66.8, 31.3, "genitofemoral nerve, genital branch"],
+    [69.7, 36.5, "common femoral artery"],
+  ],
+  41: [
+    [75, 63.7, "sciatic nerve"],
+    [80.4, 28.7, "lateral femoral cutaneous nerve"],
+    [72.2, 34.1, "femoral nerve"],
+    [77.5, 31.5, "sartorius"],
+    [74.1, 49.4, "femoral head"],
+    [52.8, 72.2, "coccyx"],
+  ],
+  42: [
+    [82.3, 43.1, "gluteus minimus"],
+    [68.2, 33.3, "ilioinguinal nerve"],
+    [66.1, 32.2, "genitofemoral nerve, genital branch"],
+    [70.6, 33.7, "genitofemoral nerve, femoral branch"],
+    [69.7, 35.9, "common femoral artery"],
+  ],
+  43: [
+    [71.7, 34.4, "femoral nerve"],
+    [84.1, 56, "gluteus medius"],
+    [86, 50.8, "gluteus medius"],
+    [72.7, 41.1, "iliopsoas"],
+  ],
+  44: [
+    [72.2, 34.4, "femoral nerve"],
+    [85.5, 32.8, "tensor fascia lata"],
+    [79.2, 37.6, "rectus femoris"],
+    [70.6, 33.9, "genitofemoral nerve, femoral branch"],
+  ],
+  45: [
+    [77, 63.5, "sciatic nerve"],
+    [82.7, 42.9, "gluteus minimus"],
+    [84.9, 56.7, "gluteus medius"],
+    [79.2, 71.6, "gluteus maximus"],
+    [65.5, 31.7, "ilioinguinal nerve"],
+    [64.9, 56.9, "obturator internus"],
+    [68, 70.2, "sacrotuberus ligament"],
+    [69.9, 35.5, "common femoral artery"],
+  ],
+  46: [
+    [72.3, 35.2, "femoral nerve"],
+    [73.1, 42.5, "iliopsoas"],
+    [64.1, 56.9, "obturator internus"],
+    [70.3, 67.4, "obturator internus"],
+    [77, 60.2, "obturator internus"],
+  ],
+  47: [
+    [64.1, 47.7, "Obturator nerve"],
+    [84.9, 53, "greater trochanter"],
+    [54.7, 31.1, "rectus abdominis"],
+    [68.9, 69.8, "sacrotuberus ligament"],
+    [70.9, 33.5, "genitofemoral nerve, femoral branch"],
+  ],
+  48: [
+    [87.2, 52.9, "gluteus medius"],
+    [73.1, 43.8, "iliopsoas"],
+    [84.4, 52.1, "greater trochanter"],
+    [66.3, 66.1, "pudendal NVB"],
+  ],
+  49: [
+    [84.6, 46.4, "gluteus minimus"],
+    [85.2, 33.9, "tensor fascia lata"],
+    [77.6, 49.9, "femoral neck"],
+    [65.2, 63, "Pudendal NVB (Alcock's canal)"],
+    [68.8, 69.8, "sacrotuberus ligament"],
+  ],
+  50: [
+    [78.4, 63, "sciatic nerve"],
+    [81.5, 70.7, "gluteus maximus"],
+    [73, 45.5, "iliopsoas"],
+    [85.2, 52.9, "greater trochanter"],
+    [64, 55.8, "obturator internus"],
+    [69.7, 36.6, "common femoral artery"],
+  ],
+  51: [
+    [63.8, 43.6, "Obturator nerve"],
+    [86.2, 47.9, "gluteus minimus"],
+    [63.8, 57.8, "obturator internus"],
+    [63.5, 60.8, "pudendal NVB (Alcock's canal)"],
+    [70, 69.3, "sacrotuberus ligament"],
+  ],
+  52: [
+    [79.6, 28.5, "lateral femoral cutaneous nerve"],
+    [85.4, 34.2, "tensor fascia lata"],
+    [73.9, 30.9, "sartorius"],
+    [73.7, 48.3, "iliopsoas"],
+  ],
+  53: [
+    [80.7, 63, "sciatic nerve"],
+    [85.7, 34.2, "tensor fascia lata"],
+    [79, 35.5, "rectus femoris"],
+    [51.1, 42.9, "pubic symphysis"],
+    [62.9, 59.1, "pudendal NVB (Alcock's canal)"],
+    [69.9, 36.5, "common femoral artery"],
+    [65.8, 35.9, "great saphenous vein"],
+  ],
+  54: [
+    [74.2, 67, "conjoined hamstring"],
+    [74.8, 62.6, "semimembranosus"],
+    [74.2, 51.4, "iliopsoas"],
+    [53.3, 38.7, "pubic tubercle"],
+  ],
+  56: [
+    [74.5, 53.2, "iliopsoas"],
+  ],
+  57: [
+    [84.9, 71.1, "gluteus maximus"],
+    [86.3, 34.2, "tensor fascia lata"],
+    [72.5, 31.5, "sartorius"],
+    [74.2, 53.4, "iliopsoas"],
+    [80.3, 51.4, "intertrochanteric femur"],
+    [63.8, 58, "inferior pubic ramus"],
+    [69.4, 36.3, "superficial femoral artery"],
+  ],
+  58: [
+    [75.1, 66.5, "conjoined hamstring"],
+    [74.1, 53.4, "iliopsoas"],
+    [76.2, 56, "lesser trochanter"],
+  ],
+  59: [
+    [76.2, 65.9, "biceps femoris, long head"],
+    [64.4, 36.3, "great saphenous vein"],
+  ],
+  60: [
+    [81.2, 62.4, "sciatic nerve"],
+    [75, 63, "semimembranosus"],
+    [73, 66.9, "semitendinosus"],
+    [76.5, 55.1, "lesser trochanter"],
+    [68.9, 40.5, "superficial femoral vein"],
+  ],
+  61: [
+    [86.9, 35.5, "tensor fascia lata"],
+    [69.4, 37.4, "superficial femoral artery"],
+    [63.5, 37.2, "great saphenous vein"],
+  ],
+  62: [
+    [70.8, 32.6, "sartorius"],
+    [77.2, 65.6, "biceps femoris, long head"],
+  ],
+  63: [
+    [80.6, 62.1, "sciatic nerve"],
+    [68.3, 40.9, "superficial femoral vein"],
+  ],
+  64: [
+    [76.5, 34.1, "rectus femoris"],
+    [57.8, 51.9, "gracilis"],
+    [75.4, 62.3, "semimembranosus"],
+    [76.1, 68.1, "semitendinosus"],
+  ],
+  65: [
+    [77.5, 65.2, "biceps femoris, long head"],
+    [62.3, 37.9, "great saphenous vein"],
+  ],
+  66: [
+    [87.2, 36.3, "tensor fascia lata"],
+    [69.6, 33.3, "sartorius"],
+    [76.2, 67.8, "semitendinosus"],
+    [80.1, 51.2, "subtrochanteric femur"],
+    [68, 37.9, "superficial femoral artery"],
+  ],
+  67: [
+    [68.6, 40.9, "superficial femoral vein"],
+  ],
+  68: [
+    [67.4, 38.1, "superficial femoral artery"],
+  ],
+  69: [
+    [80.7, 63.4, "sciatic nerve"],
+    [86.9, 34.8, "tensor fascia lata"],
+    [57.6, 53.2, "gracilis"],
+    [78.2, 65.2, "biceps femoris, long head"],
+  ],
+  70: [
+    [68, 42.2, "superficial femoral vein"],
+  ],
+  71: [
+    [75.3, 34.4, "rectus femoris"],
+    [75.6, 63.2, "semimembranosus"],
+    [76.7, 68.5, "semitendinosus"],
+    [66.4, 39.4, "superficial femoral artery"],
+  ],
+  72: [
+    [60.4, 40, "great saphenous vein"],
+  ],
+  74: [
+    [77, 69.1, "semitendinosus"],
+    [65.5, 40, "superficial femoral artery"],
+    [67.5, 42.4, "superficial femoral vein"],
+  ],
+  75: [
+    [81.2, 63.4, "sciatic nerve"],
+    [57.8, 54.5, "gracilis"],
+  ],
+  76: [
+    [58.7, 41.6, "great saphenous vein"],
+  ],
+  77: [
+    [73.1, 34.6, "rectus femoris"],
+    [57.4, 55.4, "gracilis"],
+    [64.7, 40.5, "superficial femoral artery"],
+  ],
+  79: [
+    [79.3, 64.5, "biceps femoris, long head"],
+    [66.4, 44, "superficial femoral vein"],
+    [58.2, 42.5, "great saphenous vein"],
+  ],
+  80: [
+    [57.3, 54.7, "gracilis"],
+    [76.4, 66.7, "semitendinosus"],
+  ],
+  81: [
+    [64.1, 41.6, "superficial femoral artery"],
+    [66.4, 44.4, "superficial femoral vein"],
+  ],
+  83: [
+    [81, 64.5, "biceps femoris, long head"],
+  ],
+  84: [
+    [74.7, 63.5, "semimembranosus"],
+  ],
+  85: [
+    [71.6, 34.6, "rectus femoris"],
+    [56.8, 57.3, "gracilis"],
+    [63, 42.9, "superficial femoral artery"],
+  ],
+  86: [
+    [75.1, 66.9, "semitendinosus"],
+  ],
+  87: [
+    [81.2, 64.8, "biceps femoris, long head"],
+    [65.1, 46, "superficial femoral vein"],
+  ],
+  88: [
+    [56.4, 58.8, "gracilis"],
+    [62.4, 44.6, "superficial femoral artery"],
+  ],
+  91: [
+    [61.9, 44.8, "superficial femoral artery"],
+  ],
+  92: [
+    [74.4, 66.9, "semitendinosus"],
+    [64.1, 47.3, "superficial femoral vein"],
+  ],
+  94: [
+    [80.3, 64.5, "biceps femoris, long head"],
+  ],
+  95: [
+    [61.6, 46.8, "superficial femoral artery"],
+  ],
+  96: [
+    [72.5, 63.5, "semimembranosus"],
+  ],
+  97: [
+    [62.1, 47, "Adductor/Hunter's canal"],
+    [63.8, 48.6, "superficial femoral vein"],
+  ],
+  99: [
+    [81.2, 63.9, "biceps femoris, long head"],
+    [61.9, 48.3, "superficial femoral artery"],
+  ],
+  100: [
+    [72.5, 63.2, "semimembranosus"],
+    [79.9, 64.5, "biceps femoris, long head"],
+    [73.6, 67, "semitendinosus"],
+    [64.1, 49.5, "superficial femoral vein"],
+  ],
+};
 
 // ─── ANATOMY ATLAS DATA (Visible Human Project) ──────────────────────────────
 const VHP_BASE = 'https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Male-Images/PNG_format';
@@ -311,7 +720,7 @@ const ATLAS_JOINTS = {
     useLocalMRI: true,
     localPath: '/atlas/pelvis/pelvis_', localExt: '.webp',
     sequences: {
-      t1: { label:'T1', path:'/atlas/pelvis/pelvis_', slices:Array.from({length:100},(_,i)=>i+1), ext:'.webp' },
+      t1: { label:'T1', path:'/atlas/pelvis/pelvis_', slices:Array.from({length:100},(_,i)=>i+1), ext:'.webp', permanentLabels: PELVIS_LABELS },
       dess: { label:'DESS', path:'/atlas/pelvis_dess/dess_', slices:Array.from({length:206},(_,i)=>i+25), ext:'.webp' },
     },
     view: 'Axial MRI — pelvis without contrast',
@@ -457,6 +866,12 @@ function AtlasModal({ onClose }) {
   const totalLabels = Object.values(userLabels).reduce((s, arr) => s + arr.length, 0);
   const layerColors = { bones:'#4a7fa5', tendons:'#2d7a5a', muscles:'#c07040', nerves:'#d97706', arteries:'#dc2626', veins:'#7c3aed' };
 
+  // Permanent baked-in labels for current slice (T1 pelvis only)
+  const seqDataForLabels = jointData?.sequences?.[sequence] || null;
+  const permanentLabels = (seqDataForLabels?.permanentLabels && currentSlice)
+    ? (seqDataForLabels.permanentLabels[currentSlice] || [])
+    : [];
+
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}>
       <div style={{ background:'#0f172a',borderRadius:16,width:'min(96vw,1100px)',maxHeight:'92vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
@@ -560,8 +975,8 @@ function AtlasModal({ onClose }) {
                   alt={`Axial MRI slice ${currentSlice}`}
                 />
               )}
-              {/* User label overlay — positioned over actual image using imgRef bounds */}
-              {imgLoaded && imgRef.current && currentLabels.length > 0 && (() => {
+              {/* Label overlay — permanent baked labels + user labels */}
+              {imgLoaded && imgRef.current && (permanentLabels.length > 0 || currentLabels.length > 0) && (() => {
                 const ir = imgRef.current.getBoundingClientRect();
                 const cr = imgContainerRef.current.getBoundingClientRect();
                 const ol = ir.left - cr.left;
@@ -570,8 +985,17 @@ function AtlasModal({ onClose }) {
                 const oh = ir.height;
                 return (
                   <svg style={{ position:'absolute',left:ol,top:ot,width:ow,height:oh,pointerEvents:'none',overflow:'visible' }} viewBox="0 0 100 100" preserveAspectRatio="none">
+                    {/* Permanent baked-in labels — white dots, white text */}
+                    {permanentLabels.map(([x, y, text], li) => (
+                      <g key={'p'+li}>
+                        <circle cx={x} cy={y} r="1.0" fill="white" opacity="0.9"/>
+                        <rect x={x+1.5} y={y-2.8} width={text.length*1.6+2} height="5.0" rx="0.8" fill="rgba(0,0,0,0.75)"/>
+                        <text x={x+2.5} y={y+1.0} fontSize="2.6" fill="white" fontFamily="monospace" fontWeight="600">{text}</text>
+                      </g>
+                    ))}
+                    {/* User labels — yellow dots (label mode additions) */}
                     {currentLabels.map(([x, y, text], li) => (
-                      <g key={li}>
+                      <g key={'u'+li}>
                         <circle cx={x} cy={y} r="1.2" fill="#facc15" opacity="0.95"/>
                         <rect x={x+1.5} y={y-2.8} width={text.length*1.8+2} height="5.2" rx="0.8" fill="rgba(0,0,0,0.85)"/>
                         <text x={x+2.5} y={y+1.1} fontSize="2.8" fill="#facc15" fontFamily="monospace" fontWeight="700">{text}</text>
