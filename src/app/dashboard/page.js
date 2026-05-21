@@ -13,7 +13,8 @@ const ABSENT_STRUCTURES = [
   'loose body','loose bodies','synovitis','plicae','plica',
 ];
 
-const ANATOMY = {
+// MRI anatomy templates — full soft tissue detail
+const ANATOMY_MRI = {
   knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Soft Tissues',
   shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenohumeral Joint, Glenoid Labrum, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
   hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Soft Tissues',
@@ -24,6 +25,25 @@ const ANATOMY = {
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues',
   foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
 };
+
+// CT anatomy templates — bone/joint/soft tissue only, no tendons/ligaments/labrum
+const ANATOMY_CT = {
+  knee:'Bones, Joint Effusion, Dislocation or Subluxation, Joint Space (medial compartment, lateral compartment, patellofemoral), Soft Tissues',
+  shoulder:'Bones, Joint Effusion, Dislocation or Subluxation, Acromioclavicular Joint, Glenohumeral Joint Space, Soft Tissues',
+  hip:'Bones, Joint Effusion, Dislocation or Subluxation, Joint Space, Soft Tissues',
+  wrist:'Bones, Dislocation or Subluxation, Radiocarpal Joint Space, Midcarpal Joint Space, Soft Tissues',
+  elbow:'Bones, Joint Effusion, Dislocation or Subluxation, Joint Space, Soft Tissues',
+  ankle:'Bones, Joint Effusion, Dislocation or Subluxation, Tibiotalar Joint Space, Subtalar Joint Space, Soft Tissues',
+  spine:'Vertebral Alignment, Vertebral Bodies, Disc Spaces, Spinal Canal, Neural Foramina, Facet Joints, Soft Tissues',
+  pelvis:'Pelvic Ring, Sacroiliac Joints, Pubic Symphysis, Hip Joints, Acetabula, Soft Tissues',
+  foot:'Bones, Lisfranc Joint Complex, Dislocation or Subluxation, Joint Spaces, Soft Tissues',
+};
+
+// Selector — pick correct template based on modality
+const ANATOMY = ANATOMY_MRI; // kept for backward compat; buildPrompt uses getAnatomy()
+function getAnatomy(part, isCT) {
+  return isCT ? (ANATOMY_CT[part] || ANATOMY_MRI[part]) : (ANATOMY_MRI[part] || '');
+}
 
 
 // ─── GRADING CONTEXT BUILDER ─────────────────────────────────────────────────
@@ -48,7 +68,7 @@ function buildPrompt(part, lat, con, spineRegion, modality) {
     : `Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast.`;
 
   const findingsRules = isCT
-    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses write "absent." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern. No T1/T2/STIR/marrow signal language. 4. BONES RULE — address all three: Fracture/cortical disruption (or "No fracture or cortical disruption."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion.") — three sentences on same line.`
+    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent" not "intact." EXCEPTION: Soft Tissues — write "No acute soft tissue abnormality." if not mentioned. 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR/marrow signal language. 4. BONES RULE — address all three on same line: Fracture/cortical disruption (or "No fracture or cortical disruption."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). 5. JOINT SPACE RULE — for each joint space subheading address: narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis."`
     : `FINDINGS RULES: 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses — write "absent" not "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — address all three: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion."`;
 
   const normalImpressionText = isCT
@@ -67,13 +87,15 @@ CRITICAL FORMATTING RULES:
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 
-ANATOMY TO COVER for ${part}: ${ANATOMY[part]}
+ANATOMY TO COVER for ${part}: ${getAnatomy(part, isCT)}
 Generate a subheading for EVERY structure listed above.
 ${findingsRules}
 IMPRESSION RULES:
 - Synthesize positive findings into clinically meaningful impression.
 - Number each item. Most important first.
 - ${normalImpressionText}
+- INCIDENTAL FINDINGS: If incidental findings are provided, add each as a numbered impression item. Add an asterisk * immediately after the impression item text (before the period) for any item that has a FOOTNOTE_REF. Example: "3. Incidental pulmonary nodule, solid, 6-8mm.*"
+- After IMPRESSION, add a FOOTNOTE: section (not REFERENCES:) containing only the FOOTNOTE_REF lines, each on its own line, in small font. Format: "* Author et al. Journal Year."
 - CARTILAGE / OA RULE (knee only): If Modified Outerbridge grading is mentioned in 2 or more compartments (medial, lateral, patellofemoral), do NOT list each compartment separately in the impression. Instead write a single impression line: "Osteoarthrosis, most notable in the [worst compartment] compartment with grade [X] chondromalacia, and [mild/moderate] involvement of the [other compartments] as above." If only 1 compartment involved, report it normally.
 - OSTEOCHONDRAL EXCEPTION: If an osteochondral lesion, OCD, or subchondral fracture is present, list it separately by name regardless of the OA rule above.${gradingBlock}
 
@@ -108,10 +130,40 @@ function formatReport(txt) {
     .replace(/^\s*[-•]\s+/gm, '');
 
   let inImpression = false;
+  let inReferences = false;
+  let inFootnote = false;
 
   return cleaned.split('\n').map((line, i) => {
     const t = line.trim();
     if (!t) return <div key={i} style={{ height: 5 }} />;
+
+    // FOOTNOTE section — small font with line break above
+    const isFootnoteHeader = /^FOOTNOTE:?$/i.test(t);
+    if (isFootnoteHeader) {
+      inFootnote = true; inImpression = false; inReferences = false;
+      return (
+        <div key={i} style={{ marginTop: 16, marginBottom: 4, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#94a3b8', textTransform: 'uppercase' }}>Footnotes</span>
+        </div>
+      );
+    }
+    if (inFootnote) {
+      return <div key={i} style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.6, paddingLeft: 4, marginBottom: 2 }}>{t}</div>;
+    }
+
+    // REFERENCES section — same small font style
+    const isReferencesHeader = /^REFERENCES:?$/i.test(t);
+    if (isReferencesHeader) {
+      inReferences = true; inImpression = false;
+      return (
+        <div key={i} style={{ marginTop: 16, marginBottom: 4, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#94a3b8', textTransform: 'uppercase' }}>References</span>
+        </div>
+      );
+    }
+    if (inReferences) {
+      return <div key={i} style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.6, paddingLeft: 4, marginBottom: 2 }}>{t}</div>;
+    }
 
     const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
     if (isHeader) {
@@ -126,10 +178,17 @@ function formatReport(txt) {
     const isNumbered = /^\d+\./.test(t);
     if (isNumbered || inImpression) {
       const num = t.match(/^\d+\./)?.[0];
+      const lineText = num ? t.slice(num.length).trim() : t;
+      // Render asterisk in impression as superscript
+      const parts = lineText.split('*');
       return (
         <div key={i} style={{ marginTop: 5, paddingLeft: 4, fontSize: 13, lineHeight: 1.7, display: 'flex', gap: 6 }}>
           {num && <span style={{ fontWeight: 700, color: '#2563eb', flexShrink: 0 }}>{num}</span>}
-          <span style={{ color: '#1e293b', fontWeight: 400 }}>{num ? t.slice(num.length).trim() : t}</span>
+          <span style={{ color: '#1e293b', fontWeight: 400 }}>
+            {parts.map((p, pi) => (
+              <span key={pi}>{p}{pi < parts.length - 1 ? <sup style={{ color:'#dc2626', fontWeight:700, fontSize:10 }}>*</sup> : null}</span>
+            ))}
+          </span>
         </div>
       );
     }
@@ -723,9 +782,9 @@ function IncidentalPanel({
   const optBtn = (label, val, current, setter) => (
     <button key={label} onClick={() => setter(current === val ? '' : val)}
       style={{ padding:'4px 9px', borderRadius:6, fontSize:11, fontWeight:current===val?700:400,
-        border:'1px solid '+(current===val?'#d97706':'#e2e8f0'),
-        background:current===val?'#fffbeb':'white',
-        color:current===val?'#d97706':'#64748b', cursor:'pointer', whiteSpace:'nowrap' }}>
+        border:'1px solid '+(current===val?'#dc2626':'#e2e8f0'),
+        background:current===val?'#fef2f2':'white',
+        color:current===val?'#dc2626':'#64748b', cursor:'pointer', whiteSpace:'nowrap' }}>
       {label}
     </button>
   );
@@ -743,17 +802,17 @@ function IncidentalPanel({
   };
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:8, borderRadius:10, border:'2px solid #fbbf24', background:'#fffbeb', padding:10 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:8, borderRadius:10, border:'2px solid #ef4444', background:'#fef2f2', padding:10 }}>
 
       {/* Warning banner */}
       {showLung && (
-        <div style={{ ...warnStyle, background:'#fef3c7', color:'#92400e' }}>
+        <div style={{ ...warnStyle, background:'#fee2e2', color:'#991b1b' }}>
           <span style={{ fontSize:16 }}>⚠️</span>
           <span>DID YOU CHECK THE LUNG?</span>
         </div>
       )}
       {showGU && (
-        <div style={{ ...warnStyle, background:'#fef3c7', color:'#92400e' }}>
+        <div style={{ ...warnStyle, background:'#fee2e2', color:'#991b1b' }}>
           <span style={{ fontSize:16 }}>⚠️</span>
           <span>DID YOU CHECK THE GU SYSTEM?</span>
         </div>
@@ -781,7 +840,7 @@ function IncidentalPanel({
           {noduleType && noduleSize && (() => {
             const rec = getFleischnerRec(noduleType, noduleSize);
             return rec ? (
-              <div style={{ fontSize:10, color:'#78350f', background:'#fef9c3', borderRadius:6, padding:'5px 8px', lineHeight:1.6 }}>
+              <div style={{ fontSize:10, color:'#7f1d1d', background:'#fee2e2', borderRadius:6, padding:'5px 8px', lineHeight:1.6 }}>
                 <strong>Low risk:</strong> {rec.low}<br/>
                 <strong>High risk:</strong> {rec.high}
               </div>
@@ -975,7 +1034,7 @@ function AtlasModal({ onClose }) {
   const [sequence, setSequence] = useState('t1');
   const sequenceRef = useRef('t1');
   const [labelMode, setLabelMode] = useState(false);
-  const [visibleLayers, setVisibleLayers] = useState({ nerves:true, muscles:true, vessels:true, bones:true, ligaments:true });
+  const [visibleLayers, setVisibleLayers] = useState({ nerves:true, muscles:true, arteries:true, veins:true, bones:true, ligaments:true });
   const [userLabels, setUserLabels] = useState({});
   const [pendingClick, setPendingClick] = useState(null);
   const [pendingText, setPendingText] = useState('');
@@ -1099,11 +1158,12 @@ function AtlasModal({ onClose }) {
   const getLabelLayer = (name) => {
     const n = name.toLowerCase();
     if (/nerve|plexus|nvb|ganglion/.test(n)) return 'nerves';
-    if (/artery|vein|vessel|saphenous|femoral art|femoral vein|iliac a|iliac v|canal/.test(n)) return 'vessels';
+    if (/artery|femoral art|iliac a|common femoral a|superficial femoral a/.test(n)) return 'arteries';
+    if (/vein|saphenous|femoral vein|iliac v|superficial femoral v/.test(n)) return 'veins';
     if (/muscle|maximus|medius|minimus|psoas|iliacus|iliopsoas|sartorius|rectus fem|gracilis|semi|biceps|tensor|piriform|obturator int|hamstring|adductor/.test(n)) return 'muscles';
-    if (/sacrum|ilium|femur|acetabulum|trochanter|spine|coccyx|symphysis|ramus|tubercle|asis|aiis|iliac spine/.test(n)) return 'bones';
+    if (/sacrum|ilium|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|asis|aiis|spine|intertrochanteric|subtrochanteric|pubic/.test(n)) return 'bones';
     if (/ligament|ligamentous|synovial|sacrospinous|sacrotuberous/.test(n)) return 'ligaments';
-    return 'muscles'; // default
+    return 'muscles';
   };
 
   const permanentLabels = allPermanentLabels.filter(([,, name]) => visibleLayers[getLabelLayer(name)]);
@@ -1211,29 +1271,46 @@ function AtlasModal({ onClose }) {
                   alt={`Axial MRI slice ${currentSlice}`}
                 />
               )}
-              {/* Label overlay — covers image exactly using inset:0 + object-fit trick */}
+              {/* Label overlay — color-coded with leader lines */}
               {imgLoaded && (permanentLabels.length > 0 || currentLabels.length > 0) && (
                 <svg
-                  style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }}
+                  style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', overflow:'visible' }}
                   viewBox="0 0 100 100"
                   preserveAspectRatio="xMidYMid meet"
                 >
-                  {/* Permanent baked-in labels — white */}
-                  {permanentLabels.map(([x, y, text], li) => (
-                    <g key={'p'+li}>
-                      <circle cx={x} cy={y} r="0.8" fill="white" opacity="0.95"/>
-                      <rect x={x+1.2} y={y-2.4} width={Math.min(text.length*1.5+1.5, 35)} height="4.6" rx="0.6" fill="rgba(0,0,0,0.80)"/>
-                      <text x={x+2.0} y={y+0.9} fontSize="2.5" fill="white" fontFamily="monospace" fontWeight="600">{text}</text>
-                    </g>
-                  ))}
-                  {/* User labels — yellow */}
-                  {currentLabels.map(([x, y, text], li) => (
-                    <g key={'u'+li}>
-                      <circle cx={x} cy={y} r="1.0" fill="#facc15" opacity="0.95"/>
-                      <rect x={x+1.2} y={y-2.4} width={Math.min(text.length*1.6+1.5, 35)} height="4.6" rx="0.6" fill="rgba(0,0,0,0.85)"/>
-                      <text x={x+2.0} y={y+0.9} fontSize="2.5" fill="#facc15" fontFamily="monospace" fontWeight="700">{text}</text>
-                    </g>
-                  ))}
+                  {/* Color map by category */}
+                  {permanentLabels.map(([x, y, text], li) => {
+                    const layer = getLabelLayer(text);
+                    const colorMap = { nerves:'#facc15', muscles:'#f97316', arteries:'#ef4444', veins:'#60a5fa', bones:'#ffffff', ligaments:'#9ca3af' };
+                    const col = colorMap[layer] || '#ffffff';
+                    // Leader line: extend outward from dot to label
+                    const lx = x > 50 ? x - 2 : x + 2;
+                    const labelX = x > 50 ? x - 3 : x + 3;
+                    const textAnchor = x > 50 ? 'end' : 'start';
+                    return (
+                      <g key={'p'+li}>
+                        <circle cx={x} cy={y} r="0.6" fill={col} opacity="0.95"/>
+                        <line x1={x} y1={y} x2={lx} y2={y} stroke={col} strokeWidth="0.3" opacity="0.8"/>
+                        <text x={labelX} y={y+0.6} fontSize="2.0" fill={col} fontFamily="monospace" fontWeight="700" textAnchor={textAnchor}
+                          style={{ textShadow:'0 0 3px rgba(0,0,0,0.9)', paintOrder:'stroke' }}
+                          stroke="rgba(0,0,0,0.7)" strokeWidth="0.5">{text}</text>
+                      </g>
+                    );
+                  })}
+                  {/* User labels — white with leader line */}
+                  {currentLabels.map(([x, y, text], li) => {
+                    const lx = x > 50 ? x - 2 : x + 2;
+                    const labelX = x > 50 ? x - 3 : x + 3;
+                    const textAnchor = x > 50 ? 'end' : 'start';
+                    return (
+                      <g key={'u'+li}>
+                        <circle cx={x} cy={y} r="0.8" fill="#facc15" opacity="0.95"/>
+                        <line x1={x} y1={y} x2={lx} y2={y} stroke="#facc15" strokeWidth="0.3" opacity="0.8"/>
+                        <text x={labelX} y={y+0.6} fontSize="2.0" fill="#facc15" fontFamily="monospace" fontWeight="700" textAnchor={textAnchor}
+                          stroke="rgba(0,0,0,0.7)" strokeWidth="0.5" style={{ paintOrder:'stroke' }}>{text}</text>
+                      </g>
+                    );
+                  })}
                 </svg>
               )}
               {/* Pending click dot — shows where user clicked */}
@@ -1270,25 +1347,26 @@ function AtlasModal({ onClose }) {
             {/* Layer visibility toggles — always shown */}
             <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 2px' }}>Show Labels</p>
             <div style={{ display:'flex',flexWrap:'wrap',gap:4 }}>
+              {/* ALL ON / ALL OFF */}
+              <button onClick={() => setVisibleLayers({ nerves:true,muscles:true,arteries:true,veins:true,bones:true,ligaments:true })}
+                style={{ padding:'3px 7px',borderRadius:5,fontSize:9,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All On</button>
+              <button onClick={() => setVisibleLayers({ nerves:false,muscles:false,arteries:false,veins:false,bones:false,ligaments:false })}
+                style={{ padding:'3px 7px',borderRadius:5,fontSize:9,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All Off</button>
               {[
-                {key:'all', label:'All', color:'#e2e8f0'},
-                {key:'nerves', label:'Nerves', color:'#d97706'},
-                {key:'muscles', label:'Muscles', color:'#c07040'},
-                {key:'vessels', label:'Vessels', color:'#dc2626'},
-                {key:'bones', label:'Bones', color:'#4a7fa5'},
-                {key:'ligaments', label:'Ligaments', color:'#2d7a5a'},
+                {key:'nerves',    label:'Nerves',    color:'#facc15'},
+                {key:'muscles',   label:'Muscles',   color:'#f97316'},
+                {key:'arteries',  label:'Arteries',  color:'#ef4444'},
+                {key:'veins',     label:'Veins',     color:'#60a5fa'},
+                {key:'bones',     label:'Bones',     color:'#e2e8f0'},
+                {key:'ligaments', label:'Ligaments', color:'#6b7280'},
               ].map(({key, label, color}) => (
                 <button key={key}
-                  onClick={() => setVisibleLayers(prev =>
-                    key === 'all'
-                      ? { nerves:true, muscles:true, vessels:true, bones:true, ligaments:true }
-                      : { ...prev, [key]: !prev[key] }
-                  )}
+                  onClick={() => setVisibleLayers(prev => ({ ...prev, [key]: !prev[key] }))}
                   style={{
                     padding:'3px 7px', borderRadius:5, fontSize:9, fontWeight:700,
-                    border:'1px solid '+(key==='all'?'#475569':color),
-                    background: key==='all' ? '#1e293b' : (visibleLayers[key] ? color+'33' : 'transparent'),
-                    color: key==='all' ? '#94a3b8' : (visibleLayers[key] ? color : '#475569'),
+                    border:'1px solid '+color,
+                    background: visibleLayers[key] ? color+'33' : 'transparent',
+                    color: visibleLayers[key] ? color : '#475569',
                     cursor:'pointer', transition:'all 0.1s',
                   }}>
                   {label}
@@ -1667,6 +1745,7 @@ export default function DashboardPage() {
   const [spineRegion, setSpineRegion] = useState('lumbar');
   const [showAtlas, setShowAtlas] = useState(false);
   const [showDdx, setShowDdx] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const recognitionRef = useRef(null);
 
   // ── Incidental findings state ──────────────────────────────────────────────
@@ -1711,15 +1790,17 @@ export default function DashboardPage() {
   // Build incidental findings text for injection into prompt
   const buildIncidentalBlock = () => {
     const lines = [];
+    let refNum = 1;
 
     // Fleischner
     if (showLungWarning && noduleType && noduleSize) {
       const fleischner = getFleischnerRec(noduleType, noduleSize);
       if (fleischner) {
-        lines.push(`INCIDENTAL PULMONARY NODULE — ${noduleType.toUpperCase()} — ${noduleSize}:`);
+        lines.push(`INCIDENTAL PULMONARY NODULE* — ${noduleType.toUpperCase()} — ${noduleSize} (add asterisk * after this impression item):`);
         lines.push(`Low-risk patient: ${fleischner.low}`);
         lines.push(`High-risk patient: ${fleischner.high}`);
-        lines.push(`Citation: MacMahon H et al. Guidelines for Management of Incidental Pulmonary Nodules Detected on CT Images: From the Fleischner Society 2017. Radiology 2017;284(1):228-243.`);
+        lines.push(`FOOTNOTE_REF_${refNum}: *MacMahon H et al. Guidelines for Management of Incidental Pulmonary Nodules Detected on CT Images: From the Fleischner Society 2017. Radiology 2017;284(1):228-243.`);
+        refNum++;
       }
     }
 
@@ -1727,9 +1808,10 @@ export default function DashboardPage() {
     if (showGUWarning && renalFinding) {
       const renal = getRenalRec(renalFinding);
       if (renal) {
-        lines.push(`INCIDENTAL RENAL FINDING — ${renalFinding}:`);
+        lines.push(`INCIDENTAL RENAL FINDING* — ${renalFinding} (add asterisk * after this impression item):`);
         lines.push(renal.rec);
-        lines.push(`Citation: Herts BR et al. ACR Incidental Findings Committee Recommendation for CT and MRI of the Kidney. J Am Coll Radiol 2018;15(2):264-273.`);
+        lines.push(`FOOTNOTE_REF_${refNum}: *Herts BR et al. ACR Incidental Findings Committee Recommendation for CT and MRI of the Kidney. J Am Coll Radiol 2018;15(2):264-273.`);
+        refNum++;
       }
     }
 
@@ -1737,14 +1819,15 @@ export default function DashboardPage() {
     if (showGUWarning && gynFinding) {
       const gyn = getGynRec(gynFinding, isPostmenopausal);
       if (gyn) {
-        lines.push(`INCIDENTAL GYNECOLOGIC FINDING — ${gynFinding}:`);
+        lines.push(`INCIDENTAL GYNECOLOGIC FINDING* — ${gynFinding} (add asterisk * after this impression item):`);
         if (isPostmenopausal === null) {
           lines.push(`If premenopausal: ${gyn.pre}`);
           lines.push(`If postmenopausal: ${gyn.post}`);
         } else {
           lines.push(isPostmenopausal ? gyn.post : gyn.pre);
         }
-        lines.push(`Citation: Patel MD et al. ACR Appropriateness Criteria / SRU Consensus Guidelines on Management of Adnexal Cysts. J Am Coll Radiol 2020.`);
+        lines.push(`FOOTNOTE_REF_${refNum}: *Patel MD et al. ACR/SRU Consensus Guidelines on Management of Adnexal Cysts. J Am Coll Radiol 2020.`);
+        refNum++;
       }
     }
 
@@ -1752,9 +1835,9 @@ export default function DashboardPage() {
     if (showGUWarning && aortaFinding) {
       const aorta = getAortaRec(aortaFinding);
       if (aorta) {
-        lines.push(`INCIDENTAL AORTIC FINDING — ${aortaFinding}:`);
+        lines.push(`INCIDENTAL AORTIC FINDING* — ${aortaFinding} (add asterisk * after this impression item):`);
         lines.push(aorta.rec);
-        lines.push(`Citation: Khosa F et al. ACR Incidental Findings Committee Recommendations for Abdominal Aortic Aneurysm. J Am Coll Radiol 2013;10(8):575-579.`);
+        lines.push(`FOOTNOTE_REF_${refNum}: *Khosa F et al. ACR Incidental Findings Committee Recommendations for Abdominal Aortic Aneurysm. J Am Coll Radiol 2013;10(8):575-579.`);
       }
     }
 
@@ -1837,8 +1920,8 @@ export default function DashboardPage() {
   const stopListening = () => { const rec = recognitionRef.current; recognitionRef.current = null; try { rec?.stop(); } catch {} setIsListening(false); };
   useEffect(() => () => { recognitionRef.current?.stop(); }, []);
 
-  const inp = { width:'100%',padding:'9px 12px',border:'1px solid #dde3ed',borderRadius:8,fontSize:14,boxSizing:'border-box',color:'#1e293b',outline:'none',background:'white' };
-  const lbl = { fontSize:11,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
+  const inp = { width:'100%',padding:'9px 12px',border:'1px solid '+(darkMode?'#334155':'#dde3ed'),borderRadius:8,fontSize:14,boxSizing:'border-box',color:darkMode?'#e2e8f0':'#1e293b',outline:'none',background:darkMode?'#0f172a':'white' };
+  const lbl = { fontSize:11,fontWeight:600,color:darkMode?'#94a3b8':'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
 
   const colHdr = (gradient, icon, title) => (
     <div style={{ background:gradient,padding:'15px 18px',display:'flex',alignItems:'center',gap:10 }}>
@@ -1885,6 +1968,13 @@ export default function DashboardPage() {
             <span>🫁</span> MRI Anatomy Atlas
           </button>
 
+          {/* Dark mode toggle */}
+          <button onClick={() => setDarkMode(d => !d)}
+            title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:darkMode?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.08)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
+            <span>{darkMode ? '☀️' : '🌙'}</span> {darkMode ? 'Light' : 'Dark'}
+          </button>
+
           {/* DDx button */}
           <button onClick={() => setShowDdx(true)}
             style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(124,58,237,0.5)',background:'rgba(124,58,237,0.15)',color:'#c4b5fd',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
@@ -1908,7 +1998,7 @@ export default function DashboardPage() {
       <div className="msk-grid">
 
         {/* Col 1 — Dictation */}
-        <div style={{ background:'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div style={{ background:darkMode?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column',color:darkMode?'#e2e8f0':'inherit' }}>
           {colHdr(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#2563eb)', isCT?'🔬':'📝', isCT?'CT Dictation Input':'MRI Dictation Input')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
             <div style={{ display:'flex',gap:8 }}>
@@ -1971,10 +2061,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Col 2 — Report */}
-        <div style={{ background:'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div style={{ background:darkMode?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
-            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid #e8edf5',borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:generatedReport?'white':'#f8fafc' }}>
+            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(darkMode?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:generatedReport?(darkMode?'#0f172a':'white'):(darkMode?'#0f172a':'#f8fafc') }}>
               {isGenerating
                 ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
                 : generatedReport
@@ -1987,7 +2077,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Col 3 — Reference */}
-        <div style={{ background:'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div style={{ background:darkMode?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr('linear-gradient(135deg,#0e7490,#0891b2)', '📐', 'Reference Panel')}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
             <ReferencePanel selectedBodyPart={selectedBodyPart} />
