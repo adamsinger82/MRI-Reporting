@@ -3,14 +3,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// ─── SUPABASE CLIENT ─────────────────────────────────────────────────────────
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// ─── SUPABASE CLIENT FACTORY ─────────────────────────────────────────────────
+// Function (not module-level const) so env vars are available at request time
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
 
 // ─── MODEL ROUTING ──────────────────────────────────────────────────────────
-// DDx uses Haiku (10x cheaper), Reports use Sonnet (better language)
 const MODEL_ROUTER = {
   report: 'claude-sonnet-4-6',
   ddx:    'claude-haiku-4-5-20251001',
@@ -25,7 +27,7 @@ const TIER_LIMITS = {
 };
 
 // ─── RATE LIMIT CHECK ───────────────────────────────────────────────────────
-async function checkRateLimit(userId, feature, tier = 'trial') {
+async function checkRateLimit(supabase, userId, feature, tier = 'trial') {
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
 
@@ -65,6 +67,9 @@ function cleanPrompt(text) {
 // ─── MAIN HANDLER ───────────────────────────────────────────────────────────
 export async function POST(request) {
   try {
+    // Create Supabase client here — env vars available at request time
+    const supabase = getSupabase();
+
     const body = await request.json();
     const {
       system,
@@ -94,7 +99,7 @@ export async function POST(request) {
     }
 
     // ── Rate limit ───────────────────────────────────────────────────────
-    const usage = await checkRateLimit(userId, feature, userTier);
+    const usage = await checkRateLimit(supabase, userId, feature, userTier);
 
     if (!usage.allowed) {
       return Response.json({
@@ -108,12 +113,12 @@ export async function POST(request) {
     const model = MODEL_ROUTER[feature] || MODEL_ROUTER.report;
     const useCache = model.includes('sonnet');
 
-    // ── Prompt caching for Sonnet (saves ~90% on repeated system prompt) ─
+    // ── Prompt caching for Sonnet ────────────────────────────────────────
     const systemPayload = useCache
       ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
       : system;
 
-    // ── Strip empty DDx fields to save tokens ────────────────────────────
+    // ── Strip empty DDx fields ───────────────────────────────────────────
     const cleanedMessages = feature === 'ddx'
       ? messages.map(m => ({
           ...m,
@@ -121,14 +126,14 @@ export async function POST(request) {
         }))
       : messages;
 
-    // ── Call Anthropic API via fetch (no SDK needed) ─────────────────────
+    // ── Call Anthropic API ───────────────────────────────────────────────
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31',  // required for caching
+        'anthropic-beta': 'prompt-caching-2024-07-31',
       },
       body: JSON.stringify({
         model,
@@ -147,7 +152,6 @@ export async function POST(request) {
       );
     }
 
-    // ── Return response + usage metadata ─────────────────────────────────
     return Response.json({
       ...data,
       _meta: {
