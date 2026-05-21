@@ -1,29 +1,22 @@
 // src/app/api/generate/route.js
 // Smart API route: auto-routes to Haiku vs Sonnet, prompt caching, rate limiting
 
-import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 
-// ─── CLIENTS ────────────────────────────────────────────────────────────────
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
+// ─── SUPABASE CLIENT ─────────────────────────────────────────────────────────
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY  // server-side only — never expose this
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 // ─── MODEL ROUTING ──────────────────────────────────────────────────────────
-// DDx uses Haiku (10x cheaper, quality is fine for pattern-matching DDx)
-// Reports use Sonnet (needs nuanced language generation)
+// DDx uses Haiku (10x cheaper), Reports use Sonnet (better language)
 const MODEL_ROUTER = {
   report: 'claude-sonnet-4-6',
   ddx:    'claude-haiku-4-5-20251001',
 };
 
-// ─── DAILY LIMITS BY SUBSCRIPTION TIER ─────────────────────────────────────
-// Store user tier in Supabase profiles table as: trial | resident | attending | power
+// ─── DAILY LIMITS BY TIER ───────────────────────────────────────────────────
 const TIER_LIMITS = {
   trial:     { report: 10,  ddx: 5  },
   resident:  { report: 30,  ddx: 15 },
@@ -52,22 +45,17 @@ async function checkRateLimit(userId, feature, tier = 'trial') {
     return { allowed: false, count, limit, tier };
   }
 
-  // Log this call
   await supabase.from('api_usage').insert({ user_id: userId, feature });
-
   return { allowed: true, count: count + 1, limit, tier };
 }
 
-// ─── CLEAN DDx PROMPT — strip empty fields ──────────────────────────────────
-// Removes blank lines from DDx prompts so we don't waste tokens on empty fields
+// ─── CLEAN DDx PROMPT — strip empty fields to save tokens ───────────────────
 function cleanPrompt(text) {
   return text
     .split('\n')
     .filter(line => {
       const trimmed = line.trim();
-      // Remove lines that are just "Label: " with nothing after the colon
       if (/^[A-Za-z\s\/()]+:\s*$/.test(trimmed)) return false;
-      // Remove lines with placeholder-only content
       if (/x10-3 mm2\/s$/.test(trimmed) && !/\d/.test(trimmed.split(':')[1] || '')) return false;
       return trimmed.length > 0;
     })
@@ -82,10 +70,10 @@ export async function POST(request) {
       system,
       messages,
       max_tokens = 1000,
-      feature = 'report',   // 'report' | 'ddx'
+      feature = 'report',
     } = body;
 
-    // ── Auth ──────────────────────────────────────────────────────────────
+    // ── Auth ─────────────────────────────────────────────────────────────
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '');
 
@@ -96,19 +84,16 @@ export async function POST(request) {
       const { data: { user } } = await supabase.auth.getUser(token);
       if (user) {
         userId = user.id;
-
-        // Fetch subscription tier from your profiles table
         const { data: profile } = await supabase
           .from('profiles')
           .select('tier')
           .eq('id', userId)
           .single();
-
         userTier = profile?.tier || 'trial';
       }
     }
 
-    // ── Rate limit check ─────────────────────────────────────────────────
+    // ── Rate limit ───────────────────────────────────────────────────────
     const usage = await checkRateLimit(userId, feature, userTier);
 
     if (!usage.allowed) {
@@ -121,17 +106,14 @@ export async function POST(request) {
 
     // ── Model routing ────────────────────────────────────────────────────
     const model = MODEL_ROUTER[feature] || MODEL_ROUTER.report;
-
-    // ── Prompt caching (Sonnet only — Haiku doesn't need it) ─────────────
-    // Cache saves ~90% on repeated system prompt tokens within a 5-min window
-    // Most valuable for radiologists generating multiple reports in one sitting
     const useCache = model.includes('sonnet');
 
+    // ── Prompt caching for Sonnet (saves ~90% on repeated system prompt) ─
     const systemPayload = useCache
       ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
       : system;
 
-    // ── Clean prompt for DDx (strip empty fields) ────────────────────────
+    // ── Strip empty DDx fields to save tokens ────────────────────────────
     const cleanedMessages = feature === 'ddx'
       ? messages.map(m => ({
           ...m,
@@ -139,17 +121,35 @@ export async function POST(request) {
         }))
       : messages;
 
-    // ── Call Anthropic ───────────────────────────────────────────────────
-    const response = await anthropic.messages.create({
-      model,
-      max_tokens,
-      system: systemPayload,
-      messages: cleanedMessages,
+    // ── Call Anthropic API via fetch (no SDK needed) ─────────────────────
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',  // required for caching
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens,
+        system: systemPayload,
+        messages: cleanedMessages,
+      }),
     });
+
+    const data = await anthropicRes.json();
+
+    if (!anthropicRes.ok) {
+      return Response.json(
+        { error: data?.error?.message || 'Anthropic API error' },
+        { status: anthropicRes.status }
+      );
+    }
 
     // ── Return response + usage metadata ─────────────────────────────────
     return Response.json({
-      ...response,
+      ...data,
       _meta: {
         model,
         feature,
@@ -157,7 +157,7 @@ export async function POST(request) {
         dailyLimit: usage.limit,
         tier: userTier,
         cached: useCache,
-      }
+      },
     });
 
   } catch (err) {
