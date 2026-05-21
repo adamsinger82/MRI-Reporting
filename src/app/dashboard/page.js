@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { JOINT_DATA, DIAGRAM_SVGS } from './referenceData';
+import CopyButton from './CopyButton';
 
 const BODY_PARTS = ['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot'];
 const BILATERAL = ['spine','pelvis'];
@@ -912,7 +913,6 @@ export default function DashboardPage() {
   const [generatedReport, setGeneratedReport] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
   const [micError, setMicError] = useState('');
   const [spineRegion, setSpineRegion] = useState('lumbar');
   const [showAtlas, setShowAtlas] = useState(false);
@@ -997,7 +997,6 @@ export default function DashboardPage() {
 
   const stopListening = () => { const rec = recognitionRef.current; recognitionRef.current = null; try { rec?.stop(); } catch {} setIsListening(false); };
   useEffect(() => () => { recognitionRef.current?.stop(); }, []);
-  const copyToClipboard = () => { if (!generatedReport) return; navigator.clipboard.writeText(generatedReport).then(() => { setCopySuccess(true); setTimeout(() => setCopySuccess(false), 2500); }); };
 
   const inp = { width:'100%',padding:'9px 12px',border:'1px solid #dde3ed',borderRadius:8,fontSize:14,boxSizing:'border-box',color:'#1e293b',outline:'none',background:'white' };
   const lbl = { fontSize:11,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
@@ -1129,10 +1128,7 @@ export default function DashboardPage() {
                   : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
               }
             </div>
-            <button onClick={copyToClipboard} disabled={!generatedReport}
-              style={{ width:'100%',padding:10,borderRadius:9,border:'1.5px solid '+(copySuccess?'#86efac':'#e2e8f0'),background:copySuccess?'#f0fdf4':(!generatedReport?'#f8fafc':'white'),fontSize:13,fontWeight:600,cursor:!generatedReport?'not-allowed':'pointer',color:copySuccess?'#16a34a':'#475569',transition:'all 0.2s' }}>
-              {copySuccess ? '✓ Copied to Clipboard' : '📋 Copy for PowerScribe'}
-            </button>
+            <CopyButton generatedReport={generatedReport} />
           </div>
         </div>
 
