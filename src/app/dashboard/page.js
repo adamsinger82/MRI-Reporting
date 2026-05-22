@@ -99,7 +99,7 @@ function isAbsentStructure(label) {
   return ABSENT_STRUCTURES.some(s => l.includes(s));
 }
 
-function formatReport(txt, darkMode) {
+function formatReport(txt, darkMode = false) {
   if (!txt) return null;
   const cleaned = txt
     .replace(/\bunremarkable\b/gi, 'intact')
@@ -1603,7 +1603,7 @@ Be concise and clinically actionable. Use WHO 2020 bone tumor classification, Kr
 }
 
 // ─── REFERENCE PANEL ──────────────────────────────────────────────────────
-function ReferencePanel({ selectedBodyPart, darkMode }) {
+function ReferencePanel({ selectedBodyPart, darkMode = false }) {
   const jointData = JOINT_DATA[selectedBodyPart];
   const [selectedMeasurementId, setSelectedMeasurementId] = useState('');
   useEffect(() => { setSelectedMeasurementId(''); }, [selectedBodyPart]);
