@@ -716,83 +716,80 @@ function AtlasModal({ onClose }) {
               )}
 
               {/* DOTS ONLY on image — no text labels */}
-              {/* Dots + leader lines using CSS absolute positioning over actual image */}
+              {/* Single SVG overlay — dots + lines + labels all in one coordinate space */}
               {imgLoaded && imgRef.current && imgAreaRef.current && renderTick >= 0 && (() => {
                 const ir = imgRef.current.getBoundingClientRect();
                 const ar = imgAreaRef.current.getBoundingClientRect();
-                // Image offset within the area (due to objectFit:contain black bars)
-                const imgLeft = ir.left - ar.left;
-                const imgTop  = ir.top  - ar.top;
-                const imgW    = ir.width;
-                const imgH    = ir.height;
-
+                const ol = ir.left - ar.left;
+                const ot = ir.top  - ar.top;
+                const ow = ir.width;
+                const oh = ir.height;
+                // SVG viewBox matches image pixel dimensions exactly
                 return (
-                  <div style={{ position:'absolute', inset:0, pointerEvents:'none', overflow:'visible' }}>
-                    {/* Permanent dots + leader lines */}
+                  <svg style={{ position:'absolute', left:ol, top:ot, width:ow, height:oh, pointerEvents:'none', overflow:'visible' }}
+                    viewBox={`0 0 ${ow} ${oh}`}>
+
+                    {/* Permanent labels */}
                     {permanentLabels.map(([x, y, name], li) => {
                       const col = colorMap[getLabelLayer(name)] || '#ffffff';
-                      const px = imgLeft + (x / 100) * imgW;
-                      const py = imgTop  + (y / 100) * imgH;
-                      const lineW = ar.width * 2; // extends well past image into sidebar
+                      const px = (x / 100) * ow;
+                      const py = (y / 100) * oh;
+                      // Send line toward RIGHT edge (labels on right side)
+                      const lineLen = 60;
+                      const lx2 = Math.min(ow - 4, px + lineLen);
+                      const textX = lx2 + 4;
+                      const textAnchor = 'start';
+                      const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
-                        <div key={'p'+li}>
+                        <g key={'p'+li}>
                           {/* Dot */}
-                          <div style={{
-                            position:'absolute',
-                            left: px, top: py,
-                            width:8, height:8,
-                            borderRadius:'50%',
-                            background:col,
-                            transform:'translate(-50%,-50%)',
-                            boxShadow:`0 0 0 1.5px rgba(0,0,0,0.6), 0 0 5px ${col}88`,
-                          }}/>
-                          {/* Leader line — fixed 800px ensures it always reaches sidebar */}
-                          <div style={{
-                            position:'absolute',
-                            left: px + 4,
-                            top: py,
-                            width: 800,
-                            height:1,
-                            background:`linear-gradient(to right, ${col} 0%, ${col} 70%, transparent 100%)`,
-                            opacity:0.6,
-                            transform:'translateY(-50%)',
-                          }}/>
-                        </div>
+                          <circle cx={px} cy={py} r="4" fill={col} opacity="0.95"
+                            stroke="rgba(0,0,0,0.7)" strokeWidth="1"/>
+                          {/* Leader line */}
+                          <line x1={px+5} y1={py} x2={lx2} y2={py}
+                            stroke={col} strokeWidth="1" opacity="0.7"/>
+                          {/* Text with black shadow for readability */}
+                          <text x={textX} y={py} fontSize={fontSize} fill="rgba(0,0,0,0.85)"
+                            fontFamily="system-ui,sans-serif" fontWeight="700"
+                            dominantBaseline="middle" dx="1" dy="1">{name}</text>
+                          <text x={textX} y={py} fontSize={fontSize} fill={col}
+                            fontFamily="system-ui,sans-serif" fontWeight="700"
+                            dominantBaseline="middle">{name}</text>
+                        </g>
                       );
                     })}
+
                     {/* User label dots */}
-                    {currentLabels.map(([x, y], li) => {
-                      const px = imgLeft + (x / 100) * imgW;
-                      const py = imgTop  + (y / 100) * imgH;
+                    {currentLabels.map(([x, y, text], li) => {
+                      const px = (x / 100) * ow;
+                      const py = (y / 100) * oh;
+                      const lx2 = Math.min(ow - 4, px + 60);
+                      const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
-                        <div key={'u'+li} style={{
-                          position:'absolute',
-                          left:px, top:py,
-                          width:10, height:10,
-                          borderRadius:'50%',
-                          background:'#facc15',
-                          transform:'translate(-50%,-50%)',
-                          boxShadow:'0 0 0 2px rgba(0,0,0,0.7), 0 0 8px #facc1588',
-                        }}/>
+                        <g key={'u'+li}>
+                          <circle cx={px} cy={py} r="5" fill="#facc15" opacity="0.95"
+                            stroke="rgba(0,0,0,0.7)" strokeWidth="1.5"/>
+                          <line x1={px+6} y1={py} x2={lx2} y2={py}
+                            stroke="#facc15" strokeWidth="1" opacity="0.7"/>
+                          <text x={lx2+4} y={py} fontSize={fontSize} fill="rgba(0,0,0,0.85)"
+                            fontFamily="system-ui,sans-serif" fontWeight="700"
+                            dominantBaseline="middle" dx="1" dy="1">{text}</text>
+                          <text x={lx2+4} y={py} fontSize={fontSize} fill="#facc15"
+                            fontFamily="system-ui,sans-serif" fontWeight="700"
+                            dominantBaseline="middle">{text}</text>
+                        </g>
                       );
                     })}
+
                     {/* Pending click dot */}
-                    {pendingClick && (() => {
-                      const px = imgLeft + (pendingClick.x / 100) * imgW;
-                      const py = imgTop  + (pendingClick.y / 100) * imgH;
-                      return (
-                        <div style={{
-                          position:'absolute',
-                          left:px, top:py,
-                          width:12, height:12,
-                          borderRadius:'50%',
-                          background:'#facc15',
-                          transform:'translate(-50%,-50%)',
-                          boxShadow:'0 0 0 2px white, 0 0 10px #facc15',
-                        }}/>
-                      );
-                    })()}
-                  </div>
+                    {pendingClick && (
+                      <circle
+                        cx={(pendingClick.x/100)*ow}
+                        cy={(pendingClick.y/100)*oh}
+                        r="6" fill="#facc15" opacity="0.95"
+                        stroke="white" strokeWidth="2"/>
+                    )}
+                  </svg>
                 );
               })()}
 
@@ -843,65 +840,32 @@ function AtlasModal({ onClose }) {
               </div>
             )}
 
-            {/* Y-aligned label list — each label positioned at its Y% */}
-            <div style={{ flex:1,position:'relative',overflow:'hidden' }}>
-              {(sidebarLabels.length > 0 || currentLabels.length > 0) ? (
-                // Distribute labels evenly if they'd overlap, otherwise use Y position
-                (() => {
-                  const allLabels = [
-                    ...sidebarLabels.map(([x,y,name]) => ({ x,y,name,isUser:false })),
-                    ...currentLabels.map(([x,y,text]) => ({ x,y,name:text,isUser:true })),
-                  ].sort((a,b) => a.y - b.y);
-
-                  // Assign vertical positions — spread labels to avoid overlap
-                  // Each label gets at least 22px of vertical space
-                  const MIN_GAP = 22; // px between labels
-                  const containerH = 600; // approximate sidebar height
-                  const positions = [];
-                  allLabels.forEach((lbl, i) => {
-                    const idealPct = lbl.y; // use the Y% directly
-                    const idealPx = (idealPct / 100) * containerH;
-                    const minPx = i > 0 ? positions[i-1] + MIN_GAP : 4;
-                    positions.push(Math.max(idealPx, minPx));
-                  });
-
-                  return allLabels.map((lbl, i) => {
-                    const layer = getLabelLayer(lbl.name);
-                    const col = lbl.isUser ? '#facc15' : (colorMap[layer] || '#ffffff');
-                    const topPct = (positions[i] / containerH * 100);
+            {/* Simple label list — labels are now drawn on the image itself */}
+            <div style={{ flex:1,overflowY:'auto',padding:'4px 0' }}>
+              {sidebarLabels.length === 0 && currentLabels.length === 0 ? (
+                <div style={{ padding:12,textAlign:'center',color:'#334155',fontSize:10 }}>
+                  No labels for this slice
+                </div>
+              ) : (
+                <>
+                  {sidebarLabels.map(([x,y,name], i) => {
+                    const col = colorMap[getLabelLayer(name)] || '#ffffff';
                     return (
-                      <div key={i} style={{
-                        position:'absolute',
-                        top: `${topPct}%`,
-                        left:0, right:0,
-                        display:'flex',
-                        alignItems:'center',
-                        gap:0,
-                        transform:'translateY(-50%)',
-                      }}>
-                        {/* Vertical marker aligned with leader line */}
-                        <div style={{ width:6,height:6,borderRadius:'50%',background:col,opacity:0.8,flexShrink:0,marginRight:2 }}/>
-                        <span style={{
-                          fontSize:12,
-                          color:col,
-                          fontWeight:600,
-                          lineHeight:1.3,
-                          paddingLeft:5,
-                          textShadow:'0 1px 3px rgba(0,0,0,0.9)',
-                          whiteSpace:'nowrap',
-                        }}>{lbl.name}</span>
-                        {lbl.isUser && (
-                          <button onClick={() => deleteLabel(currentLabelKey, currentLabels.findIndex(([,,t]) => t===lbl.name))}
-                            style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:10,padding:'0 0 0 4px',lineHeight:1,marginLeft:'auto',marginRight:4 }}>✕</button>
-                        )}
+                      <div key={i} style={{ display:'flex',alignItems:'center',gap:6,padding:'3px 10px' }}>
+                        <div style={{ width:6,height:6,borderRadius:'50%',background:col,flexShrink:0 }}/>
+                        <span style={{ fontSize:10,color:col,fontWeight:500 }}>{name}</span>
                       </div>
                     );
-                  });
-                })()
-              ) : (
-                <div style={{ padding:16,textAlign:'center',color:'#334155',fontSize:10,marginTop:20 }}>
-                  {!imgLoaded ? '' : 'No labels for this slice'}
-                </div>
+                  })}
+                  {currentLabels.map(([x,y,text], i) => (
+                    <div key={'u'+i} style={{ display:'flex',alignItems:'center',gap:6,padding:'3px 10px' }}>
+                      <div style={{ width:6,height:6,borderRadius:'50%',background:'#facc15',flexShrink:0 }}/>
+                      <span style={{ flex:1,fontSize:10,color:'#facc15',fontWeight:500 }}>{text}</span>
+                      <button onClick={() => deleteLabel(currentLabelKey, i)}
+                        style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:10,padding:0 }}>✕</button>
+                    </div>
+                  ))}
+                </>
               )}
             </div>
 
