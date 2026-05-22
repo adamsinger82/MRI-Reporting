@@ -1,3 +1,4 @@
+'use client';
 // CopyButton.js — Drop-in replacement for the copy button section in page.js
 // Supports PS One, Dragon Medical, Fluency, and plain text output formats
 //
