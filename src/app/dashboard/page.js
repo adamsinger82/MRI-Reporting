@@ -443,6 +443,7 @@ function AtlasModal({ onClose }) {
   const [sliceIdx, setSliceIdx] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [renderTick, setRenderTick] = useState(0);
   const [sequence, setSequence] = useState('t1');
   const sequenceRef = useRef('t1');
   const [labelMode, setLabelMode] = useState(false);
@@ -705,7 +706,7 @@ function AtlasModal({ onClose }) {
               )}
               {imgUrl && (
                 <img key={imgUrl} src={imgUrl} ref={imgRef}
-                  onLoad={() => setImgLoaded(true)}
+                  onLoad={() => { setImgLoaded(true); requestAnimationFrame(() => setRenderTick(t => t+1)); }}
                   onError={() => { setImgError(true); setImgLoaded(false); }}
                   style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',display:imgLoaded?'block':'none',borderRadius:4,userSelect:'none' }}
                   loading="eager"
@@ -716,7 +717,7 @@ function AtlasModal({ onClose }) {
 
               {/* DOTS ONLY on image — no text labels */}
               {/* Dots + leader lines using CSS absolute positioning over actual image */}
-              {imgLoaded && imgRef.current && (() => {
+              {imgLoaded && imgRef.current && imgAreaRef.current && renderTick >= 0 && (() => {
                 const ir = imgRef.current.getBoundingClientRect();
                 const ar = imgAreaRef.current.getBoundingClientRect();
                 // Image offset within the area (due to objectFit:contain black bars)
@@ -726,13 +727,13 @@ function AtlasModal({ onClose }) {
                 const imgH    = ir.height;
 
                 return (
-                  <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
+                  <div style={{ position:'absolute', inset:0, pointerEvents:'none', overflow:'visible' }}>
                     {/* Permanent dots + leader lines */}
                     {permanentLabels.map(([x, y, name], li) => {
                       const col = colorMap[getLabelLayer(name)] || '#ffffff';
                       const px = imgLeft + (x / 100) * imgW;
                       const py = imgTop  + (y / 100) * imgH;
-                      const lineW = ar.width - px; // extends to right edge of image area
+                      const lineW = ar.width * 2; // extends well past image into sidebar
                       return (
                         <div key={'p'+li}>
                           {/* Dot */}
@@ -745,15 +746,15 @@ function AtlasModal({ onClose }) {
                             transform:'translate(-50%,-50%)',
                             boxShadow:`0 0 0 1.5px rgba(0,0,0,0.6), 0 0 5px ${col}88`,
                           }}/>
-                          {/* Leader line to right edge */}
+                          {/* Leader line — extends past image into black sidebar area */}
                           <div style={{
                             position:'absolute',
                             left: px + 4,
                             top: py,
-                            width: Math.max(0, lineW - 4),
+                            width: Math.max(0, ar.width - px + 300), // extends into sidebar
                             height:1,
                             background:col,
-                            opacity:0.55,
+                            opacity:0.5,
                             transform:'translateY(-50%)',
                           }}/>
                         </div>
