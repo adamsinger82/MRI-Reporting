@@ -726,8 +726,8 @@ function AtlasModal({ onClose }) {
                 const oh = ir.height;
                 // SVG viewBox matches image pixel dimensions exactly
                 return (
-                  <svg style={{ position:'absolute', left:ol-320, top:ot, width:ow+320, height:oh, pointerEvents:'none', overflow:'visible' }}
-                    viewBox={`-320 0 ${ow+320} ${oh}`}>
+                  <svg style={{ position:'absolute', left:ol, top:ot, width:ow+320, height:oh, pointerEvents:'none', overflow:'visible' }}
+                    viewBox={`0 0 ${ow+320} ${oh}`}>
 
                     {/* Permanent labels */}
                     {permanentLabels.map(([x, y, name], li) => {
@@ -735,8 +735,8 @@ function AtlasModal({ onClose }) {
                       const px = (x / 100) * ow;
                       const py = (y / 100) * oh;
                       // Text in black area on LEFT, line goes right to dot
-                      const textX = -315;    // fully in black area left of image
-                      const lineStartX = textX + (name.length * 7.5 + 6); // after text ends
+                      const textX = ow + 20; // in black area RIGHT of image
+                      const lineStartX = ow + 14; // line ends just before text
                       const textAnchor = 'start';
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
@@ -745,7 +745,7 @@ function AtlasModal({ onClose }) {
                           <circle cx={px} cy={py} r="4" fill={col} opacity="0.95"
                             stroke="rgba(0,0,0,0.7)" strokeWidth="1"/>
                           {/* Leader line */}
-                          <line x1={lineStartX} y1={py} x2={px-4} y2={py}
+                          <line x1={px+5} y1={py} x2={lineStartX} y2={py}
                             stroke={col} strokeWidth="1" opacity="0.7"/>
                           {/* Text with black shadow for readability */}
                           <text x={textX} y={py} fontSize={fontSize} fill="rgba(0,0,0,0.85)"
@@ -763,13 +763,13 @@ function AtlasModal({ onClose }) {
                     {currentLabels.map(([x, y, text], li) => {
                       const px = (x / 100) * ow;
                       const py = (y / 100) * oh;
-                      const textXu = -315; const lineStartXu = textXu + (text.length * 7.5 + 6);
+                      const textXu = ow + 20; const lineStartXu = ow + 14;
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
                         <g key={'u'+li}>
                           <circle cx={px} cy={py} r="5" fill="#facc15" opacity="0.95"
                             stroke="rgba(0,0,0,0.7)" strokeWidth="1.5"/>
-                          <line x1={lineStartXu} y1={py} x2={px-4} y2={py}
+                          <line x1={px+5} y1={py} x2={lineStartXu} y2={py}
                             stroke="#facc15" strokeWidth="1" opacity="0.7"/>
                           <text x={textXu} y={py} fontSize={fontSize} fill="rgba(0,0,0,0.85)"
                             fontFamily="system-ui,sans-serif" fontWeight="700"
