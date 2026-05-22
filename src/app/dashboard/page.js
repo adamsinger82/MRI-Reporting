@@ -652,20 +652,7 @@ function AtlasModal({ onClose }) {
                 </div>
               )}
 
-              {/* Pending label input — appears over image */}
-              {pendingClick && (
-                <div style={{ position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',background:'#1e293b',border:'1px solid #3b82f6',borderRadius:8,padding:10,zIndex:20,minWidth:220 }}>
-                  <p style={{ margin:'0 0 5px',fontSize:10,color:'#93c5fd',fontWeight:700 }}>Name this structure</p>
-                  <input autoFocus value={pendingText} onChange={e => setPendingText(e.target.value)}
-                    onKeyDown={e => { if (e.key==='Enter') saveLabel(); if (e.key==='Escape') setPendingClick(null); }}
-                    placeholder="e.g. R femoral head"
-                    style={{ width:'100%',padding:'5px 7px',background:'#0f172a',border:'1px solid #475569',borderRadius:5,color:'#e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box' }}/>
-                  <div style={{ display:'flex',gap:5,marginTop:6 }}>
-                    <button onClick={saveLabel} style={{ flex:1,padding:'4px',background:'#1d4ed8',border:'none',borderRadius:4,color:'white',fontSize:10,fontWeight:700,cursor:'pointer' }}>Save</button>
-                    <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'4px',background:'#334155',border:'none',borderRadius:4,color:'#94a3b8',fontSize:10,cursor:'pointer' }}>Cancel</button>
-                  </div>
-                </div>
-              )}
+{/* Label input moved to sidebar — no overlap with image */}
             </div>
 
             {/* Bottom bar */}
@@ -693,6 +680,22 @@ function AtlasModal({ onClose }) {
                 Slice {currentSlice} — {sidebarLabels.length} structures
               </p>
             </div>
+            {/* Label input in sidebar — away from image, no accidental clicks */}
+            {pendingClick && (
+              <div style={{ padding:'10px 12px',background:'#1e3a5f',borderBottom:'2px solid #3b82f6',flexShrink:0 }}>
+                <p style={{ margin:'0 0 6px',fontSize:10,color:'#93c5fd',fontWeight:700 }}>
+                  📍 Name this structure ({pendingClick.x.toFixed(0)}%, {pendingClick.y.toFixed(0)}%)
+                </p>
+                <input autoFocus value={pendingText} onChange={e => setPendingText(e.target.value)}
+                  onKeyDown={e => { if (e.key==='Enter') saveLabel(); if (e.key==='Escape') setPendingClick(null); }}
+                  placeholder="e.g. sciatic nerve"
+                  style={{ width:'100%',padding:'6px 8px',background:'#0f172a',border:'1px solid #3b82f6',borderRadius:5,color:'#e2e8f0',fontSize:12,outline:'none',boxSizing:'border-box',marginBottom:6 }}/>
+                <div style={{ display:'flex',gap:5 }}>
+                  <button onClick={saveLabel} style={{ flex:1,padding:'5px',background:'#1d4ed8',border:'none',borderRadius:5,color:'white',fontSize:11,fontWeight:700,cursor:'pointer' }}>Save</button>
+                  <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'5px',background:'#334155',border:'none',borderRadius:5,color:'#94a3b8',fontSize:11,cursor:'pointer' }}>Cancel</button>
+                </div>
+              </div>
+            )}
             <div style={{ flex:1,overflowY:'auto',padding:'6px 0' }}>
               {sidebarLabels.length === 0 ? (
                 <div style={{ padding:16,textAlign:'center',color:'#334155',fontSize:11 }}>
