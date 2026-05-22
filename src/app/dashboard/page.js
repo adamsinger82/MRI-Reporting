@@ -13,8 +13,7 @@ const ABSENT_STRUCTURES = [
   'loose body','loose bodies','synovitis','plicae','plica',
 ];
 
-// MRI anatomy templates — full soft tissue detail
-const ANATOMY_MRI = {
+const ANATOMY = {
   knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Soft Tissues',
   shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenohumeral Joint, Glenoid Labrum, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
   hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Soft Tissues',
@@ -25,25 +24,6 @@ const ANATOMY_MRI = {
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues',
   foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
 };
-
-// CT anatomy templates — bone/joint/soft tissue only, no tendons/ligaments/labrum
-const ANATOMY_CT = {
-  knee:'Bones, Joint Effusion, Dislocation or Subluxation, Joint Space (medial compartment, lateral compartment, patellofemoral), Soft Tissues',
-  shoulder:'Bones, Joint Effusion, Dislocation or Subluxation, Acromioclavicular Joint, Glenohumeral Joint Space, Soft Tissues',
-  hip:'Bones, Joint Effusion, Dislocation or Subluxation, Joint Space, Soft Tissues',
-  wrist:'Bones, Dislocation or Subluxation, Radiocarpal Joint Space, Midcarpal Joint Space, Soft Tissues',
-  elbow:'Bones, Joint Effusion, Dislocation or Subluxation, Joint Space, Soft Tissues',
-  ankle:'Bones, Joint Effusion, Dislocation or Subluxation, Tibiotalar Joint Space, Subtalar Joint Space, Soft Tissues',
-  spine:'Vertebral Alignment, Vertebral Bodies, Disc Spaces, Spinal Canal, Neural Foramina, Facet Joints, Soft Tissues',
-  pelvis:'Pelvic Ring, Sacroiliac Joints, Pubic Symphysis, Hip Joints, Acetabula, Soft Tissues',
-  foot:'Bones, Lisfranc Joint Complex, Dislocation or Subluxation, Joint Spaces, Soft Tissues',
-};
-
-// Selector — pick correct template based on modality
-const ANATOMY = ANATOMY_MRI; // kept for backward compat; buildPrompt uses getAnatomy()
-function getAnatomy(part, isCT) {
-  return isCT ? (ANATOMY_CT[part] || ANATOMY_MRI[part]) : (ANATOMY_MRI[part] || '');
-}
 
 
 // ─── GRADING CONTEXT BUILDER ─────────────────────────────────────────────────
@@ -68,7 +48,7 @@ function buildPrompt(part, lat, con, spineRegion, modality) {
     : `Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast.`;
 
   const findingsRules = isCT
-    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent" not "intact." EXCEPTION: Soft Tissues — write "No acute soft tissue abnormality." if not mentioned. 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR/marrow signal language. 4. BONES RULE — address all three on same line: Fracture/cortical disruption (or "No fracture or cortical disruption."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). 5. JOINT SPACE RULE — for each joint space subheading address: narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis."`
+    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses write "absent." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern. No T1/T2/STIR/marrow signal language. 4. BONES RULE — address all three: Fracture/cortical disruption (or "No fracture or cortical disruption."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion.") — three sentences on same line.`
     : `FINDINGS RULES: 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses — write "absent" not "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — address all three: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion."`;
 
   const normalImpressionText = isCT
@@ -87,15 +67,13 @@ CRITICAL FORMATTING RULES:
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 
-ANATOMY TO COVER for ${part}: ${getAnatomy(part, isCT)}
+ANATOMY TO COVER for ${part}: ${ANATOMY[part]}
 Generate a subheading for EVERY structure listed above.
 ${findingsRules}
 IMPRESSION RULES:
 - Synthesize positive findings into clinically meaningful impression.
 - Number each item. Most important first.
 - ${normalImpressionText}
-- INCIDENTAL FINDINGS: If incidental findings are provided, add each as a numbered impression item. Add an asterisk * immediately after the impression item text (before the period) for any item that has a FOOTNOTE_REF. Example: "3. Incidental pulmonary nodule, solid, 6-8mm.*"
-- After IMPRESSION, add a FOOTNOTE: section (not REFERENCES:) containing only the FOOTNOTE_REF lines, each on its own line, in small font. Format: "* Author et al. Journal Year."
 - CARTILAGE / OA RULE (knee only): If Modified Outerbridge grading is mentioned in 2 or more compartments (medial, lateral, patellofemoral), do NOT list each compartment separately in the impression. Instead write a single impression line: "Osteoarthrosis, most notable in the [worst compartment] compartment with grade [X] chondromalacia, and [mild/moderate] involvement of the [other compartments] as above." If only 1 compartment involved, report it normally.
 - OSTEOCHONDRAL EXCEPTION: If an osteochondral lesion, OCD, or subchondral fracture is present, list it separately by name regardless of the OA rule above.${gradingBlock}
 
@@ -121,7 +99,7 @@ function isAbsentStructure(label) {
   return ABSENT_STRUCTURES.some(s => l.includes(s));
 }
 
-function formatReport(txt) {
+function formatReport(txt, darkMode) {
   if (!txt) return null;
   const cleaned = txt
     .replace(/\bunremarkable\b/gi, 'intact')
@@ -133,44 +111,35 @@ function formatReport(txt) {
   let inReferences = false;
   let inFootnote = false;
 
+  const negColor  = darkMode ? '#94a3b8' : '#6b7280';
+  const posColor  = darkMode ? '#f1f5f9' : '#dc2626';
+  const lblColor  = darkMode ? '#cbd5e1' : '#1e293b';
+  const bodyColor = darkMode ? '#e2e8f0' : '#1e293b';
+  const posWeight = darkMode ? 500 : 600;
+
   return cleaned.split('\n').map((line, i) => {
     const t = line.trim();
     if (!t) return <div key={i} style={{ height: 5 }} />;
 
-    // FOOTNOTE section — small font with line break above
-    const isFootnoteHeader = /^FOOTNOTE:?$/i.test(t);
-    if (isFootnoteHeader) {
+    // FOOTNOTE / REFERENCES — small grey section below impression
+    if (/^FOOTNOTE:?$/i.test(t)) {
       inFootnote = true; inImpression = false; inReferences = false;
-      return (
-        <div key={i} style={{ marginTop: 16, marginBottom: 4, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#94a3b8', textTransform: 'uppercase' }}>Footnotes</span>
-        </div>
-      );
+      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(darkMode?'#334155':'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>Footnotes</span></div>;
     }
-    if (inFootnote) {
-      return <div key={i} style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.6, paddingLeft: 4, marginBottom: 2 }}>{t}</div>;
-    }
+    if (inFootnote) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
 
-    // REFERENCES section — same small font style
-    const isReferencesHeader = /^REFERENCES:?$/i.test(t);
-    if (isReferencesHeader) {
+    if (/^REFERENCES:?$/i.test(t)) {
       inReferences = true; inImpression = false;
-      return (
-        <div key={i} style={{ marginTop: 16, marginBottom: 4, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: '#94a3b8', textTransform: 'uppercase' }}>References</span>
-        </div>
-      );
+      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(darkMode?'#334155':'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>References</span></div>;
     }
-    if (inReferences) {
-      return <div key={i} style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.6, paddingLeft: 4, marginBottom: 2 }}>{t}</div>;
-    }
+    if (inReferences) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
 
     const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
     if (isHeader) {
       inImpression = t.startsWith('IMPRESSION');
       return (
         <div key={i} style={{ marginTop: i > 0 ? 20 : 0, marginBottom: 6 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#1e3a5f', borderBottom: '2px solid #2563eb', paddingBottom: 3, display: 'inline-block' }}>{t}</span>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: darkMode ? '#93c5fd' : '#1e3a5f', borderBottom: '2px solid #2563eb', paddingBottom: 3, display: 'inline-block' }}>{t}</span>
         </div>
       );
     }
@@ -178,17 +147,10 @@ function formatReport(txt) {
     const isNumbered = /^\d+\./.test(t);
     if (isNumbered || inImpression) {
       const num = t.match(/^\d+\./)?.[0];
-      const lineText = num ? t.slice(num.length).trim() : t;
-      // Render asterisk in impression as superscript
-      const parts = lineText.split('*');
       return (
         <div key={i} style={{ marginTop: 5, paddingLeft: 4, fontSize: 13, lineHeight: 1.7, display: 'flex', gap: 6 }}>
           {num && <span style={{ fontWeight: 700, color: '#2563eb', flexShrink: 0 }}>{num}</span>}
-          <span style={{ color: '#1e293b', fontWeight: 400 }}>
-            {parts.map((p, pi) => (
-              <span key={pi}>{p}{pi < parts.length - 1 ? <sup style={{ color:'#dc2626', fontWeight:700, fontSize:10 }}>*</sup> : null}</span>
-            ))}
-          </span>
+          <span style={{ color: bodyColor, fontWeight: 400 }}>{num ? t.slice(num.length).trim() : t}</span>
         </div>
       );
     }
@@ -210,24 +172,24 @@ function formatReport(txt) {
         const negPattern = /^(no fracture|no osteonecrosis|no marrow|no avascular|no bone lesion|no aggressive|no cortical)/i;
         return (
           <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{label} </span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: lblColor }}>{label} </span>
             {sentences.map((s, si) => {
               const st = s.trim();
               const sentNeg = negPattern.test(st);
-              return <span key={si} style={{ fontSize: 13, color: sentNeg ? '#6b7280' : '#dc2626', fontWeight: sentNeg ? 400 : 600 }}>{st}{si < sentences.length - 1 ? ' ' : ''}</span>;
+              return <span key={si} style={{ fontSize: 13, color: sentNeg ? negColor : posColor, fontWeight: sentNeg ? 400 : posWeight }}>{st}{si < sentences.length - 1 ? ' ' : ''}</span>;
             })}
           </div>
         );
       }
       return (
         <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{label} </span>
-          <span style={{ fontSize: 13, color: isAllNeg ? '#6b7280' : '#dc2626', fontWeight: isAllNeg ? 400 : 600 }}>{value}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: lblColor }}>{label} </span>
+          <span style={{ fontSize: 13, color: isAllNeg ? negColor : posColor, fontWeight: isAllNeg ? 400 : posWeight }}>{value}</span>
         </div>
       );
     }
 
-    return <div key={i} style={{ fontSize: 13, color: inImpression ? '#1e293b' : '#dc2626', fontWeight: inImpression ? 400 : 500, lineHeight: 1.8, paddingLeft: 4 }}>{t}</div>;
+    return <div key={i} style={{ fontSize: 13, color: inImpression ? bodyColor : posColor, fontWeight: inImpression ? 400 : posWeight, lineHeight: 1.8, paddingLeft: 4 }}>{t}</div>;
   });
 }
 
@@ -782,9 +744,9 @@ function IncidentalPanel({
   const optBtn = (label, val, current, setter) => (
     <button key={label} onClick={() => setter(current === val ? '' : val)}
       style={{ padding:'4px 9px', borderRadius:6, fontSize:11, fontWeight:current===val?700:400,
-        border:'1px solid '+(current===val?'#dc2626':'#e2e8f0'),
-        background:current===val?'#fef2f2':'white',
-        color:current===val?'#dc2626':'#64748b', cursor:'pointer', whiteSpace:'nowrap' }}>
+        border:'1px solid '+(current===val?'#d97706':'#e2e8f0'),
+        background:current===val?'#fffbeb':'white',
+        color:current===val?'#d97706':'#64748b', cursor:'pointer', whiteSpace:'nowrap' }}>
       {label}
     </button>
   );
@@ -802,17 +764,17 @@ function IncidentalPanel({
   };
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:8, borderRadius:10, border:'2px solid #ef4444', background:'#fef2f2', padding:10 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:8, borderRadius:10, border:'2px solid #fbbf24', background:'#fffbeb', padding:10 }}>
 
       {/* Warning banner */}
       {showLung && (
-        <div style={{ ...warnStyle, background:'#fee2e2', color:'#991b1b' }}>
+        <div style={{ ...warnStyle, background:'#fef3c7', color:'#92400e' }}>
           <span style={{ fontSize:16 }}>⚠️</span>
           <span>DID YOU CHECK THE LUNG?</span>
         </div>
       )}
       {showGU && (
-        <div style={{ ...warnStyle, background:'#fee2e2', color:'#991b1b' }}>
+        <div style={{ ...warnStyle, background:'#fef3c7', color:'#92400e' }}>
           <span style={{ fontSize:16 }}>⚠️</span>
           <span>DID YOU CHECK THE GU SYSTEM?</span>
         </div>
@@ -840,7 +802,7 @@ function IncidentalPanel({
           {noduleType && noduleSize && (() => {
             const rec = getFleischnerRec(noduleType, noduleSize);
             return rec ? (
-              <div style={{ fontSize:10, color:'#7f1d1d', background:'#fee2e2', borderRadius:6, padding:'5px 8px', lineHeight:1.6 }}>
+              <div style={{ fontSize:10, color:'#78350f', background:'#fef9c3', borderRadius:6, padding:'5px 8px', lineHeight:1.6 }}>
                 <strong>Low risk:</strong> {rec.low}<br/>
                 <strong>High risk:</strong> {rec.high}
               </div>
@@ -1025,9 +987,12 @@ Object.entries(ATLAS_JOINTS).forEach(([k, v]) => {
 });
 
 // ─── ANATOMY ATLAS MODAL ───────────────────────────────────────────────────
+// Rebuilt with split layout: image on left (dots only), labels sidebar on right
+// Label editor uses imgRef.getBoundingClientRect() to record clicks relative
+// to the ACTUAL image pixels — not the container — fixing coordinate drift.
 function AtlasModal({ onClose }) {
-  const [selectedRegion, setSelectedRegion] = useState('Upper Extremity');
-  const [selectedJoint, setSelectedJoint] = useState('shoulder');
+  const [selectedRegion, setSelectedRegion] = useState('Pelvis & Spine');
+  const [selectedJoint, setSelectedJoint] = useState('pelvis');
   const [sliceIdx, setSliceIdx] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -1038,6 +1003,7 @@ function AtlasModal({ onClose }) {
   const [userLabels, setUserLabels] = useState({});
   const [pendingClick, setPendingClick] = useState(null);
   const [pendingText, setPendingText] = useState('');
+  const imgRef = useRef(null);
   const imgContainerRef = useRef(null);
 
   const regionJoints = ATLAS_REGIONS_MAP[selectedRegion] || {};
@@ -1057,11 +1023,11 @@ function AtlasModal({ onClose }) {
     if (jointData) {
       const idx = jointData.useLocalMRI ? jointData.defaultSlice-1 : jointData.slices.indexOf(jointData.defaultSlice);
       setSliceIdx(Math.max(0, idx));
-      setImgLoaded(false);
-      setImgError(false);
+      setImgLoaded(false); setImgError(false);
     }
   }, [selectedJoint]);
 
+  // Wheel scroll
   useEffect(() => {
     const el = imgContainerRef.current;
     if (!el) return;
@@ -1069,8 +1035,8 @@ function AtlasModal({ onClose }) {
       e.preventDefault();
       if (!jointData) return;
       setSliceIdx(i => {
-        const seqD = jointData?.sequences?.[sequenceRef.current] || null;
-        const slices = seqD ? seqD.slices : jointData.slices;
+        const sq = jointData?.sequences?.[sequenceRef.current] || null;
+        const slices = sq ? sq.slices : jointData.slices;
         const next = e.deltaY > 0 ? Math.min(slices.length-1, i+1) : Math.max(0, i-1);
         if (next !== i) setImgLoaded(false);
         return next;
@@ -1080,7 +1046,7 @@ function AtlasModal({ onClose }) {
     return () => el.removeEventListener('wheel', handleWheel);
   }, [jointData]);
 
-  // Preload full stack immediately when joint or sequence changes
+  // Preload stack
   useEffect(() => {
     if (!jointData) return;
     const sq = jointData?.sequences?.[sequenceRef.current] || null;
@@ -1090,18 +1056,10 @@ function AtlasModal({ onClose }) {
     const pathFn = sq
       ? (i) => `${sq.path}${String(sliceArr[i]).padStart(3,'0')}${sq.ext}`
       : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
-    // Fire all preloads immediately — browser will queue and prioritize
-    sliceArr.forEach((_, i) => {
-      const img = new Image();
-      img.src = pathFn(i);
-    });
+    sliceArr.forEach((_, i) => { const img = new Image(); img.src = pathFn(i); });
   }, [selectedJoint, sequence]);
 
-  useEffect(() => {
-    setSliceIdx(0);
-    setImgLoaded(false);
-    setImgError(false);
-  }, [sequence]);
+  useEffect(() => { setSliceIdx(0); setImgLoaded(false); setImgError(false); }, [sequence]);
 
   const seqData = jointData?.sequences?.[sequence] || null;
   const activeSlices = seqData ? seqData.slices : (jointData ? jointData.slices : []);
@@ -1114,12 +1072,15 @@ function AtlasModal({ onClose }) {
         : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
     : null;
 
-  const imgRef = useRef(null);
+  // ── Label click handler — coords relative to ACTUAL image pixels ──────────
   const handleImageClick = (e) => {
     if (!labelMode || !imgRef.current) return;
     const rect = imgRef.current.getBoundingClientRect();
+    // Record as % of actual image dimensions (not container)
     const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
     const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
+    // Clamp to 0-100
+    if (x < 0 || x > 100 || y < 0 || y > 100) return;
     setPendingClick({ x, y });
     setPendingText('');
   };
@@ -1128,8 +1089,7 @@ function AtlasModal({ onClose }) {
     if (!pendingClick || !pendingText.trim()) { setPendingClick(null); return; }
     const key = `${selectedJoint}_${currentSlice}`;
     setUserLabels(prev => ({ ...prev, [key]: [...(prev[key] || []), [pendingClick.x, pendingClick.y, pendingText.trim()]] }));
-    setPendingClick(null);
-    setPendingText('');
+    setPendingClick(null); setPendingText('');
   };
 
   const deleteLabel = (key, i) => {
@@ -1139,128 +1099,139 @@ function AtlasModal({ onClose }) {
   const exportLabels = () => {
     const blob = new Blob([JSON.stringify(userLabels, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'atlas_labels.json'; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'atlas_labels.json'; a.click();
     URL.revokeObjectURL(url);
   };
 
   const currentLabelKey = `${selectedJoint}_${currentSlice}`;
   const currentLabels = userLabels[currentLabelKey] || [];
   const totalLabels = Object.values(userLabels).reduce((s, arr) => s + arr.length, 0);
-  const layerColors = { bones:'#4a7fa5', tendons:'#2d7a5a', muscles:'#c07040', nerves:'#d97706', arteries:'#dc2626', veins:'#7c3aed' };
 
-  // Permanent baked-in labels for current slice (T1 pelvis only)
+  // Permanent baked-in labels — T1 pelvis only
   const allPermanentLabels = (seqData?.permanentLabels && currentSlice != null)
-    ? (seqData.permanentLabels[currentSlice] || [])
-    : [];
+    ? (seqData.permanentLabels[currentSlice] || []) : [];
 
-  // Layer categorization for filter toggles
   const getLabelLayer = (name) => {
     const n = name.toLowerCase();
     if (/nerve|plexus|nvb|ganglion/.test(n)) return 'nerves';
     if (/artery|femoral art|iliac a|common femoral a|superficial femoral a/.test(n)) return 'arteries';
     if (/vein|saphenous|femoral vein|iliac v|superficial femoral v/.test(n)) return 'veins';
     if (/muscle|maximus|medius|minimus|psoas|iliacus|iliopsoas|sartorius|rectus fem|gracilis|semi|biceps|tensor|piriform|obturator int|hamstring|adductor/.test(n)) return 'muscles';
-    if (/sacrum|ilium|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|asis|aiis|spine|intertrochanteric|subtrochanteric|pubic/.test(n)) return 'bones';
+    if (/sacrum|ilium|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|asis|aiis|spine|intertrochanteric|pubic/.test(n)) return 'bones';
     if (/ligament|ligamentous|synovial|sacrospinous|sacrotuberous/.test(n)) return 'ligaments';
     return 'muscles';
   };
 
-  const permanentLabels = allPermanentLabels.filter(([,, name]) => visibleLayers[getLabelLayer(name)]);
+  const colorMap = { nerves:'#facc15', muscles:'#f97316', arteries:'#ef4444', veins:'#60a5fa', bones:'#ffffff', ligaments:'#9ca3af' };
+
+  const permanentLabels = allPermanentLabels.filter(([,,name]) => visibleLayers[getLabelLayer(name)]);
+
+  // Build sorted label list for sidebar — group by layer
+  const sidebarLabels = permanentLabels.slice().sort((a, b) => {
+    const order = ['nerves','arteries','veins','bones','muscles','ligaments'];
+    return order.indexOf(getLabelLayer(a[2])) - order.indexOf(getLabelLayer(b[2]));
+  });
 
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}>
-      <div style={{ background:'#0f172a',borderRadius:16,width:'min(96vw,1100px)',maxHeight:'92vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
+      <div style={{ background:'#0f172a',borderRadius:16,width:'min(98vw,1200px)',maxHeight:'94vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
 
         {/* Header */}
-        <div style={{ background:'linear-gradient(135deg,#1e3a5f,#1d4ed8)',padding:'12px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
+        <div style={{ background:'linear-gradient(135deg,#1e3a5f,#1d4ed8)',padding:'10px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
           <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-            <span style={{ fontSize:18 }}>🔬</span>
-            <span style={{ color:'white',fontWeight:800,fontSize:14,letterSpacing:'0.08em' }}>ANATOMY ATLAS — MRI</span>
+            <span style={{ fontSize:16 }}>🔬</span>
+            <span style={{ color:'white',fontWeight:800,fontSize:13,letterSpacing:'0.08em' }}>ANATOMY ATLAS — MRI</span>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'5px 14px',cursor:'pointer',fontSize:13,fontWeight:600 }}>✕</button>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'4px 12px',cursor:'pointer',fontSize:12,fontWeight:600 }}>✕</button>
         </div>
 
         <div style={{ display:'flex',flex:1,overflow:'hidden',minHeight:0 }}>
 
           {/* Col 1 — joint selector */}
-          <div style={{ width:150,borderRight:'1px solid #1e293b',padding:12,display:'flex',flexDirection:'column',gap:6,overflowY:'auto',background:'#0f172a',flexShrink:0 }}>
-            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 4px' }}>Region</p>
+          <div style={{ width:140,borderRight:'1px solid #1e293b',padding:10,display:'flex',flexDirection:'column',gap:5,overflowY:'auto',background:'#0f172a',flexShrink:0 }}>
+            <p style={{ fontSize:9,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 3px' }}>Region</p>
             <select value={selectedRegion} onChange={e => setSelectedRegion(e.target.value)}
-              style={{ width:'100%',padding:'6px 8px',border:'1px solid #334155',borderRadius:6,fontSize:11,background:'#1e293b',color:'#e2e8f0' }}>
+              style={{ width:'100%',padding:'5px 7px',border:'1px solid #334155',borderRadius:5,fontSize:10,background:'#1e293b',color:'#e2e8f0' }}>
               {Object.keys(ATLAS_REGIONS_MAP).map(r => <option key={r} value={r}>{r}</option>)}
             </select>
-            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'10px 0 4px' }}>Joint</p>
+            <p style={{ fontSize:9,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'8px 0 3px' }}>Joint</p>
             {Object.entries(regionJoints).map(([k, v]) => (
               <button key={k} onClick={() => setSelectedJoint(k)}
-                style={{ padding:'7px 10px',borderRadius:7,border:'1px solid '+(selectedJoint===k?'#3b82f6':'#334155'),background:selectedJoint===k?'#1e3a5f':'#1e293b',color:selectedJoint===k?'#93c5fd':'#94a3b8',fontSize:12,fontWeight:selectedJoint===k?700:400,cursor:'pointer',textAlign:'left',transition:'all 0.12s' }}>
+                style={{ padding:'6px 8px',borderRadius:6,border:'1px solid '+(selectedJoint===k?'#3b82f6':'#334155'),background:selectedJoint===k?'#1e3a5f':'#1e293b',color:selectedJoint===k?'#93c5fd':'#94a3b8',fontSize:11,fontWeight:selectedJoint===k?700:400,cursor:'pointer',textAlign:'left' }}>
                 {v.label}
               </button>
             ))}
+
+            {/* Layer toggles */}
+            <p style={{ fontSize:9,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'12px 0 3px' }}>Labels</p>
+            <div style={{ display:'flex',flexWrap:'wrap',gap:3 }}>
+              <button onClick={() => setVisibleLayers({ nerves:true,muscles:true,arteries:true,veins:true,bones:true,ligaments:true })}
+                style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All On</button>
+              <button onClick={() => setVisibleLayers({ nerves:false,muscles:false,arteries:false,veins:false,bones:false,ligaments:false })}
+                style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All Off</button>
+              {[
+                {key:'nerves',label:'Nerves',color:'#facc15'},
+                {key:'muscles',label:'Muscles',color:'#f97316'},
+                {key:'arteries',label:'Arteries',color:'#ef4444'},
+                {key:'veins',label:'Veins',color:'#60a5fa'},
+                {key:'bones',label:'Bones',color:'#e2e8f0'},
+                {key:'ligaments',label:'Ligaments',color:'#9ca3af'},
+              ].map(({key,label,color}) => (
+                <button key={key} onClick={() => setVisibleLayers(prev => ({...prev,[key]:!prev[key]}))}
+                  style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid '+color,background:visibleLayers[key]?color+'33':'transparent',color:visibleLayers[key]?color:'#475569',cursor:'pointer' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Col 2 — image + overlays */}
-          <div style={{ flex:1,display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
+          {/* Col 2 — IMAGE (dots only, no text on image) */}
+          <div ref={imgContainerRef} onClick={handleImageClick}
+            style={{ flex:'0 0 auto',width:'55%',display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative',cursor:labelMode?'crosshair':'default' }}>
 
-            {/* Sequence toggle — only shown for joints with multiple sequences */}
+            {/* Sequence toggle */}
             {jointData?.sequences && (
-              <div style={{ display:'flex',gap:4,padding:'6px 14px',background:'#0a0f1a',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
-                <span style={{ fontSize:10,color:'#475569',fontWeight:600,alignSelf:'center',marginRight:4 }}>SEQUENCE:</span>
+              <div style={{ display:'flex',gap:4,padding:'5px 12px',background:'#0a0f1a',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
+                <span style={{ fontSize:9,color:'#475569',fontWeight:600,alignSelf:'center',marginRight:4 }}>SEQUENCE:</span>
                 {Object.entries(jointData.sequences).map(([key, sq]) => (
                   <button key={key} onClick={() => { setSequence(key); sequenceRef.current = key; }}
-                    style={{ padding:'4px 12px',borderRadius:6,border:'1px solid '+(sequence===key?'#3b82f6':'#334155'),background:sequence===key?'#1d4ed8':'#1e293b',color:sequence===key?'white':'#64748b',fontSize:11,fontWeight:sequence===key?700:400,cursor:'pointer',transition:'all 0.1s' }}>
+                    style={{ padding:'3px 10px',borderRadius:5,border:'1px solid '+(sequence===key?'#3b82f6':'#334155'),background:sequence===key?'#1d4ed8':'#1e293b',color:sequence===key?'white':'#64748b',fontSize:10,fontWeight:sequence===key?700:400,cursor:'pointer' }}>
                     {sq.label}
                   </button>
                 ))}
               </div>
             )}
 
-            {/* Slice navigator bar */}
+            {/* Slice navigator */}
             {jointData && (
-              <div style={{ display:'flex',alignItems:'center',gap:8,padding:'8px 14px',background:'#0f172a',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
-                <button onClick={() => { setSliceIdx(i => Math.max(0,i-1)); setImgLoaded(false); }}
-                  disabled={sliceIdx===0}
-                  style={{ background:sliceIdx===0?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===0?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===0?0.4:1,flexShrink:0 }}>‹</button>
-                {activeSlices.length > 10 ? (
-                  <div style={{ flex:1,display:'flex',alignItems:'center',gap:8 }}>
-                    <input type="range" min={0} max={activeSlices.length-1} value={sliceIdx}
-                      onChange={e => { setSliceIdx(Number(e.target.value)); setImgLoaded(false); }}
-                      style={{ flex:1,accentColor:'#3b82f6',cursor:'pointer' }} />
-                    <span style={{ color:'#93c5fd',fontSize:11,fontWeight:700,whiteSpace:'nowrap',background:'#1e293b',padding:'3px 8px',borderRadius:5,border:'1px solid #3b82f6',minWidth:60,textAlign:'center' }}>
-                      {sliceIdx+1} / {activeSlices.length}
-                    </span>
-                  </div>
-                ) : (
-                  <div style={{ flex:1,display:'flex',gap:4,alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
-                    {activeSlices.map((s,i) => (
-                      <button key={s} onClick={() => { setSliceIdx(i); setImgLoaded(false); }}
-                        style={{ padding:'3px 8px',borderRadius:5,border:'1px solid '+(i===sliceIdx?'#3b82f6':'#334155'),background:i===sliceIdx?'#1d4ed8':'#1e293b',color:i===sliceIdx?'white':'#64748b',fontSize:11,fontWeight:i===sliceIdx?700:400,cursor:'pointer',flexShrink:0 }}>
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <button onClick={() => { setSliceIdx(i => Math.min(activeSlices.length-1,i+1)); setImgLoaded(false); }}
-                  disabled={sliceIdx===activeSlices.length-1}
-                  style={{ background:sliceIdx===activeSlices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:6,width:28,height:28,cursor:sliceIdx===activeSlices.length-1?'default':'pointer',fontSize:16,fontWeight:700,opacity:sliceIdx===activeSlices.length-1?0.4:1,flexShrink:0 }}>›</button>
-
+              <div style={{ display:'flex',alignItems:'center',gap:6,padding:'6px 12px',background:'#0f172a',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
+                <button onClick={() => { setSliceIdx(i => Math.max(0,i-1)); setImgLoaded(false); }} disabled={sliceIdx===0}
+                  style={{ background:sliceIdx===0?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:5,width:24,height:24,cursor:sliceIdx===0?'default':'pointer',fontSize:14,fontWeight:700,opacity:sliceIdx===0?0.4:1,flexShrink:0 }}>‹</button>
+                <div style={{ flex:1,display:'flex',alignItems:'center',gap:6 }}>
+                  <input type="range" min={0} max={activeSlices.length-1} value={sliceIdx}
+                    onChange={e => { setSliceIdx(Number(e.target.value)); setImgLoaded(false); }}
+                    style={{ flex:1,accentColor:'#3b82f6',cursor:'pointer' }} />
+                  <span style={{ color:'#93c5fd',fontSize:10,fontWeight:700,whiteSpace:'nowrap',background:'#1e293b',padding:'2px 7px',borderRadius:4,border:'1px solid #3b82f6',minWidth:52,textAlign:'center' }}>
+                    {sliceIdx+1} / {activeSlices.length}
+                  </span>
+                </div>
+                <button onClick={() => { setSliceIdx(i => Math.min(activeSlices.length-1,i+1)); setImgLoaded(false); }} disabled={sliceIdx===activeSlices.length-1}
+                  style={{ background:sliceIdx===activeSlices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:5,width:24,height:24,cursor:sliceIdx===activeSlices.length-1?'default':'pointer',fontSize:14,fontWeight:700,opacity:sliceIdx===activeSlices.length-1?0.4:1,flexShrink:0 }}>›</button>
               </div>
             )}
 
-            {/* Image + SVG overlay */}
-            <div ref={imgContainerRef} onClick={handleImageClick}
-              style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',cursor:labelMode?'crosshair':'default' }}>
+            {/* Image area */}
+            <div style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
               {!imgLoaded && !imgError && (
                 <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:'#475569',zIndex:2 }}>
-                  <div style={{ width:36,height:36,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
-                  <span style={{ fontSize:12 }}>{jointData?.useLocalMRI ? 'Loading MRI…' : 'Loading cryosection…'}</span>
+                  <div style={{ width:32,height:32,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
+                  <span style={{ fontSize:11 }}>Loading…</span>
                 </div>
               )}
               {imgError && (
-                <div style={{ color:'#ef4444',fontSize:13,textAlign:'center',padding:20 }}>
-                  <div style={{ fontSize:32,marginBottom:8 }}>⚠️</div>
-                  <div>Image unavailable</div>
-                  <div style={{ fontSize:11,color:'#64748b',marginTop:4 }}>Slice {currentSlice}</div>
+                <div style={{ color:'#ef4444',fontSize:12,textAlign:'center',padding:16 }}>
+                  <div style={{ fontSize:28,marginBottom:6 }}>⚠️</div>
+                  <div>Image unavailable — Slice {currentSlice}</div>
                 </div>
               )}
               {imgUrl && (
@@ -1268,153 +1239,125 @@ function AtlasModal({ onClose }) {
                   onLoad={() => setImgLoaded(true)}
                   onError={() => { setImgError(true); setImgLoaded(false); }}
                   style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',display:imgLoaded?'block':'none',borderRadius:4,userSelect:'none' }}
-                  alt={`Axial MRI slice ${currentSlice}`}
+                  alt={`Slice ${currentSlice}`}
                 />
               )}
-              {/* Label overlay — color-coded with leader lines */}
-              {imgLoaded && (permanentLabels.length > 0 || currentLabels.length > 0) && (
-                <svg
-                  style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', overflow:'visible' }}
-                  viewBox="0 0 100 100"
-                  preserveAspectRatio="xMidYMid meet"
-                >
-                  {/* Color map by category */}
-                  {permanentLabels.map(([x, y, text], li) => {
-                    const layer = getLabelLayer(text);
-                    const colorMap = { nerves:'#facc15', muscles:'#f97316', arteries:'#ef4444', veins:'#60a5fa', bones:'#ffffff', ligaments:'#9ca3af' };
-                    const col = colorMap[layer] || '#ffffff';
-                    // Leader line: extend outward from dot to label
-                    const lx = x > 50 ? x - 2 : x + 2;
-                    const labelX = x > 50 ? x - 3 : x + 3;
-                    const textAnchor = x > 50 ? 'end' : 'start';
-                    return (
-                      <g key={'p'+li}>
-                        <circle cx={x} cy={y} r="0.6" fill={col} opacity="0.95"/>
-                        <line x1={x} y1={y} x2={lx} y2={y} stroke={col} strokeWidth="0.3" opacity="0.8"/>
-                        <text x={labelX} y={y+0.6} fontSize="2.0" fill={col} fontFamily="monospace" fontWeight="700" textAnchor={textAnchor}
-                          style={{ textShadow:'0 0 3px rgba(0,0,0,0.9)', paintOrder:'stroke' }}
-                          stroke="rgba(0,0,0,0.7)" strokeWidth="0.5">{text}</text>
-                      </g>
-                    );
-                  })}
-                  {/* User labels — white with leader line */}
-                  {currentLabels.map(([x, y, text], li) => {
-                    const lx = x > 50 ? x - 2 : x + 2;
-                    const labelX = x > 50 ? x - 3 : x + 3;
-                    const textAnchor = x > 50 ? 'end' : 'start';
-                    return (
-                      <g key={'u'+li}>
-                        <circle cx={x} cy={y} r="0.8" fill="#facc15" opacity="0.95"/>
-                        <line x1={x} y1={y} x2={lx} y2={y} stroke="#facc15" strokeWidth="0.3" opacity="0.8"/>
-                        <text x={labelX} y={y+0.6} fontSize="2.0" fill="#facc15" fontFamily="monospace" fontWeight="700" textAnchor={textAnchor}
-                          stroke="rgba(0,0,0,0.7)" strokeWidth="0.5" style={{ paintOrder:'stroke' }}>{text}</text>
-                      </g>
-                    );
-                  })}
-                </svg>
-              )}
-              {/* Pending click dot — shows where user clicked */}
-              {pendingClick && imgLoaded && imgRef.current && (() => {
+
+              {/* DOTS ONLY on image — no text labels */}
+              {imgLoaded && imgRef.current && (permanentLabels.length > 0 || currentLabels.length > 0 || pendingClick) && (() => {
                 const ir = imgRef.current.getBoundingClientRect();
                 const cr = imgContainerRef.current.getBoundingClientRect();
-                const px = (ir.left - cr.left) + (pendingClick.x / 100 * ir.width);
-                const py = (ir.top - cr.top) + (pendingClick.y / 100 * ir.height);
+                const ol = ir.left - cr.left;
+                const ot = ir.top - cr.top;
+                const ow = ir.width;
+                const oh = ir.height;
                 return (
-                  <div style={{ position:'absolute',left:px,top:py,transform:'translate(-50%,-50%)',zIndex:10,pointerEvents:'none' }}>
-                    <div style={{ width:12,height:12,borderRadius:'50%',background:'#facc15',border:'2px solid white',boxShadow:'0 0 8px rgba(250,204,21,0.9)' }}/>
-                  </div>
+                  <svg style={{ position:'absolute',left:ol,top:ot,width:ow,height:oh,pointerEvents:'none',overflow:'visible' }}
+                    viewBox="0 0 100 100" preserveAspectRatio="none">
+                    {/* Permanent label dots — color coded by layer */}
+                    {permanentLabels.map(([x, y, name], li) => {
+                      const col = colorMap[getLabelLayer(name)] || '#ffffff';
+                      return (
+                        <g key={'p'+li}>
+                          <circle cx={x} cy={y} r="1.2" fill={col} opacity="0.9" stroke="rgba(0,0,0,0.6)" strokeWidth="0.4"/>
+                        </g>
+                      );
+                    })}
+                    {/* User label dots — yellow */}
+                    {currentLabels.map(([x, y], li) => (
+                      <g key={'u'+li}>
+                        <circle cx={x} cy={y} r="1.4" fill="#facc15" opacity="0.95" stroke="rgba(0,0,0,0.6)" strokeWidth="0.4"/>
+                      </g>
+                    ))}
+                    {/* Pending click dot */}
+                    {pendingClick && (
+                      <circle cx={pendingClick.x} cy={pendingClick.y} r="1.8" fill="#facc15" opacity="0.95" stroke="white" strokeWidth="0.6"/>
+                    )}
+                  </svg>
                 );
               })()}
-              {/* Label mode hint */}
+
               {labelMode && imgLoaded && !pendingClick && (
-                <div style={{ position:'absolute',bottom:8,left:'50%',transform:'translateX(-50%)',background:'rgba(250,204,21,0.15)',border:'1px solid #facc15',borderRadius:6,padding:'4px 10px',pointerEvents:'none' }}>
-                  <span style={{ fontSize:10,color:'#facc15',fontWeight:600 }}>Click on a structure to label it</span>
+                <div style={{ position:'absolute',bottom:6,left:'50%',transform:'translateX(-50%)',background:'rgba(250,204,21,0.15)',border:'1px solid #facc15',borderRadius:5,padding:'3px 8px',pointerEvents:'none' }}>
+                  <span style={{ fontSize:9,color:'#facc15',fontWeight:600 }}>Click a structure to label it</span>
+                </div>
+              )}
+
+              {/* Pending label input — appears over image */}
+              {pendingClick && (
+                <div style={{ position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',background:'#1e293b',border:'1px solid #3b82f6',borderRadius:8,padding:10,zIndex:20,minWidth:220 }}>
+                  <p style={{ margin:'0 0 5px',fontSize:10,color:'#93c5fd',fontWeight:700 }}>Name this structure</p>
+                  <input autoFocus value={pendingText} onChange={e => setPendingText(e.target.value)}
+                    onKeyDown={e => { if (e.key==='Enter') saveLabel(); if (e.key==='Escape') setPendingClick(null); }}
+                    placeholder="e.g. R femoral head"
+                    style={{ width:'100%',padding:'5px 7px',background:'#0f172a',border:'1px solid #475569',borderRadius:5,color:'#e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box' }}/>
+                  <div style={{ display:'flex',gap:5,marginTop:6 }}>
+                    <button onClick={saveLabel} style={{ flex:1,padding:'4px',background:'#1d4ed8',border:'none',borderRadius:4,color:'white',fontSize:10,fontWeight:700,cursor:'pointer' }}>Save</button>
+                    <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'4px',background:'#334155',border:'none',borderRadius:4,color:'#94a3b8',fontSize:10,cursor:'pointer' }}>Cancel</button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Bottom info bar */}
-            {jointData && (
-              <div style={{ padding:'6px 14px',background:'#0f172a',borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0 }}>
-                <span style={{ fontSize:10,color:'#64748b',fontStyle:'italic' }}>{jointData.view}</span>
-                <span style={{ fontSize:10,color:'#334155' }}>''</span>
+            {/* Bottom bar */}
+            <div style={{ padding:'5px 12px',background:'#0f172a',borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0 }}>
+              <span style={{ fontSize:9,color:'#64748b',fontStyle:'italic' }}>{jointData?.view || ''}</span>
+              <div style={{ display:'flex',gap:6 }}>
+                <button onClick={() => { setLabelMode(m => !m); setPendingClick(null); }}
+                  style={{ padding:'3px 9px',borderRadius:5,border:'1px solid '+(labelMode?'#facc15':'#334155'),background:labelMode?'rgba(250,204,21,0.12)':'transparent',color:labelMode?'#facc15':'#64748b',fontSize:9,fontWeight:700,cursor:'pointer' }}>
+                  {labelMode ? '✏️ Labeling ON' : '✏️ Label'}
+                </button>
+                {totalLabels > 0 && (
+                  <button onClick={exportLabels}
+                    style={{ padding:'3px 9px',borderRadius:5,border:'1px solid #22c55e',background:'rgba(34,197,94,0.1)',color:'#22c55e',fontSize:9,fontWeight:700,cursor:'pointer' }}>
+                    Export JSON ({totalLabels})
+                  </button>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Col 3 — label tools + layer toggles */}
-          <div style={{ width:165,borderLeft:'1px solid #1e293b',padding:12,display:'flex',flexDirection:'column',gap:8,background:'#0f172a',flexShrink:0,overflowY:'auto' }}>
-            {/* Layer visibility toggles — always shown */}
-            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 2px' }}>Show Labels</p>
-            <div style={{ display:'flex',flexWrap:'wrap',gap:4 }}>
-              {/* ALL ON / ALL OFF */}
-              <button onClick={() => setVisibleLayers({ nerves:true,muscles:true,arteries:true,veins:true,bones:true,ligaments:true })}
-                style={{ padding:'3px 7px',borderRadius:5,fontSize:9,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All On</button>
-              <button onClick={() => setVisibleLayers({ nerves:false,muscles:false,arteries:false,veins:false,bones:false,ligaments:false })}
-                style={{ padding:'3px 7px',borderRadius:5,fontSize:9,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All Off</button>
-              {[
-                {key:'nerves',    label:'Nerves',    color:'#facc15'},
-                {key:'muscles',   label:'Muscles',   color:'#f97316'},
-                {key:'arteries',  label:'Arteries',  color:'#ef4444'},
-                {key:'veins',     label:'Veins',     color:'#60a5fa'},
-                {key:'bones',     label:'Bones',     color:'#e2e8f0'},
-                {key:'ligaments', label:'Ligaments', color:'#6b7280'},
-              ].map(({key, label, color}) => (
-                <button key={key}
-                  onClick={() => setVisibleLayers(prev => ({ ...prev, [key]: !prev[key] }))}
-                  style={{
-                    padding:'3px 7px', borderRadius:5, fontSize:9, fontWeight:700,
-                    border:'1px solid '+color,
-                    background: visibleLayers[key] ? color+'33' : 'transparent',
-                    color: visibleLayers[key] ? color : '#475569',
-                    cursor:'pointer', transition:'all 0.1s',
-                  }}>
-                  {label}
-                </button>
-              ))}
+          {/* Col 3 — LABEL SIDEBAR (text labels outside image, like reference) */}
+          <div style={{ flex:1,background:'#0a0f1a',borderLeft:'1px solid #1e293b',display:'flex',flexDirection:'column',overflow:'hidden' }}>
+            <div style={{ padding:'8px 12px',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
+              <p style={{ fontSize:9,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.08em',margin:0 }}>
+                Slice {currentSlice} — {sidebarLabels.length} structures
+              </p>
             </div>
-            <div style={{ height:1, background:'#1e293b', margin:'2px 0' }}/>
-            <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 2px' }}>Label Tools</p>
-            <button onClick={() => { setLabelMode(m => !m); setPendingClick(null); }}
-              style={{ padding:'8px 10px',borderRadius:7,border:'1px solid '+(labelMode?'#facc15':'#334155'),background:labelMode?'rgba(250,204,21,0.12)':'#1e293b',color:labelMode?'#facc15':'#94a3b8',fontSize:11,fontWeight:700,cursor:'pointer' }}>
-              {labelMode ? '✏️ Labeling ON' : '✏️ Label Mode'}
-            </button>
-            {/* Label input — appears in panel after clicking image */}
-            {pendingClick && (
-              <div style={{ background:'#1e293b',border:'1px solid #3b82f6',borderRadius:8,padding:10 }}>
-                <p style={{ margin:'0 0 6px',fontSize:10,color:'#93c5fd',fontWeight:700 }}>Name this structure</p>
-                <input autoFocus value={pendingText} onChange={e => setPendingText(e.target.value)}
-                  onKeyDown={e => { if (e.key==='Enter') saveLabel(); if (e.key==='Escape') setPendingClick(null); }}
-                  placeholder="e.g. R femoral head"
-                  style={{ width:'100%',padding:'5px 7px',background:'#0f172a',border:'1px solid #475569',borderRadius:5,color:'#e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box' }}/>
-                <div style={{ display:'flex',gap:5,marginTop:6 }}>
-                  <button onClick={saveLabel} style={{ flex:1,padding:'5px',background:'#1d4ed8',border:'none',borderRadius:5,color:'white',fontSize:10,fontWeight:700,cursor:'pointer' }}>Save</button>
-                  <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'5px',background:'#334155',border:'none',borderRadius:5,color:'#94a3b8',fontSize:10,cursor:'pointer' }}>Cancel</button>
+            <div style={{ flex:1,overflowY:'auto',padding:'6px 0' }}>
+              {sidebarLabels.length === 0 ? (
+                <div style={{ padding:16,textAlign:'center',color:'#334155',fontSize:11 }}>
+                  {permanentLabels.length === 0 ? 'No labels for this slice' : 'All layers hidden'}
                 </div>
-              </div>
-            )}
-            {totalLabels > 0 && (
-              <button onClick={exportLabels}
-                style={{ padding:'7px 10px',borderRadius:7,border:'1px solid #22c55e',background:'rgba(34,197,94,0.1)',color:'#22c55e',fontSize:11,fontWeight:700,cursor:'pointer' }}>
-                Export JSON ({totalLabels})
-              </button>
-            )}
-            {currentLabels.length > 0 && (
-              <div style={{ marginTop:4 }}>
-                <p style={{ fontSize:9,color:'#64748b',fontWeight:700,textTransform:'uppercase',margin:'0 0 4px' }}>Slice {currentSlice} labels</p>
-                {currentLabels.map(([x, y, text], i) => (
-                  <div key={i} style={{ display:'flex',alignItems:'center',gap:4,marginBottom:3 }}>
-                    <span style={{ flex:1,fontSize:10,color:'#facc15',background:'#1e293b',padding:'2px 6px',borderRadius:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{text}</span>
-                    <button onClick={() => deleteLabel(currentLabelKey, i)}
-                      style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:12,padding:'0 2px',lineHeight:1 }}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div style={{ marginTop:'auto',padding:'8px',background:'#1e293b',borderRadius:8,border:'1px solid #334155' }}>
-              <p style={{ fontSize:9,color:'#94a3b8',margin:0,lineHeight:1.6 }}>Scroll to navigate slices. Enable label mode then click any structure to annotate. Export JSON when done.</p>
+              ) : (
+                sidebarLabels.map(([x, y, name], li) => {
+                  const layer = getLabelLayer(name);
+                  const col = colorMap[layer] || '#ffffff';
+                  return (
+                    <div key={li} style={{ display:'flex',alignItems:'center',gap:8,padding:'4px 12px',borderBottom:'1px solid #0f172a' }}>
+                      <div style={{ width:7,height:7,borderRadius:'50%',background:col,flexShrink:0,boxShadow:`0 0 4px ${col}66` }}/>
+                      <span style={{ fontSize:11,color:col,fontWeight:500,lineHeight:1.4 }}>{name}</span>
+                    </div>
+                  );
+                })
+              )}
+              {/* User labels for this slice */}
+              {currentLabels.length > 0 && (
+                <div style={{ marginTop:8,borderTop:'1px solid #1e293b',padding:'6px 0' }}>
+                  <p style={{ fontSize:9,color:'#64748b',fontWeight:700,textTransform:'uppercase',margin:'0 0 4px 12px' }}>Your Labels</p>
+                  {currentLabels.map(([x, y, text], i) => (
+                    <div key={i} style={{ display:'flex',alignItems:'center',gap:8,padding:'4px 12px' }}>
+                      <div style={{ width:7,height:7,borderRadius:'50%',background:'#facc15',flexShrink:0 }}/>
+                      <span style={{ flex:1,fontSize:11,color:'#facc15' }}>{text}</span>
+                      <button onClick={() => deleteLabel(currentLabelKey, i)}
+                        style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:11,padding:0,lineHeight:1 }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
+
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -1660,18 +1603,19 @@ Be concise and clinically actionable. Use WHO 2020 bone tumor classification, Kr
 }
 
 // ─── REFERENCE PANEL ──────────────────────────────────────────────────────
-function ReferencePanel({ selectedBodyPart }) {
+function ReferencePanel({ selectedBodyPart, darkMode }) {
   const jointData = JOINT_DATA[selectedBodyPart];
   const [selectedMeasurementId, setSelectedMeasurementId] = useState('');
   useEffect(() => { setSelectedMeasurementId(''); }, [selectedBodyPart]);
   const selectedMeasurement = jointData?.measurements?.find(m => m.id === selectedMeasurementId);
   const accent = '#0891b2';
+  const dm = darkMode;
   if (!jointData) return <div style={{ color:'#94a3b8',fontSize:13,textAlign:'center',padding:20 }}>Select a body part.</div>;
   return (
     <div style={{ display:'flex',flexDirection:'column',gap:0,height:'100%' }}>
       <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
         <p style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent,margin:0 }}>{jointData.label} — Measurements</p>
-        <select style={{ width:'100%',padding:'8px 10px',border:'1px solid #e2e8f0',borderRadius:8,fontSize:13,background:'white',cursor:'pointer',color:'#1e293b',boxSizing:'border-box' }}
+        <select style={{ width:'100%',padding:'8px 10px',border:'1px solid '+(dm?'#334155':'#e2e8f0'),borderRadius:8,fontSize:13,background:dm?'#0f172a':'white',cursor:'pointer',color:dm?'#e2e8f0':'#1e293b',boxSizing:'border-box' }}
           value={selectedMeasurementId} onChange={e => setSelectedMeasurementId(e.target.value)}>
           <option value="">— Select a measurement —</option>
           {jointData.measurements.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
@@ -1679,18 +1623,18 @@ function ReferencePanel({ selectedBodyPart }) {
         {selectedMeasurement ? (
           <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
             <div style={{ display:'flex',flexDirection:'column',gap:4 }}>
-              <span style={{ display:'inline-block',padding:'2px 8px',background:'#e0f2fe',color:'#0369a1',borderRadius:999,fontSize:11,fontWeight:600,width:'fit-content' }}>{selectedMeasurement.plane}</span>
-              <p style={{ fontSize:12,color:'#64748b',margin:0,lineHeight:1.5 }}>{selectedMeasurement.description}</p>
+              <span style={{ display:'inline-block',padding:'2px 8px',background:dm?'#0c4a6e':'#e0f2fe',color:dm?'#7dd3fc':'#0369a1',borderRadius:999,fontSize:11,fontWeight:600,width:'fit-content' }}>{selectedMeasurement.plane}</span>
+              <p style={{ fontSize:12,color:dm?'#94a3b8':'#64748b',margin:0,lineHeight:1.5 }}>{selectedMeasurement.description}</p>
             </div>
-            <div style={{ border:'1px solid #e2e8f0',borderRadius:8,overflow:'hidden',background:'#fafbfc',padding:8 }}>
+            <div style={{ border:'1px solid '+(dm?'#334155':'#e2e8f0'),borderRadius:8,overflow:'hidden',background:dm?'#0f172a':'#fafbfc',padding:8 }}>
               {DIAGRAM_SVGS[selectedMeasurement.diagram] || <div style={{ padding:24,textAlign:'center',color:'#94a3b8',fontSize:12 }}>Diagram coming soon</div>}
             </div>
             {selectedMeasurement.citations && (
               <div style={{ display:'flex',flexDirection:'column',gap:4 }}>
-                <p style={{ fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.06em',margin:0 }}>📚 References</p>
+                <p style={{ fontSize:10,fontWeight:700,color:dm?'#64748b':'#64748b',textTransform:'uppercase',letterSpacing:'0.06em',margin:0 }}>📚 References</p>
                 {selectedMeasurement.citations.map((c,i) => (
                   <a key={i} href={c.url} target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize:11,color:'#2563eb',textDecoration:'none',lineHeight:1.5,display:'block',padding:'4px 8px',background:'#eff6ff',borderRadius:6,border:'1px solid #bfdbfe' }}>
+                    style={{ fontSize:11,color:'#60a5fa',textDecoration:'none',lineHeight:1.5,display:'block',padding:'4px 8px',background:dm?'#1e3a5f':'#eff6ff',borderRadius:6,border:'1px solid '+(dm?'#1d4ed8':'#bfdbfe') }}>
                     📄 {c.label}
                   </a>
                 ))}
@@ -1698,19 +1642,19 @@ function ReferencePanel({ selectedBodyPart }) {
             )}
           </div>
         ) : (
-          <div style={{ padding:12,background:'#f0f9ff',borderRadius:8,color:'#64748b',fontSize:12,textAlign:'center',border:'1px dashed #bae6fd' }}>Select a measurement to see the diagram and references</div>
+          <div style={{ padding:12,background:dm?'#0f172a':'#f0f9ff',borderRadius:8,color:dm?'#475569':'#64748b',fontSize:12,textAlign:'center',border:'1px dashed '+(dm?'#334155':'#bae6fd') }}>Select a measurement to see the diagram and references</div>
         )}
       </div>
-      <div style={{ height:1,background:'linear-gradient(to right,transparent,#e2e8f0,transparent)',margin:'14px 0',flexShrink:0 }} />
+      <div style={{ height:1,background:dm?'#334155':'linear-gradient(to right,transparent,#e2e8f0,transparent)',margin:'14px 0',flexShrink:0 }} />
       <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
         <p style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent,margin:0 }}>📊 Normal Values</p>
         {selectedMeasurement ? (
           <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12 }}>
             <tbody>
               {selectedMeasurement.normalValues.map((nv,i) => (
-                <tr key={i} style={{ borderBottom:'1px solid #f1f5f9' }}>
-                  <td style={{ padding:'5px 4px',color:'#64748b',width:'45%',verticalAlign:'top' }}>{nv.label}</td>
-                  <td style={{ padding:'5px 4px',color:'#1e293b',fontWeight:600,fontFamily:"'Courier New',monospace" }}>{nv.value}</td>
+                <tr key={i} style={{ borderBottom:'1px solid '+(dm?'#334155':'#f1f5f9') }}>
+                  <td style={{ padding:'5px 4px',color:dm?'#94a3b8':'#64748b',width:'45%',verticalAlign:'top' }}>{nv.label}</td>
+                  <td style={{ padding:'5px 4px',color:dm?'#e2e8f0':'#1e293b',fontWeight:600,fontFamily:"'Courier New',monospace" }}>{nv.value}</td>
                 </tr>
               ))}
             </tbody>
@@ -1719,9 +1663,9 @@ function ReferencePanel({ selectedBodyPart }) {
           <div style={{ display:'flex',flexDirection:'column',gap:5,overflowY:'auto',maxHeight:320 }}>
             {jointData.measurements.map(m => (
               <div key={m.id} onClick={() => setSelectedMeasurementId(m.id)}
-                style={{ padding:'7px 10px',background:'#f8fafc',borderRadius:7,border:'1px solid #f1f5f9',cursor:'pointer' }}>
+                style={{ padding:'7px 10px',background:dm?'#0f172a':'#f8fafc',borderRadius:7,border:'1px solid '+(dm?'#334155':'#f1f5f9'),cursor:'pointer' }}>
                 <div style={{ fontSize:12,fontWeight:600,color:'#0891b2' }}>{m.label}</div>
-                <div style={{ fontSize:11,color:'#64748b' }}>{m.normalValues[0]?.label}: {m.normalValues[0]?.value}</div>
+                <div style={{ fontSize:11,color:dm?'#94a3b8':'#64748b' }}>{m.normalValues[0]?.label}: {m.normalValues[0]?.value}</div>
               </div>
             ))}
           </div>
@@ -1745,7 +1689,6 @@ export default function DashboardPage() {
   const [spineRegion, setSpineRegion] = useState('lumbar');
   const [showAtlas, setShowAtlas] = useState(false);
   const [showDdx, setShowDdx] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const recognitionRef = useRef(null);
 
   // ── Incidental findings state ──────────────────────────────────────────────
@@ -1790,17 +1733,15 @@ export default function DashboardPage() {
   // Build incidental findings text for injection into prompt
   const buildIncidentalBlock = () => {
     const lines = [];
-    let refNum = 1;
 
     // Fleischner
     if (showLungWarning && noduleType && noduleSize) {
       const fleischner = getFleischnerRec(noduleType, noduleSize);
       if (fleischner) {
-        lines.push(`INCIDENTAL PULMONARY NODULE* — ${noduleType.toUpperCase()} — ${noduleSize} (add asterisk * after this impression item):`);
+        lines.push(`INCIDENTAL PULMONARY NODULE — ${noduleType.toUpperCase()} — ${noduleSize}:`);
         lines.push(`Low-risk patient: ${fleischner.low}`);
         lines.push(`High-risk patient: ${fleischner.high}`);
-        lines.push(`FOOTNOTE_REF_${refNum}: *MacMahon H et al. Guidelines for Management of Incidental Pulmonary Nodules Detected on CT Images: From the Fleischner Society 2017. Radiology 2017;284(1):228-243.`);
-        refNum++;
+        lines.push(`Citation: MacMahon H et al. Guidelines for Management of Incidental Pulmonary Nodules Detected on CT Images: From the Fleischner Society 2017. Radiology 2017;284(1):228-243.`);
       }
     }
 
@@ -1808,10 +1749,9 @@ export default function DashboardPage() {
     if (showGUWarning && renalFinding) {
       const renal = getRenalRec(renalFinding);
       if (renal) {
-        lines.push(`INCIDENTAL RENAL FINDING* — ${renalFinding} (add asterisk * after this impression item):`);
+        lines.push(`INCIDENTAL RENAL FINDING — ${renalFinding}:`);
         lines.push(renal.rec);
-        lines.push(`FOOTNOTE_REF_${refNum}: *Herts BR et al. ACR Incidental Findings Committee Recommendation for CT and MRI of the Kidney. J Am Coll Radiol 2018;15(2):264-273.`);
-        refNum++;
+        lines.push(`Citation: Herts BR et al. ACR Incidental Findings Committee Recommendation for CT and MRI of the Kidney. J Am Coll Radiol 2018;15(2):264-273.`);
       }
     }
 
@@ -1819,15 +1759,14 @@ export default function DashboardPage() {
     if (showGUWarning && gynFinding) {
       const gyn = getGynRec(gynFinding, isPostmenopausal);
       if (gyn) {
-        lines.push(`INCIDENTAL GYNECOLOGIC FINDING* — ${gynFinding} (add asterisk * after this impression item):`);
+        lines.push(`INCIDENTAL GYNECOLOGIC FINDING — ${gynFinding}:`);
         if (isPostmenopausal === null) {
           lines.push(`If premenopausal: ${gyn.pre}`);
           lines.push(`If postmenopausal: ${gyn.post}`);
         } else {
           lines.push(isPostmenopausal ? gyn.post : gyn.pre);
         }
-        lines.push(`FOOTNOTE_REF_${refNum}: *Patel MD et al. ACR/SRU Consensus Guidelines on Management of Adnexal Cysts. J Am Coll Radiol 2020.`);
-        refNum++;
+        lines.push(`Citation: Patel MD et al. ACR Appropriateness Criteria / SRU Consensus Guidelines on Management of Adnexal Cysts. J Am Coll Radiol 2020.`);
       }
     }
 
@@ -1835,9 +1774,9 @@ export default function DashboardPage() {
     if (showGUWarning && aortaFinding) {
       const aorta = getAortaRec(aortaFinding);
       if (aorta) {
-        lines.push(`INCIDENTAL AORTIC FINDING* — ${aortaFinding} (add asterisk * after this impression item):`);
+        lines.push(`INCIDENTAL AORTIC FINDING — ${aortaFinding}:`);
         lines.push(aorta.rec);
-        lines.push(`FOOTNOTE_REF_${refNum}: *Khosa F et al. ACR Incidental Findings Committee Recommendations for Abdominal Aortic Aneurysm. J Am Coll Radiol 2013;10(8):575-579.`);
+        lines.push(`Citation: Khosa F et al. ACR Incidental Findings Committee Recommendations for Abdominal Aortic Aneurysm. J Am Coll Radiol 2013;10(8):575-579.`);
       }
     }
 
@@ -1920,8 +1859,8 @@ export default function DashboardPage() {
   const stopListening = () => { const rec = recognitionRef.current; recognitionRef.current = null; try { rec?.stop(); } catch {} setIsListening(false); };
   useEffect(() => () => { recognitionRef.current?.stop(); }, []);
 
-  const inp = { width:'100%',padding:'9px 12px',border:'1px solid '+(darkMode?'#334155':'#dde3ed'),borderRadius:8,fontSize:14,boxSizing:'border-box',color:darkMode?'#e2e8f0':'#1e293b',outline:'none',background:darkMode?'#0f172a':'white' };
-  const lbl = { fontSize:11,fontWeight:600,color:darkMode?'#94a3b8':'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
+  const inp = { width:'100%',padding:'9px 12px',border:'1px solid #dde3ed',borderRadius:8,fontSize:14,boxSizing:'border-box',color:'#1e293b',outline:'none',background:'white' };
+  const lbl = { fontSize:11,fontWeight:600,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
 
   const colHdr = (gradient, icon, title) => (
     <div style={{ background:gradient,padding:'15px 18px',display:'flex',alignItems:'center',gap:10 }}>
@@ -1968,13 +1907,6 @@ export default function DashboardPage() {
             <span>🫁</span> MRI Anatomy Atlas
           </button>
 
-          {/* Dark mode toggle */}
-          <button onClick={() => setDarkMode(d => !d)}
-            title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:darkMode?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.08)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
-            <span>{darkMode ? '☀️' : '🌙'}</span> {darkMode ? 'Light' : 'Dark'}
-          </button>
-
           {/* DDx button */}
           <button onClick={() => setShowDdx(true)}
             style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(124,58,237,0.5)',background:'rgba(124,58,237,0.15)',color:'#c4b5fd',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
@@ -1998,7 +1930,7 @@ export default function DashboardPage() {
       <div className="msk-grid">
 
         {/* Col 1 — Dictation */}
-        <div style={{ background:darkMode?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column',color:darkMode?'#e2e8f0':'inherit' }}>
+        <div style={{ background:'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#2563eb)', isCT?'🔬':'📝', isCT?'CT Dictation Input':'MRI Dictation Input')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
             <div style={{ display:'flex',gap:8 }}>
@@ -2025,7 +1957,7 @@ export default function DashboardPage() {
                 <option value="with and without">With and without IV contrast</option>
               </select>
             </div>
-            <div style={{ padding:'9px 12px',background:isCT?'linear-gradient(135deg,#ecfeff,#f0f9ff)':'linear-gradient(135deg,#eff6ff,#f0f9ff)',borderRadius:8,border:isCT?'1px solid #a5f3fc':'1px solid #bfdbfe',fontSize:12,color:isCT?'#0e7490':'#1d4ed8',fontStyle:'italic',lineHeight:1.6 }}>
+            <div style={{ padding:'9px 12px',background:darkMode?(isCT?'#0c2d36':'#1e1b4b'):(isCT?'linear-gradient(135deg,#ecfeff,#f0f9ff)':'linear-gradient(135deg,#eff6ff,#f0f9ff)'),borderRadius:8,border:darkMode?'1px solid '+(isCT?'#164e63':'#312e81'):(isCT?'1px solid #a5f3fc':'1px solid #bfdbfe'),fontSize:12,color:isCT?'#22d3ee':'#818cf8',fontStyle:'italic',lineHeight:1.6 }}>
               {technique}
             </div>
             {/* ── Incidental Findings Panel ── */}
@@ -2049,38 +1981,38 @@ export default function DashboardPage() {
             </div>
             {micError && <div style={{ fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:7,padding:'7px 10px',lineHeight:1.5 }}>{micError}</div>}
             <button onClick={isListening ? stopListening : toggleListening}
-              style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:10,borderRadius:9,border:'1.5px solid '+(isListening?'#fca5a5':'#dde3ed'),background:isListening?'#fef2f2':'#f8fafc',fontSize:14,fontWeight:600,cursor:'pointer',color:isListening?'#dc2626':'#475569',transition:'all 0.15s' }}>
+              style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:10,borderRadius:9,border:'1.5px solid '+(isListening?'#fca5a5':(darkMode?'#334155':'#dde3ed')),background:isListening?'#fef2f2':(darkMode?'#0f172a':'#f8fafc'),fontSize:14,fontWeight:600,cursor:'pointer',color:isListening?'#dc2626':(darkMode?'#94a3b8':'#475569'),transition:'all 0.15s' }}>
               <span style={{ width:8,height:8,borderRadius:'50%',background:isListening?'#ef4444':'#94a3b8',boxShadow:isListening?'0 0 8px #ef4444':'none',flexShrink:0,transition:'all 0.3s' }} />
               {isListening ? '⏹ Stop Recording' : '🎤 Start Dictation'}
             </button>
             <button onClick={generateReport} disabled={isGenerating || !dictationText.trim()}
-              style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:(isGenerating||!dictationText.trim())?'#e2e8f0':(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#2563eb,#4f46e5)'),color:(isGenerating||!dictationText.trim())?'#94a3b8':'white',fontSize:14,fontWeight:700,cursor:(isGenerating||!dictationText.trim())?'not-allowed':'pointer',boxShadow:(isGenerating||!dictationText.trim())?'none':'0 4px 16px rgba(37,99,235,0.35)',letterSpacing:'0.02em' }}>
+              style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:(isGenerating||!dictationText.trim())?(darkMode?'#1e293b':'#e2e8f0'):(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#2563eb,#4f46e5)'),color:(isGenerating||!dictationText.trim())?(darkMode?'#475569':'#94a3b8'):'white',fontSize:14,fontWeight:700,cursor:(isGenerating||!dictationText.trim())?'not-allowed':'pointer',boxShadow:(isGenerating||!dictationText.trim())?'none':'0 4px 16px rgba(37,99,235,0.35)',letterSpacing:'0.02em' }}>
               {isGenerating ? '⏳ Generating…' : `✨ Generate ${isCT?'CT':'MRI'} Report`}
             </button>
           </div>
         </div>
 
         {/* Col 2 — Report */}
-        <div style={{ background:darkMode?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div style={{ background:'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
-            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(darkMode?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:generatedReport?(darkMode?'#0f172a':'white'):(darkMode?'#0f172a':'#f8fafc') }}>
+            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(darkMode?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:darkMode?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
               {isGenerating
                 ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
                 : generatedReport
-                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport)}</div>
+                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, darkMode)}</div>
                   : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
               }
             </div>
-            <CopyButton generatedReport={generatedReport} />
+            <CopyButton generatedReport={generatedReport} darkMode={darkMode} />
           </div>
         </div>
 
         {/* Col 3 — Reference */}
-        <div style={{ background:darkMode?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div style={{ background:'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr('linear-gradient(135deg,#0e7490,#0891b2)', '📐', 'Reference Panel')}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
-            <ReferencePanel selectedBodyPart={selectedBodyPart} />
+            <ReferencePanel selectedBodyPart={selectedBodyPart} darkMode={darkMode} />
           </div>
         </div>
 
