@@ -1690,6 +1690,8 @@ export default function DashboardPage() {
   const [spineRegion, setSpineRegion] = useState('lumbar');
   const [showAtlas, setShowAtlas] = useState(false);
   const [showDdx, setShowDdx] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const dm = darkMode;
   const recognitionRef = useRef(null);
 
   // ── Incidental findings state ──────────────────────────────────────────────
@@ -1908,6 +1910,13 @@ export default function DashboardPage() {
             <span>🫁</span> MRI Anatomy Atlas
           </button>
 
+          {/* Dark mode toggle */}
+          <button onClick={() => setDarkMode(d => !d)}
+            title={dm ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:dm?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.08)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
+            <span>{dm ? '☀️' : '🌙'}</span> {dm ? 'Light' : 'Dark'}
+          </button>
+
           {/* DDx button */}
           <button onClick={() => setShowDdx(true)}
             style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(124,58,237,0.5)',background:'rgba(124,58,237,0.15)',color:'#c4b5fd',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
@@ -1958,7 +1967,7 @@ export default function DashboardPage() {
                 <option value="with and without">With and without IV contrast</option>
               </select>
             </div>
-            <div style={{ padding:'9px 12px',background:darkMode?(isCT?'#0c2d36':'#1e1b4b'):(isCT?'linear-gradient(135deg,#ecfeff,#f0f9ff)':'linear-gradient(135deg,#eff6ff,#f0f9ff)'),borderRadius:8,border:darkMode?'1px solid '+(isCT?'#164e63':'#312e81'):(isCT?'1px solid #a5f3fc':'1px solid #bfdbfe'),fontSize:12,color:isCT?'#22d3ee':'#818cf8',fontStyle:'italic',lineHeight:1.6 }}>
+            <div style={{ padding:'9px 12px',background:dm?(isCT?'#0c2d36':'#1e1b4b'):(isCT?'linear-gradient(135deg,#ecfeff,#f0f9ff)':'linear-gradient(135deg,#eff6ff,#f0f9ff)'),borderRadius:8,border:dm?'1px solid '+(isCT?'#164e63':'#312e81'):(isCT?'1px solid #a5f3fc':'1px solid #bfdbfe'),fontSize:12,color:isCT?'#22d3ee':'#818cf8',fontStyle:'italic',lineHeight:1.6 }}>
               {technique}
             </div>
             {/* ── Incidental Findings Panel ── */}
@@ -1982,12 +1991,12 @@ export default function DashboardPage() {
             </div>
             {micError && <div style={{ fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:7,padding:'7px 10px',lineHeight:1.5 }}>{micError}</div>}
             <button onClick={isListening ? stopListening : toggleListening}
-              style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:10,borderRadius:9,border:'1.5px solid '+(isListening?'#fca5a5':(darkMode?'#334155':'#dde3ed')),background:isListening?'#fef2f2':(darkMode?'#0f172a':'#f8fafc'),fontSize:14,fontWeight:600,cursor:'pointer',color:isListening?'#dc2626':(darkMode?'#94a3b8':'#475569'),transition:'all 0.15s' }}>
+              style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:10,borderRadius:9,border:'1.5px solid '+(isListening?'#fca5a5':(dm?'#334155':'#dde3ed')),background:isListening?'#fef2f2':(dm?'#0f172a':'#f8fafc'),fontSize:14,fontWeight:600,cursor:'pointer',color:isListening?'#dc2626':(dm?'#94a3b8':'#475569'),transition:'all 0.15s' }}>
               <span style={{ width:8,height:8,borderRadius:'50%',background:isListening?'#ef4444':'#94a3b8',boxShadow:isListening?'0 0 8px #ef4444':'none',flexShrink:0,transition:'all 0.3s' }} />
               {isListening ? '⏹ Stop Recording' : '🎤 Start Dictation'}
             </button>
             <button onClick={generateReport} disabled={isGenerating || !dictationText.trim()}
-              style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:(isGenerating||!dictationText.trim())?(darkMode?'#1e293b':'#e2e8f0'):(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#2563eb,#4f46e5)'),color:(isGenerating||!dictationText.trim())?(darkMode?'#475569':'#94a3b8'):'white',fontSize:14,fontWeight:700,cursor:(isGenerating||!dictationText.trim())?'not-allowed':'pointer',boxShadow:(isGenerating||!dictationText.trim())?'none':'0 4px 16px rgba(37,99,235,0.35)',letterSpacing:'0.02em' }}>
+              style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:(isGenerating||!dictationText.trim())?(dm?'#1e293b':'#e2e8f0'):(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#2563eb,#4f46e5)'),color:(isGenerating||!dictationText.trim())?(dm?'#475569':'#94a3b8'):'white',fontSize:14,fontWeight:700,cursor:(isGenerating||!dictationText.trim())?'not-allowed':'pointer',boxShadow:(isGenerating||!dictationText.trim())?'none':'0 4px 16px rgba(37,99,235,0.35)',letterSpacing:'0.02em' }}>
               {isGenerating ? '⏳ Generating…' : `✨ Generate ${isCT?'CT':'MRI'} Report`}
             </button>
           </div>
@@ -1997,11 +2006,11 @@ export default function DashboardPage() {
         <div style={{ background:'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
-            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(darkMode?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:darkMode?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
+            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(dm?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
               {isGenerating
                 ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
                 : generatedReport
-                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, darkMode ? {
+                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, dm ? {
                       neg:'#94a3b8', pos:'#f1f5f9', lbl:'#cbd5e1', body:'#e2e8f0', posW:500, border:'#334155', hdr:'#93c5fd'
                     } : {
                       neg:'#6b7280', pos:'#dc2626', lbl:'#1e293b', body:'#1e293b', posW:600, border:'#e2e8f0', hdr:'#1e3a5f'
@@ -2009,7 +2018,7 @@ export default function DashboardPage() {
                   : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
               }
             </div>
-            <CopyButton generatedReport={generatedReport} darkMode={darkMode} />
+            <CopyButton generatedReport={generatedReport} dm={dm} />
           </div>
         </div>
 
@@ -2017,7 +2026,7 @@ export default function DashboardPage() {
         <div style={{ background:'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr('linear-gradient(135deg,#0e7490,#0891b2)', '📐', 'Reference Panel')}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
-            <ReferencePanel selectedBodyPart={selectedBodyPart} darkMode={darkMode} />
+            <ReferencePanel selectedBodyPart={selectedBodyPart} dm={dm} />
           </div>
         </div>
 
