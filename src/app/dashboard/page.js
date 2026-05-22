@@ -715,38 +715,83 @@ function AtlasModal({ onClose }) {
               )}
 
               {/* DOTS ONLY on image — no text labels */}
-              {imgLoaded && imgRef.current && imgAreaRef.current && (permanentLabels.length > 0 || currentLabels.length > 0 || pendingClick) && (() => {
+              {/* Dots + leader lines using CSS absolute positioning over actual image */}
+              {imgLoaded && imgRef.current && (() => {
                 const ir = imgRef.current.getBoundingClientRect();
-                const cr = imgAreaRef.current.getBoundingClientRect(); // use image AREA not full column
-                const ol = ir.left - cr.left;
-                const ot = ir.top - cr.top;
-                const ow = ir.width;
-                const oh = ir.height;
+                const ar = imgAreaRef.current.getBoundingClientRect();
+                // Image offset within the area (due to objectFit:contain black bars)
+                const imgLeft = ir.left - ar.left;
+                const imgTop  = ir.top  - ar.top;
+                const imgW    = ir.width;
+                const imgH    = ir.height;
+
                 return (
-                  <svg style={{ position:'absolute',left:ol,top:ot,width:ow,height:oh,pointerEvents:'none',overflow:'visible' }}
-                    viewBox="0 0 100 100" preserveAspectRatio="none">
-                    {/* Permanent label dots + leader lines to right edge */}
+                  <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
+                    {/* Permanent dots + leader lines */}
                     {permanentLabels.map(([x, y, name], li) => {
                       const col = colorMap[getLabelLayer(name)] || '#ffffff';
+                      const px = imgLeft + (x / 100) * imgW;
+                      const py = imgTop  + (y / 100) * imgH;
+                      const lineW = ar.width - px; // extends to right edge of image area
                       return (
-                        <g key={'p'+li}>
-                          <circle cx={x} cy={y} r="1.0" fill={col} opacity="0.95" stroke="rgba(0,0,0,0.5)" strokeWidth="0.3"/>
-                          {/* Leader line to right edge of image */}
-                          <line x1={x} y1={y} x2={100} y2={y} stroke={col} strokeWidth="0.4" opacity="0.6" strokeDasharray="1.5,1.5"/>
-                        </g>
+                        <div key={'p'+li}>
+                          {/* Dot */}
+                          <div style={{
+                            position:'absolute',
+                            left: px, top: py,
+                            width:8, height:8,
+                            borderRadius:'50%',
+                            background:col,
+                            transform:'translate(-50%,-50%)',
+                            boxShadow:`0 0 0 1.5px rgba(0,0,0,0.6), 0 0 5px ${col}88`,
+                          }}/>
+                          {/* Leader line to right edge */}
+                          <div style={{
+                            position:'absolute',
+                            left: px + 4,
+                            top: py,
+                            width: Math.max(0, lineW - 4),
+                            height:1,
+                            background:col,
+                            opacity:0.55,
+                            transform:'translateY(-50%)',
+                          }}/>
+                        </div>
                       );
                     })}
-                    {/* User label dots — yellow */}
-                    {currentLabels.map(([x, y], li) => (
-                      <g key={'u'+li}>
-                        <circle cx={x} cy={y} r="1.4" fill="#facc15" opacity="0.95" stroke="rgba(0,0,0,0.6)" strokeWidth="0.4"/>
-                      </g>
-                    ))}
+                    {/* User label dots */}
+                    {currentLabels.map(([x, y], li) => {
+                      const px = imgLeft + (x / 100) * imgW;
+                      const py = imgTop  + (y / 100) * imgH;
+                      return (
+                        <div key={'u'+li} style={{
+                          position:'absolute',
+                          left:px, top:py,
+                          width:10, height:10,
+                          borderRadius:'50%',
+                          background:'#facc15',
+                          transform:'translate(-50%,-50%)',
+                          boxShadow:'0 0 0 2px rgba(0,0,0,0.7), 0 0 8px #facc1588',
+                        }}/>
+                      );
+                    })}
                     {/* Pending click dot */}
-                    {pendingClick && (
-                      <circle cx={pendingClick.x} cy={pendingClick.y} r="1.8" fill="#facc15" opacity="0.95" stroke="white" strokeWidth="0.6"/>
-                    )}
-                  </svg>
+                    {pendingClick && (() => {
+                      const px = imgLeft + (pendingClick.x / 100) * imgW;
+                      const py = imgTop  + (pendingClick.y / 100) * imgH;
+                      return (
+                        <div style={{
+                          position:'absolute',
+                          left:px, top:py,
+                          width:12, height:12,
+                          borderRadius:'50%',
+                          background:'#facc15',
+                          transform:'translate(-50%,-50%)',
+                          boxShadow:'0 0 0 2px white, 0 0 10px #facc15',
+                        }}/>
+                      );
+                    })()}
+                  </div>
                 );
               })()}
 
