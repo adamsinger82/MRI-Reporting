@@ -350,6 +350,7 @@ function AtlasModal({ onClose }) {
   const [pendingText, setPendingText] = useState('');
   const imgRef = useRef(null);
   const imgContainerRef = useRef(null);
+  const imgAreaRef = useRef(null); // ref to the image area div (excludes bars)
 
   const regionJoints = ATLAS_REGIONS_MAP[selectedRegion] || {};
   const jointData = ATLAS_JOINTS[selectedJoint];
@@ -551,8 +552,8 @@ function AtlasModal({ onClose }) {
           </div>
 
           {/* Col 2 — IMAGE (dots only, no text on image) */}
-          <div ref={imgContainerRef} onClick={handleImageClick}
-            style={{ flex:'0 0 auto',width:'55%',display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative',cursor:labelMode?'crosshair':'default' }}>
+          <div ref={imgContainerRef}
+            style={{ flex:'0 0 auto',width:'55%',display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
 
             {/* Sequence toggle */}
             {jointData?.sequences && (
@@ -585,8 +586,9 @@ function AtlasModal({ onClose }) {
               </div>
             )}
 
-            {/* Image area */}
-            <div style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
+            {/* Image area — click handler here so coords are relative to image area only */}
+            <div ref={imgAreaRef} onClick={handleImageClick}
+              style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',cursor:labelMode?'crosshair':'default' }}>
               {!imgLoaded && !imgError && (
                 <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:'#475569',zIndex:2 }}>
                   <div style={{ width:32,height:32,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
@@ -611,9 +613,9 @@ function AtlasModal({ onClose }) {
               )}
 
               {/* DOTS ONLY on image — no text labels */}
-              {imgLoaded && imgRef.current && (permanentLabels.length > 0 || currentLabels.length > 0 || pendingClick) && (() => {
+              {imgLoaded && imgRef.current && imgAreaRef.current && (permanentLabels.length > 0 || currentLabels.length > 0 || pendingClick) && (() => {
                 const ir = imgRef.current.getBoundingClientRect();
-                const cr = imgContainerRef.current.getBoundingClientRect();
+                const cr = imgAreaRef.current.getBoundingClientRect(); // use image AREA not full column
                 const ol = ir.left - cr.left;
                 const ot = ir.top - cr.top;
                 const ow = ir.width;
