@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { useState, useRef, useEffect } from 'react';
 import { JOINT_DATA, DIAGRAM_SVGS } from './referenceData';
 import CopyButton from './CopyButton';
