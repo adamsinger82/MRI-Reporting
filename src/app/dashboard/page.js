@@ -726,17 +726,17 @@ function AtlasModal({ onClose }) {
                 const oh = ir.height;
                 // SVG viewBox matches image pixel dimensions exactly
                 return (
-                  <svg style={{ position:'absolute', left:ol, top:ot, width:ow+320, height:oh, pointerEvents:'none', overflow:'visible' }}
-                    viewBox={`0 0 ${ow+320} ${oh}`}>
+                  <svg style={{ position:'absolute', left:ol-250, top:ot, width:ow+250, height:oh, pointerEvents:'none', overflow:'visible' }}
+                    viewBox={`-250 0 ${ow+250} ${oh}`}>
 
                     {/* Permanent labels */}
                     {permanentLabels.map(([x, y, name], li) => {
                       const col = colorMap[getLabelLayer(name)] || '#ffffff';
                       const px = (x / 100) * ow;
                       const py = (y / 100) * oh;
-                      // Line goes RIGHT into black area beyond image
-                      const lx2 = ow + 16; // just past image right edge
-                      const textX = lx2 + 6;
+                      // Text in black area on LEFT, line goes right to dot
+                      const textX = -240;    // in black area left of image
+                      const lineStartX = textX + (name.length * 7 + 8); // after text
                       const textAnchor = 'start';
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
@@ -745,7 +745,7 @@ function AtlasModal({ onClose }) {
                           <circle cx={px} cy={py} r="4" fill={col} opacity="0.95"
                             stroke="rgba(0,0,0,0.7)" strokeWidth="1"/>
                           {/* Leader line */}
-                          <line x1={px+5} y1={py} x2={lx2} y2={py}
+                          <line x1={lineStartX} y1={py} x2={px-4} y2={py}
                             stroke={col} strokeWidth="1" opacity="0.7"/>
                           {/* Text with black shadow for readability */}
                           <text x={textX} y={py} fontSize={fontSize} fill="rgba(0,0,0,0.85)"
@@ -754,6 +754,7 @@ function AtlasModal({ onClose }) {
                           <text x={textX} y={py} fontSize={fontSize} fill={col}
                             fontFamily="system-ui,sans-serif" fontWeight="700"
                             textAnchor="start" dominantBaseline="middle">{name}</text>
+                          {/* Vertical tick at text end */}
                         </g>
                       );
                     })}
@@ -762,18 +763,18 @@ function AtlasModal({ onClose }) {
                     {currentLabels.map(([x, y, text], li) => {
                       const px = (x / 100) * ow;
                       const py = (y / 100) * oh;
-                      const lx2u = ow + 16;
+                      const textXu = -240; const lineStartXu = textXu + (text.length * 7 + 8);
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
                         <g key={'u'+li}>
                           <circle cx={px} cy={py} r="5" fill="#facc15" opacity="0.95"
                             stroke="rgba(0,0,0,0.7)" strokeWidth="1.5"/>
-                          <line x1={px+6} y1={py} x2={lx2u} y2={py}
+                          <line x1={lineStartXu} y1={py} x2={px-4} y2={py}
                             stroke="#facc15" strokeWidth="1" opacity="0.7"/>
-                          <text x={lx2u+6} y={py} fontSize={fontSize} fill="rgba(0,0,0,0.85)"
+                          <text x={textXu} y={py} fontSize={fontSize} fill="rgba(0,0,0,0.85)"
                             fontFamily="system-ui,sans-serif" fontWeight="700"
                             textAnchor="start" dominantBaseline="middle" dx="1" dy="1">{text}</text>
-                          <text x={lx2u+6} y={py} fontSize={fontSize} fill="#facc15"
+                          <text x={textXu} y={py} fontSize={fontSize} fill="#facc15"
                             fontFamily="system-ui,sans-serif" fontWeight="700"
                             textAnchor="start" dominantBaseline="middle">{text}</text>
                         </g>
