@@ -100,7 +100,7 @@ function isAbsentStructure(label) {
   return ABSENT_STRUCTURES.some(s => l.includes(s));
 }
 
-function formatReport(txt, darkMode = false) {
+function formatReport(txt, colors = {}) {
   if (!txt) return null;
   const cleaned = txt
     .replace(/\bunremarkable\b/gi, 'intact')
@@ -112,11 +112,11 @@ function formatReport(txt, darkMode = false) {
   let inReferences = false;
   let inFootnote = false;
 
-  const negColor  = darkMode ? '#94a3b8' : '#6b7280';
-  const posColor  = darkMode ? '#f1f5f9' : '#dc2626';
-  const lblColor  = darkMode ? '#cbd5e1' : '#1e293b';
-  const bodyColor = darkMode ? '#e2e8f0' : '#1e293b';
-  const posWeight = darkMode ? 500 : 600;
+  const negColor  = colors.neg  || '#6b7280';
+  const posColor  = colors.pos  || '#dc2626';
+  const lblColor  = colors.lbl  || '#1e293b';
+  const bodyColor = colors.body || '#1e293b';
+  const posWeight = colors.posW || 600;
 
   return cleaned.split('\n').map((line, i) => {
     const t = line.trim();
@@ -125,13 +125,13 @@ function formatReport(txt, darkMode = false) {
     // FOOTNOTE / REFERENCES — small grey section below impression
     if (/^FOOTNOTE:?$/i.test(t)) {
       inFootnote = true; inImpression = false; inReferences = false;
-      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(darkMode?'#334155':'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>Footnotes</span></div>;
+      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(colors.border||'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>Footnotes</span></div>;
     }
     if (inFootnote) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
 
     if (/^REFERENCES:?$/i.test(t)) {
       inReferences = true; inImpression = false;
-      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(darkMode?'#334155':'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>References</span></div>;
+      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(colors.border||'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>References</span></div>;
     }
     if (inReferences) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
 
@@ -140,7 +140,7 @@ function formatReport(txt, darkMode = false) {
       inImpression = t.startsWith('IMPRESSION');
       return (
         <div key={i} style={{ marginTop: i > 0 ? 20 : 0, marginBottom: 6 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: darkMode ? '#93c5fd' : '#1e3a5f', borderBottom: '2px solid #2563eb', paddingBottom: 3, display: 'inline-block' }}>{t}</span>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: colors.hdr || '#1e3a5f', borderBottom: '2px solid #2563eb', paddingBottom: 3, display: 'inline-block' }}>{t}</span>
         </div>
       );
     }
@@ -2001,7 +2001,11 @@ export default function DashboardPage() {
               {isGenerating
                 ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
                 : generatedReport
-                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, darkMode)}</div>
+                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, darkMode ? {
+                      neg:'#94a3b8', pos:'#f1f5f9', lbl:'#cbd5e1', body:'#e2e8f0', posW:500, border:'#334155', hdr:'#93c5fd'
+                    } : {
+                      neg:'#6b7280', pos:'#dc2626', lbl:'#1e293b', body:'#1e293b', posW:600, border:'#e2e8f0', hdr:'#1e3a5f'
+                    })}</div>
                   : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
               }
             </div>
@@ -2030,4 +2034,4 @@ export default function DashboardPage() {
       `}</style>
     </div>
   );
-} 
+}
