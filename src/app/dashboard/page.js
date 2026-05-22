@@ -213,6 +213,108 @@ function formatReport(txt, colors = {}) {
   });
 }
 
+// ─── PERMANENT PELVIS ATLAS LABELS (T1 sequence) ────────────────────────────
+// 39 labels across 29 slices — accurately placed with new label editor
+const PELVIS_LABELS = {
+  9: [
+    [68.5, 49.3, "lateral femoral cutaneous nerve"],
+  ],
+  11: [
+    [69.7, 49.5, "lateral femoral cutaneous nerve"],
+  ],
+  14: [
+    [72.7, 46.8, "lateral femoral cutaneous nerve"],
+  ],
+  15: [
+    [64.4, 46.3, "psoas muscle"],
+  ],
+  16: [
+    [74.2, 44.6, "lateral femoral cutaneous nerve"],
+  ],
+  18: [
+    [68.8, 47.7, "femoral nerve"],
+    [76.1, 41.4, "lateral femoral cutaneous nerve"],
+  ],
+  20: [
+    [63.9, 53.1, "obturator nerve"],
+  ],
+  21: [
+    [76.7, 35.3, "lateral femoral cutaneous nerve"],
+  ],
+  22: [
+    [70, 44.6, "femoral nerve"],
+  ],
+  23: [
+    [65, 53.6, "obturator nerve"],
+    [77, 32.8, "lateral femoral cutaneous nerve"],
+  ],
+  25: [
+    [71.1, 41.9, "femoral nerve"],
+  ],
+  28: [
+    [67.6, 61, "sciatic nerve"],
+    [66.7, 53.5, "obturator nerve"],
+    [71.2, 40.2, "femoral nerve"],
+  ],
+  31: [
+    [66.8, 52, "obturator nerve"],
+    [71.7, 38.2, "femoral nerve"],
+  ],
+  32: [
+    [68.3, 61.7, "sciatic nerve"],
+  ],
+  35: [
+    [66.5, 51.5, "obturator nerve"],
+    [72, 36.6, "femoral nerve"],
+  ],
+  39: [
+    [71.7, 63.5, "sciatic nerve"],
+    [65.3, 49.1, "obturator nerve"],
+    [71.8, 35.1, "femoral nerve"],
+    [80.2, 28.3, "lateral femoral cutaneous nerve"],
+  ],
+  42: [
+    [71.8, 34.4, "femoral nerve"],
+  ],
+  43: [
+    [64.1, 47.5, "obturator nerve"],
+  ],
+  44: [
+    [76.4, 63.2, "sciatic nerve"],
+  ],
+  46: [
+    [72.3, 35.1, "femoral nerve"],
+  ],
+  47: [
+    [64.1, 46.6, "obturator nerve"],
+  ],
+  49: [
+    [78.2, 63.4, "sciatic nerve"],
+    [63.8, 44.8, "obturator nerve"],
+  ],
+  51: [
+    [63.5, 44.1, "obturator nerve"],
+  ],
+  52: [
+    [72.7, 36.6, "femoral nerve"],
+  ],
+  53: [
+    [80.6, 63.2, "sciatic nerve"],
+  ],
+  58: [
+    [80.8, 62.6, "sciatic nerve"],
+  ],
+  65: [
+    [80.5, 62.8, "sciatic nerve"],
+  ],
+  77: [
+    [80.8, 63.2, "sciatic nerve"],
+  ],
+  86: [
+    [80, 61.6, "sciatic nerve"],
+  ],
+};
+
 // ─── ANATOMY ATLAS DATA (Visible Human Project) ──────────────────────────────
 const VHP_BASE = 'https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Male-Images/PNG_format';
 
@@ -309,7 +411,7 @@ const ATLAS_JOINTS = {
     useLocalMRI: true,
     localPath: '/atlas/pelvis/pelvis_', localExt: '.webp',
     sequences: {
-      t1: { label:'T1', path:'/atlas/pelvis/pelvis_', slices:Array.from({length:100},(_,i)=>i+1), ext:'.webp' },
+      t1: { label:'T1', path:'/atlas/pelvis/pelvis_', slices:Array.from({length:100},(_,i)=>i+1), ext:'.webp', permanentLabels: PELVIS_LABELS },
       dess: { label:'DESS', path:'/atlas/pelvis_dess/dess_', slices:Array.from({length:206},(_,i)=>i+25), ext:'.webp' },
     },
     view: 'Axial MRI — pelvis without contrast',
@@ -492,11 +594,8 @@ function AtlasModal({ onClose }) {
 
   const permanentLabels = allPermanentLabels.filter(([,,name]) => visibleLayers[getLabelLayer(name)]);
 
-  // Build sorted label list for sidebar — group by layer
-  const sidebarLabels = permanentLabels.slice().sort((a, b) => {
-    const order = ['nerves','arteries','veins','bones','muscles','ligaments'];
-    return order.indexOf(getLabelLayer(a[2])) - order.indexOf(getLabelLayer(b[2]));
-  });
+  // Sort labels by Y position for vertical alignment with dots
+  const sidebarLabels = permanentLabels.slice().sort((a, b) => a[1] - b[1]);
 
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}>
@@ -551,9 +650,12 @@ function AtlasModal({ onClose }) {
             </div>
           </div>
 
-          {/* Col 2 — IMAGE (dots only, no text on image) */}
+          {/* Col 2+3 — IMAGE + SIDEBAR in a shared flex row with SVG leader lines */}
+          <div style={{ flex:1,display:'flex',flexDirection:'row',overflow:'hidden',position:'relative' }}>
+
+          {/* Col 2 — IMAGE */}
           <div ref={imgContainerRef}
-            style={{ flex:'0 0 auto',width:'55%',display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
+            style={{ flex:'0 0 auto',width:'60%',display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
 
             {/* Sequence toggle */}
             {jointData?.sequences && (
@@ -623,12 +725,14 @@ function AtlasModal({ onClose }) {
                 return (
                   <svg style={{ position:'absolute',left:ol,top:ot,width:ow,height:oh,pointerEvents:'none',overflow:'visible' }}
                     viewBox="0 0 100 100" preserveAspectRatio="none">
-                    {/* Permanent label dots — color coded by layer */}
+                    {/* Permanent label dots + leader lines to right edge */}
                     {permanentLabels.map(([x, y, name], li) => {
                       const col = colorMap[getLabelLayer(name)] || '#ffffff';
                       return (
                         <g key={'p'+li}>
-                          <circle cx={x} cy={y} r="1.2" fill={col} opacity="0.9" stroke="rgba(0,0,0,0.6)" strokeWidth="0.4"/>
+                          <circle cx={x} cy={y} r="1.0" fill={col} opacity="0.95" stroke="rgba(0,0,0,0.5)" strokeWidth="0.3"/>
+                          {/* Leader line to right edge of image */}
+                          <line x1={x} y1={y} x2={100} y2={y} stroke={col} strokeWidth="0.4" opacity="0.6" strokeDasharray="1.5,1.5"/>
                         </g>
                       );
                     })}
@@ -673,62 +777,100 @@ function AtlasModal({ onClose }) {
             </div>
           </div>
 
-          {/* Col 3 — LABEL SIDEBAR (text labels outside image, like reference) */}
-          <div style={{ flex:1,background:'#0a0f1a',borderLeft:'1px solid #1e293b',display:'flex',flexDirection:'column',overflow:'hidden' }}>
-            <div style={{ padding:'8px 12px',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
-              <p style={{ fontSize:9,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.08em',margin:0 }}>
-                Slice {currentSlice} — {sidebarLabels.length} structures
-              </p>
-            </div>
-            {/* Label input in sidebar — away from image, no accidental clicks */}
+          {/* Col 3 — LABEL SIDEBAR with Y-aligned labels + leader lines */}
+          <div style={{ flex:1,background:'#000000',borderLeft:'none',display:'flex',flexDirection:'column',overflow:'hidden',position:'relative' }}>
+
+            {/* Label input at top when in label mode */}
             {pendingClick && (
-              <div style={{ padding:'10px 12px',background:'#1e3a5f',borderBottom:'2px solid #3b82f6',flexShrink:0 }}>
-                <p style={{ margin:'0 0 6px',fontSize:10,color:'#93c5fd',fontWeight:700 }}>
-                  📍 Name this structure ({pendingClick.x.toFixed(0)}%, {pendingClick.y.toFixed(0)}%)
+              <div style={{ padding:'8px 10px',background:'#1e3a5f',borderBottom:'2px solid #3b82f6',flexShrink:0,zIndex:10 }}>
+                <p style={{ margin:'0 0 5px',fontSize:10,color:'#93c5fd',fontWeight:700 }}>
+                  📍 Name this structure
                 </p>
                 <input autoFocus value={pendingText} onChange={e => setPendingText(e.target.value)}
                   onKeyDown={e => { if (e.key==='Enter') saveLabel(); if (e.key==='Escape') setPendingClick(null); }}
                   placeholder="e.g. sciatic nerve"
-                  style={{ width:'100%',padding:'6px 8px',background:'#0f172a',border:'1px solid #3b82f6',borderRadius:5,color:'#e2e8f0',fontSize:12,outline:'none',boxSizing:'border-box',marginBottom:6 }}/>
-                <div style={{ display:'flex',gap:5 }}>
-                  <button onClick={saveLabel} style={{ flex:1,padding:'5px',background:'#1d4ed8',border:'none',borderRadius:5,color:'white',fontSize:11,fontWeight:700,cursor:'pointer' }}>Save</button>
-                  <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'5px',background:'#334155',border:'none',borderRadius:5,color:'#94a3b8',fontSize:11,cursor:'pointer' }}>Cancel</button>
+                  style={{ width:'100%',padding:'5px 8px',background:'#0f172a',border:'1px solid #3b82f6',borderRadius:5,color:'#e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box',marginBottom:5 }}/>
+                <div style={{ display:'flex',gap:4 }}>
+                  <button onClick={saveLabel} style={{ flex:1,padding:'4px',background:'#1d4ed8',border:'none',borderRadius:4,color:'white',fontSize:10,fontWeight:700,cursor:'pointer' }}>Save</button>
+                  <button onClick={() => setPendingClick(null)} style={{ flex:1,padding:'4px',background:'#334155',border:'none',borderRadius:4,color:'#94a3b8',fontSize:10,cursor:'pointer' }}>Cancel</button>
                 </div>
               </div>
             )}
-            <div style={{ flex:1,overflowY:'auto',padding:'6px 0' }}>
-              {sidebarLabels.length === 0 ? (
-                <div style={{ padding:16,textAlign:'center',color:'#334155',fontSize:11 }}>
-                  {permanentLabels.length === 0 ? 'No labels for this slice' : 'All layers hidden'}
-                </div>
+
+            {/* Y-aligned label list — each label positioned at its Y% */}
+            <div style={{ flex:1,position:'relative',overflow:'hidden' }}>
+              {(sidebarLabels.length > 0 || currentLabels.length > 0) ? (
+                // Distribute labels evenly if they'd overlap, otherwise use Y position
+                (() => {
+                  const allLabels = [
+                    ...sidebarLabels.map(([x,y,name]) => ({ x,y,name,isUser:false })),
+                    ...currentLabels.map(([x,y,text]) => ({ x,y,name:text,isUser:true })),
+                  ].sort((a,b) => a.y - b.y);
+
+                  // Assign vertical positions — spread labels to avoid overlap
+                  // Each label gets at least 22px of vertical space
+                  const MIN_GAP = 22; // px between labels
+                  const containerH = 600; // approximate sidebar height
+                  const positions = [];
+                  allLabels.forEach((lbl, i) => {
+                    const idealPct = lbl.y; // use the Y% directly
+                    const idealPx = (idealPct / 100) * containerH;
+                    const minPx = i > 0 ? positions[i-1] + MIN_GAP : 4;
+                    positions.push(Math.max(idealPx, minPx));
+                  });
+
+                  return allLabels.map((lbl, i) => {
+                    const layer = getLabelLayer(lbl.name);
+                    const col = lbl.isUser ? '#facc15' : (colorMap[layer] || '#ffffff');
+                    const topPct = (positions[i] / containerH * 100);
+                    return (
+                      <div key={i} style={{
+                        position:'absolute',
+                        top: `${topPct}%`,
+                        left:0, right:0,
+                        display:'flex',
+                        alignItems:'center',
+                        gap:0,
+                        transform:'translateY(-50%)',
+                      }}>
+                        {/* Short horizontal tick line from left edge */}
+                        <div style={{ width:16,height:1,background:col,opacity:0.7,flexShrink:0 }}/>
+                        <span style={{
+                          fontSize:12,
+                          color:col,
+                          fontWeight:600,
+                          lineHeight:1.3,
+                          paddingLeft:5,
+                          textShadow:'0 1px 3px rgba(0,0,0,0.9)',
+                          whiteSpace:'nowrap',
+                        }}>{lbl.name}</span>
+                        {lbl.isUser && (
+                          <button onClick={() => deleteLabel(currentLabelKey, currentLabels.findIndex(([,,t]) => t===lbl.name))}
+                            style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:10,padding:'0 0 0 4px',lineHeight:1,marginLeft:'auto',marginRight:4 }}>✕</button>
+                        )}
+                      </div>
+                    );
+                  });
+                })()
               ) : (
-                sidebarLabels.map(([x, y, name], li) => {
-                  const layer = getLabelLayer(name);
-                  const col = colorMap[layer] || '#ffffff';
-                  return (
-                    <div key={li} style={{ display:'flex',alignItems:'center',gap:8,padding:'4px 12px',borderBottom:'1px solid #0f172a' }}>
-                      <div style={{ width:7,height:7,borderRadius:'50%',background:col,flexShrink:0,boxShadow:`0 0 4px ${col}66` }}/>
-                      <span style={{ fontSize:11,color:col,fontWeight:500,lineHeight:1.4 }}>{name}</span>
-                    </div>
-                  );
-                })
-              )}
-              {/* User labels for this slice */}
-              {currentLabels.length > 0 && (
-                <div style={{ marginTop:8,borderTop:'1px solid #1e293b',padding:'6px 0' }}>
-                  <p style={{ fontSize:9,color:'#64748b',fontWeight:700,textTransform:'uppercase',margin:'0 0 4px 12px' }}>Your Labels</p>
-                  {currentLabels.map(([x, y, text], i) => (
-                    <div key={i} style={{ display:'flex',alignItems:'center',gap:8,padding:'4px 12px' }}>
-                      <div style={{ width:7,height:7,borderRadius:'50%',background:'#facc15',flexShrink:0 }}/>
-                      <span style={{ flex:1,fontSize:11,color:'#facc15' }}>{text}</span>
-                      <button onClick={() => deleteLabel(currentLabelKey, i)}
-                        style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:11,padding:0,lineHeight:1 }}>✕</button>
-                    </div>
-                  ))}
+                <div style={{ padding:16,textAlign:'center',color:'#334155',fontSize:10,marginTop:20 }}>
+                  {!imgLoaded ? '' : 'No labels for this slice'}
                 </div>
               )}
             </div>
+
+            {/* Export button at bottom */}
+            {totalLabels > 0 && (
+              <div style={{ padding:'6px 10px',borderTop:'1px solid #1e293b',flexShrink:0 }}>
+                <button onClick={exportLabels}
+                  style={{ width:'100%',padding:'4px',borderRadius:5,border:'1px solid #22c55e',background:'rgba(34,197,94,0.1)',color:'#22c55e',fontSize:9,fontWeight:700,cursor:'pointer' }}>
+                  Export JSON ({totalLabels})
+                </button>
+              </div>
+            )}
           </div>
+
+          </div>{/* end Col 2+3 wrapper */}
 
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
