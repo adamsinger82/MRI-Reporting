@@ -736,7 +736,7 @@ function AtlasModal({ onClose }) {
                       const py = (y / 100) * oh;
                       // Text in black area on LEFT, line goes right to dot
                       const textX = 10; // left side of image
-                      const lineStartX = textX + (name.length * 7 + 8);
+                      const lineStartX = textX + (name.length * 7.2 + 4); // right edge of text
                       const textAnchor = 'start';
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
@@ -763,7 +763,7 @@ function AtlasModal({ onClose }) {
                     {currentLabels.map(([x, y, text], li) => {
                       const px = (x / 100) * ow;
                       const py = (y / 100) * oh;
-                      const textXu = 10; const lineStartXu = textXu + (text.length * 7 + 8);
+                      const textXu = 10; const lineStartXu = textXu + (text.length * 7.2 + 4);
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
                         <g key={'u'+li}>
@@ -840,33 +840,21 @@ function AtlasModal({ onClose }) {
               </div>
             )}
 
-            {/* Simple label list — labels are now drawn on the image itself */}
+            {/* Labels drawn on image — sidebar just shows count + delete for user labels */}
             <div style={{ flex:1,overflowY:'auto',padding:'4px 0' }}>
-              {sidebarLabels.length === 0 && currentLabels.length === 0 ? (
-                <div style={{ padding:12,textAlign:'center',color:'#334155',fontSize:10 }}>
-                  No labels for this slice
+              {sidebarLabels.length > 0 && (
+                <div style={{ padding:'6px 10px',color:'#334155',fontSize:9 }}>
+                  {sidebarLabels.length} structure{sidebarLabels.length!==1?'s':''} labeled
                 </div>
-              ) : (
-                <>
-                  {sidebarLabels.map(([x,y,name], i) => {
-                    const col = colorMap[getLabelLayer(name)] || '#ffffff';
-                    return (
-                      <div key={i} style={{ display:'flex',alignItems:'center',gap:6,padding:'3px 10px' }}>
-                        <div style={{ width:6,height:6,borderRadius:'50%',background:col,flexShrink:0 }}/>
-                        <span style={{ fontSize:10,color:col,fontWeight:500 }}>{name}</span>
-                      </div>
-                    );
-                  })}
-                  {currentLabels.map(([x,y,text], i) => (
-                    <div key={'u'+i} style={{ display:'flex',alignItems:'center',gap:6,padding:'3px 10px' }}>
-                      <div style={{ width:6,height:6,borderRadius:'50%',background:'#facc15',flexShrink:0 }}/>
-                      <span style={{ flex:1,fontSize:10,color:'#facc15',fontWeight:500 }}>{text}</span>
-                      <button onClick={() => deleteLabel(currentLabelKey, i)}
-                        style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:10,padding:0 }}>✕</button>
-                    </div>
-                  ))}
-                </>
               )}
+              {currentLabels.map(([x,y,text], i) => (
+                <div key={'u'+i} style={{ display:'flex',alignItems:'center',gap:6,padding:'3px 10px' }}>
+                  <div style={{ width:6,height:6,borderRadius:'50%',background:'#facc15',flexShrink:0 }}/>
+                  <span style={{ flex:1,fontSize:10,color:'#facc15',fontWeight:500 }}>{text}</span>
+                  <button onClick={() => deleteLabel(currentLabelKey, i)}
+                    style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:10,padding:0 }}>✕</button>
+                </div>
+              ))}
             </div>
 
             {/* Export button at bottom */}
