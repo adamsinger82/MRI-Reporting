@@ -726,8 +726,8 @@ function AtlasModal({ onClose }) {
                 const oh = ir.height;
                 // SVG viewBox matches image pixel dimensions exactly
                 return (
-                  <svg style={{ position:'absolute', left:ol-250, top:ot, width:ow+250, height:oh, pointerEvents:'none', overflow:'visible' }}
-                    viewBox={`-250 0 ${ow+250} ${oh}`}>
+                  <svg style={{ position:'absolute', left:ol-320, top:ot, width:ow+320, height:oh, pointerEvents:'none', overflow:'visible' }}
+                    viewBox={`-320 0 ${ow+320} ${oh}`}>
 
                     {/* Permanent labels */}
                     {permanentLabels.map(([x, y, name], li) => {
@@ -735,8 +735,8 @@ function AtlasModal({ onClose }) {
                       const px = (x / 100) * ow;
                       const py = (y / 100) * oh;
                       // Text in black area on LEFT, line goes right to dot
-                      const textX = -240;    // in black area left of image
-                      const lineStartX = textX + (name.length * 7 + 8); // after text
+                      const textX = -315;    // fully in black area left of image
+                      const lineStartX = textX + (name.length * 7.5 + 6); // after text ends
                       const textAnchor = 'start';
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
@@ -763,7 +763,7 @@ function AtlasModal({ onClose }) {
                     {currentLabels.map(([x, y, text], li) => {
                       const px = (x / 100) * ow;
                       const py = (y / 100) * oh;
-                      const textXu = -240; const lineStartXu = textXu + (text.length * 7 + 8);
+                      const textXu = -315; const lineStartXu = textXu + (text.length * 7.5 + 6);
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
                       return (
                         <g key={'u'+li}>
