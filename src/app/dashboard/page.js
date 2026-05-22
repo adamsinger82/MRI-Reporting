@@ -746,15 +746,15 @@ function AtlasModal({ onClose }) {
                             transform:'translate(-50%,-50%)',
                             boxShadow:`0 0 0 1.5px rgba(0,0,0,0.6), 0 0 5px ${col}88`,
                           }}/>
-                          {/* Leader line — extends past image into black sidebar area */}
+                          {/* Leader line — fixed 800px ensures it always reaches sidebar */}
                           <div style={{
                             position:'absolute',
                             left: px + 4,
                             top: py,
-                            width: Math.max(0, ar.width - px + 300), // extends into sidebar
+                            width: 800,
                             height:1,
-                            background:col,
-                            opacity:0.5,
+                            background:`linear-gradient(to right, ${col} 0%, ${col} 70%, transparent 100%)`,
+                            opacity:0.6,
                             transform:'translateY(-50%)',
                           }}/>
                         </div>
@@ -879,8 +879,8 @@ function AtlasModal({ onClose }) {
                         gap:0,
                         transform:'translateY(-50%)',
                       }}>
-                        {/* Short horizontal tick line from left edge */}
-                        <div style={{ width:16,height:1,background:col,opacity:0.7,flexShrink:0 }}/>
+                        {/* Vertical marker aligned with leader line */}
+                        <div style={{ width:6,height:6,borderRadius:'50%',background:col,opacity:0.8,flexShrink:0,marginRight:2 }}/>
                         <span style={{
                           fontSize:12,
                           color:col,
