@@ -315,20 +315,35 @@ const PELVIS_LABELS = {
   ],
 };
 
-// ─── ANATOMY ATLAS DATA (Visible Human Project) ──────────────────────────────
+// ─── ANATOMY ATLAS DATA (Visible Human Project + Real MRI) ───────────────────
 const VHP_BASE = 'https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Male-Images/PNG_format';
 
-// Each joint defines: folder, slices array (axial cross-sections), 
-// view label, and label overlays per anatomy layer
+// Helper — generate sequential slice arrays for local MRI stacks
+// folder: public subfolder, prefix: filename prefix, count: number of images, startNum: first number (default 1)
+const localSlices = (count, startNum = 1) => Array.from({length: count}, (_, i) => i + startNum);
+
+// Each joint defines: folder, slices array, view label, and label overlays per anatomy layer
 const ATLAS_JOINTS = {
   shoulder: {
     label: 'Shoulder',
     region: 'Upper Extremity',
-    folder: 'thorax',
-    slices: [1388, 1393, 1398, 1403, 1408, 1413],
-    defaultSlice: 1398,
-    view: 'Axial cryosection — glenohumeral joint level',
-    // SVG overlay labels [x%, y%, text, layerKey, color]
+    useLocalMRI: true,
+    defaultSlice: 13,
+    sequences: {
+      ax_pdfs: {
+        label: 'Ax PDFS',
+        path: '/atlas/ax_shoulder_pdfs/ax_shoulder_',
+        slices: localSlices(26),
+        ext: '.jpg',
+      },
+      sag_t1: {
+        label: 'Sag T1',
+        path: '/atlas/sag_shoulder_t1/sag_t1__shoulder_',
+        slices: localSlices(22),
+        ext: '.jpg',
+      },
+    },
+    view: 'MRI — shoulder',
     labels: {
       bones:    [[72,44,'Humeral head','#1e3a8a'],[27,44,'Glenoid','#1e3a8a'],[50,20,'Clavicle','#1e3a8a'],[50,60,'Scapula','#1e3a8a']],
       tendons:  [[62,38,'Supraspinatus','#14532d'],[68,55,'Infraspinatus','#14532d'],[38,52,'Subscapularis','#14532d']],
@@ -341,17 +356,65 @@ const ATLAS_JOINTS = {
   elbow: {
     label: 'Elbow',
     region: 'Upper Extremity',
-    folder: 'thorax',
-    slices: [1668, 1673, 1678, 1683, 1688],
-    defaultSlice: 1678,
-    view: 'Axial cryosection — distal arm / elbow region',
+    useLocalMRI: true,
+    defaultSlice: 15,
+    sequences: {
+      ax_pdfs: {
+        label: 'Ax PDFS',
+        path: '/atlas/ax_elbow_pdfs/ax_elbow_pdfs_',
+        slices: localSlices(30),
+        ext: '.jpg',
+      },
+      ax_t1: {
+        label: 'Ax T1',
+        path: '/atlas/ax_elbow_t1/ax_elbow_t1_',
+        slices: localSlices(30),
+        ext: '.jpg',
+      },
+      cor_pdfs: {
+        label: 'Cor PDFS',
+        path: '/atlas/cor_elbow_pdfs/cor_elbow_pdfs_',
+        slices: localSlices(15),
+        ext: '.jpg',
+      },
+    },
+    view: 'MRI — elbow',
     labels: {
-      bones:    [[65,50,'Humerus','#1e3a8a'],[25,50,'Humerus (L)','#1e3a8a']],
-      tendons:  [[70,40,'Biceps tendon','#14532d'],[60,60,'Triceps tendon','#14532d']],
-      muscles:  [[78,50,'Brachialis','#7c2d12'],[22,50,'Brachialis (L)','#7c2d12']],
-      nerves:   [[72,65,'Ulnar n.','#92400e'],[68,35,'Radial n.','#92400e']],
+      bones:    [[65,50,'Humerus','#1e3a8a'],[55,68,'Ulna','#1e3a8a'],[72,65,'Radius','#1e3a8a']],
+      tendons:  [[70,40,'Biceps tendon','#14532d'],[60,60,'Triceps tendon','#14532d'],[68,70,'Common extensor t.','#14532d'],[40,70,'Common flexor t.','#14532d']],
+      muscles:  [[78,50,'Brachialis','#7c2d12'],[82,40,'Brachioradialis','#7c2d12']],
+      nerves:   [[72,65,'Ulnar n.','#92400e'],[68,35,'Radial n.','#92400e'],[58,45,'Median n.','#92400e']],
       arteries: [[67,52,'Brachial a.','#991b1b']],
       veins:    [[65,55,'Brachial v.','#4c1d95']],
+    },
+  },
+  wrist: {
+    label: 'Wrist',
+    region: 'Upper Extremity',
+    useLocalMRI: true,
+    defaultSlice: 15,
+    sequences: {
+      ax_pdfs: {
+        label: 'Ax PDFS',
+        path: '/atlas/ax_wrist_pdfs/ax_wrist_',
+        slices: localSlices(30),
+        ext: '.jpg',
+      },
+      cor_pdfs: {
+        label: 'Cor PDFS',
+        path: '/atlas/cor_wrist_pdfs/cor__wrist_',
+        slices: localSlices(17, 2),
+        ext: '.jpg',
+      },
+    },
+    view: 'MRI — wrist',
+    labels: {
+      bones:    [[50,45,'Radius','#1e3a8a'],[60,55,'Scaphoid','#1e3a8a'],[50,60,'Lunate','#1e3a8a'],[40,55,'Triquetrum','#1e3a8a'],[65,65,'Capitate','#1e3a8a']],
+      tendons:  [[42,40,'Flexor tendons','#14532d'],[58,38,'Extensor tendons','#14532d'],[50,70,'TFCC','#14532d']],
+      muscles:  [[40,38,'FCR/FCU','#7c2d12'],[60,38,'ECU/ECRB','#7c2d12']],
+      nerves:   [[44,42,'Median n.','#92400e'],[38,48,'Ulnar n.','#92400e']],
+      arteries: [[46,40,'Radial a.','#991b1b'],[38,44,'Ulnar a.','#991b1b']],
+      veins:    [[48,38,'Radial v.','#4c1d95']],
     },
   },
   hip: {
@@ -373,17 +436,36 @@ const ATLAS_JOINTS = {
   knee: {
     label: 'Knee',
     region: 'Lower Extremity',
-    folder: 'thighs',
-    slices: [2095, 2105, 2115, 2125, 2135, 2145],
-    defaultSlice: 2115,
-    view: 'Axial cryosection — distal femur / knee joint',
+    useLocalMRI: true,
+    defaultSlice: 14,
+    sequences: {
+      ax_pdfs: {
+        label: 'Ax PDFS',
+        path: '/atlas/ax_knee_pdfs/ax_knee_pdfs_',
+        slices: localSlices(27),
+        ext: '.jpg',
+      },
+      cor_pdfs: {
+        label: 'Cor PDFS',
+        path: '/atlas/cor_knee_pdfs/cor_knee_pdfs_',
+        slices: localSlices(21),
+        ext: '.jpg',
+      },
+      sag_pdfs: {
+        label: 'Sag PDFS',
+        path: '/atlas/sag_knee_pdfs/sag_knee_pdfs_',
+        slices: localSlices(29),
+        ext: '.jpg',
+      },
+    },
+    view: 'MRI — knee',
     labels: {
-      bones:    [[68,50,'Distal femur','#1e3a8a'],[32,50,'Distal femur (L)','#1e3a8a'],[72,38,'Patella','#1e3a8a']],
-      tendons:  [[74,35,'Patellar tendon','#14532d'],[55,55,'ACL/PCL','#14532d'],[65,62,'Meniscus','#14532d']],
-      muscles:  [[80,40,'Biceps fem.','#7c2d12'],[74,55,'Gastroc.','#7c2d12'],[20,40,'Biceps fem. (L)','#7c2d12']],
-      nerves:   [[78,55,'Peroneal n.','#92400e'],[78,65,'Tibial n.','#92400e']],
-      arteries: [[62,65,'Popliteal a.','#991b1b']],
-      veins:    [[64,68,'Popliteal v.','#4c1d95']],
+      bones:    [[50,38,'Distal femur','#1e3a8a'],[50,62,'Proximal tibia','#1e3a8a'],[72,38,'Patella','#1e3a8a'],[78,55,'Fibula','#1e3a8a']],
+      tendons:  [[72,32,'Patellar tendon','#14532d'],[50,50,'ACL','#14532d'],[45,52,'PCL','#14532d'],[35,55,'Med. meniscus','#14532d'],[65,55,'Lat. meniscus','#14532d'],[28,48,'MCL','#14532d'],[72,48,'LCL','#14532d']],
+      muscles:  [[78,38,'Biceps fem.','#7c2d12'],[74,58,'Gastroc. (lat)','#7c2d12'],[26,58,'Gastroc. (med)','#7c2d12']],
+      nerves:   [[80,52,'Peroneal n.','#92400e'],[78,62,'Tibial n.','#92400e']],
+      arteries: [[52,58,'Popliteal a.','#991b1b']],
+      veins:    [[54,60,'Popliteal v.','#4c1d95']],
     },
   },
   ankle: {
@@ -473,6 +555,12 @@ function AtlasModal({ onClose }) {
       const idx = jointData.useLocalMRI ? jointData.defaultSlice-1 : jointData.slices.indexOf(jointData.defaultSlice);
       setSliceIdx(Math.max(0, idx));
       setImgLoaded(false); setImgError(false);
+      // Reset sequence to first available for this joint
+      if (jointData.sequences) {
+        const firstSeq = Object.keys(jointData.sequences)[0];
+        setSequence(firstSeq);
+        sequenceRef.current = firstSeq;
+      }
     }
   }, [selectedJoint]);
 
@@ -514,11 +602,11 @@ function AtlasModal({ onClose }) {
       ? (i) => `${sq.path}${String(sliceArr[i]).padStart(3,'0')}${sq.ext}`
       : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
     const center = sliceIdx || Math.floor(sliceArr.length / 2);
-    // Priority 1: load ±30 slices around current position immediately
+    // Priority 1: load ±35 slices around current position immediately
     const near = [];
     const far = [];
     sliceArr.forEach((_, i) => {
-      if (Math.abs(i - center) <= 30) near.push(i);
+      if (Math.abs(i - center) <= 35) near.push(i);
       else far.push(i);
     });
     near.forEach(i => { const img = new Image(); img.src = pathFn(i); });
