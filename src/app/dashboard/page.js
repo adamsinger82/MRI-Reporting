@@ -332,13 +332,19 @@ const ATLAS_JOINTS = {
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
-        path: '/atlas/ax_shoulder_pdfs/ax_shoulder_',
+        path: '/atlas/ax shoulder pdfs/ax shoulder ',
         slices: localSlices(26),
         ext: '.jpg',
       },
       sag_t1: {
         label: 'Sag T1',
-        path: '/atlas/sag_shoulder_t1/sag_t1__shoulder_',
+        path: '/atlas/sag shoulder t1/sag t1  shoulder ',
+        slices: localSlices(22),
+        ext: '.jpg',
+      },
+      cor_pdfs: {
+        label: 'Cor PDFS',
+        path: '/atlas/cor shoulder pdfs/cor  shoulder ',
         slices: localSlices(22),
         ext: '.jpg',
       },
@@ -361,21 +367,24 @@ const ATLAS_JOINTS = {
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
-        path: '/atlas/ax_elbow_pdfs/ax_elbow_pdfs_',
-        slices: localSlices(30),
+        path: '/atlas/ax elbow pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        slices: Array.from({length:30},(_,i)=>i+79),
         ext: '.jpg',
+        pad: 4,
       },
       ax_t1: {
         label: 'Ax T1',
-        path: '/atlas/ax_elbow_t1/ax_elbow_t1_',
-        slices: localSlices(30),
+        path: '/atlas/ax elbow t1/MRI KNEE W O CONTRAST RIGHT ',
+        slices: Array.from({length:30},(_,i)=>i+128),
         ext: '.jpg',
+        pad: 4,
       },
       cor_pdfs: {
         label: 'Cor PDFS',
-        path: '/atlas/cor_elbow_pdfs/cor_elbow_pdfs_',
-        slices: localSlices(15),
+        path: '/atlas/cor elbow pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        slices: Array.from({length:15},(_,i)=>i+112),
         ext: '.jpg',
+        pad: 4,
       },
     },
     view: 'MRI — elbow',
@@ -396,13 +405,13 @@ const ATLAS_JOINTS = {
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
-        path: '/atlas/ax_wrist_pdfs/ax_wrist_',
+        path: '/atlas/ax wrist pdfs/ax wrist ',
         slices: localSlices(30),
         ext: '.jpg',
       },
       cor_pdfs: {
         label: 'Cor PDFS',
-        path: '/atlas/cor_wrist_pdfs/cor__wrist_',
+        path: '/atlas/cor wrist pdfs/cor  wrist ',
         slices: localSlices(17, 2),
         ext: '.jpg',
       },
@@ -441,21 +450,24 @@ const ATLAS_JOINTS = {
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
-        path: '/atlas/ax_knee_pdfs/ax_knee_pdfs_',
-        slices: localSlices(27),
+        path: '/atlas/ax  knee pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        slices: Array.from({length:27},(_,i)=>i+1),
         ext: '.jpg',
+        pad: 4,
       },
       cor_pdfs: {
         label: 'Cor PDFS',
-        path: '/atlas/cor_knee_pdfs/cor_knee_pdfs_',
-        slices: localSlices(21),
+        path: '/atlas/cor knee pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        slices: Array.from({length:21},(_,i)=>i+57),
         ext: '.jpg',
+        pad: 4,
       },
       sag_pdfs: {
         label: 'Sag PDFS',
-        path: '/atlas/sag_knee_pdfs/sag_knee_pdfs_',
-        slices: localSlices(29),
+        path: '/atlas/sag knee pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        slices: Array.from({length:29},(_,i)=>i+28),
         ext: '.jpg',
+        pad: 4,
       },
     },
     view: 'MRI — knee',
@@ -601,7 +613,7 @@ function AtlasModal({ onClose }) {
     if (!src) return;
     const sliceArr = sq ? sq.slices : jointData.slices;
     const pathFn = sq
-      ? (i) => `${sq.path}${String(sliceArr[i]).padStart(3,'0')}${sq.ext}`
+      ? (i) => `${sq.path}${String(sliceArr[i]).padStart(sq.pad||3,'0')}${sq.ext}`
       : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
     const center = sliceIdx || Math.floor(sliceArr.length / 2);
     // Priority 1: load ±35 slices around current position immediately
@@ -628,7 +640,7 @@ function AtlasModal({ onClose }) {
   const currentSlice = activeSlices[sliceIdx] ?? null;
   const imgUrl = jointData && currentSlice
     ? seqData
-      ? `${seqData.path}${String(currentSlice).padStart(3,'0')}${seqData.ext}`
+      ? `${seqData.path}${String(currentSlice).padStart(seqData.pad||3,'0')}${seqData.ext}`
       : jointData.useLocalMRI
         ? `${jointData.localPath}${String(currentSlice).padStart(3,'0')}${jointData.localExt||'.webp'}`
         : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
