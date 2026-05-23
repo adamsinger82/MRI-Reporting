@@ -576,8 +576,9 @@ function AtlasModal({ onClose }) {
       if (now - wheelThrottleRef.current < 80) return; // throttle
       wheelThrottleRef.current = now;
       setSliceIdx(i => {
-        const sq = jointData?.sequences?.[sequenceRef.current] || null;
-        const slices = sq ? sq.slices : jointData.slices;
+        const activeSqKey = jointData?.sequences?.[sequenceRef.current] ? sequenceRef.current : Object.keys(jointData?.sequences||{})[0];
+        const sq = jointData?.sequences?.[activeSqKey] || null;
+        const slices = sq ? sq.slices : (jointData?.slices || []);
         const next = e.deltaY > 0 ? Math.min(slices.length-1, i+1) : Math.max(0, i-1);
         if (next !== i) {
           // Only show loading spinner if image isn't already cached
@@ -594,8 +595,9 @@ function AtlasModal({ onClose }) {
   // Smart preload — load nearby slices first for fast initial scroll
   useEffect(() => {
     if (!jointData) return;
-    const sq = jointData?.sequences?.[sequenceRef.current] || null;
-    const src = sq || (jointData.useLocalMRI ? jointData : null);
+    const preloadSqKey = jointData?.sequences?.[sequenceRef.current] ? sequenceRef.current : Object.keys(jointData?.sequences||{})[0];
+    const sq = jointData?.sequences?.[preloadSqKey] || null;
+    const src = sq || (jointData?.useLocalMRI ? jointData : null);
     if (!src) return;
     const sliceArr = sq ? sq.slices : jointData.slices;
     const pathFn = sq
@@ -618,8 +620,11 @@ function AtlasModal({ onClose }) {
 
   useEffect(() => { setSliceIdx(0); setImgLoaded(false); setImgError(false); }, [sequence]);
 
-  const seqData = jointData?.sequences?.[sequence] || null;
-  const activeSlices = seqData ? seqData.slices : (jointData ? jointData.slices : []);
+  // seqData: fall back to first available sequence if current key not present in this joint
+  const seqData = jointData?.sequences
+    ? (jointData.sequences[sequence] || jointData.sequences[Object.keys(jointData.sequences)[0]] || null)
+    : null;
+  const activeSlices = seqData ? seqData.slices : (jointData?.slices || []);
   const currentSlice = activeSlices[sliceIdx] ?? null;
   const imgUrl = jointData && currentSlice
     ? seqData
