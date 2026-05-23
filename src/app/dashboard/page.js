@@ -335,18 +335,21 @@ const ATLAS_JOINTS = {
         path: '/atlas/ax shoulder pdfs/ax shoulder ',
         slices: localSlices(26),
         ext: '.jpg',
+        pad: 4,
       },
       sag_t1: {
         label: 'Sag T1',
         path: '/atlas/sag shoulder t1/sag t1  shoulder ',
         slices: localSlices(22),
         ext: '.jpg',
+        pad: 4,
       },
       cor_pdfs: {
         label: 'Cor PDFS',
         path: '/atlas/cor shoulder pdfs/cor  shoulder ',
         slices: localSlices(22),
         ext: '.jpg',
+        pad: 4,
       },
     },
     view: 'MRI — shoulder',
@@ -408,12 +411,14 @@ const ATLAS_JOINTS = {
         path: '/atlas/ax wrist pdfs/ax wrist ',
         slices: localSlices(30),
         ext: '.jpg',
+        pad: 4,
       },
       cor_pdfs: {
         label: 'Cor PDFS',
         path: '/atlas/cor wrist pdfs/cor  wrist ',
         slices: localSlices(17, 2),
         ext: '.jpg',
+        pad: 4,
       },
     },
     view: 'MRI — wrist',
@@ -585,7 +590,7 @@ function AtlasModal({ onClose }) {
       e.preventDefault();
       if (!jointData) return;
       const now = Date.now();
-      if (now - wheelThrottleRef.current < 80) return; // throttle
+      if (now - wheelThrottleRef.current < 120) return; // throttle
       wheelThrottleRef.current = now;
       setSliceIdx(i => {
         const activeSqKey = jointData?.sequences?.[sequenceRef.current] ? sequenceRef.current : Object.keys(jointData?.sequences||{})[0];
@@ -604,30 +609,37 @@ function AtlasModal({ onClose }) {
     return () => el.removeEventListener('wheel', handleWheel);
   }, [jointData]);
 
-  // Smart preload — load nearby slices first for fast initial scroll
+  // Smart preload — ±10 immediately on joint/sequence change, rest lazily after 1s
+  // Keeps initial load snappy; browser cache handles subsequent scrolls
   useEffect(() => {
     if (!jointData) return;
     const preloadSqKey = jointData?.sequences?.[sequenceRef.current] ? sequenceRef.current : Object.keys(jointData?.sequences||{})[0];
     const sq = jointData?.sequences?.[preloadSqKey] || null;
     const src = sq || (jointData?.useLocalMRI ? jointData : null);
     if (!src) return;
-    const sliceArr = sq ? sq.slices : jointData.slices;
+    const sliceArr = sq ? sq.slices : (jointData.slices || []);
     const pathFn = sq
       ? (i) => `${sq.path}${String(sliceArr[i]).padStart(sq.pad||3,'0')}${sq.ext}`
       : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
     const center = sliceIdx || Math.floor(sliceArr.length / 2);
-    // Priority 1: load ±35 slices around current position immediately
-    const near = [];
-    const far = [];
+    // Tier 1: ±10 slices — load immediately (covers fast local scrolling)
+    const tier1 = [], tier2 = [], tier3 = [];
     sliceArr.forEach((_, i) => {
-      if (Math.abs(i - center) <= 35) near.push(i);
-      else far.push(i);
+      const d = Math.abs(i - center);
+      if (d <= 10) tier1.push(i);
+      else if (d <= 35) tier2.push(i);
+      else tier3.push(i);
     });
-    near.forEach(i => { const img = new Image(); img.src = pathFn(i); });
-    // Priority 2: load the rest after 500ms
-    setTimeout(() => {
-      far.forEach(i => { const img = new Image(); img.src = pathFn(i); });
-    }, 500);
+    tier1.forEach(i => { const img = new Image(); img.src = pathFn(i); });
+    // Tier 2: ±35 after 800ms
+    const t2 = setTimeout(() => {
+      tier2.forEach(i => { const img = new Image(); img.src = pathFn(i); });
+    }, 800);
+    // Tier 3: rest after 2.5s (user is likely settled on a joint by then)
+    const t3 = setTimeout(() => {
+      tier3.forEach(i => { const img = new Image(); img.src = pathFn(i); });
+    }, 2500);
+    return () => { clearTimeout(t2); clearTimeout(t3); };
   }, [selectedJoint, sequence]);
 
   useEffect(() => { setSliceIdx(0); setImgLoaded(false); setImgError(false); }, [sequence]);
