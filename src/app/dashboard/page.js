@@ -1069,24 +1069,7 @@ function AtlasModal({ onClose }) {
 
   useEffect(() => { setSliceIdx(0); setImgLoaded(false); setImgError(false); }, [sequence]);
 
-  // Only show spinner if new image takes >150ms — eliminates flash for cached slices
-  const prevImgUrlRef = useRef(null);
-  useEffect(() => {
-    if (!imgUrl || imgUrl === prevImgUrlRef.current) return;
-    prevImgUrlRef.current = imgUrl;
-    // Check if image is already in browser cache via a probe image
-    const probe = new Image();
-    let timer = null;
-    probe.onload = () => { clearTimeout(timer); };
-    // If not loaded within 150ms, show spinner
-    timer = setTimeout(() => { setImgLoaded(false); setImgError(false); }, 150);
-    probe.src = imgUrl;
-    // If already cached, onload fires synchronously before the setTimeout
-    if (probe.complete) { clearTimeout(timer); }
-    return () => clearTimeout(timer);
-  }, [imgUrl]);
-
-  // seqData: fall back to first available sequence if current key not present in this joint
+  // seqData / imgUrl — must be defined BEFORE any useEffect that depends on imgUrl
   const seqData = jointData?.sequences
     ? (jointData.sequences[sequence] || jointData.sequences[Object.keys(jointData.sequences)[0]] || null)
     : null;
@@ -1099,6 +1082,20 @@ function AtlasModal({ onClose }) {
         ? `${jointData.localPath}${String(currentSlice).padStart(3,'0')}${jointData.localExt||'.webp'}`
         : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
     : null;
+
+  // Only show spinner if new image takes >150ms — eliminates flash for cached slices
+  const prevImgUrlRef = useRef(null);
+  useEffect(() => {
+    if (!imgUrl || imgUrl === prevImgUrlRef.current) return;
+    prevImgUrlRef.current = imgUrl;
+    const probe = new Image();
+    let timer = null;
+    probe.onload = () => { clearTimeout(timer); };
+    timer = setTimeout(() => { setImgLoaded(false); setImgError(false); }, 150);
+    probe.src = imgUrl;
+    if (probe.complete) { clearTimeout(timer); }
+    return () => clearTimeout(timer);
+  }, [imgUrl]);
 
   // ── Label click handler — coords relative to ACTUAL image pixels ──────────
   const handleImageClick = (e) => {
