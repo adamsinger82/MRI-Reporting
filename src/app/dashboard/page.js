@@ -1830,6 +1830,212 @@ function ReferencePanel({ selectedBodyPart, darkMode = false }) {
   );
 }
 
+// ─── FLEISCHNER / INCIDENTAL HELPER FUNCTIONS ────────────────────────────────
+
+function getFleischnerRec(type, size) {
+  const recs = {
+    solid: {
+      '<6mm':       { low: 'No routine follow-up', high: 'CT at 12 months' },
+      '6-8mm':      { low: 'CT at 6-12 months, then 18-24 months if stable', high: 'CT at 6-12 months, then 18-24 months' },
+      '>8mm':       { low: 'CT at 3, 9, 24 months; PET/CT or biopsy if concerning', high: 'CT at 3, 9, 24 months; consider PET/CT' },
+    },
+    ggo: {
+      '<6mm':       { low: 'No routine follow-up', high: 'No routine follow-up' },
+      '6-8mm':      { low: 'CT at 3-6 months, then 2 and 4 years', high: 'CT at 3-6 months, then 2 and 4 years' },
+      '>8mm':       { low: 'CT at 3-6 months, then 2 and 4 years', high: 'CT at 3-6 months, then 2 and 4 years' },
+    },
+    partsolid: {
+      '<6mm':       { low: 'No routine follow-up', high: 'No routine follow-up' },
+      '6-8mm':      { low: 'CT at 3-6 months; if stable, CT at 2 and 4 years', high: 'CT at 3-6 months; if stable, CT at 2 and 4 years' },
+      '>8mm':       { low: 'CT at 3-6 months; if solid part persists, PET/CT or biopsy', high: 'CT at 3-6 months; if solid part persists, PET/CT or biopsy' },
+    },
+  };
+  return recs[type]?.[size] || null;
+}
+
+function getRenalRec(finding) {
+  const recs = {
+    'simple-cyst':      { rec: 'Bosniak I: No follow-up needed.' },
+    'minimally-complex':{ rec: 'Bosniak II: No follow-up needed.' },
+    'complex-cyst':     { rec: 'Bosniak IIF: Follow-up CT/MRI at 6 months, then annually for 5 years.' },
+    'indeterminate':    { rec: 'Bosniak III: Surgical consultation recommended.' },
+    'solid-mass':       { rec: 'Solid renal mass: Urology referral recommended. Staging CT if not already performed.' },
+    'angiomyolipoma':   { rec: 'AML < 4 cm: follow-up imaging in 1-2 years. AML ≥ 4 cm: urology referral.' },
+  };
+  return recs[finding] || null;
+}
+
+function getGynRec(finding, isPostmenopausal) {
+  const recs = {
+    'simple-cyst-small': {
+      pre:  'Simple cyst ≤ 3 cm: physiologic, no follow-up needed.',
+      post: 'Simple cyst ≤ 1 cm: no follow-up. 1-7 cm: annual follow-up ultrasound.',
+    },
+    'simple-cyst-large': {
+      pre:  'Simple cyst 3-7 cm: annual follow-up ultrasound.',
+      post: 'Simple cyst > 7 cm: MRI or surgical evaluation.',
+    },
+    'complex-cyst': {
+      pre:  'Complex adnexal cyst: GYN referral recommended.',
+      post: 'Complex adnexal cyst: GYN referral recommended; low threshold for surgical evaluation.',
+    },
+    'dermoid': {
+      pre:  'Dermoid/mature teratoma: GYN referral. Surgery if symptomatic or > 6 cm.',
+      post: 'Dermoid/mature teratoma: GYN referral recommended.',
+    },
+    'fibroid': {
+      pre:  'Uterine fibroid: GYN referral if symptomatic.',
+      post: 'Uterine fibroid: GYN referral if symptomatic; new fibroids in postmenopausal patient warrant evaluation.',
+    },
+  };
+  return recs[finding] || null;
+}
+
+function getAortaRec(finding) {
+  const recs = {
+    '< 3cm':   { rec: 'Infrarenal aorta < 3 cm: normal caliber, no follow-up indicated.' },
+    '3-3.9cm': { rec: 'Aortic ectasia 3.0-3.9 cm: surveillance ultrasound in 3 years.' },
+    '4-4.9cm': { rec: 'AAA 4.0-4.9 cm: surveillance ultrasound or CT every 6-12 months; vascular surgery referral.' },
+    '5-5.4cm': { rec: 'AAA 5.0-5.4 cm: vascular surgery referral; elective repair consideration.' },
+    '≥ 5.5cm': { rec: 'AAA ≥ 5.5 cm: urgent vascular surgery referral; threshold for elective repair.' },
+  };
+  return recs[finding] || null;
+}
+
+// ─── INCIDENTAL FINDINGS PANEL ───────────────────────────────────────────────
+function IncidentalPanel({
+  showLung, showGU,
+  noduleType, setNoduleType,
+  noduleSize, setNoduleSize,
+  renalFinding, setRenalFinding,
+  gynFinding, setGynFinding,
+  aortaFinding, setAortaFinding,
+  patientAge, setPatientAge,
+  patientSex, setPatientSex,
+  isPostmenopausal,
+}) {
+  const [open, setOpen] = useState(false);
+  const hasAny = noduleType || renalFinding || gynFinding || aortaFinding;
+
+  const tog = (val, current, setter) => (
+    <button onClick={() => setter(current === val ? '' : val)}
+      style={{ padding:'5px 10px',borderRadius:6,border:'1px solid '+(current===val?'#0891b2':'#e2e8f0'),background:current===val?'#e0f2fe':'white',color:current===val?'#0369a1':'#64748b',fontSize:11,fontWeight:current===val?700:400,cursor:'pointer',whiteSpace:'nowrap' }}>
+      {val}
+    </button>
+  );
+
+  return (
+    <div style={{ border:'1px solid '+(hasAny?'#fbbf24':'#e2e8f0'),borderRadius:8,overflow:'hidden',background:hasAny?'#fffbeb':'#f8fafc' }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ width:'100%',padding:'8px 12px',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:12,fontWeight:600,color:hasAny?'#d97706':'#64748b' }}>
+        <span>⚠️ Incidental Findings {hasAny ? '(active)' : ''}</span>
+        <span style={{ fontSize:10 }}>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div style={{ padding:'10px 12px',borderTop:'1px solid #e2e8f0',display:'flex',flexDirection:'column',gap:12 }}>
+
+          {/* Demographics */}
+          <div style={{ display:'flex',gap:8 }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:10,fontWeight:600,color:'#64748b',marginBottom:4,textTransform:'uppercase',letterSpacing:'0.06em' }}>Patient Age</div>
+              <input type="number" placeholder="Age" value={patientAge} onChange={e => setPatientAge(e.target.value)}
+                style={{ width:'100%',padding:'6px 8px',border:'1px solid #e2e8f0',borderRadius:6,fontSize:12,boxSizing:'border-box' }}/>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:10,fontWeight:600,color:'#64748b',marginBottom:4,textTransform:'uppercase',letterSpacing:'0.06em' }}>Sex</div>
+              <div style={{ display:'flex',gap:4 }}>
+                {['M','F'].map(s => (
+                  <button key={s} onClick={() => setPatientSex(patientSex === s ? '' : s)}
+                    style={{ flex:1,padding:'6px',borderRadius:6,border:'1px solid '+(patientSex===s?'#0891b2':'#e2e8f0'),background:patientSex===s?'#e0f2fe':'white',fontSize:12,fontWeight:patientSex===s?700:400,cursor:'pointer',color:patientSex===s?'#0369a1':'#64748b' }}>
+                    {s === 'M' ? 'Male' : 'Female'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Lung nodule */}
+          {showLung && (
+            <div>
+              <div style={{ fontSize:10,fontWeight:700,color:'#0369a1',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em' }}>🫁 Pulmonary Nodule (Fleischner)</div>
+              <div style={{ fontSize:10,color:'#64748b',marginBottom:4 }}>Type</div>
+              <div style={{ display:'flex',gap:4,flexWrap:'wrap',marginBottom:6 }}>
+                {tog('solid', noduleType, setNoduleType)}
+                {tog('ggo', noduleType, setNoduleType)}
+                {tog('partsolid', noduleType, setNoduleType)}
+              </div>
+              <div style={{ fontSize:10,color:'#64748b',marginBottom:4 }}>Size</div>
+              <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
+                {tog('<6mm', noduleSize, setNoduleSize)}
+                {tog('6-8mm', noduleSize, setNoduleSize)}
+                {tog('>8mm', noduleSize, setNoduleSize)}
+              </div>
+              {noduleType && noduleSize && (() => {
+                const rec = getFleischnerRec(noduleType, noduleSize);
+                return rec ? (
+                  <div style={{ marginTop:8,padding:'6px 10px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:6,fontSize:11,color:'#1e40af',lineHeight:1.5 }}>
+                    <strong>Low-risk:</strong> {rec.low}<br/>
+                    <strong>High-risk:</strong> {rec.high}
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          )}
+
+          {/* GU incidentals */}
+          {showGU && (
+            <>
+              <div>
+                <div style={{ fontSize:10,fontWeight:700,color:'#7c3aed',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em' }}>🫘 Renal Finding</div>
+                <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
+                  {['simple-cyst','minimally-complex','complex-cyst','indeterminate','solid-mass','angiomyolipoma'].map(v => tog(v, renalFinding, setRenalFinding))}
+                </div>
+                {renalFinding && (() => {
+                  const rec = getRenalRec(renalFinding);
+                  return rec ? (
+                    <div style={{ marginTop:6,padding:'6px 10px',background:'#f5f3ff',border:'1px solid #ddd6fe',borderRadius:6,fontSize:11,color:'#5b21b6',lineHeight:1.5 }}>{rec.rec}</div>
+                  ) : null;
+                })()}
+              </div>
+
+              <div>
+                <div style={{ fontSize:10,fontWeight:700,color:'#be185d',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em' }}>🔵 Gynecologic Finding</div>
+                <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
+                  {['simple-cyst-small','simple-cyst-large','complex-cyst','dermoid','fibroid'].map(v => tog(v, gynFinding, setGynFinding))}
+                </div>
+                {gynFinding && (() => {
+                  const rec = getGynRec(gynFinding, isPostmenopausal);
+                  return rec ? (
+                    <div style={{ marginTop:6,padding:'6px 10px',background:'#fdf2f8',border:'1px solid #fbcfe8',borderRadius:6,fontSize:11,color:'#9d174d',lineHeight:1.5 }}>
+                      {isPostmenopausal === null ? (
+                        <><strong>Premenopausal:</strong> {rec.pre}<br/><strong>Postmenopausal:</strong> {rec.post}</>
+                      ) : isPostmenopausal ? rec.post : rec.pre}
+                    </div>
+                  ) : null;
+                })()}
+              </div>
+
+              <div>
+                <div style={{ fontSize:10,fontWeight:700,color:'#b45309',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em' }}>🩸 Aortic Finding</div>
+                <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
+                  {['< 3cm','3-3.9cm','4-4.9cm','5-5.4cm','≥ 5.5cm'].map(v => tog(v, aortaFinding, setAortaFinding))}
+                </div>
+                {aortaFinding && (() => {
+                  const rec = getAortaRec(aortaFinding);
+                  return rec ? (
+                    <div style={{ marginTop:6,padding:'6px 10px',background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:6,fontSize:11,color:'#9a3412',lineHeight:1.5 }}>{rec.rec}</div>
+                  ) : null;
+                })()}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN DASHBOARD ────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
