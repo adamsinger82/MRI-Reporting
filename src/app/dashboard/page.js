@@ -130,6 +130,7 @@ function formatReport(txt, colors = {}) {
   let inImpression = false;
   let inReferences = false;
   let inFootnote = false;
+  let inPatientSummary = false;
 
   const negColor  = colors.neg  || '#6b7280';
   const posColor  = colors.pos  || '#dc2626';
@@ -140,6 +141,33 @@ function formatReport(txt, colors = {}) {
   return cleaned.split('\n').map((line, i) => {
     const t = line.trim();
     if (!t) return <div key={i} style={{ height: 5 }} />;
+
+    // UNDERSTANDING YOUR RESULTS — plain-language patient section, always last
+    if (/^UNDERSTANDING YOUR RESULTS:?$/i.test(t)) {
+      inPatientSummary = true; inImpression = false; inReferences = false; inFootnote = false;
+      return (
+        <div key={i} style={{ marginTop:32, borderTop:'2px solid #bfdbfe', paddingTop:14 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+            <span style={{ fontSize:15 }}>🧑‍🏫</span>
+            <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.12em', color:'#1d4ed8' }}>UNDERSTANDING YOUR RESULTS</span>
+          </div>
+          <div style={{ fontSize:10, color:'#64748b', fontStyle:'italic', marginBottom:10, paddingLeft:2 }}>A plain-language explanation of your imaging — the formal report above remains the official medical record</div>
+        </div>
+      );
+    }
+    if (inPatientSummary) {
+      if (t === 'PROVIDER_LINK' || t.includes('PROVIDER_LINK') || t.includes('<a href=')) {
+        return (
+          <div key={i} style={{ marginTop:14, paddingBottom:8 }}>
+            <a href="https://mri-reporting.vercel.app/providers" target="_blank" rel="noopener noreferrer"
+              style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:8,background:'linear-gradient(135deg,#2563eb,#4f46e5)',color:'white',fontSize:12,fontWeight:700,textDecoration:'none',boxShadow:'0 2px 8px rgba(37,99,235,0.3)' }}>
+              🔍 Find a local specialist who treats these conditions →
+            </a>
+          </div>
+        );
+      }
+      return <div key={i} style={{ fontSize:13, color:'#1e3a5f', lineHeight:1.9, paddingLeft:4, borderLeft:'3px solid #bfdbfe', marginBottom:4 }}>{t}</div>;
+    }
 
     // FOOTNOTE / REFERENCES — small grey section below impression
     if (/^FOOTNOTE:?$/i.test(t)) {
@@ -984,7 +1012,7 @@ function AtlasModal({ onClose }) {
     }
   }, [selectedJoint]);
 
-  // Wheel scroll — throttled to 80ms for smooth but controlled navigation
+  // Wheel scroll — 80ms throttle, NO imgLoaded reset (prevents spinner flash on cached images)
   const wheelThrottleRef = useRef(0);
   useEffect(() => {
     const el = imgContainerRef.current;
@@ -993,19 +1021,13 @@ function AtlasModal({ onClose }) {
       e.preventDefault();
       if (!jointData) return;
       const now = Date.now();
-      if (now - wheelThrottleRef.current < 120) return; // throttle
+      if (now - wheelThrottleRef.current < 80) return;
       wheelThrottleRef.current = now;
       setSliceIdx(i => {
         const activeSqKey = jointData?.sequences?.[sequenceRef.current] ? sequenceRef.current : Object.keys(jointData?.sequences||{})[0];
         const sq = jointData?.sequences?.[activeSqKey] || null;
         const slices = sq ? sq.slices : (jointData?.slices || []);
-        const next = e.deltaY > 0 ? Math.min(slices.length-1, i+1) : Math.max(0, i-1);
-        if (next !== i) {
-          // Only show loading spinner if image isn't already cached
-          // (cached images load in <10ms so this prevents unnecessary flicker)
-          setImgLoaded(false);
-        }
-        return next;
+        return e.deltaY > 0 ? Math.min(slices.length-1, i+1) : Math.max(0, i-1);
       });
     };
     el.addEventListener('wheel', handleWheel, { passive: false });
@@ -1046,6 +1068,23 @@ function AtlasModal({ onClose }) {
   }, [selectedJoint, sequence]);
 
   useEffect(() => { setSliceIdx(0); setImgLoaded(false); setImgError(false); }, [sequence]);
+
+  // Only show spinner if new image takes >150ms — eliminates flash for cached slices
+  const prevImgUrlRef = useRef(null);
+  useEffect(() => {
+    if (!imgUrl || imgUrl === prevImgUrlRef.current) return;
+    prevImgUrlRef.current = imgUrl;
+    // Check if image is already in browser cache via a probe image
+    const probe = new Image();
+    let timer = null;
+    probe.onload = () => { clearTimeout(timer); };
+    // If not loaded within 150ms, show spinner
+    timer = setTimeout(() => { setImgLoaded(false); setImgError(false); }, 150);
+    probe.src = imgUrl;
+    // If already cached, onload fires synchronously before the setTimeout
+    if (probe.complete) { clearTimeout(timer); }
+    return () => clearTimeout(timer);
+  }, [imgUrl]);
 
   // seqData: fall back to first available sequence if current key not present in this joint
   const seqData = jointData?.sequences
@@ -1194,17 +1233,17 @@ function AtlasModal({ onClose }) {
             {/* Slice navigator */}
             {jointData && (
               <div style={{ display:'flex',alignItems:'center',gap:6,padding:'6px 12px',background:'#0f172a',borderBottom:'1px solid #1e293b',flexShrink:0 }}>
-                <button onClick={() => { setSliceIdx(i => Math.max(0,i-1)); setImgLoaded(false); }} disabled={sliceIdx===0}
+                <button onClick={() => { setSliceIdx(i => Math.max(0,i-1)); }} disabled={sliceIdx===0}
                   style={{ background:sliceIdx===0?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:5,width:24,height:24,cursor:sliceIdx===0?'default':'pointer',fontSize:14,fontWeight:700,opacity:sliceIdx===0?0.4:1,flexShrink:0 }}>‹</button>
                 <div style={{ flex:1,display:'flex',alignItems:'center',gap:6 }}>
                   <input type="range" min={0} max={activeSlices.length-1} value={sliceIdx}
-                    onChange={e => { setSliceIdx(Number(e.target.value)); setImgLoaded(false); }}
+                    onChange={e => { setSliceIdx(Number(e.target.value)); }}
                     style={{ flex:1,accentColor:'#3b82f6',cursor:'pointer' }} />
                   <span style={{ color:'#93c5fd',fontSize:10,fontWeight:700,whiteSpace:'nowrap',background:'#1e293b',padding:'2px 7px',borderRadius:4,border:'1px solid #3b82f6',minWidth:52,textAlign:'center' }}>
                     {sliceIdx+1} / {activeSlices.length}
                   </span>
                 </div>
-                <button onClick={() => { setSliceIdx(i => Math.min(activeSlices.length-1,i+1)); setImgLoaded(false); }} disabled={sliceIdx===activeSlices.length-1}
+                <button onClick={() => { setSliceIdx(i => Math.min(activeSlices.length-1,i+1)); }} disabled={sliceIdx===activeSlices.length-1}
                   style={{ background:sliceIdx===activeSlices.length-1?'#1e293b':'#1d4ed8',border:'none',color:'white',borderRadius:5,width:24,height:24,cursor:sliceIdx===activeSlices.length-1?'default':'pointer',fontSize:14,fontWeight:700,opacity:sliceIdx===activeSlices.length-1?0.4:1,flexShrink:0 }}>›</button>
               </div>
             )}
@@ -1212,7 +1251,7 @@ function AtlasModal({ onClose }) {
             {/* Image area — click handler here so coords are relative to image area only */}
             <div ref={imgAreaRef} onClick={handleImageClick}
               style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',cursor:labelMode?'crosshair':'default' }}>
-              {!imgLoaded && !imgError && (
+              {!imgLoaded && !imgError && !imgRef.current?.src && (
                 <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:'#475569',zIndex:2 }}>
                   <div style={{ width:32,height:32,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
                   <span style={{ fontSize:11 }}>Loading…</span>
@@ -1225,12 +1264,15 @@ function AtlasModal({ onClose }) {
                 </div>
               )}
               {imgUrl && (
-                <img key={imgUrl} src={imgUrl} ref={imgRef}
+                <img src={imgUrl} ref={imgRef}
                   onLoad={() => { setImgLoaded(true); requestAnimationFrame(() => setRenderTick(t => t+1)); }}
                   onError={() => { setImgError(true); setImgLoaded(false); }}
-                  style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',display:imgLoaded?'block':'none',borderRadius:4,userSelect:'none' }}
+                  style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',
+                    opacity: imgLoaded ? 1 : 0,
+                    transition: 'opacity 0.05s',
+                    position:'absolute', borderRadius:4, userSelect:'none' }}
                   loading="eager"
-                  decoding="async"
+                  decoding="sync"
                   alt={`Slice ${currentSlice}`}
                 />
               )}
@@ -1736,6 +1778,8 @@ export default function DashboardPage() {
   // Patient demographics (for GYN menopausal logic)
   const [patientAge, setPatientAge] = useState('');
   const [patientSex, setPatientSex] = useState('');
+  const [layPersonSummary, setLayPersonSummary] = useState(false);
+  const WEBSITE_URL = 'https://mri-reporting.vercel.app'; // update to your actual patient-facing URL
 
   const showSide = !BILATERAL.includes(selectedBodyPart);
   const isCT = modality === 'CT';
@@ -1830,13 +1874,16 @@ export default function DashboardPage() {
     setGeneratedReport('');
     const lat = showSide ? side : '';
     try {
+      const layPersonInstruction = layPersonSummary
+        ? `\n\nADDITIONAL SECTION — IMPORTANT: After you have completed the full formal radiology report including TECHNIQUE, FINDINGS, IMPRESSION, and any REFERENCES/FOOTNOTE sections, append one final separate section at the very end. Do not modify the formal report sections in any way. The additional section must begin with the exact header "UNDERSTANDING YOUR RESULTS:" on its own line in ALL CAPS. Then write 2-5 plain-language sentences summarizing the key findings for a patient with a high school education. Rules: no medical jargon — use "wear and tear" not "osteoarthritis", "cartilage damage" not "chondromalacia", "torn" not "ruptured", "fluid buildup" not "effusion", "pinched nerve" not "radiculopathy". Be clear but reassuring in tone. Do not repeat the formal impression verbatim. After the sentences, on a new line, write exactly: PROVIDER_LINK`
+        : '';
       const res = await fetch('/api/generate', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
-          max_tokens:1500,
-          system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality),
+          max_tokens:1800,
+          system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality) + layPersonInstruction,
           messages:[{role:'user',content:`Dictated findings:\n\n${dictationText}${buildIncidentalBlock() ? '\n\nINCIDENTAL FINDINGS TO ADD TO IMPRESSION AND REFERENCES:\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
@@ -2026,6 +2073,10 @@ export default function DashboardPage() {
               <span style={{ width:8,height:8,borderRadius:'50%',background:isListening?'#ef4444':'#94a3b8',boxShadow:isListening?'0 0 8px #ef4444':'none',flexShrink:0,transition:'all 0.3s' }} />
               {isListening ? '⏹ Stop Recording' : '🎤 Start Dictation'}
             </button>
+            <label style={{ display:'flex',alignItems:'center',gap:8,cursor:'pointer',padding:'8px 12px',borderRadius:8,border:'1px solid '+(layPersonSummary?(dm?'#1d4ed8':'#bfdbfe'):(dm?'#334155':'#e2e8f0')),background:layPersonSummary?(dm?'#1e3a5f':'#eff6ff'):(dm?'#0f172a':'#f8fafc'),transition:'all 0.15s' }}>
+              <input type="checkbox" checked={layPersonSummary} onChange={e=>setLayPersonSummary(e.target.checked)} style={{ width:15,height:15,accentColor:'#2563eb',cursor:'pointer' }}/>
+              <span style={{ fontSize:12,fontWeight:600,color:layPersonSummary?(dm?'#93c5fd':'#1d4ed8'):(dm?'#64748b':'#64748b') }}>🧑‍🏫 Add "Understanding Your Results" patient summary</span>
+            </label>
             <button onClick={generateReport} disabled={isGenerating || !dictationText.trim()}
               style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:(isGenerating||!dictationText.trim())?(dm?'#1e293b':'#e2e8f0'):(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#2563eb,#4f46e5)'),color:(isGenerating||!dictationText.trim())?(dm?'#475569':'#94a3b8'):'white',fontSize:14,fontWeight:700,cursor:(isGenerating||!dictationText.trim())?'not-allowed':'pointer',boxShadow:(isGenerating||!dictationText.trim())?'none':'0 4px 16px rgba(37,99,235,0.35)',letterSpacing:'0.02em' }}>
               {isGenerating ? '⏳ Generating…' : `✨ Generate ${isCT?'CT':'MRI'} Report`}
