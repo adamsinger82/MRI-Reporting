@@ -1155,8 +1155,8 @@ function AtlasModal({ onClose }) {
   const sidebarLabels = permanentLabels.slice().sort((a, b) => a[1] - b[1]);
 
   return (
-    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}>
-      <div style={{ background:'#0f172a',borderRadius:16,width:'min(98vw,1200px)',maxHeight:'94vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'8px' }}>
+      <div style={{ background:'#0f172a',borderRadius:16,width:'min(99vw,1600px)',height:'min(96vh,1000px)',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
 
         {/* Header */}
         <div style={{ background:'linear-gradient(135deg,#1e3a5f,#1d4ed8)',padding:'10px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
@@ -1212,7 +1212,7 @@ function AtlasModal({ onClose }) {
 
           {/* Col 2 — IMAGE */}
           <div ref={imgContainerRef}
-            style={{ flex:'0 0 auto',width:'60%',display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
+            style={{ flex:'1 1 0',minWidth:0,display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
 
             {/* Sequence toggle */}
             {jointData?.sequences && (
@@ -1247,7 +1247,7 @@ function AtlasModal({ onClose }) {
 
             {/* Image area — click handler here so coords are relative to image area only */}
             <div ref={imgAreaRef} onClick={handleImageClick}
-              style={{ flex:1,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',cursor:labelMode?'crosshair':'default' }}>
+              style={{ flex:'1 1 0',minHeight:0,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',cursor:labelMode?'crosshair':'default' }}>
               {!imgLoaded && !imgError && !imgRef.current?.src && (
                 <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:'#475569',zIndex:2 }}>
                   <div style={{ width:32,height:32,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
@@ -1264,7 +1264,7 @@ function AtlasModal({ onClose }) {
                 <img src={imgUrl} ref={imgRef}
                   onLoad={() => { setImgLoaded(true); requestAnimationFrame(() => setRenderTick(t => t+1)); }}
                   onError={() => { setImgError(true); setImgLoaded(false); }}
-                  style={{ maxWidth:'100%',maxHeight:'100%',objectFit:'contain',
+                  style={{ maxWidth:'100%',maxHeight:'100%',width:'auto',height:'auto',objectFit:'contain',
                     opacity: imgLoaded ? 1 : 0,
                     transition: 'opacity 0.05s',
                     position:'absolute', borderRadius:4, userSelect:'none' }}
@@ -1380,7 +1380,7 @@ function AtlasModal({ onClose }) {
           </div>
 
           {/* Col 3 — LABEL SIDEBAR with Y-aligned labels + leader lines */}
-          <div style={{ flex:1,background:'#000000',borderLeft:'none',display:'flex',flexDirection:'column',overflow:'hidden',position:'relative' }}>
+          <div style={{ flex:'0 0 180px',width:180,background:'#000000',borderLeft:'1px solid #1e293b',display:'flex',flexDirection:'column',overflow:'hidden',position:'relative' }}>
 
             {/* Label input at top when in label mode */}
             {pendingClick && (
