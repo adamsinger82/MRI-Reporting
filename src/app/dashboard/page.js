@@ -91,11 +91,95 @@ ANATOMY TO COVER for ${part}: ${getAnatomy(part, isCT)}
 Generate a subheading for EVERY structure listed above.
 ${findingsRules}
 IMPRESSION RULES:
-- Synthesize positive findings into clinically meaningful impression.
-- Number each item. Most important first.
+CORE PRINCIPLE: The impression must read like a subspecialty MSK radiologist's synthesis — not a transcription of the findings list. Group related findings under a single unifying clinical diagnosis whenever possible. Use "as above" to refer back to findings rather than repeating measurements, grades, or signal descriptions. Aim for 1-4 impression items. A laundry list is always wrong.
+
+NAMED SYNDROME PATTERNS — recognize and use these by name when the findings fit:
+
+KNEE:
+- PIVOT SHIFT / ACL INJURY: ACL tear + bone bruise/fracture + meniscus tear → "Sequela of pivot shift injury with ACL tear, [lateral/medial] osseous injury, and [meniscus] tear, as above."
+- DASHBOARD INJURY: PCL tear + posterior tibial bone bruise → "Sequela of dashboard-type injury with PCL tear and posterior osseous injury, as above."
+- HYPEREXTENSION INJURY: PCL + ACL tears + anterior bone bruising → "Sequela of hyperextension injury with multiligamentous involvement, as above."
+- MULTILIGAMENTOUS: 3+ ligament injuries → "Multiligamentous knee injury (Schenck grade [if determinable]) involving [list], as above."
+- DEGENERATIVE: Cartilage loss + degenerative meniscus tear + osteophytes → "[Mild/moderate/advanced/severe] osteoarthrosis, most significant in the [compartment] compartment, with associated degenerative [meniscus] tear, as above."
+- ROTATOR CUFF ARTHROPATHY (if applicable): Superior migration humeral head + cuff tears → "Rotator cuff arthropathy with [massive cuff tear pattern], as above."
+
+SHOULDER:
+- MASSIVE ROTATOR CUFF TEAR: Tears of 2+ tendons with muscle atrophy/fatty infiltration → "Massive rotator cuff tear involving the [tendons] with [Goutallier grade] fatty infiltration and [Patte stage] muscle retraction, as above." If superior humeral head migration or glenohumeral arthritis present add: "findings consistent with rotator cuff arthropathy."
+- BANKART / ANTERIOR INSTABILITY: Anterior labral tear + Hill-Sachs + osseous Bankart → "Anterior glenohumeral instability pattern with Bankart lesion[/osseous Bankart], Hill-Sachs deformity, as above."
+- POSTERIOR INSTABILITY: Posterior labral tear + reverse Hill-Sachs → "Posterior glenohumeral instability pattern with reverse Bankart lesion and reverse Hill-Sachs deformity, as above."
+- SLAP: Superior labral tear → "SLAP tear [type if determinable], as above."
+- SUBACROMIAL IMPINGEMENT: Hooked acromion/AC arthritis + supraspinatus pathology → "Subacromial impingement pattern with [partial/full] supraspinatus [tendinosis/tear], as above."
+- AC SEPARATION: AC joint injury → "Acromioclavicular separation [Rockwood grade if determinable], as above."
+- DISLOCATION: Anterior or posterior dislocation findings → "Sequela of [anterior/posterior] glenohumeral dislocation with [associated findings], as above."
+
+ANKLE:
+- INVERSION INJURY: ATFL ± CFL ± PTFL tears + bone bruising → "Sequela of inversion ankle injury with [lateral ligament complex] tear(s) and [osseous/osteochondral] injury, as above."
+- EVERSION INJURY: Deltoid tear ± syndesmosis injury → "Sequela of eversion ankle injury with deltoid ligament disruption[/syndesmotic injury], as above."
+- HIGH ANKLE SPRAIN: Syndesmosis injury ± Maisonneuve → "High ankle sprain with syndesmotic injury, as above." If Maisonneuve: add "findings consistent with Maisonneuve fracture pattern, clinical correlation recommended."
+- HAGLUND SYNDROME: Insertional Achilles tendinopathy + Haglund deformity + retrocalcaneal bursitis → "Haglund syndrome with insertional Achilles tendinopathy, Haglund deformity, and retrocalcaneal bursitis, as above."
+- OSTEOCHONDRAL LESION TALUS: OLT → always own line: "Osteochondral lesion of the talar [medial/lateral] dome, as above."
+
+HIP:
+- FAI CAM: CAM deformity + labral tear + cartilage damage → "CAM-type femoroacetabular impingement with anterosuperior labral tear[/cartilage injury], as above."
+- FAI PINCER: Overcoverage + labral tear → "Pincer-type femoroacetabular impingement with labral [degeneration/tear], as above."
+- MIXED FAI: Both → "Mixed-type FAI with labral pathology, as above."
+- AVN: Always own line with Ficat stage if determinable.
+
+WRIST:
+- DE QUERVAIN'S: First dorsal compartment tenosynovitis (APL/EPB) → "De Quervain tenosynovitis of the first dorsal compartment, as above."
+- INTERSECTION SYNDROME (1ST/2ND): First/second compartment intersection edema → "First/second compartment intersection syndrome, as above."
+- INTERSECTION SYNDROME (3RD): EPL/second compartment crossover → "Second/third compartment intersection syndrome (posterior intersection syndrome), as above."
+- TFCC INJURY: TFCC tear ± ulnar styloid → "Triangular fibrocartilage complex tear[/ulnar styloid avulsion], as above."
+- SCAPHOLUNATE DISSOCIATION: SL ligament tear + widening → "Scapholunate ligament tear with [static/dynamic] instability pattern, as above."
+- KIENBOCK: Lunate AVN → "Kienbock disease [Lichtman stage if determinable], as above."
+
+ELBOW:
+- LATERAL EPICONDYLOSIS/TEAR: Common extensor origin → "Lateral epicondylosis[/partial tear of common extensor origin], as above." (tennis elbow)
+- MEDIAL EPICONDYLOSIS/TEAR: Common flexor origin → "Medial epicondylosis[/partial tear of common flexor origin], as above." (golfer's elbow)
+- UCL INJURY: UCL tear ± valgus instability → "Ulnar collateral ligament tear with [complete/partial] disruption, as above."
+- POSTEROLATERAL ROTATORY INSTABILITY: RCL complex tear → "Lateral collateral ligament complex tear with posterolateral rotatory instability pattern, as above."
+- DISLOCATION: "Sequela of [simple/complex] elbow dislocation with [associated fractures/ligament injuries], as above."
+- PANNER / OCD: Capitellum OCD → "Osteochondral lesion of the capitellum[/Panner disease], as above." — always own line.
+
+PELVIS:
+- YOUNG-BURGESS CLASSIFICATION: Apply when pelvic ring fracture identified:
+  - Lateral compression (LC) I/II/III based on pattern
+  - Anteroposterior compression (APC) I/II/III
+  - Vertical shear (VS)
+  - Combined mechanism (CM)
+  → "Pelvic ring fracture, [Young-Burgess classification] pattern, as above."
+- AVULSION: Apophyseal avulsion → "[ASIS/AIIS/ischial tuberosity/iliac crest] avulsion fracture, as above."
+- SACRAL INSUFFICIENCY: Bilateral sacral ala fractures in elderly → "Sacral insufficiency fractures, as above."
+
+SPINE:
+- MULTILEVEL DISC DISEASE: → "Multilevel degenerative disc disease most significant at [worst level(s)] with [worst complication — e.g. moderate spinal stenosis, neural foraminal narrowing], as above."
+- SINGLE LEVEL: → "[Level] disc herniation/protrusion with [nerve involvement if present], as above."
+- COMPRESSION FRACTURE: → "[Acute/subacute/chronic] compression fracture [level], [height loss %], as above." If multiple: group as "multilevel compression fractures."
+- SPONDYLOLISTHESIS: → "Grade [I-IV] [antero/retro]listhesis at [level] with [associated stenosis if present], as above."
+
+GENERAL NAMED SYNDROMES (any joint):
+- COMPLEX REGIONAL PAIN SYNDROME (CRPS): Periarticular osteopenia + soft tissue edema pattern → "Imaging findings consistent with complex regional pain syndrome, clinical correlation recommended."
+- STRESS FRACTURE: → "[Fatigue/insufficiency] stress fracture of the [bone], as above."
+- AVULSION: Name the muscle origin/insertion + bone → "[Muscle] avulsion [fracture/injury] at [site], as above."
+- NERVE ENTRAPMENT: → "[Nerve] entrapment at [site — e.g. carpal tunnel, cubital tunnel, tarsal tunnel], as above."
+- TRANSIENT BONE MARROW EDEMA SYNDROME: Diffuse marrow edema without fracture/AVN → "Transient bone marrow edema syndrome of the [bone/joint], as above."
+
+WHAT ALWAYS GETS ITS OWN LINE (never grouped):
+- Osteochondral lesion / OCD / subchondral fracture
+- AVN (with Ficat/ARCO stage)
+- Aggressive or indeterminate osseous lesion
+- Fracture of high urgency (pelvic ring, vertebral with cord compromise)
+- Incidental finding unrelated to primary pathology (e.g. renal cyst on hip MRI)
+- Normal exam → ${normalImpressionText}
+
+STYLE RULES:
+- Number each item. Most important/urgent first.
+- Use named syndromes and clinical mechanisms — not signal descriptions or grade numbers
+- "as above" replaces repeating measurements, grades, signal characteristics
+- Do NOT write "modified Outerbridge grade X", "T2 hyperintensity", "low signal on T1" in the impression
 - ${normalImpressionText}
-- CARTILAGE / OA RULE (knee only): If Modified Outerbridge grading is mentioned in 2 or more compartments (medial, lateral, patellofemoral), do NOT list each compartment separately in the impression. Instead write a single impression line: "Osteoarthrosis, most notable in the [worst compartment] compartment with grade [X] chondromalacia, and [mild/moderate] involvement of the [other compartments] as above." If only 1 compartment involved, report it normally.
-- OSTEOCHONDRAL EXCEPTION: If an osteochondral lesion, OCD, or subchondral fracture is present, list it separately by name regardless of the OA rule above.${gradingBlock}
+- CARTILAGE / OA RULE (knee): If Modified Outerbridge grading in 2+ compartments → single DEGENERATIVE line, not per-compartment.
+- OSTEOCHONDRAL EXCEPTION: OCD/osteochondral lesion/subchondral fracture always listed separately.${gradingBlock}
 
 FORMAT:
 TECHNIQUE:
@@ -1879,7 +1963,7 @@ export default function DashboardPage() {
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
-          max_tokens:1800,
+          max_tokens:2000,
           system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality) + layPersonInstruction,
           messages:[{role:'user',content:`Dictated findings:\n\n${dictationText}${buildIncidentalBlock() ? '\n\nINCIDENTAL FINDINGS TO ADD TO IMPRESSION AND REFERENCES:\n' + buildIncidentalBlock() : ''}`}],
         }),
