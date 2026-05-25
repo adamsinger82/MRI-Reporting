@@ -1348,10 +1348,10 @@ function AtlasModal({ onClose }) {
                 <img src={imgUrl} ref={imgRef}
                   onLoad={() => { setImgLoaded(true); requestAnimationFrame(() => setRenderTick(t => t+1)); }}
                   onError={() => { setImgError(true); setImgLoaded(false); }}
-                  style={{ maxWidth:'100%',maxHeight:'100%',width:'auto',height:'auto',objectFit:'contain',
+                  style={{ width:'100%',height:'100%',objectFit:'contain',
                     opacity: imgLoaded ? 1 : 0,
                     transition: 'opacity 0.05s',
-                    position:'absolute', borderRadius:4, userSelect:'none' }}
+                    position:'absolute', inset:0, borderRadius:4, userSelect:'none' }}
                   loading="eager"
                   decoding="sync"
                   alt={`Slice ${currentSlice}`}
