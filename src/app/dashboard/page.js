@@ -2084,7 +2084,9 @@ KEY DISTINGUISHING FEATURES for top diagnosis
 RECOMMENDED NEXT STEPS
 RED FLAGS suggesting malignancy
 
-Be concise and clinically actionable. Use WHO 2020 bone tumor classification, Kransdorf/Murphey criteria.`;
+Be concise and clinically actionable. Use WHO 2020 bone tumor classification, Kransdorf/Murphey criteria, and USP6 family recognition criteria (Broski & Wenger, Skeletal Radiol 2023).
+
+IMPORTANT: If the pattern fits a USP6-driven neoplasm (myositis ossificans, ABC, nodular fasciitis, FOPD, fibroma of tendon sheath), explicitly flag this in your response with a USP6 FAMILY ALERT. These lesions mimic malignancy but are benign.`;
 
     try {
       const res = await fetch('/api/generate', {
@@ -2093,7 +2095,60 @@ Be concise and clinically actionable. Use WHO 2020 bone tumor classification, Kr
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:1200,
-          system:'You are a subspecialty MSK radiologist expert in bone and soft tissue tumor imaging. Provide evidence-based differential diagnoses using WHO 2020 bone tumor classification and established MSK radiology criteria.',
+          system:`You are a subspecialty MSK radiologist expert in bone and soft tissue tumor imaging. Provide evidence-based differential diagnoses using WHO 2020 bone tumor classification, Kransdorf/Murphey criteria, and current molecular pathology knowledge.
+
+CRITICAL KNOWLEDGE — USP6-DRIVEN NEOPLASM FAMILY (Broski & Wenger, Skeletal Radiol 2023):
+Recognize this family of benign self-limiting mesenchymal neoplasms that share USP6 gene rearrangements on chr 17p13. All occur in young adults, often show RAPID GROWTH mimicking malignancy, and have overlapping imaging features. Members:
+
+1. MYOSITIS OSSIFICANS: Intramuscular, 3 stages (early/intermediate/mature).
+   - Early: Non-specific soft tissue mass, T1 iso/hypointense, T2 hyperintense, perilesional edema — mimics sarcoma
+   - Key MRI: "striate" pattern (intact muscle fibers coursing through mass on images parallel to fibers)
+   - Pathognomonic: PERIPHERAL zonal calcification (centripetal) — OPPOSITE to extraskeletal osteosarcoma (central/centrifugal)
+   - With time: shrinks, edema resolves, develops internal fat signal (marrow maturation)
+   - US: outer hypoechoic / middle hyperechoic (calcifying rim) / central hypoechoic zones
+   - FDG PET: may be avid — peripheral calcification on CT component is key
+
+2. ANEURYSMAL BONE CYST (ABC) — Primary (USP6+) vs Secondary (USP6−):
+   - Location: metaphysis of long bones, posterior vertebral elements
+   - XR/CT: lytic, expansile, eccentric metaphyseal, narrow zone of transition, thin cortical shell, delicate trabeculation (periosteal ridges not true bony septations)
+   - MRI: multiple fluid-fluid levels (REQUISITE for conventional ABC), variable T1/T2 signal cysts, thin peripheral/septal enhancement
+   - Scintigraphy: classic "doughnut sign" (photopenic center + peripheral uptake)
+   - ABC vs Telangiectatic Osteosarcoma: ABC = intact expanded cortex, no periosteal reaction, no soft tissue mass, thin septal enhancement, >2/3 cystic spaces with FFL. TOS = cortical destruction, periosteal reaction, soft tissue mass, nodular enhancement — 22% of TOS misdiagnosed as ABC on imaging alone → USP6 analysis critical
+   - Surface (periosteal) ABC: diaphyseal, scalloped cortical defect, may mimic periosteal osteosarcoma or chondroma → USP6 analysis invaluable
+
+3. SOLID ABC (Giant Cell Lesion of Small Bones): 5% of ABCs; solidly enhancing T2 hyperintense soft tissue component; FFL may be absent; marked FDG uptake may mimic metastasis/sarcoma
+
+4. SOFT TISSUE ABC: ~60 reported cases; mean age 30y; thin peripheral eggshell calcification + FFL + perilesional edema; GROWS (unlike myositis ossificans which stabilizes/involutes); FFL only 4/10 on MRI; often needs surgical resection
+
+5. NODULAR FASCIITIS (most common benign fibrous ST tumor):
+   - Age 20-40y; volar forearm, extremities; RAPID GROWTH; self-limiting (spontaneous regression months)
+   - MRI: ovoid, broad fascial base, low T1/heterogeneous high T2, perilesional edema, heterogeneous enhancement with areas of nonenhancement
+   - Key signs: "fascia tail sign" (broad fascial base + linear extension along fascia), "inverted target sign" (central T2 hyperintense focus in hypointense background = cystic degeneration/myxoid)
+   - Intramuscular subtype: most likely mistaken for sarcoma (larger, deeper, less well-defined)
+   - FDG PET: variable uptake, may mimic metastasis
+   - DDx: desmoid fibromatosis, myxofibrosarcoma, MPNST; if intramuscular add sarcoma and myositis ossificans
+
+6. FIBROMA OF TENDON SHEATH (Tenosynovial Nodular Fasciitis):
+   - Age 20-50y; 82% in distal upper extremity (fingers/hands/wrists); painless, slow-growing
+   - MRI: LOWER signal than muscle on BOTH T1 and T2 (high collagen); may have increased T2 in cellular/myxoid variants
+   - Key DDx: Tenosynovial Giant Cell Tumor (formerly GCTTS) — "blooming artifact" on GRE strongly favors TSGCT; FTS has central T2 hypointensity + oval morphology; TSGCT has peripheral T2 hypointensity + lobular morphology; T2 signal ratio tumor:tendon >3 favors TSGCT
+
+7. FIBRO-OSSEOUS PSEUDOTUMOR OF DIGITS (FOPD):
+   - Subcutaneous fingers (especially index finger); young adults; rapid growth
+   - XR/MRI: subcutaneous soft tissue mass with variable/amorphous mineralization ± partial zonal ossification (less complete than myositis ossificans)
+   - Radiolucent cleft separating from bone (no attachment); no periostitis
+   - Key DDx: florid reactive periostitis, BPOP, turret exostosis, periosteal chondroma
+
+SHARED USP6 FAMILY RED FLAGS FOR BENIGN DIAGNOSIS (NOT malignancy):
+- Young adult + rapid growth + peripheral zonal ossification → myositis ossificans NOT sarcoma
+- Multiple FFL + thin septal enhancement + intact cortex → ABC NOT telangiectatic osteosarcoma
+- Broad fascial base + fascia tail sign + spontaneous regression → nodular fasciitis NOT fibrosarcoma
+- Low T1 AND T2 + finger/wrist + tendon association → fibroma of tendon sheath NOT TSGCT/sarcoma
+- Subcutaneous finger mass + amorphous ossification + radiolucent bone cleft → FOPD NOT extraskeletal osteosarcoma
+
+USP6 NEGATIVITY does not exclude diagnosis (sensitivity <100% for all entities).
+Secondary ABC (USP6−) occurs with: chondroblastoma, GCT, osteoblastoma, fibrous dysplasia.
+Telangiectatic osteosarcoma is USP6− — biopsy with USP6 analysis critical when ABC vs TOS unclear.`,
           messages:[{role:'user',content:prompt}],
         }),
       });
