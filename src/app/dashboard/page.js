@@ -1407,7 +1407,7 @@ function AtlasModal({ onClose }) {
   const [sequence, setSequence] = useState('t1');
   const sequenceRef = useRef('t1');
   const [labelMode, setLabelMode] = useState(false);
-  const [visibleLayers, setVisibleLayers] = useState({ nerves:true, muscles:true, tendons:true, arteries:true, veins:true, bones:true, ligaments:true, joints:true, spaces:true });
+  const [visibleLayers, setVisibleLayers] = useState({ nerves:true, muscles:true, arteries:true, veins:true, bones:true, ligaments:true, joints:true, spaces:true });
   const [userLabels, setUserLabels] = useState({});
   const [pendingClick, setPendingClick] = useState(null);
   const [pendingText, setPendingText] = useState('');
@@ -1568,7 +1568,7 @@ function AtlasModal({ onClose }) {
 
   const getLabelLayer = (name) => {
     const n = name.toLowerCase();
-    // Anatomic spaces first — tunnels, canals, notches, recesses
+    // Anatomic spaces — tunnels, canals, notches, recesses
     if (/tunnel|canal|notch|recess|foramen|fossa|alcock|hunter|spinoglenoid|suprascapular notch|cubital tunnel|carpal tunnel|guyon/.test(n)) return 'spaces';
     // Joints
     if (/\bjoint\b|ac joint|si joint|acromioclavicular|glenohumeral|sacroiliac|radiocarpal|midcarpal|lisfranc joint|patellofemoral|tibiofemoral|tibiotalar|subtalar|facet joint/.test(n)) return 'joints';
@@ -1577,20 +1577,17 @@ function AtlasModal({ onClose }) {
     // Vessels
     if (/artery|femoral art|iliac a|neurovascular bundle/.test(n)) return 'arteries';
     if (/vein|saphenous|femoral vein|iliac v/.test(n)) return 'veins';
-    // Bones — includes cartilage, glenoid, and all named bone landmarks
+    // Bones — includes cartilage, glenoid, all named landmarks
     if (/sacrum|ilium|iliac bone|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|asis|aiis|intertrochanteric|pubic|humerus|radius|ulna|radial tuberosity|olecranon|capitellum|trochlea|epicondyle|sublime tubercle|glenoid|acromion|clavicle|scapula|scapular spine|coracoid|coracoid process|humeral head|femoral head|femoral neck|femoral diaphysis|vertebra|vertebral body|\bL[1-5]\b|\bS[1-5]\b|\bC[1-7]\b|ischial tuberosity|pubic bone|iliac crest|cartilage/.test(n)) return 'bones';
-    // Ligaments — includes aponeuroses, lacertus, UCL etc
-    if (/ligament|ligamentous|sacrospinous|sacrotuberous|aponeurosis|osbourne|lacertus|retinaculum|coracoclavicular|coracoacromial|ucl|lcl|acl|pcl|mcl|collateral|annular/.test(n)) return 'ligaments';
-    // Tendons — same color as muscles (orange) but listed separately so toggle works
-    if (/tendon|labrum|labral|anchor|bursa|fascia/.test(n)) return 'tendons';
-    // Muscles
-    if (/muscle|maximus|medius|minimus|psoas|iliacus|iliopsoas|sartorius|rectus fem|gracilis|semi|biceps|tensor|piriform|obturator int|hamstring|adductor|deltoid|pec|teres|latissimus|serratus|brachialis|pronator|supinator|triceps|subscapularis|infraspinatus|supraspinatus|coracobrachialis|pectineus/.test(n)) return 'muscles';
+    // Ligaments — includes labrum, labral, fascia, aponeuroses, UCL etc
+    if (/ligament|ligamentous|sacrospinous|sacrotuberous|aponeurosis|osbourne|lacertus|retinaculum|coracoclavicular|coracoacromial|ucl|lcl|acl|pcl|mcl|collateral|annular|labrum|labral|anchor|fascia/.test(n)) return 'ligaments';
+    // Muscles + tendons — all orange
     return 'muscles';
   };
 
-  const colorMap = { nerves:'#facc15', muscles:'#f97316', tendons:'#f97316', arteries:'#ef4444', veins:'#60a5fa', bones:'#ffffff', ligaments:'#d1d5db', joints:'#34d399', spaces:'#c084fc' };
+  const colorMap = { nerves:'#facc15', muscles:'#f97316', arteries:'#ef4444', veins:'#60a5fa', bones:'#ffffff', ligaments:'#d1d5db', joints:'#34d399', spaces:'#c084fc' };
 
-  const permanentLabels = allPermanentLabels.filter(([,,name]) => visibleLayers[getLabelLayer(name)]);
+  const permanentLabels = allPermanentLabels.filter(([,,name]) => (visibleLayers[getLabelLayer(name)] ?? true));
 
   // Sort labels by Y position for vertical alignment with dots
   const sidebarLabels = permanentLabels.slice().sort((a, b) => a[1] - b[1]);
@@ -1635,7 +1632,6 @@ function AtlasModal({ onClose }) {
               {[
                 {key:'nerves',label:'Nerves',color:'#facc15'},
                 {key:'muscles',label:'Muscles',color:'#f97316'},
-                {key:'tendons',label:'Tendons',color:'#f97316'},
                 {key:'arteries',label:'Arteries',color:'#ef4444'},
                 {key:'veins',label:'Veins',color:'#60a5fa'},
                 {key:'bones',label:'Bones',color:'#e2e8f0'},
