@@ -1407,7 +1407,7 @@ function AtlasModal({ onClose }) {
   const [sequence, setSequence] = useState('t1');
   const sequenceRef = useRef('t1');
   const [labelMode, setLabelMode] = useState(false);
-  const [visibleLayers, setVisibleLayers] = useState({ nerves:true, muscles:true, arteries:true, veins:true, bones:true, ligaments:true });
+  const [visibleLayers, setVisibleLayers] = useState({ nerves:true, muscles:true, tendons:true, arteries:true, veins:true, bones:true, ligaments:true, joints:true, spaces:true });
   const [userLabels, setUserLabels] = useState({});
   const [pendingClick, setPendingClick] = useState(null);
   const [pendingText, setPendingText] = useState('');
@@ -1568,16 +1568,27 @@ function AtlasModal({ onClose }) {
 
   const getLabelLayer = (name) => {
     const n = name.toLowerCase();
-    if (/nerve|plexus|nvb|ganglion/.test(n)) return 'nerves';
-    if (/artery|femoral art|iliac a|common femoral a|superficial femoral a/.test(n)) return 'arteries';
-    if (/vein|saphenous|femoral vein|iliac v|superficial femoral v/.test(n)) return 'veins';
-    if (/muscle|maximus|medius|minimus|psoas|iliacus|iliopsoas|sartorius|rectus fem|gracilis|semi|biceps|tensor|piriform|obturator int|hamstring|adductor/.test(n)) return 'muscles';
-    if (/sacrum|ilium|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|asis|aiis|spine|intertrochanteric|pubic/.test(n)) return 'bones';
-    if (/ligament|ligamentous|synovial|sacrospinous|sacrotuberous/.test(n)) return 'ligaments';
+    // Anatomic spaces first — tunnels, canals, notches, recesses
+    if (/tunnel|canal|notch|recess|foramen|fossa|alcock|hunter|spinoglenoid|suprascapular notch|cubital tunnel|carpal tunnel|guyon/.test(n)) return 'spaces';
+    // Joints
+    if (/\bjoint\b|ac joint|si joint|acromioclavicular|glenohumeral|sacroiliac|radiocarpal|midcarpal|lisfranc joint|patellofemoral|tibiofemoral|tibiotalar|subtalar|facet joint/.test(n)) return 'joints';
+    // Nerves
+    if (/nerve|plexus|nvb|ganglion|cutaneous nerve|antebrachial|brachial plexus/.test(n)) return 'nerves';
+    // Vessels
+    if (/artery|femoral art|iliac a|neurovascular bundle/.test(n)) return 'arteries';
+    if (/vein|saphenous|femoral vein|iliac v/.test(n)) return 'veins';
+    // Bones — includes cartilage, glenoid, and all named bone landmarks
+    if (/sacrum|ilium|iliac bone|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|asis|aiis|intertrochanteric|pubic|humerus|radius|ulna|radial tuberosity|olecranon|capitellum|trochlea|epicondyle|sublime tubercle|glenoid|acromion|clavicle|scapula|scapular spine|coracoid|coracoid process|humeral head|femoral head|femoral neck|femoral diaphysis|vertebra|vertebral body|\bL[1-5]\b|\bS[1-5]\b|\bC[1-7]\b|ischial tuberosity|pubic bone|iliac crest|cartilage/.test(n)) return 'bones';
+    // Ligaments — includes aponeuroses, lacertus, UCL etc
+    if (/ligament|ligamentous|sacrospinous|sacrotuberous|aponeurosis|osbourne|lacertus|retinaculum|coracoclavicular|coracoacromial|ucl|lcl|acl|pcl|mcl|collateral|annular/.test(n)) return 'ligaments';
+    // Tendons — same color as muscles (orange) but listed separately so toggle works
+    if (/tendon|labrum|labral|anchor|bursa|fascia/.test(n)) return 'tendons';
+    // Muscles
+    if (/muscle|maximus|medius|minimus|psoas|iliacus|iliopsoas|sartorius|rectus fem|gracilis|semi|biceps|tensor|piriform|obturator int|hamstring|adductor|deltoid|pec|teres|latissimus|serratus|brachialis|pronator|supinator|triceps|subscapularis|infraspinatus|supraspinatus|coracobrachialis|pectineus/.test(n)) return 'muscles';
     return 'muscles';
   };
 
-  const colorMap = { nerves:'#facc15', muscles:'#f97316', arteries:'#ef4444', veins:'#60a5fa', bones:'#ffffff', ligaments:'#9ca3af' };
+  const colorMap = { nerves:'#facc15', muscles:'#f97316', tendons:'#f97316', arteries:'#ef4444', veins:'#60a5fa', bones:'#ffffff', ligaments:'#d1d5db', joints:'#34d399', spaces:'#c084fc' };
 
   const permanentLabels = allPermanentLabels.filter(([,,name]) => visibleLayers[getLabelLayer(name)]);
 
@@ -1617,17 +1628,20 @@ function AtlasModal({ onClose }) {
             {/* Layer toggles */}
             <p style={{ fontSize:9,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'12px 0 3px' }}>Labels</p>
             <div style={{ display:'flex',flexWrap:'wrap',gap:3 }}>
-              <button onClick={() => setVisibleLayers({ nerves:true,muscles:true,arteries:true,veins:true,bones:true,ligaments:true })}
+              <button onClick={() => setVisibleLayers({ nerves:true,muscles:true,tendons:true,arteries:true,veins:true,bones:true,ligaments:true,joints:true,spaces:true })}
                 style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All On</button>
-              <button onClick={() => setVisibleLayers({ nerves:false,muscles:false,arteries:false,veins:false,bones:false,ligaments:false })}
+              <button onClick={() => setVisibleLayers({ nerves:false,muscles:false,tendons:false,arteries:false,veins:false,bones:false,ligaments:false,joints:false,spaces:false })}
                 style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All Off</button>
               {[
                 {key:'nerves',label:'Nerves',color:'#facc15'},
                 {key:'muscles',label:'Muscles',color:'#f97316'},
+                {key:'tendons',label:'Tendons',color:'#f97316'},
                 {key:'arteries',label:'Arteries',color:'#ef4444'},
                 {key:'veins',label:'Veins',color:'#60a5fa'},
                 {key:'bones',label:'Bones',color:'#e2e8f0'},
-                {key:'ligaments',label:'Ligaments',color:'#9ca3af'},
+                {key:'ligaments',label:'Ligaments',color:'#d1d5db'},
+                {key:'joints',label:'Joints',color:'#34d399'},
+                {key:'spaces',label:'Spaces',color:'#c084fc'},
               ].map(({key,label,color}) => (
                 <button key={key} onClick={() => setVisibleLayers(prev => ({...prev,[key]:!prev[key]}))}
                   style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid '+color,background:visibleLayers[key]?color+'33':'transparent',color:visibleLayers[key]?color:'#475569',cursor:'pointer' }}>
@@ -1718,35 +1732,52 @@ function AtlasModal({ onClose }) {
                   <svg style={{ position:'absolute', left:ol, top:ot, width:ow, height:oh, pointerEvents:'none', overflow:'visible' }}
                     viewBox={`0 0 ${ow} ${oh}`}>
 
-                    {/* Permanent labels */}
-                    {permanentLabels.map(([x, y, name], li) => {
-                      const col = colorMap[getLabelLayer(name)] || '#ffffff';
-                      const px = (x / 100) * ow;
-                      const py = (y / 100) * oh;
-                      // Text in black area on LEFT, line goes right to dot
-                      const textX = 10; // left side of image
-                      const lineStartX = textX + (name.length * 7.2 + 4); // right edge of text
-                      const textAnchor = 'start';
+                    {/* Permanent labels — evenly spaced vertically to prevent overlap */}
+                    {(() => {
                       const fontSize = Math.max(10, Math.min(13, ow / 60));
-                      return (
-                        <g key={'p'+li}>
-                          {/* Dot */}
-                          <circle cx={px} cy={py} r="4" fill={col} opacity="0.95"
-                            stroke="rgba(0,0,0,0.7)" strokeWidth="1"/>
-                          {/* Leader line */}
-                          <line x1={lineStartX} y1={py} x2={px-5} y2={py}
-                            stroke={col} strokeWidth="1" opacity="0.7"/>
-                          {/* Text with black shadow for readability */}
-                          <text x={textX} y={py} fontSize={fontSize} fill="rgba(0,0,0,0.85)"
-                            fontFamily="system-ui,sans-serif" fontWeight="700"
-                            textAnchor="start" dominantBaseline="middle" dx="1" dy="1">{name}</text>
-                          <text x={textX} y={py} fontSize={fontSize} fill={col}
-                            fontFamily="system-ui,sans-serif" fontWeight="700"
-                            textAnchor="start" dominantBaseline="middle">{name}</text>
-                          {/* Vertical tick at text end */}
-                        </g>
-                      );
-                    })}
+                      const lineH = fontSize + 5; // min spacing between label rows
+                      const n = permanentLabels.length;
+                      if (n === 0) return null;
+                      // Sort by Y so labels roughly follow anatomy top-to-bottom
+                      const sorted = permanentLabels.map(([x,y,name],origIdx) => ({x,y,name,origIdx}))
+                        .sort((a,b) => a.y - b.y);
+                      // Distribute label Y positions evenly across image height
+                      // with a small top/bottom margin
+                      const topMargin = fontSize;
+                      const botMargin = fontSize;
+                      const spread = oh - topMargin - botMargin;
+                      return sorted.map(({x, y, name, origIdx}, i) => {
+                        const col = colorMap[getLabelLayer(name)] || '#ffffff';
+                        const px = (x / 100) * ow;
+                        const py = (y / 100) * oh; // dot stays at true position
+                        // Text Y: evenly distributed
+                        const ty = n === 1 ? oh / 2 : topMargin + (i / (n - 1)) * spread;
+                        const textX = 8;
+                        const maxLabelW = ow * 0.38; // max label area = 38% of image width
+                        const lineStartX = Math.min(textX + name.length * fontSize * 0.62 + 4, maxLabelW);
+                        return (
+                          <g key={'p'+origIdx}>
+                            {/* Dot on structure */}
+                            <circle cx={px} cy={py} r="4" fill={col} opacity="0.95"
+                              stroke="rgba(0,0,0,0.7)" strokeWidth="1"/>
+                            {/* Elbow line: text → vertical jog → dot */}
+                            <polyline
+                              points={`${lineStartX},${ty} ${px - 5},${ty} ${px - 5},${py}`}
+                              fill="none" stroke={col} strokeWidth="0.9" opacity="0.65"/>
+                            {/* Final horizontal to dot */}
+                            <line x1={px-5} y1={py} x2={px-1} y2={py}
+                              stroke={col} strokeWidth="0.9" opacity="0.65"/>
+                            {/* Label text shadow */}
+                            <text x={textX} y={ty} fontSize={fontSize} fill="rgba(0,0,0,0.9)"
+                              fontFamily="system-ui,sans-serif" fontWeight="700"
+                              textAnchor="start" dominantBaseline="middle" dx="1" dy="1">{name}</text>
+                            <text x={textX} y={ty} fontSize={fontSize} fill={col}
+                              fontFamily="system-ui,sans-serif" fontWeight="700"
+                              textAnchor="start" dominantBaseline="middle">{name}</text>
+                          </g>
+                        );
+                      });
+                    })()}
 
                     {/* User label dots */}
                     {currentLabels.map(([x, y, text], li) => {
