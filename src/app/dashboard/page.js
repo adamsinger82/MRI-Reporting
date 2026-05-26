@@ -1530,11 +1530,17 @@ function AtlasModal({ onClose }) {
   // ── Label click handler — coords relative to ACTUAL image pixels ──────────
   const handleImageClick = (e) => {
     if (!labelMode || !imgRef.current) return;
-    const rect = imgRef.current.getBoundingClientRect();
-    // Record as % of actual image dimensions (not container)
-    const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
-    const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
-    // Clamp to 0-100
+    const ir = imgRef.current.getBoundingClientRect();
+    const natW = imgRef.current.naturalWidth  || 1;
+    const natH = imgRef.current.naturalHeight || 1;
+    const scale = Math.min(ir.width / natW, ir.height / natH);
+    const ow = natW * scale;
+    const oh = natH * scale;
+    // Top-left of actual rendered pixels within the element
+    const pxLeft = ir.left + (ir.width  - ow) / 2;
+    const pxTop  = ir.top  + (ir.height - oh) / 2;
+    const x = parseFloat(((e.clientX - pxLeft) / ow * 100).toFixed(1));
+    const y = parseFloat(((e.clientY - pxTop)  / oh * 100).toFixed(1));
     if (x < 0 || x > 100 || y < 0 || y > 100) return;
     setPendingClick({ x, y });
     setPendingText('');
@@ -1718,19 +1724,20 @@ function AtlasModal({ onClose }) {
               {/* Single SVG overlay — dots + lines + labels all in one coordinate space */}
               {imgLoaded && imgRef.current && imgAreaRef.current && renderTick >= 0 && (() => {
                 const imgEl = imgRef.current;
-                const ar = imgAreaRef.current.getBoundingClientRect();
-                // With objectFit:contain the rendered image area is smaller than the element bounds.
-                // Compute actual rendered image rect using natural aspect ratio.
-                const natW = imgEl.naturalWidth  || imgEl.width  || 1;
-                const natH = imgEl.naturalHeight || imgEl.height || 1;
-                const elW  = ar.width;
-                const elH  = ar.height;
-                const scale = Math.min(elW / natW, elH / natH);
+                const ar  = imgAreaRef.current.getBoundingClientRect();
+                const ir  = imgEl.getBoundingClientRect();
+                // Labels were recorded as % of the rendered image pixels.
+                // With objectFit:contain the img element fills the container but
+                // actual pixels are letterboxed. Use naturalWidth/Height to find
+                // the true rendered image rect inside the element bounds.
+                const natW = imgEl.naturalWidth  || 1;
+                const natH = imgEl.naturalHeight || 1;
+                const scale = Math.min(ir.width / natW, ir.height / natH);
                 const ow = natW * scale;
                 const oh = natH * scale;
-                // Center offset within the container (letterbox margins)
-                const ol = (elW - ow) / 2;
-                const ot = (elH - oh) / 2;
+                // Offset of rendered image pixels within the container
+                const ol = (ir.left - ar.left) + (ir.width  - ow) / 2;
+                const ot = (ir.top  - ar.top)  + (ir.height - oh) / 2;
                 return (
                   <svg style={{ position:'absolute', left:ol, top:ot, width:ow, height:oh, pointerEvents:'none', overflow:'visible' }}
                     viewBox={`0 0 ${ow} ${oh}`}>
