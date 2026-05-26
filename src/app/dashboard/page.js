@@ -1907,6 +1907,127 @@ function AtlasModal({ onClose }) {
   );
 }
 
+// ─── RESEARCH POSTS ────────────────────────────────────────────────────────
+// Add new posts to the TOP of this array. Each old post moves down automatically.
+// Fields: date, title, journal, citation, summary (array of bullet strings),
+//         keyTakeaway, link (optional DOI/PubMed URL), tags (array of strings)
+const RESEARCH_POSTS = [
+  {
+    date: 'May 25, 2026',
+    title: 'Example Post — Replace With Your First Article Review',
+    journal: 'Journal Name · Year',
+    citation: 'Author A, Author B, et al. Full article title here. Journal. Year;Vol(Issue):Pages.',
+    summary: [
+      'Study design and population: describe the cohort, imaging modality, and primary objective.',
+      'Key finding 1: the most important result with numbers where relevant.',
+      'Key finding 2: secondary findings or subgroup analysis.',
+      'Methodology note: anything notable about the technique, grading system, or statistical approach.',
+    ],
+    keyTakeaway: 'One sentence distilling the clinical bottom line — what this changes or confirms in your practice.',
+    link: 'https://scholar.google.com/scholar?q=replace+with+article+title',
+    tags: ['Knee', 'Cartilage', 'MRI'],
+  },
+];
+
+// ─── RESEARCH MODAL ────────────────────────────────────────────────────────
+function ResearchModal({ onClose }) {
+  const [expanded, setExpanded] = useState(null);
+
+  return (
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'8px' }}>
+      <div style={{ background:'#0f172a',borderRadius:16,width:'min(99vw,860px)',height:'min(96vh,1000px)',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
+
+        {/* Header */}
+        <div style={{ background:'linear-gradient(135deg,#065f46,#059669)',padding:'14px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+            <span style={{ fontSize:18 }}>📰</span>
+            <div>
+              <div style={{ color:'white',fontWeight:800,fontSize:14,letterSpacing:'0.08em' }}>LATEST MSK RADIOLOGY RESEARCH</div>
+              <div style={{ color:'rgba(255,255,255,0.6)',fontSize:11,marginTop:1 }}>Weekly article reviews — key findings distilled for clinical practice</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'4px 12px',cursor:'pointer',fontSize:12,fontWeight:600 }}>✕</button>
+        </div>
+
+        {/* Posts feed */}
+        <div style={{ flex:1,overflowY:'auto',padding:'20px 24px',display:'flex',flexDirection:'column',gap:16 }}>
+          {RESEARCH_POSTS.map((post, idx) => {
+            const isOpen = expanded === idx;
+            const isLatest = idx === 0;
+            return (
+              <div key={idx} style={{ background:isOpen?'#1e293b':'#141f30',border:'1px solid '+(isOpen?'#059669':'#1e3a5f'),borderRadius:12,overflow:'hidden',transition:'border-color 0.2s' }}>
+
+                {/* Post header — always visible */}
+                <div onClick={() => setExpanded(isOpen ? null : idx)}
+                  style={{ padding:'14px 18px',cursor:'pointer',display:'flex',gap:14,alignItems:'flex-start' }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:5,flexWrap:'wrap' }}>
+                      {isLatest && (
+                        <span style={{ background:'#059669',color:'white',fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:999,letterSpacing:'0.08em',textTransform:'uppercase' }}>NEW</span>
+                      )}
+                      {post.tags.map(tag => (
+                        <span key={tag} style={{ background:'rgba(99,102,241,0.2)',color:'#a5b4fc',fontSize:9,fontWeight:600,padding:'2px 7px',borderRadius:999 }}>{tag}</span>
+                      ))}
+                      <span style={{ fontSize:10,color:'#475569',marginLeft:'auto' }}>{post.date}</span>
+                    </div>
+                    <div style={{ fontSize:14,fontWeight:700,color:'#e2e8f0',lineHeight:1.4,marginBottom:3 }}>{post.title}</div>
+                    <div style={{ fontSize:11,color:'#64748b',fontStyle:'italic' }}>{post.journal}</div>
+                  </div>
+                  <div style={{ color:'#475569',fontSize:18,fontWeight:300,flexShrink:0,marginTop:2,transition:'transform 0.2s',transform:isOpen?'rotate(90deg)':'none' }}>›</div>
+                </div>
+
+                {/* Expanded content */}
+                {isOpen && (
+                  <div style={{ padding:'0 18px 18px',borderTop:'1px solid #1e3a5f' }}>
+
+                    {/* Citation */}
+                    <div style={{ padding:'10px 12px',background:'rgba(255,255,255,0.03)',borderRadius:7,marginTop:12,marginBottom:14 }}>
+                      <span style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em' }}>Citation  </span>
+                      <span style={{ fontSize:11,color:'#94a3b8',lineHeight:1.6 }}>{post.citation}</span>
+                    </div>
+
+                    {/* Summary bullets */}
+                    <div style={{ marginBottom:14 }}>
+                      <div style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8 }}>Summary</div>
+                      {post.summary.map((bullet, bi) => (
+                        <div key={bi} style={{ display:'flex',gap:8,marginBottom:6 }}>
+                          <span style={{ color:'#059669',fontWeight:700,fontSize:13,flexShrink:0,marginTop:1 }}>›</span>
+                          <span style={{ fontSize:13,color:'#cbd5e1',lineHeight:1.7 }}>{bullet}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Key takeaway */}
+                    <div style={{ background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(6,95,70,0.1))',border:'1px solid rgba(5,150,105,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:post.link?12:0 }}>
+                      <span style={{ fontSize:10,fontWeight:800,color:'#059669',textTransform:'uppercase',letterSpacing:'0.08em' }}>🔑 Key Takeaway  </span>
+                      <span style={{ fontSize:13,color:'#a7f3d0',lineHeight:1.6,fontWeight:500 }}>{post.keyTakeaway}</span>
+                    </div>
+
+                    {/* PubMed link */}
+                    {post.link && (
+                      <a href={post.link} target="_blank" rel="noopener noreferrer"
+                        style={{ display:'inline-flex',alignItems:'center',gap:5,marginTop:10,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
+                        🔗 Search on Google Scholar →
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding:'10px 24px',borderTop:'1px solid #1e293b',flexShrink:0,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+          <span style={{ fontSize:10,color:'#475569',fontStyle:'italic' }}>Add new posts to the top of RESEARCH_POSTS in page.js — use Google Scholar links</span>
+          <span style={{ fontSize:10,color:'#334155' }}>{RESEARCH_POSTS.length} post{RESEARCH_POSTS.length !== 1 ? 's' : ''}</span>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ─── MSK DDx MODAL ─────────────────────────────────────────────────────────
 function DdxModal({ onClose }) {
   const [tissueType, setTissueType] = useState('bone');
@@ -2231,6 +2352,7 @@ export default function DashboardPage() {
   const [spineRegion, setSpineRegion] = useState('lumbar');
   const [showAtlas, setShowAtlas] = useState(false);
   const [showDdx, setShowDdx] = useState(false);
+  const [showResearch, setShowResearch] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const dm = darkMode;
   const recognitionRef = useRef(null);
@@ -2423,6 +2545,7 @@ export default function DashboardPage() {
 
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
+      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} />}
 
       {/* ── HEADER ── */}
       <div style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
@@ -2461,6 +2584,12 @@ export default function DashboardPage() {
             title={dm ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:dm?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.08)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
             <span>{dm ? '☀️' : '🌙'}</span> {dm ? 'Light' : 'Dark'}
+          </button>
+
+          {/* Latest MSK Research button */}
+          <button onClick={() => setShowResearch(true)}
+            style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(16,185,129,0.5)',background:'rgba(16,185,129,0.12)',color:'#6ee7b7',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
+            <span>📰</span> Latest MSK Research
           </button>
 
           {/* DDx button */}
