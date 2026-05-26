@@ -1276,8 +1276,8 @@ const DIAGRAM_SVGS = {
       <text x="90" y="113" textAnchor="middle" fontSize="7" fill="white">3</text>
       <text x="102" y="108" fontSize="8" fill="#c0392b">Glenoid</text>
       {/* Arrow showing direction of retraction */}
-      <line x1="148" y1="76" x2="94" y2="107" stroke="#888" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arr-patte)"/>
       <defs><marker id="arr-patte" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="4" markerHeight="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#888" strokeWidth="1.5"/></marker></defs>
+      <line x1="148" y1="76" x2="94" y2="107" stroke="#888" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arr-patte)"/>
       <text x="160" y="225" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Coronal oblique — retraction stages</text>
     </svg>
   ),
@@ -2203,8 +2203,8 @@ const DIAGRAM_SVGS = {
   'spine-meyerding': (
     <svg viewBox="0 0 680 400" aria-label="Meyerding spondylolisthesis grades I through V">
       <defs>
-        <marker id="marr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <marker id="marr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#93c5fd" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </marker>
       </defs>
       {/* GRADES I–IV top row */}
@@ -2433,8 +2433,8 @@ const DIAGRAM_SVGS = {
       <rect x="466" y="124" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
       <rect x="466" y="124" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
       <line x1="466" y1="120" x2="527" y2="120" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
-      <path d="M452 118 L462 126" fill="none" stroke="#dc2626" strokeWidth="2" markerEnd="url(#marr2)"/>
       <defs><marker id="marr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#dc2626" strokeWidth="1.5"/></marker></defs>
+      <path d="M452 118 L462 126" fill="none" stroke="#dc2626" strokeWidth="2" markerEnd="url(#marr2)"/>
       <text x="570" y="195" textAnchor="middle" fontSize="10" fill="#64748b">Anterior translation</text>
       <text x="570" y="208" textAnchor="middle" fontSize="10" fill="#64748b">All 3 columns disrupted</text>
       {/* Severity note */}
