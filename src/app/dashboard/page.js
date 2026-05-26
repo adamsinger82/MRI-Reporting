@@ -1717,13 +1717,20 @@ function AtlasModal({ onClose }) {
               {/* DOTS ONLY on image — no text labels */}
               {/* Single SVG overlay — dots + lines + labels all in one coordinate space */}
               {imgLoaded && imgRef.current && imgAreaRef.current && renderTick >= 0 && (() => {
-                const ir = imgRef.current.getBoundingClientRect();
+                const imgEl = imgRef.current;
                 const ar = imgAreaRef.current.getBoundingClientRect();
-                const ol = ir.left - ar.left;
-                const ot = ir.top  - ar.top;
-                const ow = ir.width;
-                const oh = ir.height;
-                // SVG viewBox matches image pixel dimensions exactly
+                // With objectFit:contain the rendered image area is smaller than the element bounds.
+                // Compute actual rendered image rect using natural aspect ratio.
+                const natW = imgEl.naturalWidth  || imgEl.width  || 1;
+                const natH = imgEl.naturalHeight || imgEl.height || 1;
+                const elW  = ar.width;
+                const elH  = ar.height;
+                const scale = Math.min(elW / natW, elH / natH);
+                const ow = natW * scale;
+                const oh = natH * scale;
+                // Center offset within the container (letterbox margins)
+                const ol = (elW - ow) / 2;
+                const ot = (elH - oh) / 2;
                 return (
                   <svg style={{ position:'absolute', left:ol, top:ot, width:ow, height:oh, pointerEvents:'none', overflow:'visible' }}
                     viewBox={`0 0 ${ow} ${oh}`}>
