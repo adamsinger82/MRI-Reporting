@@ -4,7 +4,119 @@ import { useState, useRef, useEffect } from 'react';
 import { JOINT_DATA, DIAGRAM_SVGS } from './referenceData';
 import CopyButton from './CopyButton';
 
-const BODY_PARTS = ['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot'];
+// ─── SUPPLEMENTAL JOINT DATA for new body parts (merged with referenceData) ──
+const SUPPLEMENTAL_JOINT_DATA = {
+  'femur/thigh': {
+    label: 'Femur / Thigh',
+    measurements: [
+      {
+        id: 'bamic_grading',
+        label: 'BAMIC — Hamstring/Thigh Muscle Injury Grade',
+        isGradingScale: true,
+        plane: 'Axial + Coronal',
+        description: 'British Athletics Muscle Injury Classification (BAMIC). Grades muscle injuries by anatomic location and cross-sectional area (CSA) involvement. Originally validated for hamstring injuries; applied to quadriceps and adductors using the same framework.',
+        diagram: null,
+        citations: [
+          { label: 'Pollock N et al. — BAMIC validation study. Br J Sports Med 2016;50(19):1215-1220.', url: 'https://pubmed.ncbi.nlm.nih.gov/27160205/' },
+          { label: 'Wangensteen A et al. — BAMIC MRI prognosis in hamstring injuries. Am J Sports Med 2018;46(10):2353-2363.', url: 'https://pubmed.ncbi.nlm.nih.gov/29986149/' },
+        ],
+        normalValues: [
+          { label: 'Grade 0', value: 'Signal change only — no architectural disruption; peritendinous or minimal intramuscular edema' },
+          { label: 'Grade 1a', value: 'Peripheral MTJ injury, muscle belly; <10% CSA involved' },
+          { label: 'Grade 1b', value: 'Peripheral MTJ injury, muscle belly; ≥10% CSA involved' },
+          { label: 'Grade 2a', value: 'MTJ injury involving myotendinous unit; <10% CSA involved' },
+          { label: 'Grade 2b', value: 'MTJ injury involving myotendinous unit; ≥10% CSA involved' },
+          { label: 'Grade 3a', value: 'Central/intramuscular tendon injury; <10% CSA involved' },
+          { label: 'Grade 3b', value: 'Central/intramuscular tendon injury; ≥10% CSA involved' },
+          { label: 'Grade 4', value: 'Complete/near-complete tear — proximal avulsion or complete central tendon disruption with retraction' },
+          { label: 'Modifier (c)', value: 'Isolated central tendon injury without peripheral muscle involvement (e.g., Grade 3a(c))' },
+          { label: 'MTJ = myotendinous junction', value: 'CSA = cross-sectional area of involved muscle' },
+        ],
+      },
+    ],
+  },
+  'tibia/fibula': {
+    label: 'Tibia / Fibula',
+    measurements: [
+      {
+        id: 'fredericson_grade',
+        label: 'Fredericson Grade — Tibial Stress Reaction/Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'Fredericson MRI grading system for medial tibial stress syndrome and tibial stress reactions/fractures. Prognostic for return-to-sport timelines. Grade 4b (anterior cortex) = "dreaded black line" — highest risk for complete fracture.',
+        diagram: null,
+        citations: [
+          { label: 'Fredericson M et al. — MRI grading of tibial stress injuries. Am J Sports Med 1995;23(4):472-481.', url: 'https://pubmed.ncbi.nlm.nih.gov/7573660/' },
+          { label: 'Kiuru MJ et al. — MRI stress fracture grading. Skeletal Radiol 2004;33(4):216-221.', url: 'https://pubmed.ncbi.nlm.nih.gov/14730395/' },
+        ],
+        normalValues: [
+          { label: 'Grade 1', value: 'Mild periosteal edema (STIR); T1 normal; no medullary involvement' },
+          { label: 'Grade 2', value: 'Moderate-severe periosteal edema (STIR); T1 normal; no medullary involvement' },
+          { label: 'Grade 3', value: 'Periosteal + medullary edema on STIR; T1 still normal (no trabecular injury)' },
+          { label: 'Grade 4a', value: 'Periosteal + medullary edema on STIR AND abnormal (low) T1 — trabecular microfracture' },
+          { label: 'Grade 4b', value: 'Grade 4a + visible cortical/transcortical fracture line — frank stress fracture' },
+          { label: 'High-risk location', value: 'Anterior tibial cortex (Grade 4b) = "dreaded black line" — orthopedic consultation indicated' },
+          { label: 'Typical location', value: 'Posteromedial cortex, middle or distal third — medial tibial stress syndrome' },
+        ],
+      },
+    ],
+  },
+  humerus: {
+    label: 'Humerus',
+    measurements: [
+      {
+        id: 'neer_classification',
+        label: 'Neer Classification — Proximal Humerus Fracture',
+        isGradingScale: true,
+        plane: 'Coronal',
+        description: 'Neer classification for proximal humerus fractures based on displacement (>1 cm or >45°) of four segments: humeral head (articular), greater tuberosity, lesser tuberosity, and humeral shaft.',
+        diagram: null,
+        citations: [
+          { label: 'Neer CS 2nd. — Displaced proximal humeral fractures. J Bone Joint Surg Am 1970;52(6):1077-1089.', url: 'https://pubmed.ncbi.nlm.nih.gov/5455339/' },
+        ],
+        normalValues: [
+          { label: '1-part (any # of fracture lines)', value: 'No segment displaced >1 cm or angulated >45° — treat as one unit' },
+          { label: '2-part', value: 'One of 4 segments displaced: surgical neck (most common), greater tuberosity, lesser tuberosity, or anatomic neck' },
+          { label: '3-part', value: 'Two segments displaced; rotator cuff usually intact on non-displaced tuberosity' },
+          { label: '4-part', value: 'All four segments displaced; humeral head at risk for AVN' },
+          { label: '4-part valgus-impacted', value: 'Better prognosis than classic 4-part; blood supply to head more likely preserved' },
+          { label: 'Fracture-dislocation', value: 'Any 2-4 part pattern with concomitant glenohumeral dislocation' },
+        ],
+      },
+    ],
+  },
+  forearm: {
+    label: 'Forearm (Radius / Ulna)',
+    measurements: [
+      {
+        id: 'forearm_fracture_patterns',
+        label: 'Forearm Fracture-Dislocation Patterns',
+        isGradingScale: true,
+        plane: 'Coronal + Sagittal',
+        description: 'Key forearm fracture-dislocation patterns. Monteggia and Galeazzi injuries require recognition of the associated joint dislocation — missed dislocations lead to chronic instability.',
+        diagram: null,
+        citations: [
+          { label: 'Bado JL. — The Monteggia lesion. Clin Orthop Relat Res 1967;50:71-86.', url: 'https://pubmed.ncbi.nlm.nih.gov/6029007/' },
+          { label: 'Galeazzi R. — Original description. 1934.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+        ],
+        normalValues: [
+          { label: 'Monteggia — Bado I (most common)', value: 'Anterior radial head dislocation + proximal ulna fracture with anterior angulation' },
+          { label: 'Monteggia — Bado II', value: 'Posterior/posterolateral radial head dislocation + ulna fracture with posterior angulation' },
+          { label: 'Monteggia — Bado III', value: 'Lateral/anterolateral radial head dislocation + ulna metaphysis fracture' },
+          { label: 'Monteggia — Bado IV', value: 'Anterior radial head dislocation + both-bone fracture (radius + ulna)' },
+          { label: 'Galeazzi', value: 'Radial shaft fracture (usually distal third) + DRUJ disruption (dislocation/widening)' },
+          { label: 'Essex-Lopresti', value: 'Radial head fracture + interosseous membrane tear + DRUJ disruption — longitudinal forearm instability' },
+          { label: 'Both-bone forearm', value: 'Radius + ulna shaft fractures; assess PRUJ and DRUJ for associated dislocation' },
+        ],
+      },
+    ],
+  },
+};
+
+// Merge supplemental data with imported JOINT_DATA
+const EFFECTIVE_JOINT_DATA = { ...JOINT_DATA, ...SUPPLEMENTAL_JOINT_DATA };
+
+const BODY_PARTS = ['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot','femur/thigh','tibia/fibula','humerus','forearm'];
 const BILATERAL = ['spine','pelvis'];
 
 // Structures that should read "absent" when not mentioned
@@ -25,6 +137,10 @@ const ANATOMY_MRI = {
   spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs (each level), Spinal Canal, Neural Foramina, Facet Joints, Paraspinal Soft Tissues',
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues',
   foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
+  'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
+  'tibia/fibula':'Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, Posterior Tibial Tendon, Flexor Digitorum Longus, Flexor Hallucis Longus, Peroneus Longus, Peroneus Brevis, Anterior Compartment Musculature, Posterior Compartment Musculature, Lateral Compartment Musculature, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Soft Tissues',
+  humerus:'Deltoid Muscle, Biceps Brachii, Brachialis, Triceps Brachii, Coracobrachialis, Radial Nerve, Axillary Nerve, Ulnar Nerve, Humerus (cortex / medullary canal / periosteum), Bone Marrow Signal, Soft Tissues',
+  forearm:'Flexor Carpi Radialis, Flexor Carpi Ulnaris, Flexor Digitorum Superficialis, Flexor Digitorum Profundus, Flexor Pollicis Longus, Pronator Teres, Pronator Quadratus, Extensor Carpi Radialis Longus and Brevis, Extensor Carpi Ulnaris, Extensor Digitorum, Extensor Pollicis Longus and Brevis, Abductor Pollicis Longus, Brachioradialis, Supinator, Radius, Ulna, Interosseous Membrane, Radial Nerve, Median Nerve, Ulnar Nerve, Bone Marrow Signal, Soft Tissues',
 };
 
 // CT anatomy — bone/joint/soft tissue only, no tendons/ligaments/labrum
@@ -38,6 +154,10 @@ const ANATOMY_CT = {
   spine:'Vertebral Alignment, Vertebral Bodies, Disc Spaces, Spinal Canal, Neural Foramina, Facet Joints, Soft Tissues',
   pelvis:'Pelvic Ring, Sacroiliac Joints, Pubic Symphysis, Hip Joints, Acetabula, Soft Tissues',
   foot:'Bones, Lisfranc Joint Complex, Dislocation or Subluxation, Joint Spaces, Soft Tissues',
+  'femur/thigh':'Femur (cortex / medullary canal / periosteum), Soft Tissue Compartments, Soft Tissues',
+  'tibia/fibula':'Tibia (cortex / medullary canal / periosteum), Fibula, Interosseous Membrane, Soft Tissues',
+  humerus:'Humerus (cortex / medullary canal / periosteum), Soft Tissues',
+  forearm:'Radius, Ulna, Interosseous Membrane, Soft Tissues',
 };
 
 const ANATOMY = ANATOMY_MRI; // backward compat
@@ -50,7 +170,7 @@ function getAnatomy(part, isCT) {
 // Extracts grading scales from JOINT_DATA and formats them for Claude.
 // Only includes entries marked isGradingScale:true — skips pure measurements.
 function buildGradingContext(part) {
-  const jointData = JOINT_DATA[part];
+  const jointData = EFFECTIVE_JOINT_DATA[part];
   if (!jointData?.measurements?.length) return '';
   const scales = jointData.measurements.filter(m => m.isGradingScale);
   if (!scales.length) return '';
@@ -151,6 +271,60 @@ PELVIS:
   → "Pelvic ring fracture, [Young-Burgess classification] pattern, as above."
 - AVULSION: Apophyseal avulsion → "[ASIS/AIIS/ischial tuberosity/iliac crest] avulsion fracture, as above."
 - SACRAL INSUFFICIENCY: Bilateral sacral ala fractures in elderly → "Sacral insufficiency fractures, as above."
+
+FEMUR/THIGH — BAMIC GRADING (British Athletics Muscle Injury Classification):
+Apply BAMIC grading when a hamstring or thigh muscle injury is identified. BAMIC classifies injuries by anatomic location (muscle belly vs. myotendinous junction vs. central/intramuscular tendon) and cross-sectional area (CSA) involvement:
+
+GRADE 0: Reactive MRI signal change only — peritendinous edema or minimal intramuscular edema; no architectural disruption
+GRADE 1a: Injury at/near the peripheral myotendinous junction (MTJ) within the muscle; <10% CSA involved
+GRADE 1b: Injury at/near the peripheral MTJ within the muscle; ≥10% CSA involved
+GRADE 2a: Injury at/near the MTJ involving the myotendinous unit; <10% CSA involved
+GRADE 2b: Injury at/near the MTJ involving the myotendinous unit; ≥10% CSA involved
+GRADE 3a: Injury at/within the central (intramuscular) tendon; <10% CSA involved
+GRADE 3b: Injury at/within the central (intramuscular) tendon; ≥10% CSA involved
+GRADE 4: Complete or near-complete tear — proximal tendon avulsion from ischial tuberosity, or complete central tendon disruption with retraction
+
+MODIFIER (c): Add subscript (c) for isolated central tendon injury without peripheral muscle involvement (e.g., Grade 3a(c))
+
+BAMIC IMPRESSION RULES:
+- Always state the BAMIC grade, affected muscle(s) by name, and anatomic injury site
+- Include approximate CSA involvement if provided in dictation
+- Grade 4: note whether avulsion is from ischial tuberosity, degree of retraction in cm, and whether conjoint tendon or individual tendons involved
+- QUADRICEPS injuries: use BAMIC framework; specify which head (rectus femoris most common); note myotendinous vs. proximal/distal tendon
+- ADDUCTOR injuries: use BAMIC framework; adductor longus most common
+- Example Grade 2b: "Grade 2b biceps femoris long head hamstring injury at the myotendinous junction with ≥10% cross-sectional involvement, as above."
+- Example Grade 4: "Complete proximal hamstring avulsion (conjoint biceps femoris / semitendinosus / semimembranosus tendons) at the ischial tuberosity with [X] cm retraction, BAMIC Grade 4, as above."
+- In IMPRESSION, write BAMIC grade explicitly (do not use "as above" to substitute for the grade number itself)
+
+TIBIA/FIBULA — FREDERICSON GRADING (Medial Tibial Stress Syndrome / Tibial Stress Reaction):
+Apply Fredericson grading when periosteal edema, medullary edema, or cortical abnormality of the tibia is identified in a stress reaction/fracture context:
+
+GRADE 1: Mild periosteal edema on STIR/fluid-sensitive sequences; T1 normal; no medullary involvement
+GRADE 2: Moderate-to-severe periosteal edema on STIR; T1 normal; no medullary involvement
+GRADE 3: Periosteal AND medullary (marrow) edema on STIR; T1 remains normal (no trabecular injury)
+GRADE 4a: Periosteal AND marrow edema on both STIR and T1 (low T1 signal = trabecular microfracture/injury)
+GRADE 4b: Grade 4a findings PLUS a visible intracortical or transcortical fracture line — frank stress fracture
+
+FREDERICSON IMPRESSION RULES:
+- State Fredericson grade, affected bone, and location (proximal/middle/distal third of tibia)
+- Note cortical location if relevant: posteromedial cortex = medial tibial stress syndrome; anterior cortex = high-risk ("dreaded black line")
+- Grade 4b = stress fracture — list prominently with urgency flag if anterior cortex involved
+- Example Grade 3: "Medial tibial stress syndrome, Fredericson Grade 3, posteromedial cortex, middle third of tibia with periosteal and medullary edema, as above."
+- Example Grade 4b: "Tibial stress fracture, Fredericson Grade 4b, anterior cortex of the mid-tibia — high-risk location; orthopedic consultation recommended, as above."
+- Fibular stress reactions: note location and grade using same periosteal/medullary/cortical framework
+
+HUMERUS:
+- PROXIMAL HUMERUS FRACTURE: Neer classification if applicable (1-4 part based on displacement of segments: humeral head, greater tuberosity, lesser tuberosity, shaft)
+- HUMERAL SHAFT FRACTURE: Note location (proximal/middle/distal third), pattern; radial nerve at risk with middle third ("Holstein-Lewis" type)
+- AVN HUMERAL HEAD: Cruess stage if determinable; list on its own line
+- BONE LESION: Always own line; note Lodwick grade/aggressiveness
+
+FOREARM (RADIUS/ULNA):
+- BOTH-BONE FRACTURE: "Both-bone forearm fracture involving the radius and ulna, as above."
+- MONTEGGIA FRACTURE-DISLOCATION: Ulna fracture + radial head dislocation → "Monteggia fracture-dislocation pattern, as above." (Bado classification if determinable)
+- GALEAZZI FRACTURE-DISLOCATION: Radial shaft fracture + DRUJ disruption → "Galeazzi fracture-dislocation pattern, as above."
+- ISOLATED RADIAL/ULNAR SHAFT FRACTURE: Note location, pattern, and DRUJ/proximal RU joint integrity
+- BONE LESION: Always own line
 
 SPINE:
 - MULTILEVEL DISC DISEASE: → "Multilevel degenerative disc disease most significant at [worst level(s)] with [worst complication — e.g. moderate spinal stenosis, neural foraminal narrowing], as above."
@@ -2452,7 +2626,7 @@ ANGIOLIPOMA vs LIPOMA CHEAT SHEET:
 
 // ─── REFERENCE PANEL ──────────────────────────────────────────────────────
 function ReferencePanel({ selectedBodyPart, darkMode = false }) {
-  const jointData = JOINT_DATA[selectedBodyPart];
+  const jointData = EFFECTIVE_JOINT_DATA[selectedBodyPart];
   const [selectedMeasurementId, setSelectedMeasurementId] = useState('');
   useEffect(() => { setSelectedMeasurementId(''); }, [selectedBodyPart]);
   const selectedMeasurement = jointData?.measurements?.find(m => m.id === selectedMeasurementId);
@@ -2985,7 +3159,11 @@ export default function DashboardPage() {
             <div style={{ display:'flex',gap:8 }}>
               <div style={{ flex:2 }}><label style={lbl}>Body Part</label>
                 <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetIncidentals(); }}>
-                  {BODY_PARTS.map(b => <option key={b} value={b}>{b.charAt(0).toUpperCase()+b.slice(1)}</option>)}
+                  {BODY_PARTS.map(b => {
+                    const LABELS = {'femur/thigh':'Femur / Thigh','tibia/fibula':'Tibia / Fibula','humerus':'Humerus','forearm':'Forearm'};
+                    const label = LABELS[b] || (b.charAt(0).toUpperCase()+b.slice(1));
+                    return <option key={b} value={b}>{label}</option>;
+                  })}
                 </select>
               </div>
               {showSide && <div style={{ flex:1 }}><label style={lbl}>Side</label>
