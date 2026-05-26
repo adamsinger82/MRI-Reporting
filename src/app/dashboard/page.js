@@ -2148,7 +2148,136 @@ SHARED USP6 FAMILY RED FLAGS FOR BENIGN DIAGNOSIS (NOT malignancy):
 
 USP6 NEGATIVITY does not exclude diagnosis (sensitivity <100% for all entities).
 Secondary ABC (USP6−) occurs with: chondroblastoma, GCT, osteoblastoma, fibrous dysplasia.
-Telangiectatic osteosarcoma is USP6− — biopsy with USP6 analysis critical when ABC vs TOS unclear.`,
+Telangiectatic osteosarcoma is USP6− — biopsy with USP6 analysis critical when ABC vs TOS unclear.
+
+--- UPDATED KNOWLEDGE: SKELETAL RADIOLOGY 2023 PAPERS ---
+
+PAPER A — TSGCT DIGITS: LOCALIZED vs DIFFUSE (Jeong et al, Skel Radiol 2023, n=28):
+LOCALIZED TYPE (n=22): median 1.8cm, single nodule, CIRCUMSCRIBED margin, PERIPHERAL HYPOINTENSE RIM on T2 (86.4%), speckled central hypointensity (faint hemosiderin), bone erosion 50%, articular involvement 18%, muscle involvement 0%, recurrence <15%. En bloc resection curative.
+DIFFUSE TYPE (n=6): median 4.3cm, MULTINODULAR (66.7%), INFILTRATIVE margin (83.3%), NO peripheral rim (0%), GRANULAR central hypointensity (83.3%) = strong hemosiderin, articular involvement 100%, muscle involvement 67%, tendon destruction 67%, recurrence 50%. Requires adjuvant therapy.
+ROC BEST DISCRIMINATORS for diffuse type: absent peripheral rim AUC 0.932 (sens 100%, spec 86%), infiltrative margin AUC 0.917, articular involvement AUC 0.909.
+NOT DISCRIMINATORY: bone erosion (both types), neurovascular encasement (both types), septum (both types ~83-91%).
+KEY CLINICAL POINT: Both types arise from tendon sheath digits (extra-articular). Diffuse type = higher recurrence, often requires radical resection +/- pexidartinib (CSF1 inhibitor). Diffuse TSGCT digit = extra-articular equivalent of PVNS.
+
+PAPER B — NOVEL FUSION SARCOMAS: ROUND CELL, SPINDLE CELL, TARGETABLE TK, GIANT CELL (Fanburg-Smith et al, Skel Radiol 2023):
+ROUND CELL TUMORS:
+- Classic Ewing (EWSR1::FLI1 80%, EWSR1::ERG 8%): diaphyseal long bone, large soft tissue component, minimal periosteal reaction, CD99 crisp cytoplasmic membrane staining, poor prognosis.
+- CIC-REARRANGED sarcoma (CIC::DUX4): young adults (older than Ewing), larger/more necrosis/myxoid change, WT1+ nuclear-to-Golgi dot pattern, CD99 Golgi only, DISMAL prognosis. FDG uptake higher than Ewing. Treat like Ewing but outcomes poor.
+- BCOR-ALTERED sarcoma (BCOR::CCNB3): teens, pelvis/lower extremity, lytic or sclerotic, T2 heterogeneous with flow voids, CD99 NEGATIVE, BCOR+ CCNB3+, similar/slightly better than Ewing. BCOR::ITD = aggressive infantile variant (<=2yr), invades spinal canal.
+- EWSR1/FUS::NFATc2 SOLID: young adults, long bone metadiaphysis, EWSR1 amplification on FISH (key feature), mTOR targetable, behavior better than Ewing with survival after metastasectomy. IHC: CD99+, EMA+, low MIB1. DO NOT respond to Ewing therapy.
+- EWSR1/FUS::NFATc2 CYSTIC (Unicameral Bone Cyst variant): 40-67% of simple bone cysts harbor this fusion; well-defined lytic metaphyseal lesion + fracture (fallen fragment sign), NO mass/nodule on MRI; peripheral rim enhancement only; local recurrence common, NO metastases. These lack EWSR1 amplification (distinguishes from solid type).
+- EWSR1/FUS::NFATc2 VASCULAR: mimics intraosseous hemangioma/sclerosing hemangioma; multifocal possible (rib/pelvis/spine/femur); arcs-and-rings matrix confuses with cartilage DDx; favorable outcome to date.
+SPINDLE CELL:
+- INTRAOSSEOUS RMS (EWSR1/FUS::TFCP2): young adults, craniofacial/gnathic/rib/long bones, LARGE LYTIC MASS WITH CORTICAL DESTRUCTION, NO MATRIX (critical feature — distinguishes from osteosarcoma), ALK+, MyoD1+, myogenin rare/absent, desmin variable. High grade, aggressive. Key DDx clue: no osteoid matrix despite aggressive appearance.
+TARGETABLE TYROSINE KINASE FUSIONS (children/young adults, RAS::MAPK pathway):
+- ALK fusion sarcoma: MIMICS VASCULAR MALFORMATION (infiltrative, pericytoid vessels, feeder vessels); low-intermediate T2; infiltrative pattern with fascial tails; FDG avid; treat with Crizotinib.
+- NTRK fusion sarcoma: bone or soft tissue; IN BONE MIMICS OSTEOSARCOMA (metaphyseal, cortical destruction) BUT NO MATRIX/MINERALIZATION — if young patient + intraosseous + no matrix -> NGS mandatory; high-grade with TPR/KANK1 fusions; treat with Larotrectinib.
+- Other BRAF/RAF1/RET/FGFR1/ABL1 fusions: similar infiltrative ovoid-spindled pattern; targetable with respective inhibitors.
+- SHARED IHC: focal S100+, focal CD34+, SOX10 NEGATIVE (distinguishes from nerve sheath); NGS required for final classification.
+GIANT CELL RICH TUMORS:
+- GCT BONE (H3F3A G34W mutation): classic metaphyseal eccentric lytic to "end of bone," adults; G34W stains mononuclear cells but spares osteoclast giant cells; denosumab knocks out monocytic cells leaving spindled stromal cells which can form bone.
+- PRIMARY MALIGNANT GCT: nodule of UPS-like or osteosarcoma-like area within classic GCT; both components G34W+; cortical destruction/sclerotic change radiologically.
+- TSGCT/PVNS (CSF1 rearrangement, targetable with PEXIDARTINIB): intra- or extra-articular; low T2 + GRE blooming = pathognomonic; MALIGNANT TSGCT = loss of giant cells, epithelioid histiocytoid, >10 mitoses/10hpf, necrosis — CSF1 often ABSENT in malignant foci -> pexidartinib ineffective for malignant cases.
+- GIANT CELL TUMOR SOFT TISSUE (HMGA2::NCOR2): well-delineated soft tissue mass, homogeneous enhancement +/- ABC-like cystic change; keratin AE1/3 stains mononuclear stromal cells (spares giant cells); borderline/low grade.
+
+PAPER C — PET/MR PEDIATRIC BONE TUMORS (Padwal et al, Skel Radiol 2023):
+KEY ADVANTAGES of 18F-FDG PET/MR over PET/CT: >=73% radiation reduction, superior soft tissue contrast, single anesthesia, simultaneous local + whole-body staging in ~60 min.
+OSTEOSARCOMA on PET/MR: soft tissue components T2-hyperintense + FDG-avid; bone-forming components T2-hypointense + low FDG avidity -> heterogeneous appearance. Photopenic center = poor prognosis. Tumor thrombus up to 40% (SUVmax 7.9-20 for tumor thrombus vs no uptake for benign thrombus). Post-therapy SUVmax <2.5 = good response; SUVmax >5 = poor response. Skip lesions detected with 95.2% accuracy by PET vs 66.7% conventional imaging.
+EWING SARCOMA on PET/MR: restricted diffusion + hypermetabolic. Pre-therapy SUVmax >=12 = poor response predictor. FDG reduction >30% after chemo = treatment response. PET > bone scan for osseous metastases (88% vs 37%). CHECK PANCREAS for metastases (specific affinity unique to Ewing). RECIST criteria DO NOT apply to bone tumors.
+BONE LYMPHOMA on PET/MR: T1 hypointense, markedly restricted diffusion, T2 LOWER than sarcomas (unique feature), cortex typically intact (spreads via Haversian canals). FDG PPV up to 100% for active disease. Response by Lugano criteria.
+LCH on PET/MR: proliferative phase = T2 hyperintense + restricted diffusion + enhancement + marked FDG uptake. Treated LCH = T2 iso/hypointense + less diffusion restriction + less FDG. BRAF V600E mutation associated. PET/CT superior to bone surveys/MR/CT/bone scan for active lesion detection.
+
+--- UPDATED KNOWLEDGE: SKELETAL RADIOLOGY 2023 PAPERS (BATCH 2) ---
+
+PAPER D — CHORDOMA & BNCT (Murphey et al, Skel Radiol 2023):
+BNCT (BENIGN NOTOCHORDAL CELL TUMOR):
+- Incidence: 19% of cadaveric spines; clivus 11.5%, sacrococcygeal 12%, cervical 5%, thoracic 0%, lumbar 2%
+- Radiograph: usually OCCULT; larger lesions show mild patchy sclerosis
+- CT: PATCHY SCLEROSIS with MAINTAINED TRABECULAR ARCHITECTURE (trabeculae infiltrated but NOT destroyed) — key distinguishing feature; lesions typically <35mm; NO osteolysis
+- MRI: low-intermediate T1 (marrow replacement), HIGH T2 signal (myxoid); minute foci of preserved yellow marrow fat on T1 = diagnostic clue; NO contrast enhancement; NO cortical destruction; NO soft tissue mass
+- Bone scan/PET: usually NORMAL or mildly reduced uptake
+- MANAGEMENT: BIOPSY NOT WARRANTED for typical BNCT — biopsy may provoke misdiagnosis as chordoma leading to unnecessary surgery; imaging surveillance recommended
+- ANCT (Atypical Notochordal Cell Tumor): term for BNCT with atypical features (minute soft tissue extension, faint enhancement, small lytic foci); requires close follow-up but usually minimal progression over 3-10 years
+
+CONVENTIONAL CHORDOMA (CC):
+- Demographics: age 50-60 years (median 60), 2:1 male, Caucasian; 1-4% of primary malignant bone tumors
+- Location: sacrococcygeal 50%, sphenooccipital (clival) 33%, mobile spine 17%; sacrococcygeal predilection for S4-S5; mobile spine predilection for C2
+- Clinical: slow growing, insidious onset; sacrococcygeal symptoms = back pain, constipation, neuropathy; bowel/bladder incontinence = late/ominous sign
+- Radiograph: large mixed lytic-sclerotic midline lesion; CALCIFICATION 50-70% sacrococcygeal; mobile spine shows ivory vertebra or bone destruction; disc space SPARED (extends around disc, not through it)
+- CT: predominantly lytic + presacral soft tissue mass; calcification 60-90%; low attenuation (myxoid); pseudocapsule; mild-moderate septal/peripheral enhancement
+- MRI: T1 low-intermediate; T2 HIGH (92-100%) = hallmark; MULTILOBULATED with septations (100%); hemorrhage 66-77% (high T1+T2); heterogeneous enhancement (95%); soft tissue mass 100% sacrococcygeal; SI joint transgression 23%; multilevel extension AROUND disc spaces (disc-SPARING)
+- FDG-PET: moderate uptake (SUVmax avg 5.8); useful for treatment monitoring
+
+DEDIFFERENTIATED CHORDOMA (DC):
+- Biphasic: CC component + HIGH GRADE sarcoma component (UPS-like or osteosarcoma-like)
+- MRI BIMORPHIC: CC portion = high T2/low enhancement; dedifferentiated portion = INTERMEDIATE T2 + PROMINENT ENHANCEMENT + lower ADC
+- More aggressive than CC; dismal prognosis
+
+POORLY DIFFERENTIATED CHORDOMA (PDC):
+- Age 1-29 years (median 11), female 2:1; CLIVUS/CERVICAL SPINE predominance (rarely sacrococcygeal)
+- IHC: brachyury+ cytokeratin+ but S100 NEGATIVE; INI1 (SMARCB1) LOSS = key diagnostic feature
+- MRI: LOWER T2 signal than CC (more cellular, less myxoid); avid enhancement; lower ADC
+- Very aggressive, early metastases, dismal prognosis
+
+BNCT vs CC KEY DISCRIMINATORS:
+- BNCT: maintained trabeculae + patchy sclerosis + no bone destruction + no soft tissue mass + no enhancement = BENIGN, surveillance only
+- CC: cortical destruction + soft tissue mass + enhancement = MALIGNANT, aggressive treatment
+- ANCT: between these two; biopsy + follow-up required
+- TREATMENT: wide en-bloc resection + proton beam RT (50-60% local control at 5yr); local recurrence 19-75%; 5-yr survival 45-86%
+
+PAPER E — WHO 2020 BONE TUMOR CLASSIFICATION (Hwang, Hameed, Kransdorf, Skel Radiol 2023):
+KEY RECLASSIFICATIONS:
+- CHONDROBLASTOMA: moved to BENIGN (recurrence <=5%, no distant mets)
+- CHONDROMYXOID FIBROMA: moved to BENIGN (despite 3-22% local recurrence)
+- ABC: USP6 rearrangement in 70% of primary ABCs (key diagnostic marker); "giant cell lesion of small bones" = solid ABC variant; old terminology NO LONGER RECOMMENDED
+- SYNOVIAL CHONDROMATOSIS: BENIGN to INTERMEDIATE (locally aggressive); malignant transformation 1-6.4% (median 20yr); marrow invasion + cortical destruction = chondrosarcomatous transformation
+- OFD-LIKE ADAMANTINOMA: malignant to INTERMEDIATE (locally aggressive); 20% local recurrence
+- EPITHELIOID HEMANGIOMA: now INTERMEDIATE (locally aggressive ONLY, no longer rarely metastasizing); FOS/FOSB rearrangements; multifocal 18-25%
+- ERDHEIM-CHESTER DISEASE: now HEMATOPOIETIC NEOPLASM; bilateral diaphyseal/metaphyseal osteosclerosis of long bones SPARING axial skeleton/hands/feet; cardiac + retroperitoneal involvement >50%; BRAF inhibitors (dabrafenib) effective; shares MAPK pathway mutations with LCH and Rosai-Dorfman
+
+ENCHONDROMA vs ACT/CS1:
+- ACT (appendicular) = CS1 (axial/flat bones) — HISTOLOGICALLY IDENTICAL, distinguished by location only
+- Features favoring ACT/CS1 over enchondroma: size >5cm, endosteal scalloping >2/3 cortex, expansile remodeling, cortical destruction, soft tissue extension, pain, bone scan uptake
+- Presence of marrow fat + no deep scalloping = enchondroma or regression; 87% of enchondromas stable/regress on MRI
+- Secondary peripheral CS from osteochondroma: cartilage cap >2.0cm (perpendicular to tidemark) = malignancy threshold
+
+NEW 2020 WHO ENTITIES:
+- HIBERNOMA OF BONE: benign brown adipocyte tumor; spine/pelvis; older women; sclerotic 64%, lytic 18%; variable T1 fat signal; SUVmax 3.0-4.1 on PET
+- FIBROCARTILAGINOUS MESENCHYMOMA: locally aggressive; age <30; metaphysis of long bones/pelvis; lytic + sclerotic rim + cortical destruction; no GNAS/IDH/MDM2 (distinguishes from FD/CS/low-grade OS)
+- DEDIFFERENTIATED ADAMANTINOMA: new malignant entity; classic adamantinoma + sarcomatoid transition; metastases in 2/3 patients
+- ROSAI-DORFMAN DISEASE: reclassified from benign; bone 5-10%; intramedullary lytic + cortical destruction + mimics malignancy
+
+OSTEOSARCOMA: now 6 subtypes; secondary OS is now separate entity with 6 subtypes (Paget, radiation, infarct, osteomyelitis, implant, fibrous dysplasia)
+
+PAPER F — ANGIOLIPOMA (Kransdorf et al, Skel Radiol 2023, n=778 lesions, 344 patients):
+CLINICAL PROFILE:
+- ALL subcutaneous (100%); forearm 30.6%, arm 17%, thigh 14.4%; upper extremity >50% of all lesions
+- Median size 2.4cm (range 0.4-7.7cm); multifocal 36% in this series
+- PAINFUL (tenderness to palpation, worsens with pressure/elastic bands) — due to intracapillary FIBRIN THROMBI (pathognomonic finding)
+- Molecular: PRKD2 mutations and/or PIK3CA activating mutations (PI3K/AKT pathway)
+- Age: late teens to 80s; median 50 years; uncommon in children
+
+ULTRASOUND:
+- HETEROGENEOUS (virtually 100%) + MILDLY HYPERECHOIC vs adjacent fat (86.1%)
+- Vascularity ABSENT 73.2% (key negative finding on color Doppler); mild vascularity 18.3%
+- Ovoid shape; abuts skin 85.5%
+
+CT:
+- Fat in 85% of lesions
+- KEY FEATURE: CURVILINEAR SUBCAPSULAR VASCULARITY (linear densities most prominent at periphery/subcapsular) = corresponds to peripheral capillary channels
+- Cellular angiolipoma (>90% vascular) = no visible fat, prominent enhancement; can mimic Kaposi sarcoma
+
+MRI:
+- "DIRTY FAT" appearance on T1 (fat signal interrupted by vascular component)
+- Moderate enhancement 69.2%; mild 19.2%
+- CHEMICAL SHIFT IMAGING: signal dropout >56% confirms fat even when vascular component is confluent
+- Small FOV + thin slices REQUIRED; routine protocols miss lesions
+
+ANGIOLIPOMA vs LIPOMA CHEAT SHEET:
+- Angiolipoma: HETEROGENEOUS + HYPERECHOIC + OVOID + PAINFUL + MULTIFOCAL + curvilinear vascularity CT + dirty fat MRI
+- Lipoma: HOMOGENEOUS + ISOECHOIC + SPINDLE SHAPE + painless + NO vascularity (0%) + clean fat signal
+- "Infiltrating angiolipoma" is OBSOLETE TERM; WHO now calls these INTRAMUSCULAR ANGIOMAS (unrelated entity)`,
+
           messages:[{role:'user',content:prompt}],
         }),
       });
