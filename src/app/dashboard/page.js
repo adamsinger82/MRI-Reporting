@@ -335,20 +335,21 @@ const PELVIS_LABELS = {
     [56.9, 53.9, "L5"],
   ],
   5: [
-    [78.8, 55, "gluteus medius"],
+    [78.8, 55.0, "gluteus medius"],
   ],
   6: [
-    [59, 53.9, "L5"],
+    [59.0, 53.9, "L5"],
   ],
   8: [
     [79.4, 54.2, "gluteus medius"],
   ],
   9: [
     [68.5, 49.3, "lateral femoral cutaneous nerve"],
-    [59.7, 54, "L5"],
+    [59.7, 54.0, "L5"],
   ],
   10: [
     [74.6, 71.2, "gluteus maximus"],
+    [59.5, 63.9, "SI joint, ligamentous portion"],
   ],
   11: [
     [69.7, 49.5, "lateral femoral cutaneous nerve"],
@@ -358,14 +359,18 @@ const PELVIS_LABELS = {
     [60.8, 54.6, "L5"],
     [57.3, 58.8, "S1"],
     [52.6, 56.1, "Sacrum, S1"],
+    [58.5, 64.5, "SI joint, ligamentous portion"],
   ],
   13: [
     [77.6, 69.9, "gluteus maximus"],
     [56.8, 64.7, "S2"],
     [53.3, 62.2, "Sacrum, S2"],
+    [71.1, 41.4, "iliac bone"],
   ],
   14: [
     [72.7, 46.8, "lateral femoral cutaneous nerve"],
+    [61.5, 57.3, "SI joint, synovial portion"],
+    [59, 66.3, "SI joint, ligamentous portion"],
   ],
   15: [
     [64.4, 46.3, "psoas muscle"],
@@ -381,16 +386,18 @@ const PELVIS_LABELS = {
   17: [
     [81.8, 53.5, "gluteus medius"],
     [80.2, 66.8, "gluteus maximus"],
+    [60.7, 57.7, "SI joint, synovial portion"],
   ],
   18: [
     [68.8, 47.7, "femoral nerve"],
     [76.1, 41.4, "lateral femoral cutaneous nerve"],
-    [61, 59.8, "S1"],
+    [61.0, 59.8, "S1"],
     [57.1, 71.2, "S3"],
+    [62.8, 57.2, "iliac bone"],
   ],
   19: [
     [81.2, 52.3, "gluteus medius"],
-    [63.8, 56, "L5"],
+    [63.8, 56.0, "L5"],
     [54.1, 73.3, "Sacrum, S4"],
   ],
   20: [
@@ -398,19 +405,22 @@ const PELVIS_LABELS = {
     [62.4, 59.4, "S1"],
     [60.6, 65.3, "S2"],
     [58.2, 71.6, "S3"],
+    [60, 62.2, "SI joint, synovial portion"],
+    [67.1, 42.2, "iliacus"],
   ],
   21: [
     [76.7, 35.3, "lateral femoral cutaneous nerve"],
-    [81.2, 52, "gluteus medius"],
+    [81.2, 52.0, "gluteus medius"],
     [81.7, 67.2, "gluteus maximus"],
     [53.7, 74.8, "Sacrum, S5"],
   ],
   22: [
     [70.0, 44.6, "femoral nerve"],
-    [81, 42.6, "gluteus minimus"],
-    [64, 57.1, "L5"],
+    [81.0, 42.6, "gluteus minimus"],
+    [64.0, 57.1, "L5"],
     [63.7, 60.3, "S1"],
     [59.4, 71.2, "S3"],
+    [60.4, 62.1, "SI joint, synovial portion"],
   ],
   23: [
     [65.0, 53.6, "obturator nerve"],
@@ -427,17 +437,18 @@ const PELVIS_LABELS = {
   25: [
     [71.1, 41.9, "femoral nerve"],
     [81.7, 51.2, "gluteus medius"],
-    [66.4, 59, "L5"],
+    [66.4, 59.0, "L5"],
     [64.5, 68.9, "piriformis"],
   ],
   26: [
     [64.5, 64.5, "S2"],
     [61.4, 69.3, "S3"],
+    [66, 40.5, "iliacus"],
   ],
   27: [
-    [80.7, 42, "gluteus minimus"],
+    [80.7, 42.0, "gluteus minimus"],
     [82.1, 65.9, "gluteus maximus"],
-    [65, 68.7, "piriformis"],
+    [65.0, 68.7, "piriformis"],
   ],
   28: [
     [67.6, 61.0, "sciatic nerve"],
@@ -462,13 +473,13 @@ const PELVIS_LABELS = {
   ],
   32: [
     [68.3, 61.7, "sciatic nerve"],
-    [82, 53.3, "gluteus medius"],
+    [82.0, 53.3, "gluteus medius"],
     [65.6, 44.3, "external iliac vein"],
   ],
   33: [
     [83.1, 67.4, "gluteus maximus"],
     [83.1, 31.4, "tensor fascia lata"],
-    [73, 63, "piriformis"],
+    [73.0, 63.0, "piriformis"],
   ],
   34: [
     [82.9, 53.9, "gluteus medius"],
@@ -477,7 +488,7 @@ const PELVIS_LABELS = {
   35: [
     [66.5, 51.5, "obturator nerve"],
     [72.0, 36.6, "femoral nerve"],
-    [80.5, 43, "gluteus minimus"],
+    [80.5, 43.0, "gluteus minimus"],
     [83.7, 67.6, "gluteus maximus"],
     [78.4, 31.6, "sartorius"],
     [76.7, 40.1, "Anterior inferior iliac spine"],
@@ -490,20 +501,20 @@ const PELVIS_LABELS = {
     [54.2, 79.2, "coccyx"],
   ],
   37: [
-    [85, 66, "gluteus maximus"],
+    [85.0, 66.0, "gluteus maximus"],
     [84.7, 32.5, "tensor fascia lata"],
   ],
   38: [
     [78.1, 43.4, "rectus femoris, reflected head"],
     [70.4, 41.7, "iliopsoas"],
-    [66.6, 40, "external iliac vein"],
+    [66.6, 40.0, "external iliac vein"],
   ],
   39: [
     [71.7, 63.5, "sciatic nerve"],
     [65.3, 49.1, "obturator nerve"],
     [71.8, 35.1, "femoral nerve"],
     [80.2, 28.3, "lateral femoral cutaneous nerve"],
-    [81, 43.2, "gluteus minimus"],
+    [81.0, 43.2, "gluteus minimus"],
     [84.1, 54.6, "gluteus medius"],
     [85.3, 67.2, "gluteus maximus"],
     [77.5, 30.6, "sartorius"],
@@ -513,7 +524,7 @@ const PELVIS_LABELS = {
   ],
   40: [
     [56.3, 25.5, "rectus abdominus"],
-    [67.1, 39, "external iliac vein"],
+    [67.1, 39.0, "external iliac vein"],
   ],
   41: [
     [84.9, 54.2, "gluteus medius"],
@@ -532,7 +543,7 @@ const PELVIS_LABELS = {
     [85.3, 54.6, "gluteus medius"],
     [84.5, 32.7, "tensor fascia lata"],
     [67.4, 68.1, "pudendal neurovascular bundle"],
-    [56, 27.6, "rectus abdominus"],
+    [56.0, 27.6, "rectus abdominus"],
     [67.4, 38.4, "external iliac vein"],
   ],
   44: [
@@ -540,7 +551,7 @@ const PELVIS_LABELS = {
     [84.4, 68.5, "gluteus maximus"],
     [73.8, 49.7, "femoral head"],
     [68.3, 70.6, "sacrotuberous ligament"],
-    [67.4, 38, "common femoral vein"],
+    [67.4, 38.0, "common femoral vein"],
   ],
   45: [
     [84.9, 56.1, "gluteus medius"],
@@ -553,8 +564,8 @@ const PELVIS_LABELS = {
     [72.3, 35.1, "femoral nerve"],
     [85.2, 33.3, "tensor fascia lata"],
     [68.7, 70.4, "sacrotuberous ligament"],
-    [65.8, 66, "pudendal neurovascular bundle"],
-    [52.1, 46, "urinary bladder"],
+    [65.8, 66.0, "pudendal neurovascular bundle"],
+    [52.1, 46.0, "urinary bladder"],
     [52.9, 61.5, "rectum"],
   ],
   47: [
@@ -568,7 +579,7 @@ const PELVIS_LABELS = {
   ],
   48: [
     [79.9, 37.1, "rectus femoris"],
-    [86, 33.7, "tensor fascia lata"],
+    [86.0, 33.7, "tensor fascia lata"],
     [78.6, 49.5, "femoral neck"],
     [69.1, 69.9, "sacrotuberous ligament"],
     [65.3, 63.8, "pudendal neurovascular bundle"],
@@ -577,29 +588,29 @@ const PELVIS_LABELS = {
   49: [
     [78.2, 63.4, "sciatic nerve"],
     [63.8, 44.8, "obturator nerve"],
-    [85, 46.4, "gluteus minimus"],
+    [85.0, 46.4, "gluteus minimus"],
     [72.5, 45.9, "iliopsoas"],
     [52.5, 33.5, "rectus abdominus"],
   ],
   50: [
-    [74.9, 31, "sartorius"],
+    [74.9, 31.0, "sartorius"],
     [85.3, 52.9, "femoral greater trochanter"],
     [69.6, 70.4, "sacrotuberous ligament"],
-    [64, 62.4, "pudendal neurovascular bundle"],
-    [65, 64, "Alcock's canal"],
+    [64.0, 62.4, "pudendal neurovascular bundle"],
+    [65.0, 64.0, "Alcock's canal"],
     [64.3, 56.5, "obturator internus"],
-    [67.2, 38, "common femoral vein"],
+    [67.2, 38.0, "common femoral vein"],
   ],
   51: [
     [63.5, 44.1, "obturator nerve"],
     [85.7, 47.8, "gluteus minimus"],
     [84.7, 69.5, "gluteus maximus"],
     [70.6, 62.6, "ischial tuberosity"],
-    [74.9, 63, "semimembranosus"],
+    [74.9, 63.0, "semimembranosus"],
     [63.4, 60.5, "pudendal neurovascular bundle"],
     [77.6, 59.8, "quadratus femoris"],
     [73.8, 48.3, "iliopsoas"],
-    [51, 36.7, "midline aponeurotic plate"],
+    [51.0, 36.7, "midline aponeurotic plate"],
     [67.4, 38.4, "common femoral vein"],
     [65.6, 36.5, "great saphenous vein"],
   ],
@@ -608,37 +619,37 @@ const PELVIS_LABELS = {
     [78.6, 35.2, "rectus femoris"],
     [85.8, 33.9, "tensor fascia lata"],
     [73.6, 67.6, "conjoined hamstring tendon"],
-    [64, 58, "obturator internus"],
+    [64.0, 58.0, "obturator internus"],
     [51.8, 52.9, "urethra"],
     [51.7, 57.9, "vagina"],
-    [51, 40, "pubic symphysis"],
+    [51.0, 40.0, "pubic symphysis"],
     [56.6, 38.4, "adductor tubercle"],
     [64.6, 41.7, "pectineus"],
-    [64.5, 52, "obturator externus"],
-    [74, 50.8, "iliopsoas"],
+    [64.5, 52.0, "obturator externus"],
+    [74.0, 50.8, "iliopsoas"],
   ],
   53: [
     [80.6, 63.2, "sciatic nerve"],
     [86.1, 47.4, "gluteus minimus"],
     [75.6, 62.8, "semimembranosus"],
-    [76.4, 59, "quadratus femoris"],
+    [76.4, 59.0, "quadratus femoris"],
     [67.9, 39.8, "common femoral vein"],
   ],
   54: [
-    [87.1, 70, "gluteus maximus"],
+    [87.1, 70.0, "gluteus maximus"],
     [86.5, 34.4, "tensor fascia lata"],
     [65.9, 43.2, "pectineus"],
     [74.3, 52.3, "iliopsoas"],
     [68.7, 39.8, "common femoral vein"],
   ],
   55: [
-    [65, 35.8, "great saphenous vein"],
+    [65.0, 35.8, "great saphenous vein"],
   ],
   56: [
     [72.8, 32.1, "sartorius"],
-    [78, 36.3, "rectus femoris"],
+    [78.0, 36.3, "rectus femoris"],
     [76.8, 59.2, "quadratus femoris"],
-    [59, 43.4, "adductor longus"],
+    [59.0, 43.4, "adductor longus"],
     [74.3, 53.3, "iliopsoas"],
   ],
   57: [
@@ -649,13 +660,13 @@ const PELVIS_LABELS = {
   58: [
     [80.8, 62.6, "sciatic nerve"],
     [86.6, 35.2, "tensor fascia lata"],
-    [76, 60.1, "quadratus femoris"],
+    [76.0, 60.1, "quadratus femoris"],
     [61.9, 44.7, "adductor longus"],
-    [74, 53.5, "iliopsoas"],
+    [74.0, 53.5, "iliopsoas"],
   ],
   59: [
-    [77, 35.2, "rectus femoris"],
-    [75.6, 63, "semimembranosus"],
+    [77.0, 35.2, "rectus femoris"],
+    [75.6, 63.0, "semimembranosus"],
     [76.2, 55.6, "femoral lesser trochanter"],
   ],
   60: [
@@ -677,7 +688,7 @@ const PELVIS_LABELS = {
     [58.2, 52.3, "gracilis"],
     [77.2, 65.5, "biceps femoris, long head"],
     [71.4, 64.1, "adductor magnus"],
-    [64, 37.9, "great saphenous vein"],
+    [64.0, 37.9, "great saphenous vein"],
     [68.5, 40.7, "superficial femoral vein"],
     [69.5, 43.4, "deep femoral vein"],
   ],
@@ -694,15 +705,15 @@ const PELVIS_LABELS = {
   67: [
     [86.9, 67.6, "gluteus maximus"],
     [68.8, 34.4, "sartorius"],
-    [75.6, 63, "semimembranosus"],
+    [75.6, 63.0, "semimembranosus"],
   ],
   68: [
-    [74.8, 35, "rectus femoris"],
+    [74.8, 35.0, "rectus femoris"],
     [86.9, 35.6, "tensor fascia lata"],
     [72.5, 64.3, "adductor magnus"],
   ],
   69: [
-    [58.6, 55, "gracilis"],
+    [58.6, 55.0, "gracilis"],
     [69.5, 45.1, "deep femoral vein"],
     [68.5, 41.5, "superficial femoral vein"],
   ],
@@ -712,7 +723,7 @@ const PELVIS_LABELS = {
     [60.6, 39.6, "great saphenous vein"],
   ],
   71: [
-    [85, 66.4, "gluteus maximus"],
+    [85.0, 66.4, "gluteus maximus"],
     [86.9, 34.2, "tensor fascia lata"],
     [76.7, 68.7, "semitendinosus"],
   ],
@@ -742,7 +753,7 @@ const PELVIS_LABELS = {
   77: [
     [80.8, 63.2, "sciatic nerve"],
     [79.4, 65.1, "biceps femoris, long head"],
-    [76, 68.3, "semitendinosus"],
+    [76.0, 68.3, "semitendinosus"],
   ],
   78: [
     [57.6, 55.6, "gracilis"],
@@ -761,14 +772,14 @@ const PELVIS_LABELS = {
     [73.1, 42.8, "vastus intermedius"],
   ],
   82: [
-    [57.1, 58, "gracilis"],
+    [57.1, 58.0, "gracilis"],
     [81.2, 65.3, "biceps femoris, long head"],
     [65.8, 44.5, "superficial femoral vein"],
     [70.6, 50.8, "deep femoral vein"],
   ],
   83: [
     [86.8, 63.2, "gluteus maximus"],
-    [72.3, 35, "rectus femoris"],
+    [72.3, 35.0, "rectus femoris"],
     [73.8, 63.6, "semimembranosus"],
   ],
   84: [
@@ -790,7 +801,7 @@ const PELVIS_LABELS = {
   ],
   89: [
     [86.3, 62.8, "gluteus maximus"],
-    [73.6, 63, "semimembranosus"],
+    [73.6, 63.0, "semimembranosus"],
   ],
   90: [
     [56.9, 60.1, "gracilis"],
@@ -815,7 +826,7 @@ const PELVIS_LABELS = {
     [62.9, 44.7, "Hunter's Canal / Adductor Canal"],
   ],
   97: [
-    [74, 67.8, "semitendinosus"],
+    [74.0, 67.8, "semitendinosus"],
   ],
   98: [
     [72.7, 63.4, "semimembranosus"],
@@ -825,8 +836,341 @@ const PELVIS_LABELS = {
     [69.8, 36.5, "rectus femoris"],
   ],
   100: [
-    [60, 46.6, "sartorius"],
-    [73.6, 67, "semitendinosus"],
+    [60.0, 46.6, "sartorius"],
+    [73.6, 67.0, "semitendinosus"],
+  ],
+};
+
+const SHOULDER_LABELS = {
+  1: [
+    [48.8, 30.5, "pec major"],
+    [54.5, 35.3, "pec major"],
+    [51.2, 37, "short head of the biceps"],
+    [47.5, 37, "coracobrachialis"],
+    [56.2, 66.7, "long head of the triceps"],
+    [51.3, 59.9, "teres major"],
+    [51.9, 49.2, "latissimus dorsi"],
+    [28.8, 61.9, "serratus anterior"],
+  ],
+  2: [
+    [44.3, 31.4, "pec major"],
+    [55.1, 35.3, "pec major"],
+    [51.3, 37.3, "short head of the biceps"],
+    [51.6, 56.7, "teres major"],
+    [51.3, 49.2, "latissimus dorsi"],
+  ],
+  3: [
+    [55.5, 35.6, "pec major"],
+    [56.7, 21.4, "deltoid, anterior"],
+    [72.4, 61.1, "deltoid, posterior"],
+    [54.3, 66, "long head of the triceps"],
+    [51.9, 55.5, "teres major"],
+    [31.4, 39.2, "pec minor"],
+  ],
+  4: [
+    [51.8, 13.1, "cephalic vein"],
+    [56, 60.9, "axillary neurovascular bundle"],
+    [50.6, 36.8, "short head of the biceps"],
+    [47.6, 36.5, "coracobrachialis"],
+    [51.3, 47.5, "latissimus dorsi"],
+  ],
+  5: [
+    [54.8, 24.1, "deltoid, anterior"],
+    [69.9, 37, "deltoid, lateral"],
+    [71.1, 62.6, "deltoid, posterior"],
+    [52.4, 55.6, "axillary neurovascular bundle"],
+    [54.3, 63.8, "long head of the triceps"],
+    [52.2, 50.4, "teres major"],
+    [51.3, 46.1, "latissimus dorsi"],
+    [30.7, 17.3, "pec major"],
+  ],
+  6: [
+    [49.8, 12.9, "cephalic vein"],
+    [50.6, 55, "axillary neurovascular bundle"],
+    [48.6, 35.6, "coracobrachialis"],
+    [51.8, 48.7, "teres major"],
+  ],
+  7: [
+    [56.6, 73.8, "teres minor"],
+    [50, 36.1, "short head of the biceps"],
+    [53.1, 61.9, "long head of the triceps"],
+    [32, 40.7, "pec minor"],
+  ],
+  8: [
+    [53.7, 24.3, "deltoid, anterior"],
+    [67.6, 35.1, "deltoid, lateral"],
+    [70.4, 67, "deltoid, posterior"],
+    [56.6, 72.6, "teres minor"],
+  ],
+  9: [
+    [46.3, 14.8, "cephalic vein"],
+    [57.1, 71.9, "teres minor"],
+    [48.5, 34.3, "coracobrachialis"],
+  ],
+  10: [
+    [55.8, 32.9, "long head of the biceps"],
+    [49.5, 50.6, "anterior inferior labrum"],
+    [58.3, 68, "teres minor"],
+    [48.5, 33.1, "coracobrachialis"],
+  ],
+  11: [
+    [48.6, 48.3, "anterior inferior labrum"],
+    [53.5, 61.2, "posterior inferior labrum"],
+    [39.8, 55, "subscapularis"],
+    [49.6, 21.7, "deltoid, anterior"],
+    [67.6, 33.3, "deltoid, lateral"],
+    [69.8, 68.5, "deltoid, posterior"],
+    [64.1, 53.3, "teres minor"],
+    [26.6, 67.8, "serratus anterior"],
+  ],
+  12: [
+    [56, 31.9, "long head of the biceps"],
+    [48, 48.7, "anterior inferior labrum"],
+    [54, 62.6, "posterior inferior labrum"],
+    [42.9, 16.1, "cephalic vein"],
+    [53.8, 72.4, "infraspinatus"],
+    [49, 30.5, "conjoined tendon"],
+    [34.5, 39.5, "pec minor"],
+  ],
+  13: [
+    [47.9, 49.2, "anterior labrum"],
+    [53.5, 62.8, "posterior labrum"],
+    [49.4, 37.2, "subscapularis"],
+    [42, 51.4, "subscapularis"],
+    [67.4, 33.6, "deltoid, lateral"],
+    [54.6, 71.7, "infraspinatus"],
+  ],
+  14: [
+    [57.6, 46, "humeral head"],
+    [47.1, 58.7, "glenoid"],
+    [50, 36.3, "subscapularis"],
+    [42.9, 48.5, "subscapularis"],
+    [53.8, 72.3, "infraspinatus"],
+    [48.2, 65.1, "suprascapular neurovascular bundle"],
+    [46.3, 34.1, "coracoid process"],
+    [39.8, 37.7, "pec minor"],
+  ],
+  15: [
+    [56.7, 31.4, "long head of the biceps"],
+    [48, 47.2, "anterior superior labrum"],
+    [52.4, 61.6, "posterior superior labrum"],
+    [49.3, 54.1, "glenoid cartilage"],
+    [50.6, 56, "humeral head cartilage"],
+    [37.7, 25.1, "cephalic vein"],
+    [55.7, 70, "infraspinatus"],
+    [62.8, 60.4, "infraspinatus"],
+    [48.8, 64.1, "spinoglenoid notch"],
+  ],
+  16: [
+    [48.3, 47.5, "anterior superior labrum"],
+    [51.4, 59.4, "posterior superior labrum"],
+    [65.4, 50.6, "infraspinatus"],
+    [60.9, 62.4, "infraspinatus"],
+    [45.2, 62.2, "suprascapular neurovascular bundle"],
+  ],
+  17: [
+    [53.6, 34.6, "long head of the biceps"],
+    [50.1, 52.8, "superior labrum"],
+    [60.2, 33.6, "supraspinatus"],
+    [64.9, 48.9, "infraspinatus"],
+    [41.9, 57.8, "suprascapular neurovascular bundle"],
+    [39.2, 56.5, "suprascapular notch"],
+  ],
+  18: [
+    [53, 40.9, "long head of the biceps"],
+    [50.8, 49.7, "biceps labral anchor complex"],
+    [37.8, 55.1, "suprascapular neurovascular bundle"],
+  ],
+  19: [
+    [47.3, 59.5, "supraspinatus"],
+    [58, 38, "supraspinatus"],
+    [35.1, 54.6, "suprascapular neurovascular bundle"],
+    [53, 71.4, "scapular spine"],
+    [41.2, 48.2, "coracoclavicular ligament complex"],
+  ],
+  20: [
+    [50.3, 54.3, "supraspinatus"],
+    [41, 48.9, "coracoclavicular ligament complex"],
+  ],
+  21: [
+    [60.4, 49.7, "acromion"],
+    [54.8, 47.8, "acromioclavicular joint"],
+    [35.6, 42.8, "clavicle"],
+  ],
+};
+
+const ELBOW_LABELS = {
+  79: [
+    [49.6, 35, "biceps"],
+    [56.3, 69.2, "triceps"],
+    [60, 58.7, "ulnar nerve"],
+    [43.1, 55.6, "radial nerve"],
+    [55.9, 46.1, "median nerve"],
+    [44.6, 39.9, "musculocutaneous nerve"],
+    [48.6, 60.6, "humerus"],
+  ],
+  80: [
+    [44.5, 49.7, "brachialis"],
+    [43.3, 55, "radial nerve"],
+  ],
+  81: [
+    [44.2, 38.3, "musculocutaneous nerve"],
+  ],
+  82: [
+    [43.7, 53.6, "radial nerve"],
+    [56.7, 44.1, "median nerve"],
+  ],
+  83: [
+    [44.8, 37, "musculocutaneous nerve"],
+  ],
+  84: [
+    [46, 46.7, "brachialis"],
+    [56.6, 68.5, "triceps"],
+    [61.5, 61.2, "ulnar nerve"],
+    [43.7, 51.9, "radial nerve"],
+    [44.8, 36.1, "musculocutaneous nerve"],
+    [50.8, 58.2, "humerus"],
+  ],
+  85: [
+    [50.4, 32.2, "biceps"],
+    [57.4, 42.4, "median nerve"],
+    [45, 35, "lateral antebrachial cutaneous nerve"],
+  ],
+  86: [
+    [44.4, 48.7, "radial nerve"],
+    [45.2, 34.6, "lateral antebrachial cutaneous nerve"],
+  ],
+  87: [
+    [47.3, 44.6, "brachialis"],
+    [56.3, 68.7, "triceps"],
+    [62.8, 61.4, "ulnar nerve"],
+  ],
+  88: [
+    [51.2, 31.6, "biceps"],
+    [44, 45.5, "radial nerve"],
+    [58, 39.4, "median nerve"],
+    [45.6, 33.8, "lateral antebrachial cutaneous nerve"],
+  ],
+  89: [
+    [56.3, 70.2, "triceps"],
+    [44.6, 63.9, "lateral humeral epicondyle"],
+  ],
+  90: [
+    [48.3, 41.2, "brachialis"],
+    [62.8, 62.9, "ulnar nerve"],
+    [43.2, 43.3, "radial nerve"],
+    [58.1, 36, "median nerve"],
+    [45.7, 33.4, "lateral antebrachial cutaneous nerve"],
+  ],
+  91: [
+    [62.8, 63.3, "ulnar nerve"],
+    [64.1, 62.9, "Osbourne's aponeurosis"],
+    [61.8, 63.8, "cubital tunnel"],
+    [43.3, 40.9, "radial nerve"],
+    [65.2, 55.8, "medial humeral epicondyle"],
+    [43.7, 62.1, "lateral humeral epicondyle"],
+  ],
+  92: [
+    [50.5, 30.5, "biceps"],
+    [43.2, 39.4, "radial nerve"],
+    [58.2, 33.8, "median nerve"],
+    [66.2, 52.6, "flexor pronator tendon"],
+    [46.1, 32.2, "lateral antebrachial cutaneous nerve"],
+    [65.1, 57, "medial humeral epicondyle"],
+  ],
+  93: [
+    [49.5, 39.4, "brachialis"],
+    [43.5, 37.8, "superficial branch of the radial nerve"],
+    [42.3, 40.4, "deep branch of the radial nerve"],
+    [65.4, 51.2, "flexor pronator tendon"],
+    [66.1, 48, "pronator teres"],
+    [55.1, 29.4, "lacertus fibrosus"],
+  ],
+  94: [
+    [63.3, 59.9, "ulnar nerve"],
+    [41, 53.3, "common extensor tendon"],
+    [55.9, 29.4, "lacertus fibrosus"],
+  ],
+  95: [
+    [43.9, 36.3, "superficial branch of the radial nerve"],
+    [57.9, 33.8, "median nerve"],
+    [40.9, 51.9, "common extensor tendon"],
+    [62.6, 54.6, "UCL"],
+    [45.6, 45.5, "capitellum"],
+    [45.5, 40.4, "cartilage"],
+    [57.1, 46, "trochlea"],
+    [55.6, 65.5, "olecranon"],
+  ],
+  96: [
+    [49.8, 34.6, "biceps"],
+    [51.3, 40, "brachialis"],
+    [62.5, 54.5, "UCL"],
+  ],
+  97: [
+    [57.2, 36.1, "median nerve"],
+    [41, 51.2, "common extensor tendon"],
+    [62.8, 39.4, "pronator teres"],
+    [62.2, 56.5, "UCL"],
+  ],
+  98: [
+    [51.9, 42.4, "brachialis"],
+    [62.6, 59.9, "ulnar nerve"],
+    [45.3, 36.8, "superficial branch of the radial nerve"],
+    [42.8, 39.5, "deep branch of the radial nerve"],
+    [62.1, 56, "sublime tubercle"],
+  ],
+  99: [
+    [60.5, 38.3, "pronator teres"],
+  ],
+  100: [
+    [51.4, 39.2, "biceps"],
+    [52.8, 45.6, "brachialis"],
+    [44.7, 37.5, "superficial branch of the radial nerve"],
+    [43, 40.9, "deep branch of the radial nerve"],
+  ],
+  101: [
+    [43.2, 41.9, "deep branch of the radial nerve"],
+    [57.5, 37, "pronator teres"],
+  ],
+  102: [
+    [53.6, 50, "brachialis"],
+    [60.1, 58.3, "ulnar nerve"],
+    [43, 42.4, "deep branch of the radial nerve"],
+  ],
+  103: [
+    [51.1, 44.4, "biceps"],
+    [44.3, 38.3, "superficial branch of the radial nerve"],
+    [56, 45.1, "median nerve"],
+    [56.2, 36.1, "pronator teres"],
+  ],
+  104: [
+    [51.3, 48.3, "biceps"],
+    [54.3, 54.5, "brachialis"],
+    [42.5, 45, "deep branch of the radial nerve"],
+  ],
+  105: [
+    [57.9, 57.3, "ulnar nerve"],
+    [44.6, 37.7, "superficial branch of the radial nerve"],
+    [54.9, 45, "median nerve"],
+    [52.9, 36.3, "pronator teres"],
+    [50.9, 54.1, "radial tuberosity"],
+    [52, 64.3, "ulna"],
+  ],
+  106: [
+    [42.2, 47.7, "deep branch of the radial nerve"],
+    [44.7, 44.8, "supinator, deep head"],
+    [43.3, 42.8, "supinator, superficial head"],
+    [47.6, 50.4, "radius"],
+  ],
+  107: [
+    [44.4, 38.7, "superficial branch of the radial nerve"],
+    [54.2, 44.8, "median nerve"],
+  ],
+  108: [
+    [56.9, 55.1, "ulnar nerve"],
+    [41.7, 50.4, "deep branch of the radial nerve"],
+    [42.9, 52.8, "supinator, deep head"],
+    [41, 52.4, "supinator, superficial head"],
   ],
 };
 
@@ -851,6 +1195,7 @@ const ATLAS_JOINTS = {
         slices: localSlices(26),
         ext: '.jpg',
         pad: 4,
+        permanentLabels: SHOULDER_LABELS,
       },
       sag_t1: {
         label: 'Sag T1',
@@ -889,6 +1234,7 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:30},(_,i)=>i+79),
         ext: '.jpg',
         pad: 4,
+        permanentLabels: ELBOW_LABELS,
       },
       ax_t1: {
         label: 'Ax T1',
@@ -1826,212 +2172,6 @@ function ReferencePanel({ selectedBodyPart, darkMode = false }) {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ─── FLEISCHNER / INCIDENTAL HELPER FUNCTIONS ────────────────────────────────
-
-function getFleischnerRec(type, size) {
-  const recs = {
-    solid: {
-      '<6mm':       { low: 'No routine follow-up', high: 'CT at 12 months' },
-      '6-8mm':      { low: 'CT at 6-12 months, then 18-24 months if stable', high: 'CT at 6-12 months, then 18-24 months' },
-      '>8mm':       { low: 'CT at 3, 9, 24 months; PET/CT or biopsy if concerning', high: 'CT at 3, 9, 24 months; consider PET/CT' },
-    },
-    ggo: {
-      '<6mm':       { low: 'No routine follow-up', high: 'No routine follow-up' },
-      '6-8mm':      { low: 'CT at 3-6 months, then 2 and 4 years', high: 'CT at 3-6 months, then 2 and 4 years' },
-      '>8mm':       { low: 'CT at 3-6 months, then 2 and 4 years', high: 'CT at 3-6 months, then 2 and 4 years' },
-    },
-    partsolid: {
-      '<6mm':       { low: 'No routine follow-up', high: 'No routine follow-up' },
-      '6-8mm':      { low: 'CT at 3-6 months; if stable, CT at 2 and 4 years', high: 'CT at 3-6 months; if stable, CT at 2 and 4 years' },
-      '>8mm':       { low: 'CT at 3-6 months; if solid part persists, PET/CT or biopsy', high: 'CT at 3-6 months; if solid part persists, PET/CT or biopsy' },
-    },
-  };
-  return recs[type]?.[size] || null;
-}
-
-function getRenalRec(finding) {
-  const recs = {
-    'simple-cyst':      { rec: 'Bosniak I: No follow-up needed.' },
-    'minimally-complex':{ rec: 'Bosniak II: No follow-up needed.' },
-    'complex-cyst':     { rec: 'Bosniak IIF: Follow-up CT/MRI at 6 months, then annually for 5 years.' },
-    'indeterminate':    { rec: 'Bosniak III: Surgical consultation recommended.' },
-    'solid-mass':       { rec: 'Solid renal mass: Urology referral recommended. Staging CT if not already performed.' },
-    'angiomyolipoma':   { rec: 'AML < 4 cm: follow-up imaging in 1-2 years. AML ≥ 4 cm: urology referral.' },
-  };
-  return recs[finding] || null;
-}
-
-function getGynRec(finding, isPostmenopausal) {
-  const recs = {
-    'simple-cyst-small': {
-      pre:  'Simple cyst ≤ 3 cm: physiologic, no follow-up needed.',
-      post: 'Simple cyst ≤ 1 cm: no follow-up. 1-7 cm: annual follow-up ultrasound.',
-    },
-    'simple-cyst-large': {
-      pre:  'Simple cyst 3-7 cm: annual follow-up ultrasound.',
-      post: 'Simple cyst > 7 cm: MRI or surgical evaluation.',
-    },
-    'complex-cyst': {
-      pre:  'Complex adnexal cyst: GYN referral recommended.',
-      post: 'Complex adnexal cyst: GYN referral recommended; low threshold for surgical evaluation.',
-    },
-    'dermoid': {
-      pre:  'Dermoid/mature teratoma: GYN referral. Surgery if symptomatic or > 6 cm.',
-      post: 'Dermoid/mature teratoma: GYN referral recommended.',
-    },
-    'fibroid': {
-      pre:  'Uterine fibroid: GYN referral if symptomatic.',
-      post: 'Uterine fibroid: GYN referral if symptomatic; new fibroids in postmenopausal patient warrant evaluation.',
-    },
-  };
-  return recs[finding] || null;
-}
-
-function getAortaRec(finding) {
-  const recs = {
-    '< 3cm':   { rec: 'Infrarenal aorta < 3 cm: normal caliber, no follow-up indicated.' },
-    '3-3.9cm': { rec: 'Aortic ectasia 3.0-3.9 cm: surveillance ultrasound in 3 years.' },
-    '4-4.9cm': { rec: 'AAA 4.0-4.9 cm: surveillance ultrasound or CT every 6-12 months; vascular surgery referral.' },
-    '5-5.4cm': { rec: 'AAA 5.0-5.4 cm: vascular surgery referral; elective repair consideration.' },
-    '≥ 5.5cm': { rec: 'AAA ≥ 5.5 cm: urgent vascular surgery referral; threshold for elective repair.' },
-  };
-  return recs[finding] || null;
-}
-
-// ─── INCIDENTAL FINDINGS PANEL ───────────────────────────────────────────────
-function IncidentalPanel({
-  showLung, showGU,
-  noduleType, setNoduleType,
-  noduleSize, setNoduleSize,
-  renalFinding, setRenalFinding,
-  gynFinding, setGynFinding,
-  aortaFinding, setAortaFinding,
-  patientAge, setPatientAge,
-  patientSex, setPatientSex,
-  isPostmenopausal,
-}) {
-  const [open, setOpen] = useState(false);
-  const hasAny = noduleType || renalFinding || gynFinding || aortaFinding;
-
-  const tog = (val, current, setter) => (
-    <button onClick={() => setter(current === val ? '' : val)}
-      style={{ padding:'5px 10px',borderRadius:6,border:'1px solid '+(current===val?'#0891b2':'#e2e8f0'),background:current===val?'#e0f2fe':'white',color:current===val?'#0369a1':'#64748b',fontSize:11,fontWeight:current===val?700:400,cursor:'pointer',whiteSpace:'nowrap' }}>
-      {val}
-    </button>
-  );
-
-  return (
-    <div style={{ border:'1px solid '+(hasAny?'#fbbf24':'#e2e8f0'),borderRadius:8,overflow:'hidden',background:hasAny?'#fffbeb':'#f8fafc' }}>
-      <button onClick={() => setOpen(o => !o)}
-        style={{ width:'100%',padding:'8px 12px',background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:12,fontWeight:600,color:hasAny?'#d97706':'#64748b' }}>
-        <span>⚠️ Incidental Findings {hasAny ? '(active)' : ''}</span>
-        <span style={{ fontSize:10 }}>{open ? '▲' : '▼'}</span>
-      </button>
-
-      {open && (
-        <div style={{ padding:'10px 12px',borderTop:'1px solid #e2e8f0',display:'flex',flexDirection:'column',gap:12 }}>
-
-          {/* Demographics */}
-          <div style={{ display:'flex',gap:8 }}>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:10,fontWeight:600,color:'#64748b',marginBottom:4,textTransform:'uppercase',letterSpacing:'0.06em' }}>Patient Age</div>
-              <input type="number" placeholder="Age" value={patientAge} onChange={e => setPatientAge(e.target.value)}
-                style={{ width:'100%',padding:'6px 8px',border:'1px solid #e2e8f0',borderRadius:6,fontSize:12,boxSizing:'border-box' }}/>
-            </div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:10,fontWeight:600,color:'#64748b',marginBottom:4,textTransform:'uppercase',letterSpacing:'0.06em' }}>Sex</div>
-              <div style={{ display:'flex',gap:4 }}>
-                {['M','F'].map(s => (
-                  <button key={s} onClick={() => setPatientSex(patientSex === s ? '' : s)}
-                    style={{ flex:1,padding:'6px',borderRadius:6,border:'1px solid '+(patientSex===s?'#0891b2':'#e2e8f0'),background:patientSex===s?'#e0f2fe':'white',fontSize:12,fontWeight:patientSex===s?700:400,cursor:'pointer',color:patientSex===s?'#0369a1':'#64748b' }}>
-                    {s === 'M' ? 'Male' : 'Female'}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Lung nodule */}
-          {showLung && (
-            <div>
-              <div style={{ fontSize:10,fontWeight:700,color:'#0369a1',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em' }}>🫁 Pulmonary Nodule (Fleischner)</div>
-              <div style={{ fontSize:10,color:'#64748b',marginBottom:4 }}>Type</div>
-              <div style={{ display:'flex',gap:4,flexWrap:'wrap',marginBottom:6 }}>
-                {tog('solid', noduleType, setNoduleType)}
-                {tog('ggo', noduleType, setNoduleType)}
-                {tog('partsolid', noduleType, setNoduleType)}
-              </div>
-              <div style={{ fontSize:10,color:'#64748b',marginBottom:4 }}>Size</div>
-              <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
-                {tog('<6mm', noduleSize, setNoduleSize)}
-                {tog('6-8mm', noduleSize, setNoduleSize)}
-                {tog('>8mm', noduleSize, setNoduleSize)}
-              </div>
-              {noduleType && noduleSize && (() => {
-                const rec = getFleischnerRec(noduleType, noduleSize);
-                return rec ? (
-                  <div style={{ marginTop:8,padding:'6px 10px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:6,fontSize:11,color:'#1e40af',lineHeight:1.5 }}>
-                    <strong>Low-risk:</strong> {rec.low}<br/>
-                    <strong>High-risk:</strong> {rec.high}
-                  </div>
-                ) : null;
-              })()}
-            </div>
-          )}
-
-          {/* GU incidentals */}
-          {showGU && (
-            <>
-              <div>
-                <div style={{ fontSize:10,fontWeight:700,color:'#7c3aed',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em' }}>🫘 Renal Finding</div>
-                <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
-                  {['simple-cyst','minimally-complex','complex-cyst','indeterminate','solid-mass','angiomyolipoma'].map(v => tog(v, renalFinding, setRenalFinding))}
-                </div>
-                {renalFinding && (() => {
-                  const rec = getRenalRec(renalFinding);
-                  return rec ? (
-                    <div style={{ marginTop:6,padding:'6px 10px',background:'#f5f3ff',border:'1px solid #ddd6fe',borderRadius:6,fontSize:11,color:'#5b21b6',lineHeight:1.5 }}>{rec.rec}</div>
-                  ) : null;
-                })()}
-              </div>
-
-              <div>
-                <div style={{ fontSize:10,fontWeight:700,color:'#be185d',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em' }}>🔵 Gynecologic Finding</div>
-                <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
-                  {['simple-cyst-small','simple-cyst-large','complex-cyst','dermoid','fibroid'].map(v => tog(v, gynFinding, setGynFinding))}
-                </div>
-                {gynFinding && (() => {
-                  const rec = getGynRec(gynFinding, isPostmenopausal);
-                  return rec ? (
-                    <div style={{ marginTop:6,padding:'6px 10px',background:'#fdf2f8',border:'1px solid #fbcfe8',borderRadius:6,fontSize:11,color:'#9d174d',lineHeight:1.5 }}>
-                      {isPostmenopausal === null ? (
-                        <><strong>Premenopausal:</strong> {rec.pre}<br/><strong>Postmenopausal:</strong> {rec.post}</>
-                      ) : isPostmenopausal ? rec.post : rec.pre}
-                    </div>
-                  ) : null;
-                })()}
-              </div>
-
-              <div>
-                <div style={{ fontSize:10,fontWeight:700,color:'#b45309',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em' }}>🩸 Aortic Finding</div>
-                <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
-                  {['< 3cm','3-3.9cm','4-4.9cm','5-5.4cm','≥ 5.5cm'].map(v => tog(v, aortaFinding, setAortaFinding))}
-                </div>
-                {aortaFinding && (() => {
-                  const rec = getAortaRec(aortaFinding);
-                  return rec ? (
-                    <div style={{ marginTop:6,padding:'6px 10px',background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:6,fontSize:11,color:'#9a3412',lineHeight:1.5 }}>{rec.rec}</div>
-                  ) : null;
-                })()}
-              </div>
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
 }
