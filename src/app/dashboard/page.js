@@ -2339,6 +2339,184 @@ function ReferencePanel({ selectedBodyPart, darkMode = false }) {
   );
 }
 
+
+// ─── INCIDENTAL FINDINGS HELPERS ─────────────────────────────────────────────
+// Fleischner Society 2017 guidelines for incidental pulmonary nodules
+function getFleischnerRec(type, size) {
+  const recs = {
+    solid: {
+      '<6mm':    { low: 'No routine follow-up', high: 'Optional CT at 12 months' },
+      '6-8mm':   { low: 'CT at 6-12 months, then 18-24 months if stable', high: 'CT at 6-12 months, then 18-24 months if stable' },
+      '>8mm':    { low: 'Consider CT at 3 months, PET/CT, or tissue sampling', high: 'CT at 3 months, PET/CT, or tissue sampling' },
+    },
+    ggo: {
+      '<6mm':    { low: 'No routine follow-up', high: 'No routine follow-up' },
+      '6-8mm':   { low: 'CT at 6-12 months to confirm persistence, then CT every 2 years until 5 years', high: 'CT at 6-12 months to confirm persistence, then CT every 2 years until 5 years' },
+      '>8mm':    { low: 'CT at 3-6 months to confirm persistence, then CT every year for 3 years', high: 'CT at 3-6 months to confirm persistence, then CT every year for 3 years' },
+    },
+    partsolid: {
+      '<6mm':    { low: 'No routine follow-up', high: 'No routine follow-up' },
+      '6-8mm':   { low: 'CT at 3-6 months. If stable and solid component <6mm, annual CT x 5 years', high: 'CT at 3-6 months. If stable and solid component <6mm, annual CT x 5 years' },
+      '>8mm':    { low: 'CT at 3-6 months. PET/CT or tissue sampling if solid component grows or >8mm', high: 'CT at 3-6 months. PET/CT or tissue sampling if solid component grows or >8mm' },
+    },
+  };
+  return recs[type]?.[size] || null;
+}
+
+// ACR Incidental Renal Findings Committee guidelines
+function getRenalRec(finding) {
+  const recs = {
+    'simple cyst (<1cm)':        { rec: 'No follow-up needed. Benign simple cyst.' },
+    'simple cyst (1-3.9cm)':     { rec: 'No follow-up needed if classic simple cyst. Bosniak I.' },
+    'simple cyst (≥4cm)':        { rec: 'No follow-up needed if classic simple cyst. Confirm with ultrasound if not classic.' },
+    'minimally complex (Bosniak II)':  { rec: 'No follow-up needed.' },
+    'Bosniak IIF':               { rec: 'CT or MRI at 6 months, then annually for 5 years.' },
+    'Bosniak III':               { rec: 'Urologic referral. ~50% malignancy rate.' },
+    'Bosniak IV':                { rec: 'Urologic referral. Surgical or ablative therapy recommended.' },
+    'solid mass (<1cm)':         { rec: 'Urologic consultation. Growth rate assessment with short-interval follow-up CT/MRI.' },
+    'solid mass (1-3.9cm)':      { rec: 'Urologic consultation. CT/MRI with and without contrast for characterization.' },
+    'solid mass (≥4cm)':         { rec: 'Urologic consultation. Surgical planning.' },
+  };
+  return recs[finding] || null;
+}
+
+// ACR/SRU guidelines for incidental gynecologic findings
+function getGynRec(finding, isPostmenopausal) {
+  const recs = {
+    'simple cyst (<3cm)': {
+      pre:  'No follow-up needed. Likely functional or physiologic cyst.',
+      post: 'No follow-up needed if <1cm. Follow-up ultrasound in 1 year if 1-3cm.',
+    },
+    'simple cyst (3-5cm)': {
+      pre:  'Follow-up ultrasound in 1 year.',
+      post: 'Follow-up ultrasound in 1 year.',
+    },
+    'simple cyst (5-7cm)': {
+      pre:  'Follow-up ultrasound in 6-12 months or GYN referral.',
+      post: 'GYN referral.',
+    },
+    'simple cyst (>7cm)': {
+      pre:  'MRI or GYN referral.',
+      post: 'GYN referral or surgical evaluation.',
+    },
+    'complex cyst': {
+      pre:  'GYN referral. IOTA characterization or ADNEX model recommended.',
+      post: 'GYN referral. Malignancy risk higher in postmenopausal patients.',
+    },
+    'fibroid (small <3cm)': {
+      pre:  'No follow-up needed if asymptomatic.',
+      post: 'No follow-up needed. New growth in postmenopausal patient warrants evaluation.',
+    },
+    'endometrial thickening': {
+      pre:  'Clinical correlation. Endometrial biopsy if symptomatic.',
+      post: 'GYN referral. Endometrial biopsy recommended if >4mm.',
+    },
+  };
+  return recs[finding] || null;
+}
+
+// ACR Incidental Aortic Findings guidelines
+function getAortaRec(finding) {
+  const recs = {
+    '<3cm':         { rec: 'Normal aortic diameter. No follow-up needed.' },
+    '3-3.9cm':      { rec: 'Infrarenal aortic ectasia. Vascular surgery notification. Ultrasound or CT in 3 years.' },
+    '4-4.9cm':      { rec: 'AAA — moderate. Vascular surgery referral. CT/ultrasound every 6-12 months.' },
+    '5-5.4cm':      { rec: 'AAA — large. Urgent vascular surgery referral. Surgical planning.' },
+    '≥5.5cm':       { rec: 'AAA — surgical threshold. Urgent vascular surgery referral. Surgical repair indicated.' },
+    'penetrating ulcer': { rec: 'Vascular surgery notification. Short-interval CT follow-up in 3-6 months. Urgent if symptomatic.' },
+    'intramural hematoma': { rec: 'Urgent vascular surgery notification. High risk for dissection.' },
+  };
+  return recs[finding] || null;
+}
+
+// ─── INCIDENTAL PANEL COMPONENT ───────────────────────────────────────────────
+function IncidentalPanel({ showLung, showGU, noduleType, setNoduleType, noduleSize, setNoduleSize,
+  renalFinding, setRenalFinding, gynFinding, setGynFinding, aortaFinding, setAortaFinding,
+  patientAge, setPatientAge, patientSex, setPatientSex, isPostmenopausal }) {
+
+  const tog = (val, current, setter) => (
+    <button onClick={() => setter(current === val ? '' : val)}
+      style={{ padding:'4px 8px',borderRadius:6,border:'1px solid '+(current===val?'#dc2626':'#334155'),background:current===val?'#fef2f2':'transparent',color:current===val?'#dc2626':'#94a3b8',fontSize:10,fontWeight:current===val?700:400,cursor:'pointer' }}>
+      {val}
+    </button>
+  );
+
+  return (
+    <div style={{ background:'#1a0a0a',border:'1.5px solid #dc2626',borderRadius:8,padding:'10px 12px',display:'flex',flexDirection:'column',gap:10 }}>
+      {showLung && (
+        <div>
+          <div style={{ fontSize:10,fontWeight:800,color:'#ef4444',letterSpacing:'0.1em',marginBottom:6 }}>⚠️ DID YOU CHECK THE LUNG?</div>
+          <div style={{ fontSize:10,color:'#94a3b8',marginBottom:4 }}>Nodule type:</div>
+          <div style={{ display:'flex',gap:4,flexWrap:'wrap',marginBottom:6 }}>
+            {['solid','ggo','partsolid'].map(t => tog(t, noduleType, setNoduleType))}
+          </div>
+          {noduleType && (
+            <>
+              <div style={{ fontSize:10,color:'#94a3b8',marginBottom:4 }}>Size:</div>
+              <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
+                {['<6mm','6-8mm','>8mm'].map(s => tog(s, noduleSize, setNoduleSize))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      {showGU && (
+        <div>
+          <div style={{ fontSize:10,fontWeight:800,color:'#ef4444',letterSpacing:'0.1em',marginBottom:6 }}>⚠️ DID YOU CHECK THE GU SYSTEM?</div>
+          <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
+            <div>
+              <div style={{ fontSize:10,color:'#94a3b8',marginBottom:3 }}>Renal finding:</div>
+              <select value={renalFinding} onChange={e=>setRenalFinding(e.target.value)}
+                style={{ width:'100%',padding:'4px 6px',borderRadius:5,fontSize:10,background:'#0f172a',color:'#e2e8f0',border:'1px solid #334155' }}>
+                <option value="">— None —</option>
+                {['simple cyst (<1cm)','simple cyst (1-3.9cm)','simple cyst (≥4cm)','minimally complex (Bosniak II)','Bosniak IIF','Bosniak III','Bosniak IV','solid mass (<1cm)','solid mass (1-3.9cm)','solid mass (≥4cm)'].map(v => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize:10,color:'#94a3b8',marginBottom:3 }}>Gynecologic finding:</div>
+              <select value={gynFinding} onChange={e=>setGynFinding(e.target.value)}
+                style={{ width:'100%',padding:'4px 6px',borderRadius:5,fontSize:10,background:'#0f172a',color:'#e2e8f0',border:'1px solid #334155' }}>
+                <option value="">— None —</option>
+                {['simple cyst (<3cm)','simple cyst (3-5cm)','simple cyst (5-7cm)','simple cyst (>7cm)','complex cyst','fibroid (small <3cm)','endometrial thickening'].map(v => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
+            </div>
+            {gynFinding && (
+              <div style={{ display:'flex',gap:6 }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:10,color:'#94a3b8',marginBottom:3 }}>Patient age:</div>
+                  <input type="number" value={patientAge} onChange={e=>setPatientAge(e.target.value)} placeholder="Age"
+                    style={{ width:'100%',padding:'4px 6px',borderRadius:5,fontSize:10,background:'#0f172a',color:'#e2e8f0',border:'1px solid #334155' }}/>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:10,color:'#94a3b8',marginBottom:3 }}>Sex:</div>
+                  <div style={{ display:'flex',gap:3 }}>
+                    {['M','F'].map(s => (
+                      <button key={s} onClick={()=>setPatientSex(patientSex===s?'':s)}
+                        style={{ flex:1,padding:'4px',borderRadius:5,border:'1px solid '+(patientSex===s?'#2563eb':'#334155'),background:patientSex===s?'#1e3a5f':'transparent',color:patientSex===s?'#93c5fd':'#94a3b8',fontSize:10,cursor:'pointer' }}>
+                        {s==='M'?'M':'F'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize:10,color:'#94a3b8',marginBottom:3 }}>Aortic diameter:</div>
+              <div style={{ display:'flex',gap:4,flexWrap:'wrap' }}>
+                {['<3cm','3-3.9cm','4-4.9cm','5-5.4cm','≥5.5cm','penetrating ulcer','intramural hematoma'].map(v => tog(v, aortaFinding, setAortaFinding))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN DASHBOARD ────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
