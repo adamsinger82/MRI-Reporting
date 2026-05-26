@@ -1532,8 +1532,8 @@ function AtlasModal({ onClose }) {
   const handleImageClick = (e) => {
     if (!labelMode || !imgRef.current) return;
     const ir = imgRef.current.getBoundingClientRect();
-    const natW = imgRef.current.naturalWidth  || 1;
-    const natH = imgRef.current.naturalHeight || 1;
+    const natW = imgRef.current.naturalWidth  > 0 ? imgRef.current.naturalWidth  : imgRef.current.getBoundingClientRect().width;
+    const natH = imgRef.current.naturalHeight > 0 ? imgRef.current.naturalHeight : imgRef.current.getBoundingClientRect().height;
     const scale = Math.min(ir.width / natW, ir.height / natH);
     const ow = natW * scale;
     const oh = natH * scale;
@@ -1728,14 +1728,14 @@ function AtlasModal({ onClose }) {
                 const ar  = imgAreaRef.current.getBoundingClientRect();
                 const ir  = imgEl.getBoundingClientRect();
                 // Labels were recorded as % of the rendered image pixels.
-                // With objectFit:contain the img element fills the container but
-                // actual pixels are letterboxed. Use naturalWidth/Height to find
-                // the true rendered image rect inside the element bounds.
-                const natW = imgEl.naturalWidth  || 1;
-                const natH = imgEl.naturalHeight || 1;
+                // Use naturalWidth/Height to compute true rendered rect inside objectFit:contain.
+                // Guard against natW/natH = 0 (image not yet decoded) — fall back to element size.
+                const natW = imgEl.naturalWidth  > 0 ? imgEl.naturalWidth  : ir.width;
+                const natH = imgEl.naturalHeight > 0 ? imgEl.naturalHeight : ir.height;
                 const scale = Math.min(ir.width / natW, ir.height / natH);
                 const ow = natW * scale;
                 const oh = natH * scale;
+                if (!ow || !oh || !isFinite(ow) || !isFinite(oh)) return null;
                 // Offset of rendered image pixels within the container
                 const ol = (ir.left - ar.left) + (ir.width  - ow) / 2;
                 const ot = (ir.top  - ar.top)  + (ir.height - oh) / 2;
@@ -2282,7 +2282,7 @@ function ReferencePanel({ selectedBodyPart, darkMode = false }) {
         <select style={{ width:'100%',padding:'8px 10px',border:'1px solid '+(dm?'#334155':'#e2e8f0'),borderRadius:8,fontSize:13,background:dm?'#0f172a':'white',cursor:'pointer',color:dm?'#e2e8f0':'#1e293b',boxSizing:'border-box' }}
           value={selectedMeasurementId} onChange={e => setSelectedMeasurementId(e.target.value)}>
           <option value="">— Select a measurement —</option>
-          {jointData.measurements.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+          {(jointData.measurements||[]).map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
         </select>
         {selectedMeasurement ? (
           <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
@@ -2325,7 +2325,7 @@ function ReferencePanel({ selectedBodyPart, darkMode = false }) {
           </table>
         ) : (
           <div style={{ display:'flex',flexDirection:'column',gap:5,overflowY:'auto',maxHeight:320 }}>
-            {jointData.measurements.map(m => (
+            {(jointData.measurements||[]).map(m => (
               <div key={m.id} onClick={() => setSelectedMeasurementId(m.id)}
                 style={{ padding:'7px 10px',background:dm?'#0f172a':'#f8fafc',borderRadius:7,border:'1px solid '+(dm?'#334155':'#f1f5f9'),cursor:'pointer' }}>
                 <div style={{ fontSize:12,fontWeight:600,color:'#0891b2' }}>{m.label}</div>
