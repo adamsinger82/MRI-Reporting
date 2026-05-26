@@ -786,6 +786,79 @@ const JOINT_DATA = {
         ],
         diagram: 'spine-cobb',
       },
+      {
+        id: 'pfirrmann',
+        label: 'Pfirrmann Disc Grading',
+        plane: 'Sagittal T2',
+        isGradingScale: true,
+        description: 'MRI grading of intervertebral disc degeneration based on T2 signal, disc structure, NP/AF distinction, and disc height. Grade I–II normal, III–V degenerate.',
+        normalValues: [
+          { label: 'Grade I', value: 'Homogeneous bright white NP, normal height' },
+          { label: 'Grade II', value: 'Inhomogeneous, horizontal gray band, normal height' },
+          { label: 'Grade III', value: 'Gray NP, NP/AF boundary indistinct, normal or slight ↓ height' },
+          { label: 'Grade IV', value: 'Dark gray/black NP, no NP/AF distinction, ↓ height' },
+          { label: 'Grade V', value: 'Black collapsed disc, no disc space, ± osteophytes' },
+        ],
+        citations: [
+          { label: "Pfirrmann CW et al. Magnetic resonance classification of lumbar intervertebral disc degeneration. Spine 2001", url: "https://scholar.google.com/scholar?q=Pfirrmann+magnetic+resonance+classification+lumbar+intervertebral+disc+degeneration+Spine+2001" },
+        ],
+        diagram: 'spine-pfirrmann',
+      },
+      {
+        id: 'canal-stenosis',
+        label: 'Central Canal Stenosis',
+        plane: 'Axial T2 + Sagittal T2',
+        isGradingScale: true,
+        description: 'Grading of central spinal canal stenosis based on thecal sac compression and residual CSF signal on T2 MRI. Assessed at disc level on axial images.',
+        normalValues: [
+          { label: 'Normal', value: 'Round thecal sac, full CSF halo, no compression' },
+          { label: 'Mild', value: 'CSF present, sac mildly deformed, > 50% CSF remaining' },
+          { label: 'Moderate', value: 'CSF markedly reduced, sac flattened/triangular' },
+          { label: 'Severe', value: 'No CSF signal, sac/cauda effaced, nerve roots packed' },
+        ],
+        citations: [
+          { label: "Schizas C et al. Qualitative grading of severity of lumbar spinal stenosis based on MRI. Spine 2010", url: "https://scholar.google.com/scholar?q=Schizas+qualitative+grading+lumbar+spinal+stenosis+MRI+2010" },
+          { label: "Lee GY et al. A new grading system of lumbar central canal stenosis on MRI. Skeletal Radiol 2011", url: "https://scholar.google.com/scholar?q=Lee+grading+lumbar+central+canal+stenosis+MRI+skeletal+radiology+2011" },
+        ],
+        diagram: 'spine-stenosis',
+      },
+      {
+        id: 'foraminal-stenosis',
+        label: 'Foraminal Stenosis',
+        plane: 'Axial T2 + Sagittal T2',
+        isGradingScale: true,
+        description: 'Grading of neural foraminal stenosis based on residual epidural fat and nerve root deformation. Assessed on axial and sagittal T2 images.',
+        normalValues: [
+          { label: 'Grade 0', value: 'Normal — fat fills foramen, root freely mobile' },
+          { label: 'Grade 1', value: 'Mild — fat > 25%, root not deformed' },
+          { label: 'Grade 2', value: 'Moderate — fat < 25%, root deformed' },
+          { label: 'Grade 3', value: 'Severe — no fat, root obliterated' },
+        ],
+        citations: [
+          { label: "Lee S et al. Nerve root contact and foraminal stenosis grading in lumbar spine. Spine 2010", url: "https://scholar.google.com/scholar?q=foraminal+stenosis+grading+nerve+root+MRI+lumbar+spine" },
+          { label: "Wildermuth S et al. Lumbar spine: quantitative and qualitative assessment of positional MR. Radiology 1998", url: "https://scholar.google.com/scholar?q=Wildermuth+lumbar+spine+positional+MRI+foraminal+stenosis+1998" },
+        ],
+        diagram: 'spine-foraminal',
+      },
+      {
+        id: 'meyerding',
+        label: 'Meyerding Spondylolisthesis',
+        plane: 'Sagittal',
+        isGradingScale: true,
+        description: 'Grading of anterior vertebral slip (anterolisthesis) as a percentage of the inferior endplate width of the lower vertebra. Grade V = spondyloptosis (complete fall-off).',
+        normalValues: [
+          { label: 'Grade I', value: '0–25% slip — canal open' },
+          { label: 'Grade II', value: '25–50% slip — mild canal kink' },
+          { label: 'Grade III', value: '50–75% slip — significant canal angulation' },
+          { label: 'Grade IV', value: '75–100% slip — severe canal compromise' },
+          { label: 'Grade V', value: 'Spondyloptosis — L5 anterior to S1, canal obliterated' },
+        ],
+        citations: [
+          { label: "Meyerding HW. Spondylolisthesis. Surg Gynecol Obstet 1932", url: "https://scholar.google.com/scholar?q=Meyerding+spondylolisthesis+classification+1932" },
+          { label: "Wiltse LL et al. Classification of spondylolysis and spondylolisthesis. Clin Orthop 1976", url: "https://scholar.google.com/scholar?q=Wiltse+Newman+Macnab+classification+spondylolysis+spondylolisthesis+1976" },
+        ],
+        diagram: 'spine-meyerding',
+      },
     ],
   },
 
@@ -1791,200 +1864,756 @@ const DIAGRAM_SVGS = {
   // ══════════════════════════════════════════════════════════════════════════
 
   'spine-modic': (
-    <svg viewBox="0 0 320 240" aria-label="Modic changes classification">
-      {/* Three vertebral units side by side */}
-      {[
-        {label:'Type 1', x:20, t1:'dark', t2:'bright', color:'#93c5fd', note:'Edema'},
-        {label:'Type 2', x:115, t1:'bright', t2:'bright', color:'#fde68a', note:'Fatty'},
-        {label:'Type 3', x:210, t1:'dark', t2:'dark', color:'#94a3b8', note:'Sclerosis'},
-      ].map(({label,x,t1,t2,color,note},i) => {
-        const endpColor = color;
-        return (
-          <g key={i}>
-            {/* Upper vertebra */}
-            <rect x={x} y={40} width={85} height={48} rx={5} fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5"/>
-            {/* Upper endplate signal */}
-            <rect x={x} y={84} width={85} height={10} rx={2} fill={endpColor} stroke="#4a7fa5" strokeWidth="1"/>
-            {/* Disc */}
-            <rect x={x} y={94} width={85} height={20} rx={2} fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1.2"/>
-            {/* Lower endplate signal */}
-            <rect x={x} y={114} width={85} height={10} rx={2} fill={endpColor} stroke="#4a7fa5" strokeWidth="1"/>
-            {/* Lower vertebra */}
-            <rect x={x} y={124} width={85} height={48} rx={5} fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5"/>
-            <text x={x+42} y={188} textAnchor="middle" fontSize="9" fill="#c0392b" fontWeight="bold">{label}</text>
-            <text x={x+42} y={200} textAnchor="middle" fontSize="8" fill="#555">{note}</text>
-            <text x={x+42} y={212} textAnchor="middle" fontSize="7" fill="#888">T1:{t1} T2:{t2}</text>
-          </g>
-        );
-      })}
-      <text x="160" y="232" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Sagittal T1/T2 — endplate signal</text>
+    <svg viewBox="0 0 680 340" aria-label="Modic endplate changes types 1 2 3">
+      <defs>
+        <pattern id="trab1" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.5" r="0.8" fill="#c8a882" opacity="0.6"/>
+          <circle cx="4.5" cy="4.5" r="0.8" fill="#c8a882" opacity="0.6"/>
+        </pattern>
+        <pattern id="trab2" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.5" r="0.8" fill="#d4b896" opacity="0.5"/>
+          <circle cx="4.5" cy="4.5" r="0.8" fill="#d4b896" opacity="0.5"/>
+        </pattern>
+        <pattern id="trab3" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.5" r="0.8" fill="#b0a090" opacity="0.55"/>
+          <circle cx="4.5" cy="4.5" r="0.8" fill="#b0a090" opacity="0.55"/>
+        </pattern>
+      </defs>
+      {/* TYPE 1 — Edema */}
+      <rect x="60" y="28" width="148" height="88" rx="14" fill="#e8d0b0" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="60" y="28" width="148" height="88" rx="14" fill="url(#trab1)" opacity="0.7"/>
+      <rect x="62" y="90" width="144" height="22" rx="4" fill="#c83020" opacity="0.55"/>
+      <rect x="60" y="113" width="148" height="9" rx="3" fill="#e8c8c0" stroke="#b86060" strokeWidth="0.8"/>
+      <rect x="64" y="122" width="140" height="32" rx="6" fill="#8ab4c8" stroke="#5890aa" strokeWidth="1"/>
+      <ellipse cx="134" cy="138" rx="38" ry="10" fill="#6898b0" opacity="0.5"/>
+      <rect x="60" y="154" width="148" height="9" rx="3" fill="#e8c8c0" stroke="#b86060" strokeWidth="0.8"/>
+      <rect x="62" y="162" width="144" height="22" rx="4" fill="#c83020" opacity="0.55"/>
+      <rect x="60" y="163" width="148" height="88" rx="14" fill="#d8b888" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="60" y="163" width="148" height="88" rx="14" fill="url(#trab1)" opacity="0.5"/>
+      <text x="134" y="272" textAnchor="middle" fontSize="14" fontWeight="600" fill="#1e293b">Type 1</text>
+      <text x="134" y="288" textAnchor="middle" fontSize="12" fill="#c0392b" fontWeight="600">Edema / inflammation</text>
+      <text x="134" y="303" textAnchor="middle" fontSize="11" fill="#555">T1 &#8595;  T2 &#8593;  (active)</text>
+      {/* TYPE 2 — Fatty */}
+      <rect x="266" y="28" width="148" height="88" rx="14" fill="#f0e0a0" stroke="#c8a840" strokeWidth="1.2"/>
+      <rect x="266" y="28" width="148" height="88" rx="14" fill="url(#trab2)" opacity="0.6"/>
+      <rect x="268" y="90" width="144" height="22" rx="4" fill="#e8c840" opacity="0.6"/>
+      <rect x="266" y="113" width="148" height="9" rx="3" fill="#f0e090" stroke="#c8a830" strokeWidth="0.8"/>
+      <rect x="270" y="122" width="140" height="32" rx="6" fill="#8ab4c8" stroke="#5890aa" strokeWidth="1"/>
+      <ellipse cx="340" cy="138" rx="38" ry="10" fill="#6898b0" opacity="0.5"/>
+      <rect x="266" y="154" width="148" height="9" rx="3" fill="#f0e090" stroke="#c8a830" strokeWidth="0.8"/>
+      <rect x="268" y="162" width="144" height="22" rx="4" fill="#e8c840" opacity="0.6"/>
+      <rect x="266" y="163" width="148" height="88" rx="14" fill="#e8c860" stroke="#c8a840" strokeWidth="1.2"/>
+      <rect x="266" y="163" width="148" height="88" rx="14" fill="url(#trab2)" opacity="0.5"/>
+      <text x="340" y="272" textAnchor="middle" fontSize="14" fontWeight="600" fill="#1e293b">Type 2</text>
+      <text x="340" y="288" textAnchor="middle" fontSize="12" fill="#b07800" fontWeight="600">Fatty replacement</text>
+      <text x="340" y="303" textAnchor="middle" fontSize="11" fill="#555">T1 &#8593;  T2 &#8593;  (chronic stable)</text>
+      {/* TYPE 3 — Sclerosis */}
+      <rect x="472" y="28" width="148" height="88" rx="14" fill="#e8e0d0" stroke="#a09080" strokeWidth="1.2"/>
+      <rect x="472" y="28" width="148" height="88" rx="14" fill="url(#trab3)" opacity="0.6"/>
+      <rect x="474" y="90" width="144" height="22" rx="4" fill="#606060" opacity="0.55"/>
+      <rect x="472" y="113" width="148" height="9" rx="3" fill="#808080" stroke="#606060" strokeWidth="0.8"/>
+      <rect x="476" y="122" width="140" height="32" rx="6" fill="#7090a0" stroke="#508090" strokeWidth="1"/>
+      <rect x="472" y="154" width="148" height="9" rx="3" fill="#808080" stroke="#606060" strokeWidth="0.8"/>
+      <rect x="474" y="162" width="144" height="22" rx="4" fill="#606060" opacity="0.55"/>
+      <rect x="472" y="163" width="148" height="88" rx="14" fill="#d0c8b8" stroke="#a09080" strokeWidth="1.2"/>
+      <rect x="472" y="163" width="148" height="88" rx="14" fill="url(#trab3)" opacity="0.5"/>
+      <text x="546" y="272" textAnchor="middle" fontSize="14" fontWeight="600" fill="#1e293b">Type 3</text>
+      <text x="546" y="288" textAnchor="middle" fontSize="12" fill="#444" fontWeight="600">Sclerosis / end-stage</text>
+      <text x="546" y="303" textAnchor="middle" fontSize="11" fill="#555">T1 &#8595;  T2 &#8595;  (sclerotic)</text>
+    </svg>
+  ),
+
+  'spine-pfirrmann': (
+    <svg viewBox="0 0 680 320" aria-label="Pfirrmann disc grading I through V">
+      <defs>
+        <pattern id="vbp" x="0" y="0" width="5" height="5" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.5" r="0.7" fill="#c8a882" opacity="0.55"/>
+          <circle cx="4" cy="4" r="0.7" fill="#c8a882" opacity="0.55"/>
+        </pattern>
+      </defs>
+      {/* GRADE I */}
+      <rect x="30" y="30" width="96" height="70" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="30" y="30" width="96" height="70" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <rect x="30" y="104" width="96" height="60" rx="6" fill="#9ab870" stroke="#6a9050" strokeWidth="1.2"/>
+      <rect x="44" y="110" width="68" height="48" rx="8" fill="#f0f8ff"/>
+      <ellipse cx="78" cy="134" rx="26" ry="15" fill="#e0f0ff" opacity="0.85"/>
+      <rect x="30" y="164" width="96" height="70" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="30" y="164" width="96" height="70" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <text x="78" y="252" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1d4ed8">Grade I</text>
+      <text x="78" y="267" textAnchor="middle" fontSize="11" fill="#1d4ed8">Bright white NP</text>
+      <text x="78" y="280" textAnchor="middle" fontSize="10" fill="#64748b">Normal height</text>
+      {/* GRADE II */}
+      <rect x="142" y="30" width="96" height="70" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="142" y="30" width="96" height="70" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <rect x="142" y="104" width="96" height="58" rx="6" fill="#a0c078" stroke="#6a9050" strokeWidth="1.2"/>
+      <rect x="156" y="110" width="68" height="46" rx="8" fill="#e8f4d8"/>
+      <ellipse cx="190" cy="133" rx="24" ry="13" fill="#d8eecc" opacity="0.85"/>
+      <line x1="158" y1="133" x2="222" y2="133" stroke="#8aaa60" strokeWidth="1.5" opacity="0.7"/>
+      <rect x="142" y="162" width="96" height="70" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="142" y="162" width="96" height="70" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <text x="190" y="252" textAnchor="middle" fontSize="14" fontWeight="700" fill="#16a34a">Grade II</text>
+      <text x="190" y="267" textAnchor="middle" fontSize="11" fill="#16a34a">Horizontal gray band</text>
+      <text x="190" y="280" textAnchor="middle" fontSize="10" fill="#64748b">Normal height</text>
+      {/* GRADE III */}
+      <rect x="254" y="30" width="96" height="70" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="254" y="30" width="96" height="70" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <rect x="254" y="104" width="96" height="50" rx="6" fill="#b0b878" stroke="#7a8850" strokeWidth="1.2"/>
+      <rect x="268" y="108" width="68" height="42" rx="6" fill="#c8c890"/>
+      <rect x="254" y="154" width="96" height="70" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="254" y="154" width="96" height="70" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <text x="302" y="242" textAnchor="middle" fontSize="14" fontWeight="700" fill="#d97706">Grade III</text>
+      <text x="302" y="257" textAnchor="middle" fontSize="11" fill="#d97706">Gray, NP/AF indistinct</text>
+      <text x="302" y="270" textAnchor="middle" fontSize="10" fill="#64748b">Normal or slight &#8595; ht</text>
+      {/* GRADE IV */}
+      <rect x="366" y="36" width="96" height="68" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="366" y="36" width="96" height="68" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <rect x="366" y="108" width="96" height="36" rx="5" fill="#b0a068" stroke="#807848" strokeWidth="1.2"/>
+      <rect x="378" y="111" width="72" height="30" rx="5" fill="#907850"/>
+      <rect x="366" y="144" width="96" height="68" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="366" y="144" width="96" height="68" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <text x="414" y="232" textAnchor="middle" fontSize="14" fontWeight="700" fill="#ea580c">Grade IV</text>
+      <text x="414" y="247" textAnchor="middle" fontSize="11" fill="#ea580c">Dark, no NP/AF distinction</text>
+      <text x="414" y="260" textAnchor="middle" fontSize="10" fill="#64748b">Moderate &#8595; height</text>
+      {/* GRADE V */}
+      <rect x="478" y="42" width="96" height="68" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="478" y="42" width="96" height="68" rx="10" fill="url(#vbp)" opacity="0.7"/>
+      <polygon points="478,108 496,100 514,108" fill="#b89060" stroke="#987040" strokeWidth="0.8"/>
+      <polygon points="560,108 578,100 596,108" fill="#b89060" stroke="#987040" strokeWidth="0.8"/>
+      <rect x="478" y="108" width="96" height="18" rx="3" fill="#807060" stroke="#605040" strokeWidth="1"/>
+      <rect x="486" y="110" width="80" height="14" rx="3" fill="#504840"/>
+      <polygon points="478,126 496,136 514,126" fill="#b89060" stroke="#987040" strokeWidth="0.8"/>
+      <polygon points="560,126 578,136 596,126" fill="#b89060" stroke="#987040" strokeWidth="0.8"/>
+      <rect x="478" y="126" width="96" height="68" rx="10" fill="#dcc898" stroke="#b8905a" strokeWidth="1.2"/>
+      <rect x="478" y="126" width="96" height="68" rx="10" fill="url(#vbp)" opacity="0.5"/>
+      <text x="526" y="214" textAnchor="middle" fontSize="14" fontWeight="700" fill="#dc2626">Grade V</text>
+      <text x="526" y="229" textAnchor="middle" fontSize="11" fill="#dc2626">Collapsed / black disc</text>
+      <text x="526" y="242" textAnchor="middle" fontSize="10" fill="#64748b">Disc space lost &#177; osteophytes</text>
+    </svg>
+  ),
+
+  'spine-stenosis': (
+    <svg viewBox="0 0 680 580" aria-label="Canal and foraminal stenosis MRI style grades normal to severe">
+      <defs>
+        <radialGradient id="csf_n" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff"/>
+          <stop offset="80%" stopColor="#e0e0e0"/>
+          <stop offset="100%" stopColor="#c0c0c0"/>
+        </radialGradient>
+        <radialGradient id="muscle_g" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#585858"/>
+          <stop offset="100%" stopColor="#303030"/>
+        </radialGradient>
+      </defs>
+      <text x="170" y="18" textAnchor="middle" fontSize="13" fontWeight="700" fill="#1e293b">Spinal canal stenosis</text>
+      <text x="510" y="18" textAnchor="middle" fontSize="13" fontWeight="700" fill="#1e293b">Foraminal stenosis</text>
+      <text x="100" y="34" textAnchor="middle" fontSize="10" fill="#64748b">Axial T2</text>
+      <text x="242" y="34" textAnchor="middle" fontSize="10" fill="#64748b">Sagittal T2</text>
+      <text x="440" y="34" textAnchor="middle" fontSize="10" fill="#64748b">Axial T2</text>
+      <text x="590" y="34" textAnchor="middle" fontSize="10" fill="#64748b">Sagittal T2</text>
+      {/* ROW 1: NORMAL */}
+      <text x="28" y="110" textAnchor="middle" fontSize="12" fontWeight="700" fill="#16a34a">Normal</text>
+      <rect x="42" y="42" width="116" height="116" rx="5" fill="#141414"/>
+      <ellipse cx="100" cy="100" rx="52" ry="50" fill="url(#muscle_g)"/>
+      <ellipse cx="100" cy="97" rx="33" ry="30" fill="#484848" stroke="#686868" strokeWidth="1.5"/>
+      <path d="M75 116 Q100 130 125 116" fill="none" stroke="#585858" strokeWidth="7" strokeLinecap="round"/>
+      <rect x="96" y="128" width="8" height="18" rx="3" fill="#484848"/>
+      <ellipse cx="100" cy="72" rx="26" ry="10" fill="#3a3a3a"/>
+      <ellipse cx="100" cy="97" rx="22" ry="20" fill="#aaaaaa"/>
+      <ellipse cx="100" cy="97" rx="16" ry="16" fill="url(#csf_n)"/>
+      <circle cx="96" cy="95" r="2.5" fill="#555"/>
+      <circle cx="104" cy="95" r="2.5" fill="#555"/>
+      <circle cx="100" cy="101" r="2" fill="#666"/>
+      <rect x="184" y="42" width="116" height="116" rx="5" fill="#141414"/>
+      <rect x="190" y="48" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="190" y="98" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="192" y="84" width="54" height="14" rx="2" fill="#222"/>
+      <rect x="254" y="50" width="38" height="100" rx="5" fill="#e8e8e8"/>
+      <rect x="290" y="54" width="6" height="92" rx="2" fill="#888"/>
+      {/* Foraminal Normal */}
+      <rect x="382" y="42" width="116" height="116" rx="5" fill="#141414"/>
+      <ellipse cx="440" cy="100" rx="52" ry="50" fill="url(#muscle_g)"/>
+      <ellipse cx="440" cy="97" rx="33" ry="30" fill="#484848" stroke="#686868" strokeWidth="1.5"/>
+      <path d="M415 116 Q440 130 465 116" fill="none" stroke="#585858" strokeWidth="7" strokeLinecap="round"/>
+      <ellipse cx="440" cy="72" rx="26" ry="10" fill="#3a3a3a"/>
+      <ellipse cx="440" cy="97" rx="22" ry="20" fill="#aaaaaa"/>
+      <ellipse cx="440" cy="97" rx="15" ry="15" fill="url(#csf_n)"/>
+      <ellipse cx="414" cy="93" rx="10" ry="13" fill="#cccccc"/>
+      <circle cx="414" cy="93" r="5" fill="#3a3a3a" stroke="#555" strokeWidth="0.8"/>
+      <ellipse cx="466" cy="93" rx="10" ry="13" fill="#cccccc"/>
+      <circle cx="466" cy="93" r="5" fill="#3a3a3a" stroke="#555" strokeWidth="0.8"/>
+      <rect x="532" y="42" width="116" height="116" rx="5" fill="#141414"/>
+      <rect x="538" y="48" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="538" y="98" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="540" y="84" width="54" height="14" rx="2" fill="#222"/>
+      <ellipse cx="618" cy="72" rx="14" ry="17" fill="#bbbbbb"/>
+      <circle cx="618" cy="72" r="6" fill="#2a2a2a"/>
+      <ellipse cx="618" cy="112" rx="14" ry="17" fill="#bbbbbb"/>
+      <circle cx="618" cy="112" r="6" fill="#2a2a2a"/>
+      {/* ROW 2: MILD */}
+      <text x="28" y="244" textAnchor="middle" fontSize="12" fontWeight="700" fill="#3b82f6">Mild</text>
+      <rect x="42" y="176" width="116" height="116" rx="5" fill="#141414"/>
+      <ellipse cx="100" cy="234" rx="52" ry="50" fill="url(#muscle_g)"/>
+      <ellipse cx="100" cy="231" rx="33" ry="30" fill="#484848" stroke="#686868" strokeWidth="1.5"/>
+      <path d="M75 250 Q100 264 125 250" fill="none" stroke="#585858" strokeWidth="7" strokeLinecap="round"/>
+      <ellipse cx="100" cy="207" rx="30" ry="12" fill="#4a4a4a"/>
+      <ellipse cx="100" cy="229" rx="20" ry="18" fill="#909090"/>
+      <ellipse cx="100" cy="231" rx="14" ry="14" fill="url(#csf_n)"/>
+      <circle cx="96" cy="229" r="2.5" fill="#555"/>
+      <circle cx="104" cy="229" r="2.5" fill="#555"/>
+      <rect x="184" y="176" width="116" height="116" rx="5" fill="#141414"/>
+      <rect x="190" y="182" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="190" y="232" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="192" y="218" width="54" height="14" rx="2" fill="#282828"/>
+      <path d="M254 184 L290 184 L290 284 L254 284 Q276 268 274 249 Q272 232 262 222 Q268 208 254 196 Z" fill="#d8d8d8"/>
+      <rect x="382" y="176" width="116" height="116" rx="5" fill="#141414"/>
+      <ellipse cx="440" cy="234" rx="52" ry="50" fill="url(#muscle_g)"/>
+      <ellipse cx="440" cy="231" rx="33" ry="30" fill="#484848" stroke="#686868" strokeWidth="1.5"/>
+      <path d="M415 250 Q440 264 465 250" fill="none" stroke="#585858" strokeWidth="7" strokeLinecap="round"/>
+      <ellipse cx="440" cy="206" rx="26" ry="10" fill="#3a3a3a"/>
+      <ellipse cx="440" cy="229" rx="20" ry="18" fill="#909090"/>
+      <ellipse cx="440" cy="231" rx="14" ry="14" fill="url(#csf_n)"/>
+      <ellipse cx="414" cy="227" rx="8" ry="11" fill="#909090"/>
+      <circle cx="414" cy="227" r="4.5" fill="#3a3a3a"/>
+      <ellipse cx="466" cy="227" rx="8" ry="11" fill="#909090"/>
+      <circle cx="466" cy="227" r="4.5" fill="#3a3a3a"/>
+      <rect x="532" y="176" width="116" height="116" rx="5" fill="#141414"/>
+      <rect x="538" y="182" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="538" y="232" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="540" y="218" width="54" height="14" rx="2" fill="#282828"/>
+      <ellipse cx="618" cy="206" rx="12" ry="15" fill="#888888"/>
+      <circle cx="618" cy="206" r="5" fill="#2a2a2a"/>
+      <ellipse cx="618" cy="244" rx="12" ry="15" fill="#888888"/>
+      <circle cx="618" cy="244" r="5" fill="#2a2a2a"/>
+      {/* ROW 3: MODERATE */}
+      <text x="28" y="378" textAnchor="middle" fontSize="12" fontWeight="700" fill="#d97706">Moderate</text>
+      <rect x="42" y="310" width="116" height="116" rx="5" fill="#141414"/>
+      <ellipse cx="100" cy="368" rx="52" ry="50" fill="url(#muscle_g)"/>
+      <ellipse cx="100" cy="365" rx="33" ry="30" fill="#484848" stroke="#686868" strokeWidth="1.5"/>
+      <path d="M75 382 Q100 396 125 382" fill="none" stroke="#606060" strokeWidth="8" strokeLinecap="round"/>
+      <ellipse cx="100" cy="341" rx="32" ry="14" fill="#585858"/>
+      <ellipse cx="74" cy="368" rx="9" ry="6" fill="#545454"/>
+      <ellipse cx="126" cy="368" rx="9" ry="6" fill="#545454"/>
+      <ellipse cx="100" cy="363" rx="16" ry="15" fill="#686868"/>
+      <path d="M88 354 Q100 370 112 354 Q107 347 100 345 Q93 347 88 354 Z" fill="#d0d0d0"/>
+      <circle cx="97" cy="360" r="2" fill="#555"/>
+      <circle cx="103" cy="360" r="2" fill="#555"/>
+      <rect x="184" y="310" width="116" height="116" rx="5" fill="#141414"/>
+      <rect x="190" y="316" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="190" y="366" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="192" y="352" width="54" height="14" rx="2" fill="#383838"/>
+      <path d="M254 318 L290 318 L290 418 L254 418 Q280 402 278 384 Q276 366 258 354 Q274 342 254 328 Z" fill="#b0b0b0"/>
+      <rect x="382" y="310" width="116" height="116" rx="5" fill="#141414"/>
+      <ellipse cx="440" cy="368" rx="52" ry="50" fill="url(#muscle_g)"/>
+      <ellipse cx="440" cy="365" rx="33" ry="30" fill="#484848" stroke="#686868" strokeWidth="1.5"/>
+      <path d="M415 382 Q440 396 465 382" fill="none" stroke="#585858" strokeWidth="7" strokeLinecap="round"/>
+      <ellipse cx="440" cy="341" rx="28" ry="11" fill="#484848"/>
+      <ellipse cx="440" cy="363" rx="15" ry="14" fill="#c8c8c8"/>
+      <ellipse cx="414" cy="362" rx="6" ry="8" fill="#555555"/>
+      <circle cx="414" cy="362" r="3.5" fill="#2a2a2a"/>
+      <ellipse cx="466" cy="362" rx="6" ry="8" fill="#555555"/>
+      <circle cx="466" cy="362" r="3.5" fill="#2a2a2a"/>
+      <rect x="532" y="310" width="116" height="116" rx="5" fill="#141414"/>
+      <rect x="538" y="316" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="538" y="366" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="540" y="352" width="54" height="14" rx="2" fill="#383838"/>
+      <ellipse cx="618" cy="340" rx="10" ry="12" fill="#484848"/>
+      <circle cx="618" cy="340" r="4" fill="#282828"/>
+      <ellipse cx="618" cy="376" rx="10" ry="12" fill="#484848"/>
+      <circle cx="618" cy="376" r="4" fill="#282828"/>
+      {/* ROW 4: SEVERE */}
+      <text x="28" y="512" textAnchor="middle" fontSize="12" fontWeight="700" fill="#dc2626">Severe</text>
+      <rect x="42" y="444" width="116" height="116" rx="5" fill="#141414"/>
+      <ellipse cx="100" cy="502" rx="52" ry="50" fill="url(#muscle_g)"/>
+      <ellipse cx="100" cy="499" rx="33" ry="30" fill="#484848" stroke="#686868" strokeWidth="1.5"/>
+      <path d="M75 515 Q100 530 125 515" fill="none" stroke="#686868" strokeWidth="9" strokeLinecap="round"/>
+      <ellipse cx="100" cy="474" rx="34" ry="16" fill="#606060"/>
+      <ellipse cx="71" cy="500" rx="12" ry="8" fill="#606060"/>
+      <ellipse cx="129" cy="500" rx="12" ry="8" fill="#606060"/>
+      <ellipse cx="100" cy="494" rx="7" ry="5" fill="#999999"/>
+      <rect x="184" y="444" width="116" height="116" rx="5" fill="#141414"/>
+      <rect x="190" y="450" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="190" y="500" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="192" y="486" width="54" height="14" rx="2" fill="#444"/>
+      <path d="M254 452 L290 452 L290 552 L254 552 Q282 536 280 519 Q278 504 260 490 Q276 476 254 462 Z" fill="#888888"/>
+      <rect x="382" y="444" width="116" height="116" rx="5" fill="#141414"/>
+      <ellipse cx="440" cy="502" rx="52" ry="50" fill="url(#muscle_g)"/>
+      <ellipse cx="440" cy="499" rx="33" ry="30" fill="#484848" stroke="#686868" strokeWidth="1.5"/>
+      <path d="M415 515 Q440 530 465 515" fill="none" stroke="#585858" strokeWidth="7" strokeLinecap="round"/>
+      <ellipse cx="440" cy="474" rx="30" ry="13" fill="#585858"/>
+      <ellipse cx="440" cy="497" rx="14" ry="13" fill="#b0b0b0"/>
+      <ellipse cx="414" cy="497" rx="5" ry="6" fill="#2c2c2c"/>
+      <ellipse cx="466" cy="497" rx="5" ry="6" fill="#2c2c2c"/>
+      <rect x="532" y="444" width="116" height="116" rx="5" fill="#141414"/>
+      <rect x="538" y="450" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="538" y="500" width="58" height="36" rx="5" fill="#3c3c3c"/>
+      <rect x="540" y="486" width="54" height="14" rx="2" fill="#444"/>
+      <ellipse cx="618" cy="474" rx="8" ry="10" fill="#282828"/>
+      <ellipse cx="618" cy="510" rx="8" ry="10" fill="#282828"/>
+      <line x1="38" y1="174" x2="642" y2="174" stroke="#e2e8f0" strokeWidth="0.5"/>
+      <line x1="38" y1="308" x2="642" y2="308" stroke="#e2e8f0" strokeWidth="0.5"/>
+      <line x1="38" y1="442" x2="642" y2="442" strokeWidth="0.5" stroke="#e2e8f0"/>
+      <line x1="340" y1="38" x2="340" y2="562" stroke="#e2e8f0" strokeWidth="0.5"/>
+      <text x="340" y="576" textAnchor="middle" fontSize="10" fill="#94a3b8">T2 MRI — bright = CSF/fat  &#8226;  dark = bone/disc/fibrous tissue</text>
+    </svg>
+  ),
+
+  'spine-foraminal': (
+    <svg viewBox="0 0 680 200" aria-label="Foraminal stenosis grades 0 to 3">
+      <defs>
+        <radialGradient id="fat_f2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#cccccc"/>
+          <stop offset="100%" stopColor="#999999"/>
+        </radialGradient>
+      </defs>
+      <text x="85" y="20" textAnchor="middle" fontSize="12" fontWeight="700" fill="#16a34a">Grade 0 — Normal</text>
+      <rect x="34" y="28" width="102" height="72" rx="8" fill="#141414"/>
+      <rect x="40" y="34" width="90" height="60" rx="6" fill="#2a2a2a" stroke="#505050" strokeWidth="1"/>
+      <ellipse cx="85" cy="64" rx="30" ry="22" fill="url(#fat_f2)"/>
+      <circle cx="85" cy="64" r="9" fill="#1a1a1a" stroke="#444" strokeWidth="0.8"/>
+      <text x="85" y="116" textAnchor="middle" fontSize="11" fill="#16a34a">Fat fills foramen</text>
+      <text x="85" y="130" textAnchor="middle" fontSize="10" fill="#64748b">Root freely mobile</text>
+      <text x="255" y="20" textAnchor="middle" fontSize="12" fontWeight="700" fill="#d97706">Grade 1 — Mild</text>
+      <rect x="204" y="28" width="102" height="72" rx="8" fill="#141414"/>
+      <rect x="210" y="34" width="90" height="60" rx="6" fill="#2a2a2a" stroke="#505050" strokeWidth="1"/>
+      <rect x="212" y="34" width="86" height="14" rx="4" fill="#505050"/>
+      <ellipse cx="255" cy="68" rx="24" ry="18" fill="#aaaaaa"/>
+      <circle cx="255" cy="68" r="8" fill="#1a1a1a" stroke="#444" strokeWidth="0.8"/>
+      <text x="255" y="116" textAnchor="middle" fontSize="11" fill="#d97706">Fat &gt;25% remaining</text>
+      <text x="255" y="130" textAnchor="middle" fontSize="10" fill="#64748b">Root not deformed</text>
+      <text x="425" y="20" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ea580c">Grade 2 — Moderate</text>
+      <rect x="374" y="28" width="102" height="72" rx="8" fill="#141414"/>
+      <rect x="380" y="34" width="90" height="60" rx="6" fill="#2a2a2a" stroke="#505050" strokeWidth="1"/>
+      <rect x="382" y="34" width="86" height="16" rx="4" fill="#606060"/>
+      <rect x="382" y="78" width="86" height="16" rx="4" fill="#606060"/>
+      <ellipse cx="425" cy="64" rx="16" ry="12" fill="#666666"/>
+      <ellipse cx="425" cy="64" rx="10" ry="7" fill="#1a1a1a" stroke="#555" strokeWidth="1"/>
+      <text x="425" y="116" textAnchor="middle" fontSize="11" fill="#ea580c">Fat &lt;25%</text>
+      <text x="425" y="130" textAnchor="middle" fontSize="10" fill="#64748b">Root deformed</text>
+      <text x="595" y="20" textAnchor="middle" fontSize="12" fontWeight="700" fill="#dc2626">Grade 3 — Severe</text>
+      <rect x="544" y="28" width="102" height="72" rx="8" fill="#141414"/>
+      <rect x="550" y="34" width="90" height="60" rx="6" fill="#2a2a2a" stroke="#505050" strokeWidth="1"/>
+      <rect x="552" y="34" width="86" height="20" rx="5" fill="#707070"/>
+      <rect x="552" y="74" width="86" height="20" rx="5" fill="#707070"/>
+      <ellipse cx="595" cy="64" rx="8" ry="5" fill="#444444" stroke="#dc2626" strokeWidth="1.2"/>
+      <text x="595" y="116" textAnchor="middle" fontSize="11" fill="#dc2626">No fat visible</text>
+      <text x="595" y="130" textAnchor="middle" fontSize="10" fill="#64748b">Root obliterated</text>
+    </svg>
+  ),
+
+  'spine-meyerding': (
+    <svg viewBox="0 0 680 400" aria-label="Meyerding spondylolisthesis grades I through V">
+      <defs>
+        <marker id="marr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </marker>
+      </defs>
+      {/* GRADES I–IV top row */}
+      {/* Grade I */}
+      <text x="65" y="15" textAnchor="middle" fontSize="12" fontWeight="700" fill="#16a34a">Grade I</text>
+      <text x="65" y="28" textAnchor="middle" fontSize="10" fill="#16a34a">0–25%</text>
+      <path d="M10 200 Q10 160 30 150 Q50 138 80 145 Q108 152 108 170 Q108 220 80 235 Q50 248 28 238 Q10 228 10 200 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <rect x="10" y="143" width="24" height="30" fill="#93c5fd" opacity="0.7"/>
+      <rect x="34" y="140" width="24" height="30" fill="#86efac" opacity="0.7"/>
+      <rect x="58" y="141" width="24" height="30" fill="#fca5a5" opacity="0.7"/>
+      <rect x="82" y="145" width="26" height="28" fill="#fde68a" opacity="0.7"/>
+      <line x1="34" y1="140" x2="34" y2="175" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="58" y1="139" x2="58" y2="175" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="82" y1="140" x2="82" y2="175" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="106" y1="144" x2="106" y2="175" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <path d="M16 143 Q55 156 112 148 L112 158 Q55 166 16 153 Z" fill="#a8d0e8" stroke="#5090b8" strokeWidth="1" opacity="0.8"/>
+      <path d="M16 140 Q34 86 88 84 Q112 83 116 108 Q116 153 88 164 Q56 172 30 163 Q14 155 16 140 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <path d="M108 94 Q116 120 114 152 Q118 162 118 202 Q118 232 114 247" fill="none" stroke="#93c5fd" strokeWidth="8" strokeLinecap="round" opacity="0.7"/>
+      <text x="65" y="270" textAnchor="middle" fontSize="11" fill="#64748b">Minimal slip</text>
+      <text x="65" y="283" textAnchor="middle" fontSize="11" fill="#16a34a">Canal: open</text>
+      {/* Grade II */}
+      <text x="195" y="15" textAnchor="middle" fontSize="12" fontWeight="700" fill="#d97706">Grade II</text>
+      <text x="195" y="28" textAnchor="middle" fontSize="10" fill="#d97706">25–50%</text>
+      <path d="M143 205 Q143 165 163 153 Q183 140 212 148 Q240 155 240 175 Q240 225 212 238 Q182 250 160 242 Q143 232 143 205 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <rect x="143" y="146" width="24" height="30" fill="#93c5fd" opacity="0.7"/>
+      <rect x="167" y="143" width="24" height="30" fill="#86efac" opacity="0.7"/>
+      <rect x="191" y="144" width="24" height="30" fill="#fca5a5" opacity="0.7"/>
+      <rect x="215" y="148" width="25" height="28" fill="#fde68a" opacity="0.7"/>
+      <line x1="167" y1="143" x2="167" y2="177" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="191" y1="142" x2="191" y2="177" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="215" y1="144" x2="215" y2="177" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="239" y1="148" x2="239" y2="177" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <path d="M145 148 Q184 160 242 153 L242 164 Q184 172 145 160 Z" fill="#a8d0e8" stroke="#5090b8" strokeWidth="1" opacity="0.8"/>
+      <path d="M170 143 Q170 102 190 90 Q212 77 240 84 Q268 90 268 112 Q268 153 240 164 Q212 172 188 166 Q170 158 170 143 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <path d="M240 96 Q250 122 248 155 Q242 163 242 177 Q246 200 242 237" fill="none" stroke="#93c5fd" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" opacity="0.65"/>
+      <circle cx="244" cy="158" r="5" fill="#3b82f6" opacity="0.9"/>
+      <text x="195" y="270" textAnchor="middle" fontSize="11" fill="#64748b">Moderate slip</text>
+      <text x="195" y="283" textAnchor="middle" fontSize="11" fill="#d97706">Canal: mild kink</text>
+      {/* Grade III */}
+      <text x="325" y="15" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ea580c">Grade III</text>
+      <text x="325" y="28" textAnchor="middle" fontSize="10" fill="#ea580c">50–75%</text>
+      <path d="M273 210 Q273 168 293 156 Q315 143 343 150 Q370 157 370 177 Q370 228 343 242 Q313 255 290 247 Q273 237 273 210 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <rect x="273" y="150" width="24" height="30" fill="#93c5fd" opacity="0.7"/>
+      <rect x="297" y="147" width="24" height="30" fill="#86efac" opacity="0.7"/>
+      <rect x="321" y="148" width="24" height="30" fill="#fca5a5" opacity="0.7"/>
+      <rect x="345" y="151" width="25" height="28" fill="#fde68a" opacity="0.7"/>
+      <line x1="297" y1="147" x2="297" y2="181" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="321" y1="147" x2="321" y2="181" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="345" y1="149" x2="345" y2="181" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="369" y1="152" x2="369" y2="181" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <path d="M275 153 Q314 164 372 158 L372 168 Q314 176 275 164 Z" fill="#a8d0e8" stroke="#5090b8" strokeWidth="1" opacity="0.8"/>
+      <path d="M316 147 Q316 105 336 92 Q358 78 385 86 Q412 92 412 114 Q412 155 385 167 Q357 176 333 170 Q316 162 316 147 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <path d="M384 98 Q394 125 392 150 Q386 162 374 170 Q372 185 370 210 Q374 230 370 244" fill="none" stroke="#93c5fd" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+      <circle cx="380" cy="163" r="6" fill="#f59e0b" opacity="0.9"/>
+      <text x="325" y="270" textAnchor="middle" fontSize="11" fill="#64748b">Severe slip</text>
+      <text x="325" y="283" textAnchor="middle" fontSize="11" fill="#ea580c">Canal: kinked</text>
+      {/* Grade IV */}
+      <text x="455" y="15" textAnchor="middle" fontSize="12" fontWeight="700" fill="#dc2626">Grade IV</text>
+      <text x="455" y="28" textAnchor="middle" fontSize="10" fill="#dc2626">75–100%</text>
+      <path d="M403 215 Q403 172 423 159 Q445 145 474 153 Q502 160 502 181 Q502 232 474 246 Q444 260 421 252 Q403 242 403 215 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <rect x="403" y="153" width="25" height="30" fill="#93c5fd" opacity="0.7"/>
+      <rect x="428" y="150" width="25" height="30" fill="#86efac" opacity="0.7"/>
+      <rect x="453" y="151" width="24" height="30" fill="#fca5a5" opacity="0.7"/>
+      <rect x="477" y="154" width="25" height="28" fill="#fde68a" opacity="0.7"/>
+      <line x1="428" y1="150" x2="428" y2="184" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="452" y1="150" x2="452" y2="184" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="476" y1="152" x2="476" y2="184" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <line x1="500" y1="155" x2="500" y2="184" stroke="#1d4ed8" strokeWidth="1.2"/>
+      <path d="M405 158 Q444 168 505 163 L505 173 Q444 181 405 170 Z" fill="#a8d0e8" stroke="#5090b8" strokeWidth="1" opacity="0.8"/>
+      <path d="M470 152 Q470 108 490 95 Q512 81 539 89 Q566 96 566 118 Q566 160 539 172 Q511 182 487 176 Q470 168 470 152 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <path d="M538 101 Q550 128 546 155 Q540 165 506 175 Q503 191 502 216 Q506 237 502 248" fill="none" stroke="#93c5fd" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+      <circle cx="522" cy="167" r="7" fill="#ef4444" opacity="0.95"/>
+      <text x="455" y="270" textAnchor="middle" fontSize="11" fill="#64748b">Near-complete</text>
+      <text x="455" y="283" textAnchor="middle" fontSize="11" fill="#dc2626">Canal: severe</text>
+      {/* Grade V — Spondyloptosis — bottom row centered */}
+      <text x="340" y="308" textAnchor="middle" fontSize="13" fontWeight="700" fill="#7c2d12">Grade V — Spondyloptosis</text>
+      <path d="M200 375 Q200 345 220 333 Q245 320 272 327 Q300 334 300 352 Q300 385 272 370 Q245 358 222 362 Q200 364 200 375 Z" fill="#f0e6c8" stroke="#c8a860" strokeWidth="2"/>
+      <path d="M300 350 Q305 362 300 374" fill="none" stroke="#c8a860" strokeWidth="2.5"/>
+      <path d="M120 350 Q120 318 142 307 Q166 295 194 302 Q222 309 222 328 Q222 362 194 374 Q166 384 144 376 Q120 367 120 350 Z" fill="#f0e6c8" stroke="#991b1b" strokeWidth="2.2"/>
+      <path d="M125 350 Q170 364 222 357 Q215 370 175 372 Q148 372 125 362 Z" fill="#a8d0e8" stroke="#5090b8" strokeWidth="0.8" opacity="0.6"/>
+      <path d="M218 305 Q228 322 226 348" fill="none" stroke="#93c5fd" strokeWidth="7" strokeLinecap="round" opacity="0.7"/>
+      <line x1="220" y1="354" x2="232" y2="366" stroke="#dc2626" strokeWidth="2.5"/>
+      <line x1="232" y1="354" x2="220" y2="366" stroke="#dc2626" strokeWidth="2.5"/>
+      <path d="M304 354 Q309 364 307 378" fill="none" stroke="#93c5fd" strokeWidth="7" strokeLinecap="round" opacity="0.4"/>
+      <line x1="222" y1="302" x2="172" y2="377" stroke="#991b1b" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.8" markerEnd="url(#marr)"/>
+      {/* Legend */}
+      <rect x="380" y="320" width="14" height="12" rx="2" fill="#93c5fd" opacity="0.8"/>
+      <text x="398" y="330" fontSize="10" fill="#1d4ed8">Grade I zone (0–25%)</text>
+      <rect x="380" y="336" width="14" height="12" rx="2" fill="#86efac" opacity="0.8"/>
+      <text x="398" y="346" fontSize="10" fill="#16a34a">Grade II zone (25–50%)</text>
+      <rect x="380" y="352" width="14" height="12" rx="2" fill="#fca5a5" opacity="0.8"/>
+      <text x="398" y="362" fontSize="10" fill="#dc2626">Grade III zone (50–75%)</text>
+      <rect x="380" y="368" width="14" height="12" rx="2" fill="#fde68a" opacity="0.8"/>
+      <text x="398" y="378" fontSize="10" fill="#b45309">Grade IV zone (75–100%)</text>
+      <text x="340" y="397" textAnchor="middle" fontSize="10" fill="#94a3b8">Blue = spinal canal  &#8226;  &#10005; = canal obliteration  &#8226;  Color zones = % of S1 endplate displaced</text>
     </svg>
   ),
 
   'spine-disc-nomen': (
-    <svg viewBox="0 0 320 240" aria-label="Disc nomenclature bulge protrusion extrusion sequestration">
-      {[
-        {label:'Bulge', x:22, shape:'bulge'},
-        {label:'Protrusion', x:92, shape:'protrusion'},
-        {label:'Extrusion', x:175, shape:'extrusion'},
-        {label:'Sequestration', x:248, shape:'sequestration'},
-      ].map(({label,x,shape},i) => {
-        const cx = x + 30;
-        return (
-          <g key={i}>
-            {/* Vertebrae */}
-            <rect x={x} y={30} width={60} height={35} rx={4} fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.2"/>
-            <rect x={x} y={115} width={60} height={35} rx={4} fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.2"/>
-            {/* Disc base */}
-            <rect x={x} y={65} width={60} height={50} rx={2} fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1.2"/>
-            {/* Herniation shapes */}
-            {shape==='bulge' && <rect x={x-8} y={72} width={76} height={36} rx={10} fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1.5" opacity="0.7"/>}
-            {shape==='protrusion' && <ellipse cx={cx+18} cy={90} rx={12} ry={18} fill="#fde68a" stroke="#d97706" strokeWidth="1.5"/>}
-            {shape==='extrusion' && <ellipse cx={cx+18} cy={85} rx={14} ry={24} fill="#fca5a5" stroke="#c0392b" strokeWidth="1.5"/>}
-            {shape==='sequestration' && <>
-              <ellipse cx={cx+18} cy={82} rx={10} ry={16} fill="#fca5a5" stroke="#c0392b" strokeWidth="1" opacity="0.5"/>
-              <ellipse cx={cx+20} cy={62} rx={9} ry={12} fill="#c0392b" stroke="#991b1b" strokeWidth="1.5"/>
-              <text x={cx+20} y={65} textAnchor="middle" fontSize="7" fill="white">frag</text>
-            </>}
-            <text x={cx} y={170} textAnchor="middle" fontSize="8" fill="#c0392b" fontWeight="bold">{label}</text>
-          </g>
-        );
-      })}
-      <text x="160" y="232" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Axial view — disc morphology types</text>
+    <svg viewBox="0 0 680 300" aria-label="Lumbar disc nomenclature bulge protrusion extrusion sequestration">
+      <defs>
+        <pattern id="vbd" x="0" y="0" width="5" height="5" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.5" r="0.7" fill="#c8a882" opacity="0.5"/>
+          <circle cx="3.8" cy="3.8" r="0.7" fill="#c8a882" opacity="0.5"/>
+        </pattern>
+      </defs>
+      {/* Helper: sagittal view of L4-L5 disc segment for each type */}
+      {/* NORMAL */}
+      <text x="60" y="18" textAnchor="middle" fontSize="12" fontWeight="700" fill="#16a34a">Normal</text>
+      <rect x="12" y="28" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="12" y="28" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <rect x="14" y="82" width="92" height="28" rx="5" fill="#8ab4c8" stroke="#5090b0" strokeWidth="1.2"/>
+      <ellipse cx="60" cy="96" rx="28" ry="10" fill="#6898b0" opacity="0.6"/>
+      <rect x="12" y="112" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="12" y="112" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <text x="60" y="185" textAnchor="middle" fontSize="11" fill="#16a34a">Intact disc</text>
+      <text x="60" y="198" textAnchor="middle" fontSize="10" fill="#64748b">Normal height</text>
+      <text x="60" y="211" textAnchor="middle" fontSize="10" fill="#64748b">NP bright T2</text>
+      {/* BULGE */}
+      <text x="200" y="18" textAnchor="middle" fontSize="12" fontWeight="700" fill="#d97706">Bulge</text>
+      <rect x="152" y="28" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="152" y="28" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <path d="M154 82 Q200 72 246 82 L248 110 Q200 120 152 110 Z" fill="#7ab4cc" stroke="#4890b0" strokeWidth="1.2"/>
+      {/* Broad symmetric bulge anterior */}
+      <path d="M152 82 Q200 68 248 82 Q252 96 248 96 Q200 84 152 96 Z" fill="#6898b8" opacity="0.8"/>
+      <rect x="152" y="112" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="152" y="112" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <text x="200" y="185" textAnchor="middle" fontSize="11" fill="#d97706">Broad-based</text>
+      <text x="200" y="198" textAnchor="middle" fontSize="10" fill="#64748b">&gt;50% circumference</text>
+      <text x="200" y="211" textAnchor="middle" fontSize="10" fill="#64748b">&lt;3mm beyond EP</text>
+      {/* PROTRUSION */}
+      <text x="340" y="18" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ea580c">Protrusion</text>
+      <rect x="292" y="28" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="292" y="28" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <path d="M294 82 Q340 78 386 82 L386 110 Q340 106 294 110 Z" fill="#7ab4cc" stroke="#4890b0" strokeWidth="1.2"/>
+      {/* Focal posterior protrusion — base wider than AP extent */}
+      <ellipse cx="340" cy="84" rx="16" ry="12" fill="#4878a8" opacity="0.9"/>
+      <rect x="292" y="112" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="292" y="112" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <text x="340" y="185" textAnchor="middle" fontSize="11" fill="#ea580c">Focal / asymmetric</text>
+      <text x="340" y="198" textAnchor="middle" fontSize="10" fill="#64748b">&lt;25% circumference</text>
+      <text x="340" y="211" textAnchor="middle" fontSize="10" fill="#64748b">Base &gt; AP extent</text>
+      {/* EXTRUSION */}
+      <text x="480" y="18" textAnchor="middle" fontSize="12" fontWeight="700" fill="#dc2626">Extrusion</text>
+      <rect x="432" y="28" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="432" y="28" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <path d="M434 82 Q480 78 526 82 L526 110 Q480 106 434 110 Z" fill="#7ab4cc" stroke="#4890b0" strokeWidth="1.2"/>
+      {/* AP extent > base — mushroom shape */}
+      <path d="M468 82 Q480 60 492 82 Q488 90 492 96 Q480 92 468 96 Q472 90 468 82 Z" fill="#3060a0" opacity="0.9"/>
+      <rect x="432" y="112" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="432" y="112" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <text x="480" y="185" textAnchor="middle" fontSize="11" fill="#dc2626">AP extent &gt; base</text>
+      <text x="480" y="198" textAnchor="middle" fontSize="10" fill="#64748b">Herniated NP</text>
+      <text x="480" y="211" textAnchor="middle" fontSize="10" fill="#64748b">Breaks annulus</text>
+      {/* SEQUESTRATION */}
+      <text x="620" y="18" textAnchor="middle" fontSize="12" fontWeight="700" fill="#7c2d12">Sequestration</text>
+      <rect x="572" y="28" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="572" y="28" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <path d="M574 82 Q620 78 666 82 L666 110 Q620 106 574 110 Z" fill="#7ab4cc" stroke="#4890b0" strokeWidth="1.2"/>
+      {/* Free fragment migrated away from disc */}
+      <ellipse cx="616" cy="72" rx="11" ry="9" fill="#2850a0" opacity="0.95" stroke="#1a3880" strokeWidth="0.8"/>
+      <rect x="572" y="112" width="96" height="52" rx="8" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="572" y="112" width="96" height="52" rx="8" fill="url(#vbd)" opacity="0.6"/>
+      <text x="620" y="185" textAnchor="middle" fontSize="11" fill="#7c2d12">Free fragment</text>
+      <text x="620" y="198" textAnchor="middle" fontSize="10" fill="#64748b">Separated from disc</text>
+      <text x="620" y="211" textAnchor="middle" fontSize="10" fill="#64748b">May migrate up/down</text>
+      <text x="340" y="240" textAnchor="middle" fontSize="10" fill="#94a3b8">Per NASS/ASSR/ASNR 2014 nomenclature guidelines — sagittal T2 MRI view</text>
     </svg>
   ),
 
   'spine-ao-cervical': (
-    <svg viewBox="0 0 320 240" aria-label="AO Spine cervical classification">
-      {[
-        {label:'A0\nMinor', x:18, color:'#bbf7d0', border:'#16a34a', shape:'intact'},
-        {label:'A4\nBurst', x:90, color:'#fde68a', border:'#d97706', shape:'burst'},
-        {label:'B2\nTension', x:175, color:'#fdba74', border:'#ea580c', shape:'tension'},
-        {label:'C\nTranslate', x:250, color:'#fca5a5', border:'#dc2626', shape:'translate'},
-      ].map(({label,x,color,border,shape},i) => {
-        const cx = x + 32;
-        return (
-          <g key={i}>
-            {/* Vertebral body */}
-            <rect x={x} y={50} width={64} height={45} rx={4}
-              fill={shape==='translate'?'#fca5a5':color} stroke={border} strokeWidth="2"/>
-            {/* Disc */}
-            <rect x={x} y={95} width={64} height={16} rx={2} fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1"/>
-            {/* Below vertebra */}
-            <rect x={x + (shape==='translate'?12:0)} y={111} width={64} height={45} rx={4}
-              fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5"/>
-            {/* Burst fracture lines */}
-            {shape==='burst' && <>
-              <line x1={x+32} y1={50} x2={x+18} y2={95} stroke="#c0392b" strokeWidth="1.5"/>
-              <line x1={x+32} y1={50} x2={x+46} y2={95} stroke="#c0392b" strokeWidth="1.5"/>
-            </>}
-            {/* Tension band */}
-            {shape==='tension' && <>
-              <line x1={x+32} y1={50} x2={x+32} y2={30} stroke="#c0392b" strokeWidth="2"/>
-              <line x1={x+15} y1={30} x2={x+49} y2={30} stroke="#c0392b" strokeWidth="2"/>
-              <text x={cx} y={27} textAnchor="middle" fontSize="7" fill="#c0392b">PLC disruption</text>
-            </>}
-            <text x={cx} y={180} textAnchor="middle" fontSize="9" fill="#333" fontWeight="600">{label.split('\n')[0]}</text>
-            <text x={cx} y={191} textAnchor="middle" fontSize="8" fill="#555">{label.split('\n')[1]}</text>
-          </g>
-        );
-      })}
-      <text x="160" y="215" textAnchor="middle" fontSize="9" fill="#888">A=compression  B=tension band  C=displacement</text>
-      <text x="160" y="232" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Sagittal — AO Cervical types</text>
+    <svg viewBox="0 0 680 320" aria-label="AO Spine cervical fracture classification types A B C">
+      <defs>
+        <pattern id="vbao" x="0" y="0" width="5" height="5" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.5" r="0.7" fill="#c8a882" opacity="0.5"/>
+          <circle cx="3.8" cy="3.8" r="0.7" fill="#c8a882" opacity="0.5"/>
+        </pattern>
+      </defs>
+      <text x="340" y="18" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1e293b">AO Spine Cervical Classification (C3–C7)</text>
+      {/* TYPE A — COMPRESSION */}
+      <text x="110" y="42" textAnchor="middle" fontSize="13" fontWeight="700" fill="#d97706">Type A — Compression</text>
+      <text x="55" y="58" textAnchor="middle" fontSize="10" fill="#d97706">A0 Minor</text>
+      <rect x="14" y="64" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="14" y="64" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      <line x1="14" y1="76" x2="96" y2="76" stroke="#c8a860" strokeWidth="0.8" strokeDasharray="3 2"/>
+      <rect x="14" y="124" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="14" y="124" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      <text x="55" y="195" textAnchor="middle" fontSize="10" fill="#64748b">Spinous/transverse Fx</text>
+      <text x="110" y="58" textAnchor="middle" fontSize="10" fill="#d97706">A3 Burst partial</text>
+      <rect x="100" y="64" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="100" y="64" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      {/* Burst — comminuted VB, retropulsed fragment */}
+      <line x1="100" y1="85" x2="182" y2="85" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
+      <line x1="100" y1="95" x2="182" y2="95" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
+      <line x1="141" y1="64" x2="141" y2="120" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
+      <rect x="152" y="72" width="10" height="30" rx="2" fill="#b04020" opacity="0.7"/>
+      <rect x="100" y="124" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="100" y="124" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      <text x="141" y="195" textAnchor="middle" fontSize="10" fill="#64748b">Burst — retropulsion</text>
+      {/* TYPE B — TENSION BAND */}
+      <text x="340" y="42" textAnchor="middle" fontSize="13" fontWeight="700" fill="#ea580c">Type B — Tension Band Failure</text>
+      <text x="270" y="58" textAnchor="middle" fontSize="10" fill="#ea580c">B1 Posterior bony</text>
+      <rect x="228" y="64" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="228" y="64" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      {/* Posterior element fracture — tension band failure */}
+      <path d="M290 64 Q298 80 290 96" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="285" y1="70" x2="295" y2="82" stroke="#dc2626" strokeWidth="1.5"/>
+      <rect x="228" y="124" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="228" y="124" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      <text x="270" y="195" textAnchor="middle" fontSize="10" fill="#64748b">Posterior Fx, bony</text>
+      <text x="355" y="58" textAnchor="middle" fontSize="10" fill="#ea580c">B2 PLC disruption</text>
+      <rect x="314" y="64" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="314" y="64" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      {/* Ligamentous distraction — gap posteriorly */}
+      <path d="M375 64 Q385 80 375 96" fill="none" stroke="#7c2d12" strokeWidth="1.5" strokeDasharray="3 2"/>
+      <path d="M366 64 Q358 72 366 80" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round"/>
+      <rect x="314" y="124" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="314" y="124" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      <text x="355" y="195" textAnchor="middle" fontSize="10" fill="#64748b">Lig disruption (PLC)</text>
+      {/* TYPE C — TRANSLATION */}
+      <text x="570" y="42" textAnchor="middle" fontSize="13" fontWeight="700" fill="#dc2626">Type C — Translation</text>
+      <text x="570" y="58" textAnchor="middle" fontSize="10" fill="#dc2626">All columns displaced</text>
+      <rect x="445" y="64" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="445" y="64" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      {/* Translation — VB shifted anterior on lower VB */}
+      <rect x="466" y="124" width="82" height="56" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="466" y="124" width="82" height="56" rx="7" fill="url(#vbao)" opacity="0.6"/>
+      <line x1="466" y1="120" x2="527" y2="120" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
+      <path d="M452 118 L462 126" fill="none" stroke="#dc2626" strokeWidth="2" markerEnd="url(#marr2)"/>
+      <defs><marker id="marr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#dc2626" strokeWidth="1.5"/></marker></defs>
+      <text x="570" y="195" textAnchor="middle" fontSize="10" fill="#64748b">Anterior translation</text>
+      <text x="570" y="208" textAnchor="middle" fontSize="10" fill="#64748b">All 3 columns disrupted</text>
+      {/* Severity note */}
+      <rect x="40" y="220" width="600" height="50" rx="8" fill="#fef3c7" stroke="#d97706" strokeWidth="1"/>
+      <text x="340" y="238" textAnchor="middle" fontSize="11" fontWeight="700" fill="#92400e">Modifiers: N0–N4 neurological status  |  F1–F4 facet injury severity</text>
+      <text x="340" y="254" textAnchor="middle" fontSize="10" fill="#78350f">Stability: A (least) &#8594; B &#8594; C (most unstable)  |  SLICS &amp; AO Spine score guide surgical decision</text>
     </svg>
   ),
 
   'spine-ao-tl': (
-    <svg viewBox="0 0 320 240" aria-label="AO Spine thoracolumbar classification">
-      {[
-        {label:'A1\nWedge', x:18, shape:'wedge', color:'#bbf7d0', border:'#16a34a'},
-        {label:'A4\nBurst', x:90, shape:'burst', color:'#fde68a', border:'#d97706'},
-        {label:'B1\nBony PLC', x:168, shape:'bony', color:'#fdba74', border:'#ea580c'},
-        {label:'C\nDisplace', x:248, shape:'translate', color:'#fca5a5', border:'#dc2626'},
-      ].map(({label,x,shape,color,border},i) => {
-        const cx = x + 32;
-        const vbPath = shape==='wedge'
-          ? `M${x} 50 L${x+64} 50 L${x+55} 95 L${x+9} 95 Z`
-          : `M${x} 50 L${x+64} 50 L${x+64} 95 L${x} 95 Z`;
-        return (
-          <g key={i}>
-            <path d={vbPath} fill={color} stroke={border} strokeWidth="2"/>
-            <rect x={x} y={95} width={64} height={14} rx={2} fill="#8bb8a8" stroke="#2d7a5a" strokeWidth="1"/>
-            <rect x={x+(shape==='translate'?16:0)} y={109} width={64} height={44} rx={4} fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5"/>
-            {shape==='burst' && <>
-              <line x1={x+32} y1={50} x2={x+16} y2={95} stroke="#c0392b" strokeWidth="1.5"/>
-              <line x1={x+32} y1={50} x2={x+48} y2={95} stroke="#c0392b" strokeWidth="1.5"/>
-              <ellipse cx={x+40} cy={105} rx={8} ry={5} fill="#c0392b" opacity="0.6"/>
-            </>}
-            {shape==='bony' && <>
-              <line x1={x+32} y1={95} x2={x+32} y2={65} stroke="#c0392b" strokeWidth="2"/>
-              <line x1={x+10} y1={65} x2={x+54} y2={65} stroke="#c0392b" strokeWidth="2"/>
-            </>}
-            <text x={cx} y={178} textAnchor="middle" fontSize="9" fill="#333" fontWeight="600">{label.split('\n')[0]}</text>
-            <text x={cx} y={190} textAnchor="middle" fontSize="8" fill="#555">{label.split('\n')[1]}</text>
-          </g>
-        );
-      })}
-      <text x="160" y="214" textAnchor="middle" fontSize="9" fill="#888">TLICS: ≤3 = conservative  ≥5 = surgical</text>
-      <text x="160" y="232" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Sagittal — AO Thoracolumbar types</text>
+    <svg viewBox="0 0 680 300" aria-label="AO Spine thoracolumbar fracture classification TLICS">
+      <defs>
+        <pattern id="vbtl" x="0" y="0" width="5" height="5" patternUnits="userSpaceOnUse">
+          <circle cx="1.5" cy="1.5" r="0.7" fill="#c8a882" opacity="0.5"/>
+          <circle cx="3.8" cy="3.8" r="0.7" fill="#c8a882" opacity="0.5"/>
+        </pattern>
+      </defs>
+      <text x="340" y="18" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1e293b">AO Spine Thoracolumbar Classification (T1–L5)</text>
+      {/* TYPE A */}
+      <text x="100" y="42" textAnchor="middle" fontSize="13" fontWeight="700" fill="#d97706">Type A — Compression</text>
+      <text x="50" y="58" textAnchor="middle" fontSize="10" fill="#d97706">A1 Wedge</text>
+      <rect x="10" y="62" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="10" y="62" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      {/* Anterior wedge */}
+      <path d="M10 62 L90 62 L90 120 L10 105 Z" fill="#c8a060" opacity="0.4"/>
+      <rect x="10" y="124" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="10" y="124" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <text x="50" y="198" textAnchor="middle" fontSize="10" fill="#64748b">Ant wedge Fx</text>
+      <text x="130" y="58" textAnchor="middle" fontSize="10" fill="#d97706">A4 Burst</text>
+      <rect x="98" y="62" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="98" y="62" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <line x1="98" y1="80" x2="178" y2="80" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
+      <line x1="98" y1="92" x2="178" y2="92" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
+      <line x1="138" y1="62" x2="138" y2="120" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
+      <rect x="150" y="70" width="10" height="36" rx="2" fill="#b04020" opacity="0.7"/>
+      <rect x="98" y="124" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="98" y="124" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <text x="138" y="198" textAnchor="middle" fontSize="10" fill="#64748b">Burst + retropulsion</text>
+      {/* TYPE B */}
+      <text x="340" y="42" textAnchor="middle" fontSize="13" fontWeight="700" fill="#ea580c">Type B — Posterior Tension</text>
+      <text x="258" y="58" textAnchor="middle" fontSize="10" fill="#ea580c">B1 Bony PLC</text>
+      <rect x="218" y="62" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="218" y="62" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <path d="M280 62 Q290 78 280 95" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/>
+      <rect x="218" y="124" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="218" y="124" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <text x="258" y="198" textAnchor="middle" fontSize="10" fill="#64748b">Chance fracture</text>
+      <text x="340" y="58" textAnchor="middle" fontSize="10" fill="#ea580c">B2 Ligamentous</text>
+      <rect x="302" y="62" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="302" y="62" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <path d="M364 58 Q375 75 364 92" fill="none" stroke="#7c2d12" strokeWidth="1.5" strokeDasharray="3 2"/>
+      <path d="M354 58 Q344 68 354 78" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round"/>
+      <rect x="302" y="124" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="302" y="124" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <text x="342" y="198" textAnchor="middle" fontSize="10" fill="#64748b">PLC disruption</text>
+      {/* TYPE C */}
+      <text x="570" y="42" textAnchor="middle" fontSize="13" fontWeight="700" fill="#dc2626">Type C — Dislocation</text>
+      <text x="570" y="58" textAnchor="middle" fontSize="10" fill="#dc2626">All columns</text>
+      <rect x="446" y="62" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="446" y="62" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <rect x="470" y="124" width="80" height="58" rx="7" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.5"/>
+      <rect x="470" y="124" width="80" height="58" rx="7" fill="url(#vbtl)" opacity="0.6"/>
+      <line x1="470" y1="120" x2="526" y2="120" stroke="#dc2626" strokeWidth="1" strokeDasharray="2 1"/>
+      <text x="570" y="198" textAnchor="middle" fontSize="10" fill="#64748b">Translational / rotational</text>
+      {/* TLICS table */}
+      <rect x="40" y="215" width="600" height="66" rx="8" fill="#f0f4ff" stroke="#6366f1" strokeWidth="1"/>
+      <text x="340" y="232" textAnchor="middle" fontSize="11" fontWeight="700" fill="#3730a3">TLICS Score (Thoracolumbar Injury Classification and Severity Score)</text>
+      <text x="100" y="248" textAnchor="middle" fontSize="10" fill="#1e293b">Morphology: A1=1 A2=2 A3/B=3 B3/C=4</text>
+      <text x="340" y="248" textAnchor="middle" fontSize="10" fill="#1e293b">PLC: Intact=0  Suspected=2  Disrupted=3</text>
+      <text x="560" y="248" textAnchor="middle" fontSize="10" fill="#1e293b">Neuro: Intact=0  Root=2  Complete=2  Incomplete=3</text>
+      <text x="200" y="264" textAnchor="middle" fontSize="10" fontWeight="600" fill="#16a34a">&#8804;3 = Conservative</text>
+      <text x="340" y="264" textAnchor="middle" fontSize="10" fontWeight="600" fill="#d97706">4 = Either (surgeon discretion)</text>
+      <text x="490" y="264" textAnchor="middle" fontSize="10" fontWeight="600" fill="#dc2626">&#8805;5 = Surgical</text>
+      <text x="340" y="278" textAnchor="middle" fontSize="9" fill="#64748b">PLC = posterior ligamentous complex  |  Neuro = neurological status</text>
     </svg>
   ),
 
   'spine-imbalance': (
-    <svg viewBox="0 0 320 240" aria-label="Coronal and sagittal spinal imbalance">
-      {/* Sagittal view left */}
-      <rect x="18" y="20" width="130" height="200" rx="6" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1"/>
-      <text x="83" y="38" textAnchor="middle" fontSize="9" fill="#1d4ed8" fontWeight="bold">Sagittal</text>
-      {/* Spine curve */}
-      <path d="M70 50 Q90 90 75 130 Q60 165 80 200" fill="none" stroke="#4a7fa5" strokeWidth="3"/>
+    <svg viewBox="0 0 680 300" aria-label="Spinal sagittal and coronal imbalance SVA pelvic incidence">
+      <text x="340" y="18" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1e293b">Global Spinal Alignment Parameters</text>
+      {/* SAGITTAL — left panel */}
+      <text x="170" y="36" textAnchor="middle" fontSize="13" fontWeight="600" fill="#1d4ed8">Sagittal Alignment</text>
+      {/* Full spine silhouette — lateral view */}
+      {/* Vertebral column simplified */}
+      <path d="M160 52 Q148 80 152 110 Q156 140 148 170 Q140 200 148 230 Q154 255 160 268" fill="none" stroke="#c8a860" strokeWidth="3" strokeLinecap="round"/>
+      {/* Vertebral bodies as rounded rects along curve */}
+      {[52,72,92,112,132,152,172,192,212,232].map((y,i) => (
+        <rect key={i} x={148-(i<5?i*1.5:12-(i-5)*1.5)} y={y} width="24" height="16" rx="3" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1"/>
+      ))}
+      {/* Sacrum */}
+      <path d="M142 252 Q155 258 162 268 Q150 272 140 265 Z" fill="#d4c090" stroke="#c8a860" strokeWidth="1.2"/>
       {/* C7 plumb line */}
-      <line x1="74" y1="55" x2="74" y2="210" stroke="#c0392b" strokeWidth="1.5" strokeDasharray="4 2"/>
-      <circle cx="74" cy="55" r="4" fill="#c0392b"/>
-      <text x="85" y="53" fontSize="8" fill="#c0392b">C7</text>
-      <circle cx="80" cy="200" r="4" fill="#e07030"/>
-      <text x="86" y="203" fontSize="8" fill="#e07030">S1</text>
-      {/* SVA offset */}
-      <line x1="74" y1="200" x2="80" y2="200" stroke="#c0392b" strokeWidth="2"/>
-      <text x="55" y="175" fontSize="8" fill="#c0392b">SVA</text>
-      <text x="50" y="186" fontSize="8" fill="#c0392b">&lt;50mm</text>
-
-      {/* Coronal view right */}
-      <rect x="172" y="20" width="130" height="200" rx="6" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1"/>
-      <text x="237" y="38" textAnchor="middle" fontSize="9" fill="#1d4ed8" fontWeight="bold">Coronal</text>
-      {/* Spine curve */}
-      <path d="M237 50 Q255 90 240 130 Q225 165 242 200" fill="none" stroke="#4a7fa5" strokeWidth="3"/>
+      <line x1="160" y1="52" x2="160" y2="268" stroke="#1d4ed8" strokeWidth="1.2" strokeDasharray="5 3"/>
+      {/* SVA measurement — horizontal distance C7 to S1 */}
+      <line x1="152" y1="268" x2="160" y2="268" stroke="#dc2626" strokeWidth="2"/>
+      <text x="140" y="265" fontSize="9" fill="#dc2626">S1</text>
+      <line x1="160" y1="52" x2="200" y2="52" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="3 2"/>
+      <text x="202" y="55" fontSize="9" fill="#dc2626">C7</text>
+      <text x="172" y="280" textAnchor="middle" fontSize="10" fontWeight="600" fill="#dc2626">SVA &lt;50mm = balanced</text>
+      {/* Pelvic parameters */}
+      <text x="90" y="200" fontSize="9" fill="#16a34a">PI = PT + SS</text>
+      <path d="M108 210 Q100 225 108 240" fill="none" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round"/>
+      <text x="68" y="218" fontSize="9" fill="#16a34a">PT</text>
+      <text x="68" y="234" fontSize="9" fill="#16a34a">SS</text>
+      <text x="170" y="294" textAnchor="middle" fontSize="10" fill="#64748b">PI–LL mismatch &lt;10° ideal</text>
+      {/* CORONAL — right panel */}
+      <text x="490" y="36" textAnchor="middle" fontSize="13" fontWeight="600" fill="#7c3aed">Coronal Alignment</text>
+      {/* Spine with scoliotic curve */}
+      <path d="M490 52 Q470 90 490 130 Q510 165 490 205 Q475 235 490 265" fill="none" stroke="#c8a860" strokeWidth="3" strokeLinecap="round"/>
+      {[52,72,92,112,132,152,172,192,212,232].map((y,i) => {
+        const x = 490 + (i<3?-i*4:i<6?(i-5)*4:(i-7)*3);
+        return <rect key={i} x={x-12} y={y} width="24" height="16" rx="3" fill="#e8d8a8" stroke="#c8a860" strokeWidth="1"/>;
+      })}
+      {/* Pelvis */}
+      <path d="M462 252 Q490 260 518 252 L518 270 Q490 278 462 270 Z" fill="#d4c090" stroke="#c8a860" strokeWidth="1.2"/>
+      {/* C7 plumb line */}
+      <line x1="490" y1="52" x2="490" y2="280" stroke="#7c3aed" strokeWidth="1.2" strokeDasharray="5 3"/>
       {/* CSVL */}
-      <line x1="237" y1="50" x2="237" y2="210" stroke="#aaa" strokeWidth="1" strokeDasharray="4 2"/>
-      {/* C7 to CSVL offset */}
-      <circle cx="237" cy="55" r="4" fill="#c0392b"/>
-      <text x="248" y="53" fontSize="8" fill="#c0392b">C7</text>
-      <line x1="237" y1="195" x2="253" y2="195" stroke="#c0392b" strokeWidth="2"/>
-      <text x="254" y="183" fontSize="8" fill="#c0392b">Coronal</text>
-      <text x="254" y="194" fontSize="8" fill="#c0392b">bal &lt;20mm</text>
-      <text x="160" y="232" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Sagittal (SVA) + Coronal balance</text>
+      <line x1="490" y1="258" x2="490" y2="280" stroke="#dc2626" strokeWidth="2"/>
+      <text x="495" y="278" fontSize="9" fill="#dc2626">CSVL</text>
+      {/* Coronal balance line */}
+      <line x1="480" y1="52" x2="490" y2="52" stroke="#7c3aed" strokeWidth="1.5"/>
+      <text x="495" y="55" fontSize="9" fill="#7c3aed">C7</text>
+      <text x="490" y="294" textAnchor="middle" fontSize="10" fontWeight="600" fill="#7c3aed">Coronal balance &lt;20mm</text>
+      {/* Normal values box */}
+      <rect x="330" y="108" width="200" height="90" rx="7" fill="#f0fdf4" stroke="#16a34a" strokeWidth="1"/>
+      <text x="430" y="124" textAnchor="middle" fontSize="10" fontWeight="700" fill="#166534">Normal Values</text>
+      <text x="340" y="138" fontSize="9" fill="#1e293b">SVA (C7 to S1):  &lt;50 mm</text>
+      <text x="340" y="151" fontSize="9" fill="#1e293b">Coronal balance:  &lt;20 mm</text>
+      <text x="340" y="164" fontSize="9" fill="#1e293b">Pelvic tilt:  &lt;20° (normal)</text>
+      <text x="340" y="177" fontSize="9" fill="#1e293b">PI–LL mismatch:  &lt;10°</text>
+      <text x="340" y="190" fontSize="9" fill="#1e293b">Pelvic tilt &gt;25° = compensation</text>
     </svg>
   ),
 
   'spine-cobb': (
-    <svg viewBox="0 0 320 240" aria-label="Cobb angle scoliosis">
-      {[0,1,2,3,4].map(i => {
-        const y = 28 + i * 38;
-        const xOffset = [0,14,24,14,0][i];
-        return <rect key={i} x={98+xOffset} y={y} width={100} height={26} rx={5} fill="#c8d8e8" stroke="#4a7fa5" strokeWidth="1.5"/>;
-      })}
-      <line x1="98" y1="28" x2="198" y2="28" stroke="#c0392b" strokeWidth="2"/>
-      <line x1="112" y1="218" x2="212" y2="214" stroke="#c0392b" strokeWidth="2"/>
-      <line x1="98" y1="28" x2="58" y2="120" stroke="#c0392b" strokeWidth="1.5" strokeDasharray="4 2"/>
-      <line x1="112" y1="218" x2="52" y2="128" stroke="#c0392b" strokeWidth="1.5" strokeDasharray="4 2"/>
-      <path d="M 65 115 A 22 22 0 0 0 67 132" fill="none" stroke="#c0392b" strokeWidth="2"/>
-      <text x="26" y="128" fontSize="11" fill="#c0392b" fontWeight="bold">Cobb°</text>
-      <text x="38" y="165" fontSize="9" fill="#888">Normal &lt;10°</text>
-      <text x="38" y="177" fontSize="9" fill="#888">Surgery &gt;45°</text>
-      <text x="160" y="235" textAnchor="middle" fontSize="10" fill="#555" fontStyle="italic">Coronal view — scoliosis</text>
+    <svg viewBox="0 0 680 280" aria-label="Cobb angle scoliosis measurement">
+      <text x="340" y="18" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1e293b">Cobb Angle — Scoliosis Grading</text>
+      {/* Coronal spine with S-curve */}
+      <text x="170" y="38" textAnchor="middle" fontSize="12" fontWeight="600" fill="#1d4ed8">Cobb Angle Measurement</text>
+      {/* Vertebrae along S-curve */}
+      {[
+        [170,50,8],[168,68,5],[165,86,2],[162,104,-2],[160,122,-5],
+        [162,140,-2],[165,158,2],[168,176,5],[170,194,8],[170,212,6],[170,230,2]
+      ].map(([x,y,rot],i) => (
+        <rect key={i} x={x-15} y={y} width="30" height="14" rx="3"
+          fill="#e8d8a8" stroke="#c8a860" strokeWidth="1.2"
+          transform={`rotate(${rot} ${x} ${y+7})`}/>
+      ))}
+      {/* Cobb angle lines */}
+      <line x1="135" y1="50" x2="210" y2="42" stroke="#c0392b" strokeWidth="2"/>
+      <line x1="135" y1="236" x2="210" y2="244" stroke="#c0392b" strokeWidth="2"/>
+      {/* Perpendiculars */}
+      <line x1="172" y1="30" x2="172" y2="60" stroke="#c0392b" strokeWidth="1.5" strokeDasharray="3 2"/>
+      <line x1="172" y1="228" x2="172" y2="258" stroke="#c0392b" strokeWidth="1.5" strokeDasharray="3 2"/>
+      {/* Cobb angle arc */}
+      <path d="M172 58 Q195 148 172 238" fill="none" stroke="#c0392b" strokeWidth="1.5" strokeDasharray="4 2"/>
+      <text x="198" y="155" fontSize="13" fontWeight="700" fill="#c0392b">Cobb°</text>
+      {/* Grade boxes */}
+      <rect x="280" y="40" width="370" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1"/>
+      <text x="465" y="60" textAnchor="middle" fontSize="12" fontWeight="700" fill="#1e293b">Severity Classification</text>
+      {[
+        ['< 10°', 'Normal — no scoliosis', '#16a34a'],
+        ['10–25°', 'Mild — observe, brace if progressive', '#d97706'],
+        ['25–45°', 'Moderate — brace therapy', '#ea580c'],
+        ['> 40–50°', 'Severe — surgical threshold', '#dc2626'],
+        ['> 30° (skeletally immature)', 'High progression risk — early intervention', '#7c2d12'],
+      ].map(([range, desc, color], i) => (
+        <g key={i}>
+          <rect x="292" y={75+i*30} width="90" height="22" rx="4" fill={color} opacity="0.15"/>
+          <text x="337" y={90+i*30} textAnchor="middle" fontSize="11" fontWeight="700" fill={color}>{range}</text>
+          <text x="400" y={90+i*30} fontSize="11" fill="#374151">{desc}</text>
+        </g>
+      ))}
+      <text x="465" y="228" textAnchor="middle" fontSize="10" fill="#94a3b8">Measured from superior EP of uppermost tilted VB to inferior EP of lowermost tilted VB</text>
     </svg>
   ),
 
-  // ══════════════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════════════════
   // PELVIS
   // ══════════════════════════════════════════════════════════════════════════
 
