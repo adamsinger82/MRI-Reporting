@@ -60,11 +60,12 @@ function buildGradingContext(part) {
   }).join('\n\n');
 }
 
-function buildPrompt(part, lat, con, spineRegion, modality) {
+function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
   const isCT = modality === 'CT';
   const modalityName = isCT ? 'CT' : 'MRI';
+  const doseOptSentence = doseOpt ? ' One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.' : '';
   const techniqueText = isCT
-    ? `CT scan of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast. Multiplanar reformats were created. One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.`
+    ? `CT scan of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast. Multiplanar reformats were created.${doseOptSentence}`
     : `Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast.`;
 
   const findingsRules = isCT
@@ -2369,6 +2370,7 @@ export default function DashboardPage() {
   const [patientAge, setPatientAge] = useState('');
   const [patientSex, setPatientSex] = useState('');
   const [layPersonSummary, setLayPersonSummary] = useState(false);
+  const [includeDoseOpt, setIncludeDoseOpt] = useState(true);
   const WEBSITE_URL = 'https://mri-reporting.vercel.app'; // update to your actual patient-facing URL
 
   const showSide = !BILATERAL.includes(selectedBodyPart);
@@ -2378,7 +2380,7 @@ export default function DashboardPage() {
   const contrastLabel = contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without';
 
   const technique = isCT
-    ? `CT scan of the ${sideLabel}${partLabel} ${contrastLabel} IV contrast. Multiplanar reformats were created. One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.`
+    ? `CT scan of the ${sideLabel}${partLabel} ${contrastLabel} IV contrast. Multiplanar reformats were created.${includeDoseOpt ? ' One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.' : ''}`
     : `Multiplanar multisequence MRI of the ${sideLabel}${partLabel} ${contrastLabel} IV contrast.`;
 
 
@@ -2473,7 +2475,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:2000,
-          system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality) + layPersonInstruction,
+          system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt) + layPersonInstruction,
           messages:[{role:'user',content:`Dictated findings:\n\n${dictationText}${buildIncidentalBlock() ? '\n\nINCIDENTAL FINDINGS TO ADD TO IMPRESSION AND REFERENCES:\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
@@ -2645,6 +2647,12 @@ export default function DashboardPage() {
             <div style={{ padding:'9px 12px',background:dm?(isCT?'#0c2d36':'#1e1b4b'):(isCT?'linear-gradient(135deg,#ecfeff,#f0f9ff)':'linear-gradient(135deg,#eff6ff,#f0f9ff)'),borderRadius:8,border:dm?'1px solid '+(isCT?'#164e63':'#312e81'):(isCT?'1px solid #a5f3fc':'1px solid #bfdbfe'),fontSize:12,color:isCT?'#22d3ee':'#818cf8',fontStyle:'italic',lineHeight:1.6 }}>
               {technique}
             </div>
+            {isCT && (
+              <label style={{ display:'flex',alignItems:'center',gap:8,cursor:'pointer',padding:'7px 10px',borderRadius:7,border:'1px solid '+(includeDoseOpt?(dm?'#164e63':'#a5f3fc'):(dm?'#334155':'#e2e8f0')),background:includeDoseOpt?(dm?'#0c2d36':'#ecfeff'):(dm?'#0f172a':'#f8fafc'),transition:'all 0.15s' }}>
+                <input type="checkbox" checked={includeDoseOpt} onChange={e=>setIncludeDoseOpt(e.target.checked)} style={{ width:14,height:14,accentColor:'#0891b2',cursor:'pointer' }}/>
+                <span style={{ fontSize:11,fontWeight:600,color:includeDoseOpt?(dm?'#22d3ee':'#0e7490'):(dm?'#64748b':'#64748b') }}>Include dose optimization sentence</span>
+              </label>
+            )}
             {/* ── Incidental Findings Panel ── */}
             {(showLungWarning || showGUWarning) && (
               <IncidentalPanel
