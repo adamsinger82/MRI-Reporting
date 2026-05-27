@@ -3703,6 +3703,7 @@ const RHEUM_JOINTS = {
           { id:'h_sym_narrow', label:'Symmetric joint space narrowing', diags:['RA','PsA','JIA','SLE'] },
           { id:'h_preserved_space', label:'Preserved joint space', diags:['Gout'] },
           { id:'h_widened_space', label:'Widened joint space (early disease)', diags:['Acromegaly'] },
+          { id:'hand_hpoa', label:'Periosteal new bone formation along diaphyses (HPOA)', diags:['HPOA'] },
         ],
       },
     ],
@@ -3734,6 +3735,7 @@ const RHEUM_JOINTS = {
           { id:'w_asym_narrow', label:'Asymmetric joint space narrowing', diags:['OA','Gout'] },
           { id:'w_osteophytes', label:'Osteophytes present', diags:['OA','CPPD','Hem'] },
           { id:'w_periosteal', label:'Periosteal reaction / fluffy periostitis', diags:['PsA','ReA'] },
+          { id:'wrist_hpoa', label:'Periosteal new bone formation along diaphyses (HPOA)', diags:['HPOA'] },
         ],
       },
     ],
@@ -3757,6 +3759,7 @@ const RHEUM_JOINTS = {
           { id:'el_fluffy_calc', label:'Fluffy/amorphous periarticular calcification (no erosion)', diags:['HADD'] },
           { id:'el_chondrocalc', label:'Chondrocalcinosis', diags:['CPPD'] },
           { id:'el_periarticular_op', label:'Periarticular osteopenia', diags:['RA','JIA'] },
+          { id:'elbow_hpoa', label:'Periosteal new bone formation along diaphyses (HPOA)', diags:['HPOA'] },
         ],
       },
     ],
@@ -3780,6 +3783,7 @@ const RHEUM_JOINTS = {
           { id:'sh_pvns', label:'Joint space narrowing + cortical erosions + preserved bone density', diags:['PVNS'] },
           { id:'sh_chondrocalc', label:'Chondrocalcinosis (glenohumeral)', diags:['CPPD'] },
           { id:'sh_subchondral_cysts', label:'Prominent subchondral cysts', diags:['OA','CPPD','PVNS'] },
+          { id:'shoulder_hpoa', label:'Periosteal new bone formation along diaphyses (HPOA)', diags:['HPOA'] },
         ],
       },
     ],
@@ -3804,6 +3808,7 @@ const RHEUM_JOINTS = {
           { id:'hip_chondrocalc', label:'Chondrocalcinosis', diags:['CPPD'] },
           { id:'hip_subchondral_cysts', label:'Prominent subchondral cysts', diags:['OA','CPPD','PVNS'] },
           { id:'hip_calcten', label:'Periarticular / tendon calcification', diags:['HADD'] },
+          { id:'hip_hpoa', label:'Periosteal new bone formation along diaphyses (HPOA)', diags:['HPOA'] },
         ],
       },
     ],
@@ -3833,6 +3838,7 @@ const RHEUM_JOINTS = {
           { id:'kn_uniform_narrow', label:'Uniform joint space narrowing', diags:['RA','JIA'] },
           { id:'kn_pvns', label:'Joint narrowing + cortical erosions + preserved density', diags:['PVNS'] },
           { id:'kn_bilateral', label:'Bilateral symmetric involvement', diags:['OA','RA','CPPD'] },
+          { id:'knee_hpoa', label:'Periosteal new bone formation along diaphyses (HPOA)', diags:['HPOA'] },
         ],
       },
     ],
@@ -3860,6 +3866,7 @@ const RHEUM_JOINTS = {
           { id:'ft_tophus', label:'Soft-tissue tophi / lumpy-bumpy swelling', diags:['Gout'] },
           { id:'ft_overhanging', label:'Overhanging erosion margin', diags:['Gout'] },
           { id:'ft_calcten', label:'Periarticular / tendon calcification', diags:['HADD'] },
+          { id:'foot_hpoa', label:'Periosteal new bone formation along diaphyses (HPOA)', diags:['HPOA'] },
         ],
       },
     ],
@@ -3909,7 +3916,6 @@ const RHEUM_JOINTS = {
           { id:'cs_bamboo', label:'Bamboo spine / spinal ankylosis', diags:['AS'] },
           { id:'cs_squaring', label:'Squaring of vertebral body margins', diags:['AS'] },
           { id:'cs_romanus', label:'Romanus lesion (anterior corner erosion)', diags:['AS'] },
-          { id:'cs_shiny_corner', label:'Shiny corner sign (anterior corner sclerosis)', diags:['AS'] },
           { id:'cs_bulky_bridging', label:'Bulky / coarse asymmetric bony bridging', diags:['PsA','ReA'] },
           { id:'cs_dagger_sign', label:'Dagger sign (fused spinous processes)', diags:['AS'] },
           { id:'cs_andersson', label:'Andersson lesion (pseudarthrosis in ankylosed spine)', diags:['AS'] },
@@ -3919,6 +3925,7 @@ const RHEUM_JOINTS = {
         label: 'DDD / Other',
         findings: [
           { id:'cs_ddd', label:'Disc space narrowing + osteophytes (DDD)', diags:['OA'] },
+          { id:'cs_transverse_lig', label:'Calcification at transverse ligament / periodontoid region', diags:['CPPD'] },
           { id:'cs_vacuum', label:'Vacuum phenomenon in disc', diags:['OA'] },
           { id:'cs_dish', label:'Flowing anterior osteophytes spanning ≥4 levels (DISH)', diags:['DISH'] },
           { id:'cs_disc_calc', label:'Disc calcification at multiple levels', diags:['Ochronosis','CPPD'] },
@@ -3935,7 +3942,6 @@ const RHEUM_JOINTS = {
           { id:'ts_syndesmophytes', label:'Delicate syndesmophytes / bamboo spine', diags:['AS'] },
           { id:'ts_romanus', label:'Romanus lesion (anterior corner erosion)', diags:['AS'] },
           { id:'ts_squaring', label:'Vertebral body squaring', diags:['AS'] },
-          { id:'ts_shiny_corner', label:'Shiny corner sign', diags:['AS'] },
           { id:'ts_dagger_sign', label:'Dagger sign (fused spinous processes)', diags:['AS'] },
           { id:'ts_bulky_bridging', label:'Bulky asymmetric bony bridging', diags:['PsA','ReA'] },
           { id:'ts_dish', label:'Flowing anterior osteophytes ≥4 levels (DISH)', diags:['DISH'] },
@@ -3968,7 +3974,6 @@ const RHEUM_JOINTS = {
           { id:'ls_bamboo', label:'Bamboo spine appearance', diags:['AS'] },
           { id:'ls_squaring', label:'Vertebral body squaring (anterior erosion)', diags:['AS'] },
           { id:'ls_romanus', label:'Romanus lesion (anterior corner erosion/sclerosis)', diags:['AS'] },
-          { id:'ls_shiny_corner', label:'Shiny corner sign', diags:['AS'] },
           { id:'ls_dagger_sign', label:'Dagger sign (fused spinous processes on AP view)', diags:['AS'] },
           { id:'ls_bulky_bridging', label:'Bulky asymmetric bony bridging (lateral osteophytes)', diags:['PsA','ReA'] },
           { id:'ls_facet_erosion', label:'Facet joint erosions', diags:['AS','RA'] },
@@ -4009,6 +4014,7 @@ const DIAG_INFO = {
   PVNS:       { label:'PVNS / TSGCT', color:'#1e3a5f', bg:'#e0e7ff', darkBg:'#0f1f3a', darkColor:'#a5b4fc' },
   RCA:        { label:'Rotator Cuff Arthropathy', color:'#0f766e', bg:'#f0fdfa', darkBg:'#062824', darkColor:'#5eead4' },
   OCI:        { label:'Osteitis Condensans Ilii', color:'#92400e', bg:'#fef3c7', darkBg:'#3a1505', darkColor:'#fde68a' },
+  HPOA:       { label:'HPOA (Hypertrophic Osteoarthropathy)', color:'#0369a1', bg:'#e0f2fe', darkBg:'#0a2333', darkColor:'#7dd3fc' },
 };
 
 // ── Rheum Prompt Builder ────────────────────────────────────────────────────
@@ -4094,39 +4100,15 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
         )}
       </div>
 
-      {/* DDx result bar */}
-      {sortedDiags.length > 0 && (
-        <div style={{marginBottom:10,display:'flex',flexDirection:'column',gap:4}}>
 
-          {sortedDiags.slice(0,6).map(([diag,score]) => {
-            const info = DIAG_INFO[diag] || {label:diag, color:'#64748b', bg:'#f1f5f9', darkBg:'#1e293b', darkColor:'#94a3b8'};
-            const pct = Math.round((score/maxScore)*100);
-            return (
-              <div key={diag} style={{display:'flex',alignItems:'center',gap:6}}>
-                <div style={{flex:1,fontSize:11,fontWeight:600,color:dm?info.darkColor:info.color,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{info.label}</div>
-                <div style={{width:60,height:6,background:dm?'#1e293b':'#e2e8f0',borderRadius:3,flexShrink:0}}>
-                  <div style={{width:pct+'%',height:'100%',background:dm?info.darkColor:info.color,borderRadius:3,transition:'width 0.3s'}} />
-                </div>
-                <div style={{fontSize:10,color:dm?'#94a3b8':'#64748b',width:18,textAlign:'right',flexShrink:0}}>{score}</div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <div style={{height:1,background:dm?'#334155':'#e2e8f0',margin:'4px 0 8px'}} />
 
       {/* Findings checkboxes */}
       <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:10}}>
         {jointData.categories.map(cat => (
           <div key={cat.label}>
-            <p style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.07em',color:dm?'#64748b':'#94a3b8',margin:'0 0 5px 0'}}>{cat.label}</p>
             <div style={{display:'flex',flexDirection:'column',gap:3}}>
               {cat.findings.map(f => {
                 const checked = !!rheumChecks[f.id];
-                // Highlight which diagnoses this finding supports
-                const topDiag = f.diags[0];
-                const info = DIAG_INFO[topDiag] || {color:'#64748b', bg:'#f1f5f9', darkBg:'#1e293b', darkColor:'#94a3b8'};
                 return (
                   <label key={f.id} style={{display:'flex',alignItems:'flex-start',gap:7,cursor:'pointer',padding:'5px 7px',borderRadius:6,
                     background: checked ? (dm?'#1e2a3a':'#f0f4ff') : (dm?'#0f172a':'#f8fafc'),
@@ -4138,9 +4120,7 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
                       <span style={{fontSize:12,fontWeight:checked?600:400,color:checked?(dm?'#93c5fd':'#1d4ed8'):(dm?'#cbd5e1':'#374151'),lineHeight:1.3,display:'block'}}>
                         {f.label}
                       </span>
-                      <span style={{fontSize:10,color:dm?'#475569':'#94a3b8',lineHeight:1.2}}>
-                        {f.diags.map(d => (DIAG_INFO[d]||{label:d}).label).join(' · ')}
-                      </span>
+
                     </div>
                   </label>
                 );
