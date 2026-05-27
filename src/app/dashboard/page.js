@@ -943,7 +943,6 @@ function buildGradingContext(part, modality) {
 
 function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
   const isCT = modality === 'CT';
-  const isRheum = modality === 'Rheum';
   const modalityName = isCT ? 'CT' : 'MRI';
   const doseOptSentence = doseOpt ? ' One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.' : '';
   const techniqueText = isCT
@@ -4233,6 +4232,7 @@ export default function DashboardPage() {
 
   const showSide = !BILATERAL.includes(selectedBodyPart);
   const isCT = modality === 'CT';
+  const isRheum = modality === 'Rheum';
   const partLabel = selectedBodyPart === 'spine' ? `${spineRegion} spine` : selectedBodyPart;
   const sideLabel = showSide ? `${side} ` : '';
   const contrastLabel = contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without';
