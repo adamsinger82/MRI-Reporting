@@ -4,117 +4,878 @@ import { useState, useRef, useEffect } from 'react';
 import { JOINT_DATA, DIAGRAM_SVGS } from './referenceData';
 import CopyButton from './CopyButton';
 
-// ─── SUPPLEMENTAL JOINT DATA for new body parts (merged with referenceData) ──
-const SUPPLEMENTAL_JOINT_DATA = {
+// ─── MODALITY-AWARE GRADING DATA ─────────────────────────────────────────────
+// MRI_GRADING_DATA: shown in right panel when MRI is selected
+// CT_GRADING_DATA:  shown in right panel when CT is selected
+// EFFECTIVE_JOINT_DATA merges these with imported JOINT_DATA (legacy joints)
+// and the active modality slice is selected at render time.
+
+const MRI_GRADING_DATA = {
+  // ── MRI: Femur / Thigh ──────────────────────────────────────────────────
   'femur/thigh': {
-    label: 'Femur / Thigh',
+    label: 'Femur / Thigh — MRI',
     measurements: [
       {
         id: 'bamic_grading',
-        label: 'BAMIC — Hamstring/Thigh Muscle Injury Grade',
+        label: 'BAMIC — Muscle Injury Grade (Hamstring / Quad / Adductor)',
         isGradingScale: true,
         plane: 'Axial + Coronal',
-        description: 'British Athletics Muscle Injury Classification (BAMIC). Grades muscle injuries by anatomic location and cross-sectional area (CSA) involvement. Originally validated for hamstring injuries; applied to quadriceps and adductors using the same framework.',
+        description: 'British Athletics Muscle Injury Classification (BAMIC). Classifies muscle injuries by anatomic location (muscle belly, myotendinous junction, central/intramuscular tendon) and cross-sectional area (CSA) involvement. Validated for hamstrings; applied to quads and adductors using the same framework. Strong prognostic value for return-to-sport.',
         diagram: null,
         citations: [
-          { label: 'Pollock N et al. — BAMIC validation study. Br J Sports Med 2016;50(19):1215-1220.', url: 'https://pubmed.ncbi.nlm.nih.gov/27160205/' },
-          { label: 'Wangensteen A et al. — BAMIC MRI prognosis in hamstring injuries. Am J Sports Med 2018;46(10):2353-2363.', url: 'https://pubmed.ncbi.nlm.nih.gov/29986149/' },
+          { label: 'Pollock N et al. — BAMIC validation. Br J Sports Med 2016;50(19):1215-1220.', url: 'https://pubmed.ncbi.nlm.nih.gov/27160205/' },
+          { label: 'Wangensteen A et al. — BAMIC MRI prognosis. Am J Sports Med 2018;46(10):2353-2363.', url: 'https://pubmed.ncbi.nlm.nih.gov/29986149/' },
         ],
         normalValues: [
-          { label: 'Grade 0', value: 'Signal change only — no architectural disruption; peritendinous or minimal intramuscular edema' },
-          { label: 'Grade 1a', value: 'Peripheral MTJ injury, muscle belly; <10% CSA involved' },
-          { label: 'Grade 1b', value: 'Peripheral MTJ injury, muscle belly; ≥10% CSA involved' },
-          { label: 'Grade 2a', value: 'MTJ injury involving myotendinous unit; <10% CSA involved' },
-          { label: 'Grade 2b', value: 'MTJ injury involving myotendinous unit; ≥10% CSA involved' },
-          { label: 'Grade 3a', value: 'Central/intramuscular tendon injury; <10% CSA involved' },
-          { label: 'Grade 3b', value: 'Central/intramuscular tendon injury; ≥10% CSA involved' },
-          { label: 'Grade 4', value: 'Complete/near-complete tear — proximal avulsion or complete central tendon disruption with retraction' },
-          { label: 'Modifier (c)', value: 'Isolated central tendon injury without peripheral muscle involvement (e.g., Grade 3a(c))' },
-          { label: 'MTJ = myotendinous junction', value: 'CSA = cross-sectional area of involved muscle' },
+          { label: 'Grade 0', value: 'Signal change only — peritendinous/minimal intramuscular edema; NO architectural disruption' },
+          { label: 'Grade 1a', value: 'Peripheral MTJ injury within the muscle belly; <10% CSA involved' },
+          { label: 'Grade 1b', value: 'Peripheral MTJ injury within the muscle belly; ≥10% CSA involved' },
+          { label: 'Grade 2a', value: 'MTJ injury — myotendinous unit involved; <10% CSA' },
+          { label: 'Grade 2b', value: 'MTJ injury — myotendinous unit involved; ≥10% CSA' },
+          { label: 'Grade 3a', value: 'Central (intramuscular) tendon injury; <10% CSA involved' },
+          { label: 'Grade 3b', value: 'Central (intramuscular) tendon injury; ≥10% CSA involved' },
+          { label: 'Grade 4', value: 'Complete/near-complete tear — proximal avulsion or full central tendon disruption with retraction' },
+          { label: 'Modifier (c)', value: 'Isolated central tendon only (no peripheral muscle edema) — e.g. Grade 3a(c)' },
+          { label: 'Key landmarks', value: 'MTJ = myotendinous junction; CSA = cross-sectional area of injured muscle at widest axial slice' },
         ],
       },
     ],
   },
+  // ── MRI: Tibia / Fibula ─────────────────────────────────────────────────
   'tibia/fibula': {
-    label: 'Tibia / Fibula',
+    label: 'Tibia / Fibula — MRI',
     measurements: [
       {
         id: 'fredericson_grade',
-        label: 'Fredericson Grade — Tibial Stress Reaction/Fracture',
+        label: 'Fredericson Grade — Tibial Stress Reaction / Stress Fracture',
         isGradingScale: true,
         plane: 'Coronal + Axial',
-        description: 'Fredericson MRI grading system for medial tibial stress syndrome and tibial stress reactions/fractures. Prognostic for return-to-sport timelines. Grade 4b (anterior cortex) = "dreaded black line" — highest risk for complete fracture.',
+        description: 'Fredericson MRI grading for medial tibial stress syndrome and tibial stress injuries. Grades 1–2: periosteal only. Grade 3: adds medullary edema. Grade 4a: low T1 (trabecular fracture). Grade 4b: cortical fracture line (frank stress fracture). Anterior cortex Grade 4b = "dreaded black line" — high risk for complete fracture, orthopedic referral indicated.',
         diagram: null,
         citations: [
-          { label: 'Fredericson M et al. — MRI grading of tibial stress injuries. Am J Sports Med 1995;23(4):472-481.', url: 'https://pubmed.ncbi.nlm.nih.gov/7573660/' },
-          { label: 'Kiuru MJ et al. — MRI stress fracture grading. Skeletal Radiol 2004;33(4):216-221.', url: 'https://pubmed.ncbi.nlm.nih.gov/14730395/' },
+          { label: 'Fredericson M et al. — MRI tibial stress grading. Am J Sports Med 1995;23(4):472-481.', url: 'https://pubmed.ncbi.nlm.nih.gov/7573660/' },
+          { label: 'Kiuru MJ et al. — MRI stress fracture classification. Skeletal Radiol 2004;33(4):216-221.', url: 'https://pubmed.ncbi.nlm.nih.gov/14730395/' },
         ],
         normalValues: [
-          { label: 'Grade 1', value: 'Mild periosteal edema (STIR); T1 normal; no medullary involvement' },
+          { label: 'Grade 1', value: 'Mild periosteal edema (STIR only); T1 normal; no medullary signal change' },
           { label: 'Grade 2', value: 'Moderate-severe periosteal edema (STIR); T1 normal; no medullary involvement' },
-          { label: 'Grade 3', value: 'Periosteal + medullary edema on STIR; T1 still normal (no trabecular injury)' },
-          { label: 'Grade 4a', value: 'Periosteal + medullary edema on STIR AND abnormal (low) T1 — trabecular microfracture' },
-          { label: 'Grade 4b', value: 'Grade 4a + visible cortical/transcortical fracture line — frank stress fracture' },
-          { label: 'High-risk location', value: 'Anterior tibial cortex (Grade 4b) = "dreaded black line" — orthopedic consultation indicated' },
-          { label: 'Typical location', value: 'Posteromedial cortex, middle or distal third — medial tibial stress syndrome' },
+          { label: 'Grade 3', value: 'Periosteal + medullary (marrow) edema on STIR; T1 still normal — no trabecular fracture' },
+          { label: 'Grade 4a', value: 'Periosteal + marrow edema on STIR AND low T1 signal — trabecular microfracture' },
+          { label: 'Grade 4b', value: 'All of 4a PLUS visible cortical/transcortical fracture line — frank stress fracture' },
+          { label: '⚠ High-risk: Anterior cortex', value: '"Dreaded black line" — Grade 4b anterior tibia; orthopedic consultation required' },
+          { label: 'Typical MTSS location', value: 'Posteromedial cortex, middle or distal third of tibia' },
         ],
       },
     ],
   },
+  // ── MRI: Humerus ────────────────────────────────────────────────────────
   humerus: {
-    label: 'Humerus',
+    label: 'Humerus — MRI',
     measurements: [
       {
-        id: 'neer_classification',
-        label: 'Neer Classification — Proximal Humerus Fracture',
+        id: 'humerus_mri_avascular',
+        label: 'Cruess Classification — Humeral Head AVN',
         isGradingScale: true,
         plane: 'Coronal',
-        description: 'Neer classification for proximal humerus fractures based on displacement (>1 cm or >45°) of four segments: humeral head (articular), greater tuberosity, lesser tuberosity, and humeral shaft.',
+        description: 'Cruess (modified Ficat) staging of avascular necrosis of the humeral head on MRI. Based on morphologic changes from early signal abnormality to collapse and secondary glenohumeral arthritis.',
+        diagram: null,
+        citations: [
+          { label: 'Cruess RL. — Steroid-induced osteonecrosis. J R Coll Surg Edinb 1981;26(2):69-77.', url: 'https://pubmed.ncbi.nlm.nih.gov/7230104/' },
+        ],
+        normalValues: [
+          { label: 'Stage I', value: 'Normal radiograph/morphology; MRI: abnormal marrow signal only (low T1, high STIR)' },
+          { label: 'Stage II', value: 'Sclerosis/cysts/osteopenia on CT/X-ray; MRI: "double line sign" — inner high T2 + outer low T1/T2 rim; no collapse' },
+          { label: 'Stage III', value: 'Subchondral fracture ("crescent sign") without humeral head collapse' },
+          { label: 'Stage IV', value: 'Flattening/collapse of the humeral head; glenohumeral joint space preserved' },
+          { label: 'Stage V', value: 'Collapse + secondary glenohumeral joint space narrowing / osteoarthritis' },
+        ],
+      },
+    ],
+  },
+  // ── MRI: Forearm ────────────────────────────────────────────────────────
+  forearm: {
+    label: 'Forearm — MRI',
+    measurements: [
+      {
+        id: 'forearm_mri_stress',
+        label: 'Forearm Stress Reaction / Compartment Syndrome — MRI Patterns',
+        isGradingScale: false,
+        plane: 'Axial + Coronal',
+        description: 'MRI findings in forearm stress reactions (ulna most common in wheelchair athletes/throwing sports), exertional compartment syndrome (increased T2 in affected compartment post-exercise), and muscle strain patterns. Not a formal numeric grading system — apply BAMIC principles for muscle injuries.',
+        diagram: null,
+        citations: [
+          { label: 'Anderson MW. — MRI of the forearm. Semin Musculoskelet Radiol 2010;14(3):348-358.', url: 'https://pubmed.ncbi.nlm.nih.gov/20539617/' },
+        ],
+        normalValues: [
+          { label: 'Ulnar stress reaction', value: 'Periosteal edema ± medullary edema on STIR; low T1 = Grade 4a equivalent; cortical line = frank fracture' },
+          { label: 'Radial stress reaction', value: 'Same pattern; less common; seen in gymnasts and overhead athletes' },
+          { label: 'Exertional compartment', value: 'Diffuse T2 elevation in affected compartment (volar > dorsal); best imaged post-exercise' },
+          { label: 'Muscle strain (BAMIC)', value: 'Apply BAMIC Grade 0–4 framework for any discrete muscle tear' },
+          { label: 'Pronator teres syndrome', value: 'Median nerve compression at pronator teres — increased T2 signal in nerve, denervation edema in FPL/FDP(index)' },
+          { label: 'Interosseous membrane tear', value: 'Essex-Lopresti: disruption of central band; increased signal + thickening on coronal sequences' },
+        ],
+      },
+    ],
+  },
+  // ── MRI: Knee ───────────────────────────────────────────────────────────
+  knee: {
+    label: 'Knee — MRI',
+    measurements: [],  // uses existing JOINT_DATA from referenceData.js
+  },
+};
+
+const CT_GRADING_DATA = {
+  // ── CT: Knee ────────────────────────────────────────────────────────────
+  knee: {
+    label: 'Knee — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'schatzker_tibial_plateau',
+        label: 'Schatzker Classification — Tibial Plateau Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'Schatzker classification of tibial plateau fractures. Types I–III involve the lateral plateau only. Type IV involves the medial plateau (higher energy, worse prognosis). Types V–VI are bicondylar/complex. Higher Schatzker type = greater articular comminution and axial instability.',
+        diagram: null,
+        citations: [
+          { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://pubmed.ncbi.nlm.nih.gov/456045/' },
+          { label: 'Zeltser DW & Leopold SS. — Schatzker classification. Clin Orthop 2013;471(3):771-773.', url: 'https://pubmed.ncbi.nlm.nih.gov/23143299/' },
+        ],
+        normalValues: [
+          { label: 'Type I', value: 'Pure lateral plateau split fracture — no depression; young bone; assess for fibular head fracture' },
+          { label: 'Type II', value: 'Lateral plateau split + depression (most common); depression >2 mm clinically significant' },
+          { label: 'Type III', value: 'Pure lateral plateau depression (no split); osteoporotic bone; lateral meniscus at risk' },
+          { label: 'Type IV', value: 'Medial plateau fracture (split or comminuted); higher energy; associated cruciate/vascular injury' },
+          { label: 'Type V', value: 'Bicondylar fracture — both plateaus; metaphysis intact to diaphysis' },
+          { label: 'Type VI', value: 'Bicondylar + metaphyseal-diaphyseal dissociation; highest energy; severe soft tissue injury' },
+          { label: 'Depression threshold', value: '≥2 mm articular depression = surgical threshold in most guidelines' },
+        ],
+      },
+      {
+        id: 'patella_fracture',
+        label: 'Patella Fracture Classification',
+        isGradingScale: true,
+        plane: 'Axial + Sagittal',
+        description: 'Descriptive classification of patellar fractures by pattern. Treatment determined by displacement (>2 mm articular step-off or >3 mm gap) and extensor mechanism integrity.',
+        diagram: null,
+        citations: [
+          { label: 'Melvin JS & Mehta S. — Patellar fractures. J Am Acad Orthop Surg 2011;19(4):198-207.', url: 'https://pubmed.ncbi.nlm.nih.gov/21464214/' },
+        ],
+        normalValues: [
+          { label: 'Transverse (50–80%)', value: 'Most common; mid-patella; disrupts extensor mechanism if displaced' },
+          { label: 'Comminuted/stellate', value: 'High-energy; multiple fragments; variable extensor mechanism involvement' },
+          { label: 'Vertical/longitudinal', value: 'Usually does not disrupt extensor mechanism; often treated nonoperatively' },
+          { label: 'Osteochondral', value: 'Lateral femoral condyle or medial patellar facet — associated with dislocation' },
+          { label: 'Sleeve fracture', value: 'Pediatric: cartilaginous sleeve avulsion from inferior pole; easy to miss on X-ray' },
+          { label: 'Surgical threshold', value: '>2 mm articular step-off OR >3 mm fragment gap AND intact extensor mechanism not assured' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Tibia / Fibula ──────────────────────────────────────────────────
+  'tibia/fibula': {
+    label: 'Tibia / Fibula — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'schatzker_tibial_plateau',
+        label: 'Schatzker Classification — Tibial Plateau Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'Schatzker classification of tibial plateau fractures (proximal intra-articular). CT is the gold standard for classification and surgical planning. Assess for articular depression, split components, and posterior plateau involvement (often missed on X-ray).',
+        diagram: null,
+        citations: [
+          { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://pubmed.ncbi.nlm.nih.gov/456045/' },
+        ],
+        normalValues: [
+          { label: 'Type I', value: 'Pure lateral split — no depression; young bone; rule out fibular head fracture' },
+          { label: 'Type II', value: 'Lateral split + depression (most common); measure max depression in mm' },
+          { label: 'Type III', value: 'Pure lateral depression (no split); osteoporotic; lateral meniscus interposition risk' },
+          { label: 'Type IV', value: 'Medial plateau — higher energy; PCL/vascular injury association' },
+          { label: 'Type V', value: 'Bicondylar — metaphysis intact to shaft' },
+          { label: 'Type VI', value: 'Bicondylar + metaphyseal-diaphyseal dissociation — highest energy injury' },
+          { label: 'Posterior plateau', value: 'Posterolateral/posteromedial fragments: note separately — critical for surgical approach planning' },
+        ],
+      },
+      {
+        id: 'ao_ota_proximal_tibia',
+        label: 'AO/OTA — Proximal Tibia Extra-articular (41-A)',
+        isGradingScale: true,
+        plane: 'Coronal + Sagittal',
+        description: 'AO/OTA classification for proximal tibial fractures that do NOT involve the articular surface (metaphyseal and submetaphyseal). Segment 41-A. Important to distinguish from plateau fractures.',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA Fracture Classification 2018 Update. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+        ],
+        normalValues: [
+          { label: '41-A1', value: 'Simple (wedge or oblique) extra-articular proximal tibia — metaphyseal' },
+          { label: '41-A2', value: 'Metaphyseal wedge fracture' },
+          { label: '41-A3', value: 'Metaphyseal complex/comminuted — no articular involvement' },
+          { label: 'Key distinction', value: 'Fracture line must not enter joint; if articular → reclassify as 41-B (partial) or 41-C (complete articular = Schatzker V/VI)' },
+          { label: 'Tibial tubercle avulsion', value: 'Ogden classification in skeletally immature: Types I–V based on avulsion extent' },
+        ],
+      },
+      {
+        id: 'ao_ota_tibial_shaft',
+        label: 'AO/OTA — Tibial Shaft Fracture (42)',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'AO/OTA classification for tibial diaphyseal fractures (segment 42). Determines fixation strategy. Fracture pattern and comminution guide IM nail vs. plate selection.',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018 Update. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+        ],
+        normalValues: [
+          { label: '42-A (Simple)', value: 'A1: spiral; A2: oblique (≥30°); A3: transverse (<30°)' },
+          { label: '42-B (Wedge)', value: 'B1: spiral wedge; B2: bending wedge; B3: fragmented wedge' },
+          { label: '42-C (Complex/comminuted)', value: 'C1: spiral complex; C2: segmental; C3: irregular comminution' },
+          { label: 'Open fracture (Gustilo)', value: 'Grade I: <1 cm clean wound; II: >1 cm; IIIA: adequate soft tissue; IIIB: periosteal stripping; IIIC: vascular injury requiring repair' },
+          { label: 'Compartment syndrome', value: 'Note circumferential soft tissue swelling, fat stranding — clinical correlation essential' },
+        ],
+      },
+      {
+        id: 'ao_ota_distal_tibia',
+        label: 'AO/OTA — Distal Tibia / Pilon Fracture (43)',
+        isGradingScale: true,
+        plane: 'Coronal + Axial + Sagittal',
+        description: 'AO/OTA classification for distal tibial fractures including pilon (plafond) fractures. Segment 43. The Rüedi-Allgöwer system is also commonly used for pilon fractures and should be noted when applicable.',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018 Update. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+          { label: 'Rüedi TP & Allgöwer M. — Pilon fractures. Clin Orthop 1979;138:105-110.', url: 'https://pubmed.ncbi.nlm.nih.gov/456046/' },
+        ],
+        normalValues: [
+          { label: '43-A (Extra-articular)', value: 'Distal tibia metaphysis — joint surface intact; includes posterior malleolus fractures without articular step-off' },
+          { label: '43-B (Partial articular)', value: 'Part of articular surface retains continuity with shaft (e.g., Chaput/Wagstaffe fragments, posterior malleolus with step-off)' },
+          { label: '43-C (Complete articular = Pilon)', value: 'No part of articular surface in continuity with shaft; all 3 types have comminution gradations C1–C3' },
+          { label: 'Rüedi I', value: 'Pilon: undisplaced cleavage fracture of articular surface' },
+          { label: 'Rüedi II', value: 'Pilon: displacement without comminution of articular surface' },
+          { label: 'Rüedi III', value: 'Pilon: comminuted articular surface with metaphyseal impaction' },
+          { label: 'Key CT report items', value: 'Number of major articular fragments; max articular step-off (mm); fibular fracture level; degree of metaphyseal comminution' },
+        ],
+      },
+      {
+        id: 'lauge_hansen_ankle',
+        label: 'Lauge-Hansen / Danis-Weber — Ankle Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'For distal fibular fractures involving the ankle mortise. Danis-Weber classifies by fibular fracture level relative to the syndesmosis. Lauge-Hansen describes the injury mechanism and ligamentous injury sequence.',
+        diagram: null,
+        citations: [
+          { label: 'Lauge-Hansen N. — Fractures of the ankle. Arch Surg 1950;60(5):957-985.', url: 'https://pubmed.ncbi.nlm.nih.gov/15415202/' },
+          { label: 'Weber BG. — Die Verletzungen des oberen Sprunggelenkes. 1966.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+        ],
+        normalValues: [
+          { label: 'Weber A (= SA)', value: 'Fibular fracture BELOW syndesmosis (infrasyndesmal); transverse; syndesmosis intact; ATFL disrupted' },
+          { label: 'Weber B (= SER/PA)', value: 'Fibular fracture AT syndesmosis (transyndesmal); oblique/spiral; syndesmosis +/- intact; most common' },
+          { label: 'Weber C (= PER/PAB)', value: 'Fibular fracture ABOVE syndesmosis (suprasyndesmal); syndesmosis disrupted; medial injury required for instability' },
+          { label: 'Maisonneuve', value: 'Weber C variant: proximal fibular fracture + complete syndesmotic disruption — must image full fibula' },
+          { label: 'Bimalleolar equivalent', value: 'Lateral fracture + deltoid rupture (medial clear space widening) — unstable despite no medial fracture' },
+          { label: 'Trimalleolar', value: 'Lateral + medial malleolus + posterior malleolus; posterior fragment >25% joint surface = surgical' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Femur / Thigh ───────────────────────────────────────────────────
+  'femur/thigh': {
+    label: 'Femur / Thigh — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'ao_ota_proximal_femur',
+        label: 'AO/OTA — Proximal Femur Fracture (31)',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'AO/OTA classification for proximal femoral fractures (segment 31). Includes trochanteric and femoral neck fractures. Garden classification remains in common use for femoral neck (intracapsular) fractures.',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018 Update. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+          { label: 'Garden RS. — Low-angle fixation in femoral neck fractures. J Bone Joint Surg Br 1961;43:647-663.', url: 'https://pubmed.ncbi.nlm.nih.gov/14038931/' },
+        ],
+        normalValues: [
+          { label: 'Garden I (incomplete/valgus impacted)', value: 'Incomplete femoral neck fracture; trabeculae angled; NOT displaced — low AVN risk' },
+          { label: 'Garden II (complete, non-displaced)', value: 'Complete fracture; normal trabecular alignment; low-moderate AVN risk' },
+          { label: 'Garden III (complete, partial displacement)', value: 'Partial displacement; trabecular malalignment; moderate-high AVN risk' },
+          { label: 'Garden IV (complete, full displacement)', value: 'Complete displacement; no trabecular continuity; highest AVN risk (~30%)' },
+          { label: 'AO/OTA 31-A (trochanteric)', value: 'A1: simple 2-part intertrochanteric; A2: multifragmentary intertrochanteric; A3: reverse oblique/transverse — unstable' },
+          { label: 'AO/OTA 31-B (femoral neck)', value: 'B1: subcapital, minimal displacement; B2: transcervical; B3: subcapital, displaced (= Garden III/IV)' },
+          { label: 'AO/OTA 31-C (capital/head)', value: 'Femoral head fracture (Pipkin); note associated posterior dislocation' },
+        ],
+      },
+      {
+        id: 'pipkin_femoral_head',
+        label: 'Pipkin Classification — Femoral Head Fracture',
+        isGradingScale: true,
+        plane: 'Axial + Coronal',
+        description: 'Pipkin classification for femoral head fractures, which typically occur in the setting of posterior hip dislocation. CT is essential for characterizing fragment size, location, and articular involvement.',
+        diagram: null,
+        citations: [
+          { label: 'Pipkin G. — Treatment of grade IV fracture-dislocation of the hip. J Bone Joint Surg Am 1957;39-A(5):1027-1042.', url: 'https://pubmed.ncbi.nlm.nih.gov/13475403/' },
+        ],
+        normalValues: [
+          { label: 'Type I', value: 'Posterior dislocation + femoral head fracture INFERIOR (caudal) to fovea — ligamentum teres intact' },
+          { label: 'Type II', value: 'Posterior dislocation + femoral head fracture SUPERIOR (cranial) to fovea — involves weight-bearing surface' },
+          { label: 'Type III', value: 'Type I or II + associated femoral neck fracture — surgical emergency' },
+          { label: 'Type IV', value: 'Type I or II + associated acetabular fracture (any wall/column component)' },
+          { label: 'Key CT items', value: 'Fragment size (% articular surface); foveal location; associated acetabular fracture; intra-articular fragments; femoral neck integrity' },
+        ],
+      },
+      {
+        id: 'ao_ota_femoral_shaft',
+        label: 'AO/OTA — Femoral Shaft Fracture (32)',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'AO/OTA classification for femoral diaphyseal fractures (segment 32). Most treated with antegrade IM nail. Assess for ipsilateral femoral neck fracture (up to 9% missed on initial X-ray — CT required).',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018 Update. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+        ],
+        normalValues: [
+          { label: '32-A (Simple)', value: 'A1: spiral; A2: oblique (≥30°); A3: transverse (<30°)' },
+          { label: '32-B (Wedge)', value: 'B1: spiral wedge; B2: bending wedge; B3: fragmented wedge — main fragments still in contact' },
+          { label: '32-C (Complex)', value: 'C1: spiral complex; C2: segmental; C3: irregular/highly comminuted' },
+          { label: '⚠ Ipsilateral neck fracture', value: 'CT scout and proximal cuts: rule out concurrent femoral neck fracture in ALL femoral shaft injuries' },
+          { label: 'Periprosthetic (Vancouver)', value: 'If hardware present: Vancouver A (trochanteric), B1/B2/B3 (around stem), C (distal to stem)' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Humerus ─────────────────────────────────────────────────────────
+  humerus: {
+    label: 'Humerus — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'neer_proximal_humerus',
+        label: 'Neer Classification — Proximal Humerus Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'Neer classification of proximal humeral fractures. Based on displacement (>1 cm OR >45° angulation) of 4 segments: humeral head articular surface, greater tuberosity, lesser tuberosity, humeral shaft. CT essential for accurate part assignment and surgical planning.',
+        diagram: null,
+        citations: [
+          { label: 'Neer CS 2nd. — Displaced proximal humeral fractures. J Bone Joint Surg Am 1970;52(6):1077-1089.', url: 'https://pubmed.ncbi.nlm.nih.gov/5455339/' },
+          { label: 'Carofino BC & Leopold SS. — Neer classification. Clin Orthop 2013;471(1):39-43.', url: 'https://pubmed.ncbi.nlm.nih.gov/23143298/' },
+        ],
+        normalValues: [
+          { label: '1-part (any # of fracture lines)', value: 'No segment displaced >1 cm or angulated >45° — treat as single unit regardless of fracture line count' },
+          { label: '2-part — surgical neck', value: 'Shaft displaced relative to head; most common displaced type; varus/valgus angulation' },
+          { label: '2-part — greater tuberosity', value: '>1 cm displacement; rotator cuff attached; associated with anterior dislocation' },
+          { label: '2-part — lesser tuberosity', value: 'Rare isolated; associated with posterior dislocation; internal rotation mechanism' },
+          { label: '2-part — anatomic neck', value: 'Rare; high AVN risk due to disruption of arcuate artery' },
+          { label: '3-part', value: '2 segments displaced; 1 tuberosity + shaft; rotator cuff intact on non-displaced tuberosity' },
+          { label: '4-part', value: 'All 4 segments displaced; highest AVN risk (13–34%); arthroplasty often preferred in elderly' },
+          { label: '4-part valgus-impacted', value: 'Better blood supply preservation; head tilted into valgus; more amenable to ORIF' },
+          { label: 'Fracture-dislocation', value: '2-, 3-, or 4-part with concomitant glenohumeral dislocation; note direction (anterior vs. posterior)' },
+          { label: 'Head-splitting', value: 'Articular surface fractured in coronal plane; arthroplasty required' },
+        ],
+      },
+      {
+        id: 'ao_ota_humeral_shaft',
+        label: 'AO/OTA — Humeral Shaft Fracture (12)',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'AO/OTA classification for humeral diaphyseal fractures (segment 12). Radial nerve injury occurs in ~18% of humeral shaft fractures (highest risk: middle-distal third spiral/Holstein-Lewis type).',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018 Update. J Orthop Trauma 2018;32(Suppl1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+        ],
+        normalValues: [
+          { label: '12-A (Simple)', value: 'A1: spiral; A2: oblique (≥30°); A3: transverse (<30°)' },
+          { label: '12-B (Wedge)', value: 'B1: spiral wedge; B2: bending wedge; B3: fragmented wedge' },
+          { label: '12-C (Complex)', value: 'C1: spiral complex; C2: segmental; C3: irregular comminution' },
+          { label: '⚠ Holstein-Lewis', value: 'Distal-third spiral fracture — radial nerve tethered at lateral intermuscular septum; radial nerve palsy risk' },
+          { label: 'Location key', value: 'Proximal third: assess for rotator cuff/shoulder girdle injury; distal third: assess for lateral condyle/elbow involvement' },
+        ],
+      },
+      {
+        id: 'distal_humerus_fracture',
+        label: 'AO/OTA — Distal Humerus Fracture (13) + Column Classification',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'Distal humeral fractures classified by AO/OTA (13-A/B/C) and by the column concept (medial + lateral). Type C (intercondylar/bicolumn) fractures require CT for surgical planning. Jupiter modification widely used.',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+          { label: 'Jupiter JB et al. — Intercondylar fractures of the humerus. J Bone Joint Surg Am 1985;67(2):226-239.', url: 'https://pubmed.ncbi.nlm.nih.gov/3973096/' },
+        ],
+        normalValues: [
+          { label: '13-A (Extra-articular)', value: 'Supracondylar; A1: avulsion (epicondyle); A2: simple metaphyseal; A3: comminuted metaphyseal' },
+          { label: '13-B (Partial articular)', value: 'B1: lateral condyle/capitellum; B2: medial condyle; B3: frontal plane (Hahn-Steinthal/Kocher-Lorenz capitellar shear)' },
+          { label: '13-C (Complete articular — bicolumn)', value: 'C1: simple articular + simple metaphyseal; C2: simple articular + comminuted metaphyseal; C3: comminuted articular' },
+          { label: 'Capitellar shear (Dubberley)', value: 'Type I: capitellum only; Type II: capitellum + trochlea as one piece; Type III: capitellum + trochlea comminuted; ± posterior comminution' },
+          { label: 'CT key items', value: 'Articular comminution; trochlear/capitellar involvement; coronal plane fragments; medial/lateral epicondyle avulsion' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Forearm ─────────────────────────────────────────────────────────
+  forearm: {
+    label: 'Forearm — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'ao_ota_forearm',
+        label: 'AO/OTA — Both-Bone Forearm / Radius / Ulna (22)',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'AO/OTA classification for forearm shaft fractures (segment 22). Assess PRUJ (proximal radioulnar joint) and DRUJ (distal radioulnar joint) in all isolated forearm bone fractures to exclude Monteggia and Galeazzi patterns.',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+          { label: 'Bado JL. — The Monteggia lesion. Clin Orthop 1967;50:71-86.', url: 'https://pubmed.ncbi.nlm.nih.gov/6029007/' },
+        ],
+        normalValues: [
+          { label: '22-A (Simple)', value: 'A1: ulna simple + radius intact; A2: radius simple + ulna intact; A3: both bones simple fractures' },
+          { label: '22-B (Wedge)', value: 'B1: ulna wedge; B2: radius wedge; B3: one bone wedge + other simple' },
+          { label: '22-C (Complex)', value: 'C1: ulna complex + radius intact; C2: radius complex + ulna intact; C3: complex both bones' },
+          { label: '⚠ Monteggia (Bado)', value: 'I: ant. radial head disloc. + prox. ulna angulated anteriorly (most common); II: post.; III: lateral; IV: ant. + both-bone' },
+          { label: '⚠ Galeazzi', value: 'Distal-third radial shaft fracture + DRUJ dislocation/disruption — "fracture of necessity" requiring surgery' },
+          { label: '⚠ Essex-Lopresti', value: 'Radial head fracture + interosseous membrane disruption + DRUJ injury — longitudinal forearm instability; easy to miss' },
+        ],
+      },
+      {
+        id: 'distal_radius_fracture',
+        label: 'Distal Radius Fracture — Frykman / AO / Key Measurements',
+        isGradingScale: true,
+        plane: 'Coronal + Sagittal + Axial',
+        description: 'Distal radius fractures classified by AO/OTA (23-A/B/C) and historically by Frykman. CT used for comminuted and intra-articular fractures. Key measurements guide operative decision-making.',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+          { label: 'Frykman G. — Fracture of the distal radius. Acta Orthop Scand 1967;Suppl 108:1-153.', url: 'https://pubmed.ncbi.nlm.nih.gov/4226779/' },
+        ],
+        normalValues: [
+          { label: 'AO/OTA 23-A (Extra-articular)', value: 'A1: ulnar styloid only; A2: simple distal radius; A3: comminuted distal radius — radiocarpal joint intact' },
+          { label: 'AO/OTA 23-B (Partial articular)', value: 'B1: radial styloid (Chauffeur); B2: dorsal rim (Barton); B3: volar rim (volar Barton/reverse Barton)' },
+          { label: 'AO/OTA 23-C (Complete articular)', value: 'C1: simple articular + simple metaphyseal; C2: simple articular + comminuted metaphyseal; C3: comminuted articular (die-punch component common)' },
+          { label: 'Radial inclination (normal)', value: '22° (coronal); <15° = loss of inclination — surgical threshold' },
+          { label: 'Volar tilt (normal)', value: '11° (sagittal); dorsal angulation >10° = surgical threshold' },
+          { label: 'Radial height (normal)', value: '11–12 mm; shortening >3 mm = surgical threshold' },
+          { label: 'Articular step-off threshold', value: '>2 mm intra-articular gap or step-off = surgical indication' },
+          { label: 'Ulnar variance', value: 'Positive (ulna long relative to radius) — risk for TFCC injury and ulnocarpal impaction' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Shoulder ────────────────────────────────────────────────────────
+  shoulder: {
+    label: 'Shoulder — CT Fracture/Instability Classification',
+    measurements: [
+      {
+        id: 'neer_proximal_humerus_shoulder',
+        label: 'Neer Classification — Proximal Humerus Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'See Humerus CT panel for full Neer details. Briefly: 1–4 part based on displacement (>1 cm or >45°) of humeral head, greater tuberosity, lesser tuberosity, shaft.',
         diagram: null,
         citations: [
           { label: 'Neer CS 2nd. — Displaced proximal humeral fractures. J Bone Joint Surg Am 1970;52(6):1077-1089.', url: 'https://pubmed.ncbi.nlm.nih.gov/5455339/' },
         ],
         normalValues: [
-          { label: '1-part (any # of fracture lines)', value: 'No segment displaced >1 cm or angulated >45° — treat as one unit' },
-          { label: '2-part', value: 'One of 4 segments displaced: surgical neck (most common), greater tuberosity, lesser tuberosity, or anatomic neck' },
-          { label: '3-part', value: 'Two segments displaced; rotator cuff usually intact on non-displaced tuberosity' },
-          { label: '4-part', value: 'All four segments displaced; humeral head at risk for AVN' },
-          { label: '4-part valgus-impacted', value: 'Better prognosis than classic 4-part; blood supply to head more likely preserved' },
-          { label: 'Fracture-dislocation', value: 'Any 2-4 part pattern with concomitant glenohumeral dislocation' },
+          { label: '1-part', value: 'No segment displaced >1 cm or >45° — any number of fracture lines' },
+          { label: '2-part', value: 'One segment displaced (surgical neck most common)' },
+          { label: '3-part', value: 'Two segments displaced' },
+          { label: '4-part', value: 'All four segments displaced — high AVN risk' },
+          { label: 'Fracture-dislocation', value: 'Any part pattern + glenohumeral dislocation' },
+        ],
+      },
+      {
+        id: 'glenoid_bone_loss',
+        label: 'Glenoid Bone Loss — Instability Metrics (ISIS / Inverted Pear)',
+        isGradingScale: true,
+        plane: 'Axial (en face glenoid reconstruction)',
+        description: 'Critical CT measurements for anterior glenohumeral instability. Glenoid bone loss >20–25% = "inverted pear" glenoid — Latarjet procedure preferred over soft tissue repair. Hill-Sachs engagement assessed with the Remplissage/ISIS score.',
+        diagram: null,
+        citations: [
+          { label: 'Burkhart SS & De Beer JF. — Traumatic glenohumeral bone defects. Arthroscopy 2000;16(7):677-694.', url: 'https://pubmed.ncbi.nlm.nih.gov/11027751/' },
+          { label: 'Griffith JF et al. — Anterior shoulder instability: CT. AJR 2003;180(1):229-232.', url: 'https://pubmed.ncbi.nlm.nih.gov/12490511/' },
+        ],
+        normalValues: [
+          { label: 'Glenoid bone loss (circle method)', value: 'Normal glenoid diameter ~2.5 cm; % loss = (glenoid diameter – remaining glenoid) / glenoid diameter × 100' },
+          { label: '<15% bone loss', value: 'Soft tissue (Bankart) repair appropriate if engaging Hill-Sachs absent' },
+          { label: '15–25% bone loss', value: 'Borderline — assess Hill-Sachs engagement; consider Latarjet' },
+          { label: '>25% bone loss ("Inverted pear")', value: 'Latarjet or bone grafting procedure strongly recommended; Bankart alone will fail' },
+          { label: 'Hill-Sachs on-track/off-track', value: 'HS width < (glenoid track = 0.83×glenoid diameter − bone loss width) = on-track (safe for Bankart); otherwise off-track → Remplissage or Latarjet' },
+          { label: 'Osseous Bankart', value: 'Anterior glenoid rim fracture fragment — measure size; if >25% of glenoid = critical bone loss' },
+        ],
+      },
+      {
+        id: 'ac_separation_rockwood',
+        label: 'Rockwood Classification — AC Joint Separation',
+        isGradingScale: true,
+        plane: 'Coronal',
+        description: 'Rockwood classification of acromioclavicular joint separations. Types I–III are most common; Types IV–VI are rare high-energy injuries. CT useful for posterior displacement (Type IV) and associated fractures.',
+        diagram: null,
+        citations: [
+          { label: 'Rockwood CA. — Injuries to the acromioclavicular joint. 1984. In: Rockwood and Greens Fractures.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+        ],
+        normalValues: [
+          { label: 'Type I', value: 'AC ligament sprain; CC ligaments intact; no displacement on imaging' },
+          { label: 'Type II', value: 'AC ligament torn; CC ligaments sprained; <25% CC distance increase; mild widening' },
+          { label: 'Type III', value: 'AC + CC ligaments torn; 25–100% CC distance increase; deltotrapezial fascia intact' },
+          { label: 'Type IV', value: 'Clavicle displaced POSTERIORLY into trapezius — CT diagnosis; may appear Type II on AP X-ray' },
+          { label: 'Type V', value: '>100% CC distance increase; deltotrapezial fascia torn; clavicle subcutaneous' },
+          { label: 'Type VI', value: 'Clavicle displaced INFERIORLY (subacromial/subcoracoid) — rare; high energy' },
+          { label: 'Normal CC distance', value: '11–13 mm; >5 mm increase vs. contralateral = abnormal' },
         ],
       },
     ],
   },
-  forearm: {
-    label: 'Forearm (Radius / Ulna)',
+  // ── CT: Elbow ───────────────────────────────────────────────────────────
+  elbow: {
+    label: 'Elbow — CT Fracture Classification',
     measurements: [
       {
-        id: 'forearm_fracture_patterns',
-        label: 'Forearm Fracture-Dislocation Patterns',
+        id: 'mason_radial_head',
+        label: 'Mason Classification (Modified) — Radial Head Fracture',
         isGradingScale: true,
-        plane: 'Coronal + Sagittal',
-        description: 'Key forearm fracture-dislocation patterns. Monteggia and Galeazzi injuries require recognition of the associated joint dislocation — missed dislocations lead to chronic instability.',
+        plane: 'Axial + Coronal',
+        description: 'Mason classification of radial head fractures, commonly modified by Johnston (adds Type IV for fracture-dislocation). CT essential for marginal fractures and surgical planning. Radial head fractures may indicate associated Essex-Lopresti injury.',
         diagram: null,
         citations: [
-          { label: 'Bado JL. — The Monteggia lesion. Clin Orthop Relat Res 1967;50:71-86.', url: 'https://pubmed.ncbi.nlm.nih.gov/6029007/' },
-          { label: 'Galeazzi R. — Original description. 1934.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+          { label: 'Mason ML. — Some observations on fractures of the head of the radius. Br J Surg 1954;42(172):123-132.', url: 'https://pubmed.ncbi.nlm.nih.gov/13209027/' },
+          { label: 'Johnston GW. — A follow-up of one hundred cases of fracture of the head of the radius. Ulster Med J 1962;31:51-56.', url: 'https://pubmed.ncbi.nlm.nih.gov/14455025/' },
         ],
         normalValues: [
-          { label: 'Monteggia — Bado I (most common)', value: 'Anterior radial head dislocation + proximal ulna fracture with anterior angulation' },
-          { label: 'Monteggia — Bado II', value: 'Posterior/posterolateral radial head dislocation + ulna fracture with posterior angulation' },
-          { label: 'Monteggia — Bado III', value: 'Lateral/anterolateral radial head dislocation + ulna metaphysis fracture' },
-          { label: 'Monteggia — Bado IV', value: 'Anterior radial head dislocation + both-bone fracture (radius + ulna)' },
-          { label: 'Galeazzi', value: 'Radial shaft fracture (usually distal third) + DRUJ disruption (dislocation/widening)' },
-          { label: 'Essex-Lopresti', value: 'Radial head fracture + interosseous membrane tear + DRUJ disruption — longitudinal forearm instability' },
-          { label: 'Both-bone forearm', value: 'Radius + ulna shaft fractures; assess PRUJ and DRUJ for associated dislocation' },
+          { label: 'Type I', value: 'Non-displaced or minimally displaced (<2 mm); no mechanical block; non-operative' },
+          { label: 'Type II', value: 'Marginal sector fracture WITH displacement (>2 mm) or angulation; may block forearm rotation; ORIF vs. arthroplasty' },
+          { label: 'Type III', value: 'Comminuted radial head fracture — 3+ fragments; arthroplasty usually required' },
+          { label: 'Type IV (Johnston mod.)', value: 'Any radial head fracture + elbow dislocation; assess coronoid and LCL' },
+          { label: '⚠ Essex-Lopresti', value: 'Radial head fracture (often Type III) + interosseous membrane tear + DRUJ injury — do not excise head without recognizing this' },
+          { label: 'Surgical threshold', value: '>2 mm displacement, >30° angulation, >30% articular surface, or mechanical block to rotation' },
+        ],
+      },
+      {
+        id: 'coronoid_regan_morrey',
+        label: 'Regan-Morrey Classification — Coronoid Fracture',
+        isGradingScale: true,
+        plane: 'Sagittal + Axial',
+        description: 'Coronoid fractures are often associated with elbow dislocations (terrible triad: radial head + coronoid + LCL). Regan-Morrey classifies by fracture height. O'Driscoll classification (anteromedial facet involvement) increasingly used for surgical planning.',
+        diagram: null,
+        citations: [
+          { label: 'Regan W & Morrey BF. — Coronoid process fractures. J Bone Joint Surg Am 1989;71(9):1348-1354.', url: 'https://pubmed.ncbi.nlm.nih.gov/2584650/' },
+          { label: 'O'Driscoll SW et al. — Coronoid fractures. J Shoulder Elbow Surg 2003;12(1):2-11.', url: 'https://pubmed.ncbi.nlm.nih.gov/12610480/' },
+        ],
+        normalValues: [
+          { label: 'Regan-Morrey Type I', value: 'Tip fracture ≤25% coronoid height — most common; unstable if part of terrible triad' },
+          { label: 'Regan-Morrey Type II', value: 'Fragment ≤50% coronoid height' },
+          { label: 'Regan-Morrey Type III', value: 'Fragment >50% coronoid height — major instability; surgical fixation required' },
+          { label: 'O'Driscoll — Anteromedial facet', value: 'AM1: tip only; AM2: anteromedial rim; AM3: rim + anterior process; varus posteromedial instability pattern' },
+          { label: '⚠ Terrible Triad', value: 'Elbow dislocation + radial head fracture + coronoid fracture Type I/II — surgical triple repair' },
+          { label: 'CT key items', value: 'Coronoid height (mm); anteromedial facet integrity; associated radial head, olecranon, and LCL injury pattern' },
+        ],
+      },
+      {
+        id: 'olecranon_fracture',
+        label: 'Mayo Classification — Olecranon Fracture',
+        isGradingScale: true,
+        plane: 'Sagittal + Axial',
+        description: 'Mayo classification of olecranon fractures based on displacement, stability, and comminution. Guides operative vs. non-operative management.',
+        diagram: null,
+        citations: [
+          { label: 'Morrey BF. — The Elbow and Its Disorders. 1993; Mayo Clinic classification.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+        ],
+        normalValues: [
+          { label: 'Type I (Undisplaced)', value: 'IA: non-comminuted; IB: comminuted; elbow stable; non-operative' },
+          { label: 'Type II (Displaced, stable)', value: 'IIA: non-comminuted (tension band wiring); IIB: comminuted (plate fixation)' },
+          { label: 'Type III (Displaced, unstable)', value: 'IIIA: non-comminuted; IIIB: comminuted; elbow instability — plate fixation + LCL repair' },
+          { label: 'Displacement threshold', value: '>2 mm displacement with inability to actively extend against gravity = operative' },
+          { label: 'Monteggia variant', value: 'Olecranon fracture + radial head dislocation (Bado Type II equivalent) — always assess PRUJ' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Wrist ───────────────────────────────────────────────────────────
+  wrist: {
+    label: 'Wrist — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'distal_radius_ct',
+        label: 'AO/OTA — Distal Radius Fracture (23) + Key Measurements',
+        isGradingScale: true,
+        plane: 'Coronal + Sagittal',
+        description: 'CT indicated for intra-articular distal radius fractures (AO Type 23-B/C). Delineates die-punch fragment, articular comminution, and dorsal/volar rim fragments critical for surgical planning.',
+        diagram: null,
+        citations: [
+          { label: 'Meinberg EG et al. — AO/OTA 2018. J Orthop Trauma 2018;32(Suppl 1):S1-S170.', url: 'https://pubmed.ncbi.nlm.nih.gov/29256945/' },
+        ],
+        normalValues: [
+          { label: 'AO 23-A (Extra-articular)', value: 'A1: ulnar styloid; A2: simple; A3: comminuted — radiocarpal joint intact' },
+          { label: 'AO 23-B (Partial articular)', value: 'B1: radial styloid (Chauffeur); B2: dorsal rim (Barton); B3: volar rim (reverse Barton)' },
+          { label: 'AO 23-C (Complete articular)', value: 'C1: simple jt + simple metaphysis; C2: simple jt + comminuted metaphysis; C3: comminuted articular (die-punch)' },
+          { label: 'Radial inclination', value: 'Normal 22°; surgical if <15°' },
+          { label: 'Volar tilt', value: 'Normal 11°; surgical if dorsal angulation >10–15°' },
+          { label: 'Radial height', value: 'Normal 11–12 mm; surgical if shortening >3 mm' },
+          { label: 'Articular step-off', value: '>2 mm = surgical indication' },
+        ],
+      },
+      {
+        id: 'scaphoid_fracture_herbert',
+        label: 'Herbert Classification — Scaphoid Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Sagittal',
+        description: 'Herbert & Fisher classification for scaphoid fractures. CT is the definitive imaging for fracture characterization, displacement measurement, and AVN assessment. Waist fractures most common (70%).',
+        diagram: null,
+        citations: [
+          { label: 'Herbert TJ & Fisher WE. — Scaphoid fracture classification. J Bone Joint Surg Br 1984;66(1):114-123.', url: 'https://pubmed.ncbi.nlm.nih.gov/6693483/' },
+        ],
+        normalValues: [
+          { label: 'Type A (Stable acute)', value: 'A1: fracture of tubercle; A2: incomplete fracture of waist — non-displaced, stable; cast treatment' },
+          { label: 'Type B (Unstable acute)', value: 'B1: distal oblique; B2: complete waist (displaced); B3: proximal pole; B4: trans-scaphoid perilunate fracture-dislocation' },
+          { label: 'Type C (Delayed union)', value: 'Delayed union (>6 weeks); instability pattern' },
+          { label: 'Type D (Established nonunion)', value: 'D1: fibrous union; D2: pseudarthrosis with sclerosis and cyst formation' },
+          { label: 'Displacement threshold', value: '>1 mm displacement, >15° intrascaphoid angle, or >45° lateral intrascaphoid angle = unstable; surgical fixation' },
+          { label: 'Proximal pole AVN', value: 'Assess CT density of proximal fragment; low density = possible AVN (MRI more sensitive)' },
+          { label: 'Humpback deformity', value: 'DISI pattern: intrascaphoid angle >35° on lateral; lateral intrascaphoid angle >45°' },
+        ],
+      },
+      {
+        id: 'carpal_dislocation',
+        label: 'Perilunate Dislocation / Carpal Instability Classification',
+        isGradingScale: true,
+        plane: 'Sagittal + Coronal',
+        description: 'Progressive perilunate instability (Mayfield stages I–IV). Greater arc injuries involve fractures through carpal bones. Lesser arc = pure ligamentous. CT essential for identifying carpal fractures and assessing reduction.',
+        diagram: null,
+        citations: [
+          { label: 'Mayfield JK et al. — Carpal dislocations. J Hand Surg Am 1980;5(3):226-241.', url: 'https://pubmed.ncbi.nlm.nih.gov/7373122/' },
+        ],
+        normalValues: [
+          { label: 'Mayfield Stage I', value: 'Scapholunate dissociation (SL gap >3 mm, Terry Thomas sign)' },
+          { label: 'Mayfield Stage II', value: 'SL + lunocapitate dislocation' },
+          { label: 'Mayfield Stage III', value: 'SL + lunocapitate + lunotriquetral dissociation = perilunate dislocation' },
+          { label: 'Mayfield Stage IV', value: 'Lunate dislocates volarly (lunate dislocation) — median nerve compression risk' },
+          { label: 'Greater arc (trans-scaphoid)', value: 'Fracture through scaphoid ± capitate ± hamate ± triquetrum — trans-scaphoid perilunate dislocation most common variant' },
+          { label: 'DISI / VISI', value: 'DISI (SL > 70°, capitolunate > 15°); VISI (LT dissociation, lunocapitate < -15°)' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Ankle ───────────────────────────────────────────────────────────
+  ankle: {
+    label: 'Ankle — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'lauge_hansen_weber',
+        label: 'Danis-Weber / Lauge-Hansen — Ankle Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Axial',
+        description: 'Weber classification by fibular fracture level relative to the ankle syndesmosis. Lauge-Hansen describes injury mechanism and ligamentous injury sequence. CT used for complex fractures, posterior malleolus assessment, and pilon differentiation.',
+        diagram: null,
+        citations: [
+          { label: 'Weber BG. — Die Verletzungen des oberen Sprunggelenkes. 1966.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+          { label: 'Lauge-Hansen N. — Fractures of the ankle. Arch Surg 1950;60(5):957-985.', url: 'https://pubmed.ncbi.nlm.nih.gov/15415202/' },
+        ],
+        normalValues: [
+          { label: 'Weber A (infrasyndesmal)', value: 'Fibula fracture below syndesmosis; ATFL disruption; syndesmosis intact; usually stable' },
+          { label: 'Weber B (transyndesmal)', value: 'Fibula fracture at syndesmosis (most common); oblique/spiral; syndesmosis ± disrupted; stability variable' },
+          { label: 'Weber C (suprasyndesmal)', value: 'Fibula fracture above syndesmosis; syndesmosis disrupted; medial-sided injury required for instability; high fibular fracture → Maisonneuve' },
+          { label: 'Trimalleolar', value: 'Lateral + medial + posterior malleolus; posterior fragment >25% tibial articular surface = surgical' },
+          { label: 'Posterior malleolus (Haraguchi)', value: 'Type I: posterolateral oblique (most common, ~70%); Type II: medial extension; Type III: small shell avulsion' },
+          { label: 'Syndesmosis assessment', value: 'Tibiofibular clear space >5 mm (AP), >6 mm (mortise); tibiofibular overlap <10 mm (AP), <1 mm (mortise) = widening' },
+          { label: '⚠ Maisonneuve', value: 'Weber C + proximal fibular fracture; image full fibula; CT ankle + CT/X-ray proximal fibula' },
+        ],
+      },
+      {
+        id: 'calcaneus_sanders',
+        label: 'Sanders Classification — Calcaneus Fracture',
+        isGradingScale: true,
+        plane: 'Coronal (posterior facet)',
+        description: 'Sanders CT classification of intra-articular calcaneus fractures based on number and location of fracture lines in the posterior facet of the subtalar joint. The primary coronally reconstructed CT image through the widest part of the posterior facet is used.',
+        diagram: null,
+        citations: [
+          { label: 'Sanders R et al. — Operative treatment of intra-articular calcaneal fractures. J Bone Joint Surg Am 1993;75(2):232-252.', url: 'https://pubmed.ncbi.nlm.nih.gov/8423182/' },
+        ],
+        normalValues: [
+          { label: 'Type I', value: 'All non-displaced fractures regardless of number of fracture lines — non-operative' },
+          { label: 'Type II (1 fracture line)', value: 'IIA: lateral column; IIB: central; IIC: medial column — 2 articular fragments' },
+          { label: 'Type III (2 fracture lines)', value: 'IIIAB: lateral + central; IIIAC: lateral + medial; IIIBC: central + medial — 3 articular fragments' },
+          { label: 'Type IV (3+ fracture lines)', value: 'Highly comminuted posterior facet — 4+ fragments; primary subtalar arthrodesis often preferred' },
+          { label: 'Böhler angle (normal)', value: '25–40°; flattening (<20°) indicates collapse of posterior facet; <0° = severe comminution' },
+          { label: 'Crucial angle of Gissane', value: '120–145°; widening suggests posterior facet impaction' },
+          { label: 'Key CT items', value: 'Posterior facet comminution; sustentaculum tali involvement; peroneal tendon entrapment; lateral wall blowout' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Hip ─────────────────────────────────────────────────────────────
+  hip: {
+    label: 'Hip — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'garden_femoral_neck',
+        label: 'Garden Classification — Femoral Neck Fracture',
+        isGradingScale: true,
+        plane: 'Coronal',
+        description: 'Garden classification for intracapsular femoral neck fractures. CT clarifies fracture pattern and detects posterior comminution. Garden III/IV = displaced = high AVN risk; arthroplasty often preferred in elderly.',
+        diagram: null,
+        citations: [
+          { label: 'Garden RS. — Low-angle fixation in femoral neck fractures. J Bone Joint Surg Br 1961;43:647-663.', url: 'https://pubmed.ncbi.nlm.nih.gov/14038931/' },
+        ],
+        normalValues: [
+          { label: 'Garden I', value: 'Incomplete/valgus impacted — trabeculae angled; NOT fully displaced; low AVN risk' },
+          { label: 'Garden II', value: 'Complete, non-displaced — normal trabecular alignment; low-moderate AVN risk' },
+          { label: 'Garden III', value: 'Partially displaced — trabecular malalignment; moderate-high AVN risk' },
+          { label: 'Garden IV', value: 'Completely displaced — no trabecular continuity; ~30% AVN risk' },
+          { label: 'Simplified (I/II vs. III/IV)', value: 'Non-displaced (I+II): consider ORIF; Displaced (III+IV): arthroplasty in elderly, ORIF in young' },
+        ],
+      },
+      {
+        id: 'letournel_acetabulum',
+        label: 'Letournel-Judet — Acetabular Fracture Classification',
+        isGradingScale: true,
+        plane: 'Axial + Coronal + 3D CT',
+        description: 'Letournel-Judet classification of acetabular fractures. Based on two-column concept (anterior + posterior). CT with 3D reconstruction is the definitive imaging modality. 5 elementary + 5 associated fracture patterns.',
+        diagram: null,
+        citations: [
+          { label: 'Letournel E & Judet R. — Fractures of the Acetabulum. 1981; 2nd ed. Springer 1993.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+          { label: 'Tile M. — Fractures of the Pelvis and Acetabulum. 3rd ed. 2003.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+        ],
+        normalValues: [
+          { label: 'Elementary — Posterior wall', value: 'Most common; posterior wall fracture ± dislocation; assess % wall involvement (>50% = unstable)' },
+          { label: 'Elementary — Posterior column', value: 'Posterior column from greater/lesser sciatic notch to ischiopubic ramus' },
+          { label: 'Elementary — Anterior wall', value: 'Anterior wall only — rare' },
+          { label: 'Elementary — Anterior column', value: 'Anterior column from iliac wing to pubic symphysis' },
+          { label: 'Elementary — Transverse', value: 'Horizontal fracture line through both columns; "spur sign" on obturator oblique = associated type' },
+          { label: 'Associated — Both column (most complex)', value: 'Both columns separated from intact ilium; "spur sign" on CT; no articular surface remains attached to axial skeleton' },
+          { label: 'Associated — T-type', value: 'Transverse + vertical component through obturator foramen' },
+          { label: 'Associated — Posterior column + wall', value: 'Combined posterior column + posterior wall fracture' },
+          { label: 'Associated — Transverse + posterior wall', value: 'Most common associated type' },
+          { label: 'Associated — Anterior + posterior hemitransverse', value: 'Anterior column/wall + posterior hemitransverse component' },
+          { label: 'CT key items', value: 'Femoral head congruence; intra-articular fragments; marginal impaction; dome comminution; posterior wall % involvement' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Pelvis ──────────────────────────────────────────────────────────
+  pelvis: {
+    label: 'Pelvis — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'young_burgess',
+        label: 'Young-Burgess Classification — Pelvic Ring Fracture',
+        isGradingScale: true,
+        plane: 'Axial + Coronal',
+        description: 'Young-Burgess classification of pelvic ring fractures by mechanism. CT with 3D reconstruction is the definitive imaging. Correlates with hemorrhagic injury and ligamentous disruption pattern. Tile classification (A/B/C) based on stability is also widely used.',
+        diagram: null,
+        citations: [
+          { label: 'Young JW & Burgess AR. — Radiologic Management of Pelvic Ring Fractures. 1987.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+          { label: 'Tile M. — Fractures of the Pelvis and Acetabulum. 3rd ed. 2003.', url: 'https://pubmed.ncbi.nlm.nih.gov/' },
+        ],
+        normalValues: [
+          { label: 'LC I (Lateral Compression)', value: 'Sacral buckle fracture + ipsilateral pubic rami fractures — stable; lowest hemorrhage risk' },
+          { label: 'LC II', value: 'LC I + ipsilateral iliac wing (crescent) fracture — partially stable' },
+          { label: 'LC III ("windswept pelvis")', value: 'LC II + contralateral APC injury — highly unstable; significant hemorrhage risk' },
+          { label: 'APC I (Anteroposterior Compression)', value: 'Pubic symphysis widening <2.5 cm; anterior SI ligament sprain only — stable' },
+          { label: 'APC II ("Open book")', value: 'Symphysis >2.5 cm + anterior SI ligaments torn; posterior SI intact — rotationally unstable' },
+          { label: 'APC III', value: 'Complete hemipelvic dissociation — anterior AND posterior SI ligaments torn; most hemorrhage risk' },
+          { label: 'VS (Vertical Shear)', value: 'Vertical displacement of hemipelvis — complete instability; highest hemorrhage risk' },
+          { label: 'CM (Combined Mechanism)', value: 'Mix of above patterns' },
+          { label: 'Tile A', value: 'Stable — posterior arch intact' },
+          { label: 'Tile B', value: 'Rotationally unstable, vertically stable — posterior arch partially intact' },
+          { label: 'Tile C', value: 'Rotationally + vertically unstable — posterior arch completely disrupted' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Spine ───────────────────────────────────────────────────────────
+  spine: {
+    label: 'Spine — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'ao_spine_classification',
+        label: 'AO Spine Classification — Vertebral Fracture',
+        isGradingScale: true,
+        plane: 'Sagittal + Axial',
+        description: 'AO Spine classification system (updated 2013). Three major types: A (compression), B (tension band disruption), C (displacement/translation). Subclassified by morphology and neural injury. Replaces older Denis three-column model in most centers.',
+        diagram: null,
+        citations: [
+          { label: 'Vaccaro AR et al. — AO Spine subaxial cervical spine injury classification. Eur Spine J 2016;25(7):2173-2184.', url: 'https://pubmed.ncbi.nlm.nih.gov/26984749/' },
+          { label: 'Reinhold M et al. — AO thoracolumbar classification. Eur Spine J 2013;22(10):2184-2201.', url: 'https://pubmed.ncbi.nlm.nih.gov/23760689/' },
+        ],
+        normalValues: [
+          { label: 'Type A — Compression', value: 'A0: minor (spinous/transverse process); A1: wedge; A2: split; A3: incomplete burst; A4: complete burst' },
+          { label: 'Type B — Tension band', value: 'B1: posterior tension band (Chance-type); B2: posterior tension band with osseous injury; B3: anterior (hyperextension through disc/vertebra)' },
+          { label: 'Type C — Displacement/translation', value: 'Any fracture with translational/rotational displacement — most unstable; surgical in almost all cases' },
+          { label: 'Burst fracture distinction', value: 'A3/A4 (incomplete/complete burst): posterior vertebral wall retropulsion into canal — measure % canal compromise and retropulsion distance (mm)' },
+          { label: 'TLICS (modifier)', value: 'Thoracolumbar Injury Classification Score: morphology (1–4) + PLC integrity (0–3) + neurologic status (0–4); ≥5 = surgery; ≤3 = non-operative; 4 = surgeon discretion' },
+          { label: 'CSISS / SLIC (cervical)', value: 'Subaxial Cervical Injury Severity Score: disc morphology + DLC integrity + neurologic; ≥5 = surgery' },
+          { label: 'Key CT items', value: 'Retropulsion distance (mm); % canal compromise; posterior ligamentous complex (PLC) disruption (CT: interspinous widening, facet perch/dislocation); vertebral height loss (%)' },
+        ],
+      },
+      {
+        id: 'odontoid_anderson_dalonzo',
+        label: 'Anderson-D'Alonzo — Odontoid (Dens) Fracture',
+        isGradingScale: true,
+        plane: 'Coronal + Sagittal',
+        description: 'Anderson-D'Alonzo classification for odontoid fractures. Type II (waist) is most common and has highest nonunion rate. CT provides definitive characterization; MRI assesses transverse ligament integrity.',
+        diagram: null,
+        citations: [
+          { label: 'Anderson LD & D'Alonzo RT. — Odontoid fractures. J Bone Joint Surg Am 1974;56(8):1663-1674.', url: 'https://pubmed.ncbi.nlm.nih.gov/4434035/' },
+        ],
+        normalValues: [
+          { label: 'Type I', value: 'Oblique avulsion fracture of dens TIP — rare; stable if transverse ligament intact' },
+          { label: 'Type II', value: 'Fracture at BASE of dens (dens-body junction) — most common (60%); highest nonunion rate (up to 36%); surgery often recommended' },
+          { label: 'Type IIA', value: 'Type II variant: comminuted base — even higher nonunion risk; essentially all require surgery' },
+          { label: 'Type III', value: 'Fracture extends into C2 vertebral BODY — better blood supply; lower nonunion rate; often treated with halo or rigid collar' },
+          { label: 'Displacement', value: '>5 mm or angulation >10° = associated with higher nonunion rate; surgical fixation strongly favored' },
+          { label: 'Transverse ligament', value: 'CT: atlantodental interval (ADI) >3 mm adult / >5 mm child = ligamentous instability; MRI for definitive assessment' },
+        ],
+      },
+    ],
+  },
+  // ── CT: Foot ────────────────────────────────────────────────────────────
+  foot: {
+    label: 'Foot — CT Fracture Classification',
+    measurements: [
+      {
+        id: 'lisfranc_fracture_classification',
+        label: 'Lisfranc Injury — Myerson / Hardcastle Classification',
+        isGradingScale: true,
+        plane: 'Axial + Coronal',
+        description: 'Lisfranc (tarsometatarsal) injuries classified by Hardcastle (modified by Myerson). CT is definitive for subtle Lisfranc injuries, fleck signs, and articular comminution. A fleck fracture at base of 2nd MT or medial cuneiform = pathognomonic for ligamentous disruption.',
+        diagram: null,
+        citations: [
+          { label: 'Hardcastle PH et al. — Injuries to the Lisfranc joint. J Bone Joint Surg Br 1982;64(3):349-356.', url: 'https://pubmed.ncbi.nlm.nih.gov/7096433/' },
+          { label: 'Myerson MS et al. — Fracture-dislocations of the tarsometatarsal joints. J Bone Joint Surg Am 1986;68(6):932-936.', url: 'https://pubmed.ncbi.nlm.nih.gov/3734882/' },
+        ],
+        normalValues: [
+          { label: 'Type A (Total incongruity)', value: 'ALL 5 TMT joints displaced in the same direction (lateral most common) — complete Lisfranc disruption' },
+          { label: 'Type B (Partial incongruity)', value: 'B1: medial displacement (1st TMT only); B2: lateral displacement (2nd–5th TMTs, 1st intact)' },
+          { label: 'Type C (Divergent)', value: 'C1: partial divergent (1st MT medial + others lateral); C2: complete divergent — all TMT joints disrupted, divergent pattern' },
+          { label: 'Purely ligamentous', value: 'No fracture on X-ray; CT/MRI: >2 mm 1st–2nd intermetatarsal space widening; "fleck sign" at base 2nd MT or cuneiform = equivalent to ligamentous disruption' },
+          { label: 'Threshold for instability', value: '>2 mm displacement between 1st and 2nd MT bases; any diastasis of medial cuneiform–2nd MT = operative in most guidelines' },
+          { label: 'Key CT items', value: 'Diastasis measurement (mm); fleck fracture location; plantar Lisfranc ligament avulsion; navicular-cuneiform involvement' },
+        ],
+      },
+      {
+        id: 'calcaneus_sanders_foot',
+        label: 'Sanders Classification — Calcaneus Fracture',
+        isGradingScale: true,
+        plane: 'Coronal (posterior facet)',
+        description: 'Sanders CT classification of intra-articular calcaneus fractures. Coronal CT through widest posterior facet is the key image. Type I = non-operative; Types II–IV graded by posterior facet comminution.',
+        diagram: null,
+        citations: [
+          { label: 'Sanders R et al. — Operative calcaneal fractures. J Bone Joint Surg Am 1993;75(2):232-252.', url: 'https://pubmed.ncbi.nlm.nih.gov/8423182/' },
+        ],
+        normalValues: [
+          { label: 'Type I', value: 'All non-displaced — non-operative regardless of fracture line count' },
+          { label: 'Type IIA/B/C', value: 'One fracture line; 2 articular fragments — A: lateral, B: central, C: medial column' },
+          { label: 'Type IIIAB/AC/BC', value: 'Two fracture lines; 3 articular fragments — various combinations' },
+          { label: 'Type IV', value: 'Highly comminuted posterior facet — 4+ fragments; consider primary subtalar arthrodesis' },
+          { label: 'Böhler angle', value: 'Normal 25–40°; reduced = posterior facet collapse' },
+          { label: 'Peroneal tendon', value: 'Assess for lateral wall blowout and peroneal tendon entrapment' },
         ],
       },
     ],
   },
 };
 
-// Merge supplemental data with imported JOINT_DATA
-const EFFECTIVE_JOINT_DATA = { ...JOINT_DATA, ...SUPPLEMENTAL_JOINT_DATA };
+// ─── MODALITY-AWARE DATA SELECTOR ────────────────────────────────────────────
+// Returns the correct grading data object for a given body part and modality.
+// MRI: uses MRI_GRADING_DATA if available, else falls back to JOINT_DATA (referenceData.js legacy).
+// CT:  uses CT_GRADING_DATA if available, else returns null (Reference Panel shows a notice).
+function getEffectiveJointData(bodyPart, modality) {
+  if (modality === 'CT') {
+    return CT_GRADING_DATA[bodyPart] || null;
+  }
+  // MRI: prefer MRI_GRADING_DATA override, else legacy JOINT_DATA
+  return MRI_GRADING_DATA[bodyPart] || JOINT_DATA[bodyPart] || null;
+}
 
 const BODY_PARTS = ['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot','femur/thigh','tibia/fibula','humerus','forearm'];
 const BILATERAL = ['spine','pelvis'];
@@ -169,8 +930,8 @@ function getAnatomy(part, isCT) {
 // ─── GRADING CONTEXT BUILDER ─────────────────────────────────────────────────
 // Extracts grading scales from JOINT_DATA and formats them for Claude.
 // Only includes entries marked isGradingScale:true — skips pure measurements.
-function buildGradingContext(part) {
-  const jointData = EFFECTIVE_JOINT_DATA[part];
+function buildGradingContext(part, modality) {
+  const jointData = getEffectiveJointData(part, modality);
   if (!jointData?.measurements?.length) return '';
   const scales = jointData.measurements.filter(m => m.isGradingScale);
   if (!scales.length) return '';
@@ -196,7 +957,7 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
     ? `If entirely normal: "No significant CT findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`
     : `If entirely normal: "No significant MRI findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`;
 
-  const gradingContext = buildGradingContext(part);
+  const gradingContext = buildGradingContext(part, modality);
   const gradingBlock = gradingContext
     ? `\n\nGRADING SCALES IN USE FOR THIS JOINT (apply these when grading is mentioned in dictation):\n${gradingContext}`
     : '';
@@ -2625,18 +3386,18 @@ ANGIOLIPOMA vs LIPOMA CHEAT SHEET:
 }
 
 // ─── REFERENCE PANEL ──────────────────────────────────────────────────────
-function ReferencePanel({ selectedBodyPart, darkMode = false }) {
-  const jointData = EFFECTIVE_JOINT_DATA[selectedBodyPart];
+function ReferencePanel({ selectedBodyPart, modality = 'MRI', darkMode = false }) {
+  const jointData = getEffectiveJointData(selectedBodyPart, modality);
   const [selectedMeasurementId, setSelectedMeasurementId] = useState('');
-  useEffect(() => { setSelectedMeasurementId(''); }, [selectedBodyPart]);
+  useEffect(() => { setSelectedMeasurementId(''); }, [selectedBodyPart, modality]);
   const selectedMeasurement = jointData?.measurements?.find(m => m.id === selectedMeasurementId);
   const accent = '#0891b2';
   const dm = darkMode;
-  if (!jointData) return <div style={{ color:'#94a3b8',fontSize:13,textAlign:'center',padding:20 }}>Select a body part.</div>;
+  if (!jointData) return <div style={{ color:'#94a3b8',fontSize:13,textAlign:'center',padding:20 }}>{modality === 'CT' ? 'No CT fracture classification available for this region. Switch to a specific bone region or select MRI for grading scales.' : 'Select a body part.'}</div>;
   return (
     <div style={{ display:'flex',flexDirection:'column',gap:0,height:'100%' }}>
       <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
-        <p style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent,margin:0 }}>{jointData.label} — Measurements</p>
+        <p style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent,margin:0 }}>{jointData.label}</p>
         <select style={{ width:'100%',padding:'8px 10px',border:'1px solid '+(dm?'#334155':'#e2e8f0'),borderRadius:8,fontSize:13,background:dm?'#0f172a':'white',cursor:'pointer',color:dm?'#e2e8f0':'#1e293b',boxSizing:'border-box' }}
           value={selectedMeasurementId} onChange={e => setSelectedMeasurementId(e.target.value)}>
           <option value="">— Select a measurement —</option>
@@ -3263,9 +4024,9 @@ export default function DashboardPage() {
 
         {/* Col 3 — Reference */}
         <div style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
-          {colHdr('linear-gradient(135deg,#0e7490,#0891b2)', '📐', 'Reference Panel')}
+          {colHdr(isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#1d4ed8,#4f46e5)', isCT ? '🦴' : '📐', isCT ? 'CT Fracture Classification' : 'MRI Grading Reference')}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
-            <ReferencePanel selectedBodyPart={selectedBodyPart} dm={dm} />
+            <ReferencePanel selectedBodyPart={selectedBodyPart} modality={modality} dm={dm} />
           </div>
         </div>
 
