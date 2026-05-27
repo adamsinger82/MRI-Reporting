@@ -943,6 +943,7 @@ function buildGradingContext(part, modality) {
 
 function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
   const isCT = modality === 'CT';
+  const isRheum = modality === 'Rheum';
   const modalityName = isCT ? 'CT' : 'MRI';
   const doseOptSentence = doseOpt ? ' One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.' : '';
   const techniqueText = isCT
@@ -3636,6 +3637,560 @@ function IncidentalPanel({ showLung, showGU, noduleType, setNoduleType, noduleSi
   );
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RHEUM MODULE — X-Ray Arthritis DDx Builder
+// Based on Core Radiology: A Visual Approach to Diagnostic Imaging (Mandell 2013)
+// Chapter: Arthritis — pp. 346-364
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Rheum DDx Data ──────────────────────────────────────────────────────────
+// Each joint has categories of findings; each finding maps to compatible diagnoses.
+// diag keys: OA=Osteoarthritis, RA=Rheumatoid Arthritis, PsA=Psoriatic Arthritis,
+// AS=Ankylosing Spondylitis, ReA=Reactive Arthropathy, IBD=IBD Arthropathy,
+// Gout=Gout, CPPD=CPPD, HADD=Hydroxyapatite Deposition, SLE=Systemic Lupus,
+// JIA=Juvenile Idiopathic Arthritis, Hemo=Hemophilia, Scl=Scleroderma,
+// EOA=Erosive OA, Hem=Hemochromatosis, Sep=Septic/Infectious
+
+const RHEUM_JOINTS = {
+  hand: {
+    label: 'Hand',
+    categories: [
+      {
+        label: 'Joint Distribution',
+        findings: [
+          { id:'h_dip', label:'DIP joint involvement', diags:['OA','EOA','PsA','Gout'] },
+          { id:'h_pip', label:'PIP joint involvement', diags:['OA','EOA','RA','PsA','JIA','Gout'] },
+          { id:'h_mcp', label:'MCP joint involvement', diags:['RA','CPPD','Hem','JIA','Gout','SLE'] },
+          { id:'h_cmc', label:'1st CMC (thumb base) involvement', diags:['OA','EOA'] },
+          { id:'h_carpal', label:'Carpal/wrist involvement', diags:['RA','CPPD','JIA','Gout'] },
+          { id:'h_dip_mcp_spare', label:'MCPs spared / DIPs involved', diags:['OA','EOA','PsA'] },
+          { id:'h_mcp_pip', label:'MCPs AND PIPs involved', diags:['RA','JIA','SLE'] },
+          { id:'h_asymmetric', label:'Asymmetric distribution', diags:['PsA','Gout','OA'] },
+          { id:'h_symmetric', label:'Symmetric distribution', diags:['RA','SLE','EOA'] },
+        ],
+      },
+      {
+        label: 'Erosions',
+        findings: [
+          { id:'h_no_erosion', label:'No erosions (osteophytes only)', diags:['OA'] },
+          { id:'h_marginal_erosion', label:'Marginal erosions (bare area)', diags:['RA','PsA','ReA','JIA','Gout'] },
+          { id:'h_pencil_cup', label:'Pencil-in-cup erosion', diags:['PsA','ReA'] },
+          { id:'h_gullwing', label:'Gull-wing erosion (DIP)', diags:['EOA'] },
+          { id:'h_overhanging', label:'Overhanging margin erosion', diags:['Gout'] },
+          { id:'h_central_erosion', label:'Central erosion with marginal osteophytes', diags:['EOA'] },
+          { id:'h_radial_mch', label:'Erosions radial 2nd-3rd metacarpal heads', diags:['RA'] },
+          { id:'h_hook_osteo', label:'Hook-like/drooping osteophytes at MCP heads', diags:['CPPD','Hem'] },
+        ],
+      },
+      {
+        label: 'Bone Density & New Bone',
+        findings: [
+          { id:'h_periosteal', label:'Periosteal reaction / fluffy periostitis', diags:['PsA','ReA'] },
+          { id:'h_periarticular_op', label:'Periarticular osteopenia', diags:['RA','JIA','SLE'] },
+          { id:'h_diffuse_op', label:'Diffuse osteopenia', diags:['RA'] },
+          { id:'h_preserved_density', label:'Preserved bone density', diags:['OA','Gout','PsA','ReA','CPPD'] },
+          { id:'h_osteophytes', label:'Osteophytes present', diags:['OA','EOA','CPPD','Hem'] },
+          { id:'h_ivory_phal', label:'Ivory phalanx (osteosclerosis)', diags:['PsA'] },
+          { id:'h_ankylosis_wrist', label:'Bony ankylosis', diags:['JIA','RA','PsA'] },
+          { id:'h_brachydactyly', label:'Brachydactyly / premature fusion', diags:['JIA'] },
+        ],
+      },
+      {
+        label: 'Soft Tissue',
+        findings: [
+          { id:'h_sausage', label:'Sausage digit (entire digit swollen)', diags:['PsA','ReA'] },
+          { id:'h_sym_swelling', label:'Symmetric periarticular swelling', diags:['RA'] },
+          { id:'h_tophus', label:'Soft-tissue tophus / lumpy-bumpy swelling', diags:['Gout'] },
+          { id:'h_heberden', label:'Heberden nodes (DIP swelling)', diags:['OA'] },
+          { id:'h_bouchard', label:'Bouchard nodes (PIP swelling)', diags:['OA'] },
+          { id:'h_calc_soft', label:'Soft-tissue / periarticular calcification', diags:['Scl','CPPD','Gout'] },
+          { id:'h_acroosteolysis', label:'Acro-osteolysis (distal phalanx resorption)', diags:['Scl'] },
+          { id:'h_reducible_sublux', label:'Reducible subluxations at MCPs/PIPs', diags:['SLE'] },
+          { id:'h_nonreducible_sublux', label:'Non-reducible subluxations / deformity', diags:['RA'] },
+          { id:'h_swan_neck', label:'Swan neck deformity', diags:['RA'] },
+          { id:'h_boutonniere', label:'Boutonniere deformity', diags:['RA'] },
+          { id:'h_ulnar_dev', label:'Ulnar deviation at MCPs', diags:['RA'] },
+          { id:'h_opera_glass', label:'Opera-glass hand / telescoping digits', diags:['PsA'] },
+          { id:'h_spade_tufts', label:'Spade-like terminal tufts', diags:['Acromegaly'] },
+        ],
+      },
+      {
+        label: 'Cartilage & Space',
+        findings: [
+          { id:'h_asym_narrow', label:'Asymmetric joint space narrowing', diags:['OA','Gout'] },
+          { id:'h_sym_narrow', label:'Symmetric joint space narrowing', diags:['RA','PsA','JIA','SLE'] },
+          { id:'h_preserved_space', label:'Preserved joint space (late disease)', diags:['Gout'] },
+          { id:'h_chondrocalc', label:'Chondrocalcinosis', diags:['CPPD','Hem'] },
+          { id:'h_widened_space', label:'Widened joint space (early disease)', diags:['Acromegaly'] },
+        ],
+      },
+    ],
+  },
+  wrist: {
+    label: 'Wrist',
+    categories: [
+      {
+        label: 'Distribution',
+        findings: [
+          { id:'w_pancarpal', label:'Pan-carpal / diffuse involvement', diags:['RA','JIA'] },
+          { id:'w_tfcc', label:'TFCC chondrocalcinosis', diags:['CPPD'] },
+          { id:'w_cmc_only', label:'CMC thumb base only', diags:['OA','EOA'] },
+          { id:'w_cmc_erosion', label:'CMC osteophytes + erosions', diags:['EOA'] },
+          { id:'w_cmc_gout', label:'CMC erosions without osteophytes', diags:['Gout'] },
+          { id:'w_ulnar_styloid', label:'Ulnar styloid erosion', diags:['RA'] },
+          { id:'w_scapholunar', label:'SLAC wrist pattern', diags:['CPPD','RA'] },
+        ],
+      },
+      {
+        label: 'Findings',
+        findings: [
+          { id:'w_periarticular_op', label:'Periarticular osteopenia', diags:['RA','JIA'] },
+          { id:'w_marginal_erosion', label:'Marginal erosions', diags:['RA','PsA','Gout'] },
+          { id:'w_ankylosis', label:'Carpal ankylosis', diags:['JIA','RA'] },
+          { id:'w_preserved_density', label:'Preserved bone density', diags:['OA','Gout','PsA','CPPD'] },
+          { id:'w_chondrocalc', label:'Chondrocalcinosis (TFCC / cartilage)', diags:['CPPD'] },
+          { id:'w_calcten', label:'Calcification in tendons', diags:['HADD','CPPD'] },
+          { id:'w_sublux', label:'Subluxations / reducible malalignment', diags:['RA','SLE'] },
+        ],
+      },
+    ],
+  },
+  elbow: {
+    label: 'Elbow',
+    categories: [
+      {
+        label: 'Findings',
+        findings: [
+          { id:'el_enlarged_radhead', label:'Enlarged radial head', diags:['Hemo','JIA'] },
+          { id:'el_widened_trochlea', label:'Widened trochlear notch', diags:['Hemo'] },
+          { id:'el_jointspace_narrow', label:'Joint space narrowing', diags:['OA','RA','Hemo','JIA'] },
+          { id:'el_synovial_density', label:'Increased soft-tissue density (hemosiderin)', diags:['Hemo'] },
+          { id:'el_involvement_1in3', label:'RA involvement (~1/3 patients)', diags:['RA'] },
+          { id:'el_oa_posttrauma', label:'Joint space narrowing + osteophytes (post-trauma)', diags:['OA'] },
+          { id:'el_erosions', label:'Marginal erosions without osteophytes', diags:['RA'] },
+          { id:'el_calcten', label:'Tendon calcification (supraspinatus equivalent region)', diags:['HADD'] },
+        ],
+      },
+    ],
+  },
+  shoulder: {
+    label: 'Shoulder',
+    categories: [
+      {
+        label: 'Findings',
+        findings: [
+          { id:'sh_high_humerus', label:'High-riding humerus (superior migration)', diags:['RA'] },
+          { id:'sh_lateral_erosion', label:'Lateral humeral head erosion', diags:['RA'] },
+          { id:'sh_distal_clav_pencil', label:'"Penciling" of distal clavicle (AC joint erosion)', diags:['RA'] },
+          { id:'sh_glenohumeral_narrow', label:'Glenohumeral joint space narrowing', diags:['OA','RA'] },
+          { id:'sh_osteophytes', label:'Osteophytes / subchondral sclerosis', diags:['OA'] },
+          { id:'sh_ac_erosion', label:'AC joint erosions', diags:['RA'] },
+          { id:'sh_calcten', label:'Calcification in supraspinatus tendon', diags:['HADD'] },
+          { id:'sh_milwaukee', label:'Rapid joint destruction + calcification', diags:['HADD'] },
+          { id:'sh_amyloid', label:'Bulky soft-tissue nodules + shoulder-pad sign', diags:['Amyloid'] },
+        ],
+      },
+    ],
+  },
+  hip: {
+    label: 'Hip',
+    categories: [
+      {
+        label: 'Migration Pattern',
+        findings: [
+          { id:'hip_superolat', label:'Superolateral femoral head migration', diags:['OA'] },
+          { id:'hip_axial', label:'Axial (concentric) migration', diags:['RA','JIA'] },
+          { id:'hip_medial', label:'Medial migration (less common OA)', diags:['OA'] },
+          { id:'hip_protrusio', label:'Protrusio deformity (medial > ilioischial line)', diags:['RA'] },
+        ],
+      },
+      {
+        label: 'Findings',
+        findings: [
+          { id:'hip_jointspace', label:'Superior joint space narrowing', diags:['OA'] },
+          { id:'hip_concentric', label:'Concentric / uniform joint space narrowing', diags:['RA','JIA'] },
+          { id:'hip_osteophytes', label:'Osteophytes + subchondral sclerosis', diags:['OA'] },
+          { id:'hip_bilateral', label:'Bilateral symmetric involvement', diags:['OA','RA'] },
+          { id:'hip_epiphyseal_enlarge', label:'Epiphyseal enlargement (hyperemia)', diags:['JIA','Hemo'] },
+          { id:'hip_erosions', label:'Erosions without new bone', diags:['RA'] },
+        ],
+      },
+    ],
+  },
+  knee: {
+    label: 'Knee',
+    categories: [
+      {
+        label: 'Compartment Involvement',
+        findings: [
+          { id:'kn_medial', label:'Medial tibiofemoral predominant narrowing', diags:['OA'] },
+          { id:'kn_lateral', label:'Lateral tibiofemoral predominant narrowing', diags:['CPPD'] },
+          { id:'kn_patellofemoral', label:'Patellofemoral predominant (isolated)', diags:['CPPD'] },
+          { id:'kn_all3', label:'All 3 compartments involved', diags:['OA','RA','CPPD'] },
+          { id:'kn_sym_all3', label:'Symmetric all 3 compartments (without erosions)', diags:['RA'] },
+        ],
+      },
+      {
+        label: 'Bony Findings',
+        findings: [
+          { id:'kn_osteophytes', label:'Osteophytes (determines OA present)', diags:['OA','CPPD'] },
+          { id:'kn_subchondral_cysts', label:'Prominent subchondral cysts', diags:['OA','CPPD'] },
+          { id:'kn_sclerosis', label:'Subchondral sclerosis', diags:['OA','CPPD'] },
+          { id:'kn_no_erosion', label:'No erosions', diags:['OA','CPPD','Hemo'] },
+          { id:'kn_squaring_patella', label:'Squaring of the patella', diags:['Hemo','JIA'] },
+          { id:'kn_intercondylar_notch', label:'Widened intercondylar notch', diags:['Hemo','JIA'] },
+          { id:'kn_metaphyseal_flare', label:'Metaphyseal flaring', diags:['JIA'] },
+          { id:'kn_epiphyseal_enlarge', label:'Epiphyseal enlargement (hyperemia)', diags:['Hemo','JIA'] },
+        ],
+      },
+      {
+        label: 'Cartilage & Other',
+        findings: [
+          { id:'kn_chondrocalc', label:'Chondrocalcinosis (menisci / cartilage)', diags:['CPPD'] },
+          { id:'kn_bilateral', label:'Bilateral symmetric involvement', diags:['OA','RA','CPPD'] },
+          { id:'kn_hemosiderin_density', label:'Increased soft-tissue density (iron / hemosiderin)', diags:['Hemo'] },
+          { id:'kn_uniform_narrow', label:'Uniform joint space narrowing', diags:['RA','JIA'] },
+          { id:'kn_weight_bearing', label:'Narrowing best seen weight-bearing', diags:['OA'] },
+        ],
+      },
+    ],
+  },
+  ankle: {
+    label: 'Ankle',
+    categories: [
+      {
+        label: 'Findings',
+        findings: [
+          { id:'an_oa_posttrauma', label:'OA changes (post-traumatic)', diags:['OA'] },
+          { id:'an_hemophilia', label:'Hemophilic pattern (ankles classic site)', diags:['Hemo'] },
+          { id:'an_jia', label:'JIA pattern (ankles + knees + elbows)', diags:['JIA'] },
+          { id:'an_erosions_inflam', label:'Erosive changes + periarticular osteopenia', diags:['RA','ReA'] },
+          { id:'an_epiphyseal_hyper', label:'Epiphyseal overgrowth / premature fusion', diags:['JIA','Hemo'] },
+        ],
+      },
+    ],
+  },
+  foot: {
+    label: 'Foot',
+    categories: [
+      {
+        label: '1st MTP / Great Toe',
+        findings: [
+          { id:'ft_1mtp_oa', label:'1st MTP osteophytes / hallux rigidus', diags:['OA'] },
+          { id:'ft_1mtp_gout', label:'1st MTP soft-tissue swelling + erosion with overhanging margin', diags:['Gout'] },
+          { id:'ft_1mtp_ra', label:'MTP erosions (forefoot RA)', diags:['RA'] },
+          { id:'ft_ip_psa', label:'Great toe IP + MTP involvement', diags:['PsA'] },
+          { id:'ft_ivory', label:'Ivory phalanx (osteosclerosis of toe)', diags:['PsA'] },
+        ],
+      },
+      {
+        label: 'Calcaneus',
+        findings: [
+          { id:'ft_plantar_spur_psa', label:'Plantar calcaneal spur WITH periosteal reaction', diags:['PsA'] },
+          { id:'ft_plantar_spur_oa', label:'Plantar calcaneal spur WITHOUT reactive new bone', diags:['OA'] },
+          { id:'ft_calcaneal_erosion', label:'Posterior-superior calcaneal erosion', diags:['ReA','PsA'] },
+          { id:'ft_achilles_thick', label:'Achilles thickening / enthesophyte', diags:['ReA','PsA','AS'] },
+          { id:'ft_fluffy_periosteal', label:'Fluffy periosteal reaction calcaneus', diags:['ReA','PsA'] },
+        ],
+      },
+      {
+        label: 'Midfoot & Forefoot',
+        findings: [
+          { id:'ft_mtp_ra', label:'MTP joints involved (forefoot)', diags:['RA'] },
+          { id:'ft_talocalcaneonavicular', label:'Talocalcaneonavicular joint involved', diags:['RA'] },
+          { id:'ft_sausage_toe', label:'Sausage toe (diffuse digit swelling)', diags:['ReA','PsA'] },
+          { id:'ft_tophus', label:'Soft-tissue tophi / lumpy swelling', diags:['Gout'] },
+          { id:'ft_overhanging', label:'Overhanging erosion margin', diags:['Gout'] },
+          { id:'ft_preserved_space', label:'Preserved joint space (until late)', diags:['Gout'] },
+        ],
+      },
+    ],
+  },
+  si: {
+    label: 'SI Joints',
+    categories: [
+      {
+        label: 'Symmetry',
+        findings: [
+          { id:'si_sym', label:'Symmetric sacroiliitis (both SI joints)', diags:['AS','IBD'] },
+          { id:'si_asym', label:'Asymmetric sacroiliitis', diags:['PsA','ReA'] },
+          { id:'si_unilateral', label:'Unilateral sacroiliitis', diags:['Sep','PsA','ReA'] },
+          { id:'si_oa_inferior', label:'OA changes (inferior synovial portion only)', diags:['OA'] },
+        ],
+      },
+      {
+        label: 'Findings',
+        findings: [
+          { id:'si_erosions_iliac', label:'Erosions on iliac aspect of SI joint', diags:['AS','PsA','ReA','IBD'] },
+          { id:'si_sclerosis', label:'Subchondral sclerosis', diags:['AS','OA','PsA','ReA','IBD'] },
+          { id:'si_ankylosis', label:'SI joint ankylosis', diags:['AS'] },
+          { id:'si_fever', label:'Erosive + fever/constitutional symptoms', diags:['Sep'] },
+          { id:'si_hlab27', label:'HLA-B27 positive (clinical)', diags:['AS','PsA','ReA','IBD'] },
+        ],
+      },
+    ],
+  },
+  pelvis: {
+    label: 'Pelvis',
+    categories: [
+      {
+        label: 'SI Joint Pattern',
+        findings: [
+          { id:'pel_sym_si', label:'Symmetric sacroiliitis', diags:['AS','IBD'] },
+          { id:'pel_asym_si', label:'Asymmetric sacroiliitis', diags:['PsA','ReA'] },
+          { id:'pel_ankylosis_si', label:'SI joint ankylosis', diags:['AS'] },
+        ],
+      },
+      {
+        label: 'Hip Pattern',
+        findings: [
+          { id:'pel_hip_oa', label:'Hip OA pattern (superolateral migration)', diags:['OA'] },
+          { id:'pel_hip_ra', label:'Hip RA pattern (axial migration / protrusio)', diags:['RA'] },
+        ],
+      },
+    ],
+  },
+  'c-spine': {
+    label: 'Cervical Spine',
+    categories: [
+      {
+        label: 'RA Cervical Findings',
+        findings: [
+          { id:'cs_atlantoaxial', label:'Atlantoaxial (C1-C2) subluxation', diags:['RA'] },
+          { id:'cs_adi_widened', label:'ADI > 2.5mm (atlanto-dental interval)', diags:['RA'] },
+          { id:'cs_vertical_impact', label:'Vertical atlantoaxial impaction (dens through foramen magnum)', diags:['RA'] },
+          { id:'cs_odontoid_erosion', label:'Odontoid erosion', diags:['RA'] },
+          { id:'cs_multilevel_sublux', label:'Multilevel subluxations', diags:['RA'] },
+          { id:'cs_no_boneproduction', label:'Erosions WITHOUT bone production', diags:['RA'] },
+          { id:'cs_osteopenia', label:'Diffuse osteopenia + erosions', diags:['RA'] },
+        ],
+      },
+      {
+        label: 'AS / Spondyloarthropathy Findings',
+        findings: [
+          { id:'cs_syndesmophytes', label:'Delicate syndesmophytes (bridging)', diags:['AS'] },
+          { id:'cs_bamboo', label:'Bamboo spine / spinal ankylosis', diags:['AS'] },
+          { id:'cs_squaring', label:'Squaring of vertebral body margins', diags:['AS'] },
+          { id:'cs_romanus', label:'Romanus lesion (anterior corner erosion)', diags:['AS'] },
+          { id:'cs_shiny_corner', label:'Shiny corner sign (sclerosis)', diags:['AS'] },
+          { id:'cs_bulky_bridging', label:'Bulky / coarse bony bridging', diags:['PsA','ReA'] },
+          { id:'cs_facet_erosion', label:'Facet joint erosions', diags:['RA','AS'] },
+          { id:'cs_dagger_sign', label:'Dagger sign (fused spinous processes)', diags:['AS'] },
+          { id:'cs_andersson', label:'Andersson lesion (pseudarthrosis in ankylosed spine)', diags:['AS'] },
+        ],
+      },
+      {
+        label: 'DDD / Other',
+        findings: [
+          { id:'cs_ddd', label:'Disc desiccation + osteophytes (DDD)', diags:['OA'] },
+          { id:'cs_vacuum', label:'Vacuum phenomenon in disc', diags:['OA'] },
+          { id:'cs_dish', label:'Flowing anterior osteophytes ≥4 levels (DISH)', diags:['DISH'] },
+          { id:'cs_disc_calc', label:'Disc calcification every level', diags:['Ochronosis'] },
+        ],
+      },
+    ],
+  },
+  't-spine': {
+    label: 'Thoracic Spine',
+    categories: [
+      {
+        label: 'Findings',
+        findings: [
+          { id:'ts_syndesmophytes', label:'Syndesmophytes / bamboo spine', diags:['AS'] },
+          { id:'ts_romanus', label:'Romanus lesions (anterior corner erosion)', diags:['AS'] },
+          { id:'ts_squaring', label:'Vertebral body squaring', diags:['AS'] },
+          { id:'ts_bulky_bridging', label:'Bulky asymmetric bridging', diags:['PsA','ReA'] },
+          { id:'ts_dish', label:'Flowing anterior osteophytes (DISH)', diags:['DISH'] },
+          { id:'ts_ddd', label:'Degenerative disc disease', diags:['OA'] },
+          { id:'ts_disc_calc', label:'Intervertebral disc calcification', diags:['Ochronosis','CPPD'] },
+          { id:'ts_gibbus', label:'Gibbus deformity (angular kyphosis)', diags:['TB','Fracture'] },
+        ],
+      },
+    ],
+  },
+};
+
+// Diagnosis display info
+const DIAG_INFO = {
+  OA:         { label:'Osteoarthritis', color:'#0891b2', bg:'#ecfeff', darkBg:'#0c2d36', darkColor:'#67e8f9' },
+  EOA:        { label:'Erosive OA', color:'#0e7490', bg:'#e0f7fa', darkBg:'#0a2233', darkColor:'#38bdf8' },
+  RA:         { label:'Rheumatoid Arthritis', color:'#dc2626', bg:'#fef2f2', darkBg:'#3b0a0a', darkColor:'#fca5a5' },
+  PsA:        { label:'Psoriatic Arthritis', color:'#7c3aed', bg:'#f5f3ff', darkBg:'#2e1a4a', darkColor:'#c4b5fd' },
+  AS:         { label:'Ankylosing Spondylitis', color:'#b45309', bg:'#fffbeb', darkBg:'#2d1a05', darkColor:'#fcd34d' },
+  ReA:        { label:'Reactive Arthropathy', color:'#065f46', bg:'#ecfdf5', darkBg:'#022c1b', darkColor:'#6ee7b7' },
+  IBD:        { label:'IBD Arthropathy', color:'#1d4ed8', bg:'#eff6ff', darkBg:'#0c1f5a', darkColor:'#93c5fd' },
+  Gout:       { label:'Gout', color:'#9d174d', bg:'#fdf2f8', darkBg:'#3b0a1e', darkColor:'#f9a8d4' },
+  CPPD:       { label:'CPPD', color:'#0f766e', bg:'#f0fdfa', darkBg:'#062824', darkColor:'#5eead4' },
+  HADD:       { label:'Hydroxyapatite (HADD)', color:'#6b21a8', bg:'#faf5ff', darkBg:'#2d0f4a', darkColor:'#d8b4fe' },
+  SLE:        { label:'Systemic Lupus (SLE)', color:'#be185d', bg:'#fdf2f8', darkBg:'#3b0a2a', darkColor:'#fbcfe8' },
+  JIA:        { label:'Juvenile Idiopathic Arthritis', color:'#92400e', bg:'#fef3c7', darkBg:'#3a1505', darkColor:'#fde68a' },
+  Hemo:       { label:'Hemophilic Arthropathy', color:'#1e3a5f', bg:'#e0e7ff', darkBg:'#0f1f3a', darkColor:'#a5b4fc' },
+  Scl:        { label:'Scleroderma', color:'#374151', bg:'#f3f4f6', darkBg:'#111827', darkColor:'#d1d5db' },
+  Hem:        { label:'Hemochromatosis', color:'#78350f', bg:'#fff7ed', darkBg:'#2d1005', darkColor:'#fdba74' },
+  Sep:        { label:'Septic / Infectious', color:'#991b1b', bg:'#fef2f2', darkBg:'#3b0a0a', darkColor:'#fca5a5' },
+  Amyloid:    { label:'Amyloid Arthropathy', color:'#4b5563', bg:'#f9fafb', darkBg:'#111827', darkColor:'#9ca3af' },
+  Acromegaly: { label:'Acromegaly', color:'#0f766e', bg:'#f0fdfa', darkBg:'#062824', darkColor:'#5eead4' },
+  DISH:       { label:'DISH', color:'#0369a1', bg:'#e0f2fe', darkBg:'#0a2333', darkColor:'#7dd3fc' },
+  Ochronosis: { label:'Ochronosis', color:'#1e293b', bg:'#f1f5f9', darkBg:'#0f172a', darkColor:'#94a3b8' },
+  TB:         { label:'TB (Pott Disease)', color:'#b91c1c', bg:'#fef2f2', darkBg:'#3b0a0a', darkColor:'#fca5a5' },
+  Fracture:   { label:'Compression Fracture', color:'#374151', bg:'#f3f4f6', darkBg:'#111827', darkColor:'#d1d5db' },
+};
+
+// ── Rheum Prompt Builder ────────────────────────────────────────────────────
+function buildRheumPrompt(joint, laterality) {
+  const jLabel = RHEUM_JOINTS[joint]?.label || joint;
+  return `You are a subspecialty MSK radiologist generating a structured radiograph report for a rheumatology case.
+
+CRITICAL FORMATTING RULES:
+- NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
+- Section headers (TECHNIQUE, FINDINGS, IMPRESSION) on their own line in ALL CAPS with colon.
+- Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
+
+TECHNIQUE:
+${laterality === 'bilateral' ? 'Bilateral' : ''} radiograph of the ${jLabel.toLowerCase()}.
+
+FINDINGS RULES:
+1. Not mentioned → write "unremarkable." 
+2. Positive findings → exact dictated words only.
+3. For joints: address joint space (narrowing pattern, distribution), subchondral bone (sclerosis, cysts), osteophytes, erosions (marginal, central, overhanging), bone density, periosteal reaction, soft-tissue swelling, calcifications, subluxations or deformities.
+4. BONES RULE: address cortex integrity and any fracture or lesion.
+
+IMPRESSION RULES:
+- Synthesize findings into a clinical arthritis diagnosis when the pattern is clear.
+- Name the arthritis type using radiographic pattern (e.g., "radiographic findings consistent with osteoarthritis," "inflammatory erosive arthropathy most consistent with rheumatoid arthritis").
+- Reference the ABCDEs framework when helpful: Alignment, Bone density, Bone creation, Calcification, Cartilage space, Distribution, Erosions, Soft tissue.
+- If the DDx includes multiple entities, list top 2-3 with distinguishing features.
+- Normal exam: "No radiographic evidence of significant arthropathy of the ${jLabel.toLowerCase()}."
+
+FORMAT:
+TECHNIQUE:
+${laterality === 'bilateral' ? 'Bilateral' : ''} radiograph of the ${jLabel.toLowerCase()}.
+
+FINDINGS:
+Structure: finding
+
+IMPRESSION:
+1. Finding one`;
+}
+
+// ── Rheum DDx Panel ─────────────────────────────────────────────────────────
+function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumChecks, onGenerate, isGenerating, dm }) {
+  const jointData = RHEUM_JOINTS[rheumJoint];
+  const accent = '#a855f7';
+
+  // Compute matching diagnoses from checked findings
+  const checkedIds = Object.keys(rheumChecks).filter(k => rheumChecks[k]);
+  const diagScores = {};
+  if (checkedIds.length > 0 && jointData) {
+    jointData.categories.forEach(cat => {
+      cat.findings.forEach(f => {
+        if (rheumChecks[f.id]) {
+          f.diags.forEach(d => { diagScores[d] = (diagScores[d] || 0) + 1; });
+        }
+      });
+    });
+  }
+
+  const sortedDiags = Object.entries(diagScores)
+    .sort((a,b) => b[1]-a[1])
+    .filter(([,s]) => s > 0);
+
+  const maxScore = sortedDiags[0]?.[1] || 1;
+
+  const toggleCheck = (id) => setRheumChecks(prev => ({...prev, [id]: !prev[id]}));
+  const clearAll = () => setRheumChecks({});
+
+  if (!jointData) return <div style={{color:'#94a3b8',fontSize:13,padding:16}}>Select a joint to begin.</div>;
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:0,height:'100%'}}>
+      {/* Header */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+        <span style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent}}>{jointData.label} — Rheum DDx</span>
+        {checkedIds.length > 0 && (
+          <button onClick={clearAll} style={{fontSize:10,color:'#94a3b8',background:'none',border:'none',cursor:'pointer',padding:'2px 6px',borderRadius:4,border:'1px solid #334155'}}>
+            Clear all
+          </button>
+        )}
+      </div>
+
+      {/* DDx result bar */}
+      {sortedDiags.length > 0 && (
+        <div style={{marginBottom:10,display:'flex',flexDirection:'column',gap:4}}>
+          <p style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',color:dm?'#64748b':'#94a3b8',margin:0}}>Matching Diagnoses ({checkedIds.length} finding{checkedIds.length!==1?'s':''} selected)</p>
+          {sortedDiags.slice(0,6).map(([diag,score]) => {
+            const info = DIAG_INFO[diag] || {label:diag, color:'#64748b', bg:'#f1f5f9', darkBg:'#1e293b', darkColor:'#94a3b8'};
+            const pct = Math.round((score/maxScore)*100);
+            return (
+              <div key={diag} style={{display:'flex',alignItems:'center',gap:6}}>
+                <div style={{flex:1,fontSize:11,fontWeight:600,color:dm?info.darkColor:info.color,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',minWidth:0}}>{info.label}</div>
+                <div style={{width:60,height:6,background:dm?'#1e293b':'#e2e8f0',borderRadius:3,flexShrink:0}}>
+                  <div style={{width:pct+'%',height:'100%',background:dm?info.darkColor:info.color,borderRadius:3,transition:'width 0.3s'}} />
+                </div>
+                <div style={{fontSize:10,color:dm?'#94a3b8':'#64748b',width:18,textAlign:'right',flexShrink:0}}>{score}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{height:1,background:dm?'#334155':'#e2e8f0',margin:'4px 0 8px'}} />
+
+      {/* Findings checkboxes */}
+      <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:10}}>
+        {jointData.categories.map(cat => (
+          <div key={cat.label}>
+            <p style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.07em',color:dm?'#64748b':'#94a3b8',margin:'0 0 5px 0'}}>{cat.label}</p>
+            <div style={{display:'flex',flexDirection:'column',gap:3}}>
+              {cat.findings.map(f => {
+                const checked = !!rheumChecks[f.id];
+                // Highlight which diagnoses this finding supports
+                const topDiag = f.diags[0];
+                const info = DIAG_INFO[topDiag] || {color:'#64748b', bg:'#f1f5f9', darkBg:'#1e293b', darkColor:'#94a3b8'};
+                return (
+                  <label key={f.id} style={{display:'flex',alignItems:'flex-start',gap:7,cursor:'pointer',padding:'5px 7px',borderRadius:6,
+                    background: checked ? (dm?info.darkBg:info.bg) : (dm?'#0f172a':'#f8fafc'),
+                    border: checked ? `1px solid ${dm?info.darkColor:info.color}` : `1px solid ${dm?'#1e293b':'#f1f5f9'}`,
+                    transition:'all 0.1s'}}>
+                    <input type="checkbox" checked={checked} onChange={() => toggleCheck(f.id)}
+                      style={{marginTop:2,accentColor:accent,cursor:'pointer',flexShrink:0}} />
+                    <div style={{flex:1,minWidth:0}}>
+                      <span style={{fontSize:12,fontWeight:checked?600:400,color:checked?(dm?info.darkColor:info.color):(dm?'#cbd5e1':'#374151'),lineHeight:1.3,display:'block'}}>
+                        {f.label}
+                      </span>
+                      <span style={{fontSize:10,color:dm?'#475569':'#94a3b8',lineHeight:1.2}}>
+                        {f.diags.map(d => (DIAG_INFO[d]||{label:d}).label).join(' · ')}
+                      </span>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Generate from DDx button */}
+      <div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${dm?'#334155':'#e2e8f0'}`}}>
+        <p style={{fontSize:10,color:dm?'#64748b':'#94a3b8',margin:'0 0 6px 0',lineHeight:1.4}}>
+          {checkedIds.length > 0
+            ? `${checkedIds.length} finding${checkedIds.length!==1?'s':''} selected → top DDx: ${sortedDiags.slice(0,2).map(([d])=>(DIAG_INFO[d]||{label:d}).label).join(', ') || '—'}`
+            : 'Check findings above to generate a focused DDx report, or use the left panel to dictate freely.'}
+        </p>
+        <button onClick={onGenerate} disabled={isGenerating || checkedIds.length === 0}
+          style={{width:'100%',padding:'10px 12px',borderRadius:9,border:'none',cursor:isGenerating||checkedIds.length===0?'not-allowed':'pointer',
+            background:isGenerating||checkedIds.length===0?(dm?'#1e293b':'#e2e8f0'):'linear-gradient(135deg,#7c2d92,#a855f7)',
+            color:isGenerating||checkedIds.length===0?(dm?'#475569':'#94a3b8'):'white',
+            fontSize:13,fontWeight:700,letterSpacing:'0.02em',
+            boxShadow:isGenerating||checkedIds.length===0?'none':'0 4px 16px rgba(168,85,247,0.4)',transition:'all 0.15s'}}>
+          {isGenerating ? '⏳ Generating…' : '🔬 Generate DDx Report'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN DASHBOARD ────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
@@ -3668,6 +4223,12 @@ export default function DashboardPage() {
   const [patientSex, setPatientSex] = useState('');
   const [layPersonSummary, setLayPersonSummary] = useState(false);
   const [includeDoseOpt, setIncludeDoseOpt] = useState(true);
+  // ── Rheum module state ──────────────────────────────────────────────────
+  const [rheumJoint, setRheumJoint] = useState('knee');
+  const [rheumLaterality, setRheumLaterality] = useState('unilateral');
+  const [rheumChecks, setRheumChecks] = useState({});
+  const [rheumFreeText, setRheumFreeText] = useState('');
+  const [isGeneratingRheum, setIsGeneratingRheum] = useState(false);
   const WEBSITE_URL = 'https://mri-reporting.vercel.app'; // update to your actual patient-facing URL
 
   const showSide = !BILATERAL.includes(selectedBodyPart);
@@ -3758,7 +4319,8 @@ export default function DashboardPage() {
   };
 
   const generateReport = async () => {
-    if (!dictationText.trim()) return;
+    const textToUse = isRheum ? rheumFreeText : dictationText;
+    if (!textToUse.trim()) return;
     setIsGenerating(true);
     setGeneratedReport('');
     const lat = showSide ? side : '';
@@ -3772,8 +4334,8 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:2000,
-          system: buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt) + layPersonInstruction,
-          messages:[{role:'user',content:`Dictated findings:\n\n${dictationText}${buildIncidentalBlock() ? '\n\nINCIDENTAL FINDINGS TO ADD TO IMPRESSION AND REFERENCES:\n' + buildIncidentalBlock() : ''}`}],
+          system: isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality) : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt) + layPersonInstruction,
+          messages:[{role:'user',content:`Dictated findings:\n\n${isRheum ? rheumFreeText : dictationText}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS TO ADD TO IMPRESSION AND REFERENCES:\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
       const data = await res.json();
@@ -3781,6 +4343,42 @@ export default function DashboardPage() {
       else setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.');
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGenerating(false);
+  };
+
+  // ── Generate Report from DDx checkboxes ───────────────────────────────────
+  const generateRheumReport = async () => {
+    setIsGeneratingRheum(true);
+    setGeneratedReport('');
+    const jLabel = RHEUM_JOINTS[rheumJoint]?.label || rheumJoint;
+    // Build a structured finding list from checked boxes
+    const checkedFindings = [];
+    const jData = RHEUM_JOINTS[rheumJoint];
+    if (jData) {
+      jData.categories.forEach(cat => {
+        cat.findings.forEach(f => {
+          if (rheumChecks[f.id]) checkedFindings.push(`[${cat.label}] ${f.label}`);
+        });
+      });
+    }
+    const findingsSummary = checkedFindings.length > 0
+      ? checkedFindings.map(f => `• ${f}`).join('\n')
+      : '(No specific findings selected — generate differential only)';
+    try {
+      const res = await fetch('/api/generate', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model:'claude-sonnet-4-6',
+          max_tokens:1500,
+          system: buildRheumPrompt(rheumJoint, rheumLaterality),
+          messages:[{role:'user',content:`Radiographic findings checked by the radiologist:\n\n${findingsSummary}\n\nPlease generate a structured X-ray report based on these findings. For the impression, name the arthritis pattern(s) most consistent with this combination of findings, referencing the ABCDES framework (Alignment, Bone density, Bone creation, Calcification, Cartilage space, Distribution, Erosions, Soft tissue). If findings are consistent with a single diagnosis, state it confidently. If there is genuine diagnostic overlap, list the top 1-3 entities with distinguishing features.`}],
+        }),
+      });
+      const data = await res.json();
+      if (data?.error) setGeneratedReport('Error: ' + data.error);
+      else setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.');
+    } catch { setGeneratedReport('Network error. Please try again.'); }
+    setIsGeneratingRheum(false);
   };
 
   const toggleListening = () => {
@@ -3859,15 +4457,19 @@ export default function DashboardPage() {
 
         {/* Center: MRI/CT toggle + tool buttons */}
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-evenly',gap:16,flex:1,margin:'0 20px' }}>
-          {/* MRI/CT toggle */}
+          {/* MRI / CT / Rheum toggle */}
           <div style={{ display:'flex',alignItems:'center',background:'rgba(255,255,255,0.08)',borderRadius:10,padding:3,gap:2 }}>
-            {['MRI','CT'].map(m => (
-              <button key={m} onClick={() => setModality(m)}
+            {[
+              {id:'MRI', label:'MRI', active:'linear-gradient(135deg,#1d4ed8,#4f46e5)'},
+              {id:'CT',  label:'CT',  active:'linear-gradient(135deg,#0e7490,#0891b2)'},
+              {id:'Rheum',label:'Rheum', active:'linear-gradient(135deg,#7c2d92,#a855f7)'},
+            ].map(({id,label,active}) => (
+              <button key={id} onClick={() => setModality(id)}
                 style={{ padding:'6px 18px',borderRadius:8,border:'none',cursor:'pointer',fontSize:13,fontWeight:700,letterSpacing:'0.06em',transition:'all 0.2s',
-                  background:modality===m?(m==='CT'?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#4f46e5)'):'transparent',
-                  color:modality===m?'white':'rgba(255,255,255,0.45)',
-                  boxShadow:modality===m?'0 2px 8px rgba(0,0,0,0.25)':'none' }}>
-                {m}
+                  background:modality===id?active:'transparent',
+                  color:modality===id?'white':'rgba(255,255,255,0.45)',
+                  boxShadow:modality===id?'0 2px 8px rgba(0,0,0,0.25)':'none' }}>
+                {label}
               </button>
             ))}
           </div>
@@ -3915,28 +4517,42 @@ export default function DashboardPage() {
 
         {/* Col 1 — Dictation */}
         <div style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
-          {colHdr(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#2563eb)', isCT?'🔬':'📝', isCT?'CT Dictation Input':'MRI Dictation Input')}
+          {colHdr(isRheum?'linear-gradient(135deg,#7c2d92,#a855f7)':isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#2563eb)', isRheum?'🩻':isCT?'🔬':'📝', isRheum?'X-Ray Dictation (Rheum)':isCT?'CT Dictation Input':'MRI Dictation Input')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
             <div style={{ display:'flex',gap:8 }}>
-              <div style={{ flex:2 }}><label style={lbl}>Body Part</label>
-                <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetIncidentals(); }}>
-                  {BODY_PARTS.map(b => {
-                    const LABELS = {'femur/thigh':'Femur / Thigh','tibia/fibula':'Tibia / Fibula','humerus':'Humerus','forearm':'Forearm'};
-                    const label = LABELS[b] || (b.charAt(0).toUpperCase()+b.slice(1));
-                    return <option key={b} value={b}>{label}</option>;
-                  })}
-                </select>
-              </div>
-              {showSide && <div style={{ flex:1 }}><label style={lbl}>Side</label>
-                <select style={inp} value={side} onChange={e => setSide(e.target.value)}>
-                  <option value="left">Left</option><option value="right">Right</option><option value="bilateral">Bilateral</option>
-                </select>
-              </div>}
-              {selectedBodyPart === 'spine' && <div style={{ flex:1 }}><label style={lbl}>Region</label>
-                <select style={inp} value={spineRegion} onChange={e => setSpineRegion(e.target.value)}>
-                  <option value="cervical">Cervical</option><option value="thoracic">Thoracic</option><option value="lumbar">Lumbar</option>
-                </select>
-              </div>}
+              {isRheum ? (<>
+                <div style={{ flex:2 }}><label style={lbl}>Joint / Region</label>
+                  <select style={inp} value={rheumJoint} onChange={e => { setRheumJoint(e.target.value); setRheumChecks({}); }}>
+                    {[['hand','Hand'],['wrist','Wrist'],['elbow','Elbow'],['shoulder','Shoulder'],['hip','Hip'],['knee','Knee'],['ankle','Ankle'],['foot','Foot'],['si','SI Joints'],['pelvis','Pelvis'],['c-spine','Cervical Spine'],['t-spine','Thoracic Spine']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex:1 }}><label style={lbl}>Laterality</label>
+                  <select style={inp} value={rheumLaterality} onChange={e => setRheumLaterality(e.target.value)}>
+                    <option value="unilateral">Unilateral</option>
+                    <option value="bilateral">Bilateral</option>
+                  </select>
+                </div>
+              </>) : (<>
+                <div style={{ flex:2 }}><label style={lbl}>Body Part</label>
+                  <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetIncidentals(); }}>
+                    {BODY_PARTS.map(b => {
+                      const LABELS = {'femur/thigh':'Femur / Thigh','tibia/fibula':'Tibia / Fibula','humerus':'Humerus','forearm':'Forearm'};
+                      const label = LABELS[b] || (b.charAt(0).toUpperCase()+b.slice(1));
+                      return <option key={b} value={b}>{label}</option>;
+                    })}
+                  </select>
+                </div>
+                {showSide && <div style={{ flex:1 }}><label style={lbl}>Side</label>
+                  <select style={inp} value={side} onChange={e => setSide(e.target.value)}>
+                    <option value="left">Left</option><option value="right">Right</option><option value="bilateral">Bilateral</option>
+                  </select>
+                </div>}
+                {selectedBodyPart === 'spine' && <div style={{ flex:1 }}><label style={lbl}>Region</label>
+                  <select style={inp} value={spineRegion} onChange={e => setSpineRegion(e.target.value)}>
+                    <option value="cervical">Cervical</option><option value="thoracic">Thoracic</option><option value="lumbar">Lumbar</option>
+                  </select>
+                </div>}
+              </>)}
             </div>
             <div><label style={lbl}>Contrast</label>
               <select style={inp} value={contrast} onChange={e => setContrast(e.target.value)}>
@@ -3971,7 +4587,7 @@ export default function DashboardPage() {
             )}
             <div style={{ flex:1,display:'flex',flexDirection:'column' }}><label style={lbl}>Findings</label>
               <textarea className="msk-textarea" style={{ ...inp,flex:1,minHeight:160,resize:'vertical',lineHeight:1.7,fontFamily:'inherit',border:isListening?'1.5px solid #ef4444':'1px solid #dde3ed',boxShadow:isListening?'0 0 0 3px rgba(239,68,68,0.1)':'none',transition:'all 0.15s' }}
-                value={dictationText} onChange={e => setDictationText(e.target.value)} placeholder={`Type or dictate ${isCT?'CT':'MRI'} findings here…`} />
+                value={isRheum ? rheumFreeText : dictationText} onChange={e => isRheum ? setRheumFreeText(e.target.value) : setDictationText(e.target.value)} placeholder={`Type or dictate ${isRheum?'X-ray':isCT?'CT':'MRI'} findings here…`} />
             </div>
             {micError && <div style={{ fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:7,padding:'7px 10px',lineHeight:1.5 }}>{micError}</div>}
             <button onClick={isListening ? stopListening : toggleListening}
@@ -3985,7 +4601,7 @@ export default function DashboardPage() {
             </label>
             <button onClick={generateReport} disabled={isGenerating || !dictationText.trim()}
               style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:(isGenerating||!dictationText.trim())?(dm?'#1e293b':'#e2e8f0'):(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#2563eb,#4f46e5)'),color:(isGenerating||!dictationText.trim())?(dm?'#475569':'#94a3b8'):'white',fontSize:14,fontWeight:700,cursor:(isGenerating||!dictationText.trim())?'not-allowed':'pointer',boxShadow:(isGenerating||!dictationText.trim())?'none':'0 4px 16px rgba(37,99,235,0.35)',letterSpacing:'0.02em' }}>
-              {isGenerating ? '⏳ Generating…' : `✨ Generate ${isCT?'CT':'MRI'} Report`}
+              {isGenerating ? '⏳ Generating…' : `✨ Generate ${isRheum?'X-Ray':isCT?'CT':'MRI'} Report`}
             </button>
           </div>
         </div>
@@ -4024,9 +4640,20 @@ export default function DashboardPage() {
 
         {/* Col 3 — Reference */}
         <div style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
-          {colHdr(isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#1d4ed8,#4f46e5)', isCT ? '🦴' : '📐', isCT ? 'CT Fracture Classification' : 'MRI Grading Reference')}
+          {colHdr(isRheum ? 'linear-gradient(135deg,#7c2d92,#a855f7)' : isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#1d4ed8,#4f46e5)', isRheum ? '🩻' : isCT ? '🦴' : '📐', isRheum ? 'Rheum DDx Builder' : isCT ? 'CT Fracture Classification' : 'MRI Grading Reference')}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
-            <ReferencePanel selectedBodyPart={selectedBodyPart} modality={modality} dm={dm} />
+            {isRheum
+              ? <RheumDDxPanel
+                  rheumJoint={rheumJoint}
+                  rheumLaterality={rheumLaterality}
+                  rheumChecks={rheumChecks}
+                  setRheumChecks={setRheumChecks}
+                  onGenerate={generateRheumReport}
+                  isGenerating={isGeneratingRheum}
+                  dm={dm}
+                />
+              : <ReferencePanel selectedBodyPart={selectedBodyPart} modality={modality} dm={dm} />
+            }
           </div>
         </div>
 
