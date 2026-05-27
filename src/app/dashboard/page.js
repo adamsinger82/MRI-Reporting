@@ -545,17 +545,17 @@ const CT_GRADING_DATA = {
         label: 'Regan-Morrey Classification — Coronoid Fracture',
         isGradingScale: true,
         plane: 'Sagittal + Axial',
-        description: 'Coronoid fractures are often associated with elbow dislocations (terrible triad: radial head + coronoid + LCL). Regan-Morrey classifies by fracture height. O'Driscoll classification (anteromedial facet involvement) increasingly used for surgical planning.',
+        description: 'Coronoid fractures are often associated with elbow dislocations (terrible triad: radial head + coronoid + LCL). Regan-Morrey classifies by fracture height. O\'Driscoll classification (anteromedial facet involvement) increasingly used for surgical planning.',
         diagram: null,
         citations: [
           { label: 'Regan W & Morrey BF. — Coronoid process fractures. J Bone Joint Surg Am 1989;71(9):1348-1354.', url: 'https://pubmed.ncbi.nlm.nih.gov/2584650/' },
-          { label: 'O'Driscoll SW et al. — Coronoid fractures. J Shoulder Elbow Surg 2003;12(1):2-11.', url: 'https://pubmed.ncbi.nlm.nih.gov/12610480/' },
+          { label: 'O\'Driscoll SW et al. — Coronoid fractures. J Shoulder Elbow Surg 2003;12(1):2-11.', url: 'https://pubmed.ncbi.nlm.nih.gov/12610480/' },
         ],
         normalValues: [
           { label: 'Regan-Morrey Type I', value: 'Tip fracture ≤25% coronoid height — most common; unstable if part of terrible triad' },
           { label: 'Regan-Morrey Type II', value: 'Fragment ≤50% coronoid height' },
           { label: 'Regan-Morrey Type III', value: 'Fragment >50% coronoid height — major instability; surgical fixation required' },
-          { label: 'O'Driscoll — Anteromedial facet', value: 'AM1: tip only; AM2: anteromedial rim; AM3: rim + anterior process; varus posteromedial instability pattern' },
+          { label: 'O\'Driscoll — Anteromedial facet', value: 'AM1: tip only; AM2: anteromedial rim; AM3: rim + anterior process; varus posteromedial instability pattern' },
           { label: '⚠ Terrible Triad', value: 'Elbow dislocation + radial head fracture + coronoid fracture Type I/II — surgical triple repair' },
           { label: 'CT key items', value: 'Coronoid height (mm); anteromedial facet integrity; associated radial head, olecranon, and LCL injury pattern' },
         ],
@@ -799,13 +799,13 @@ const CT_GRADING_DATA = {
       },
       {
         id: 'odontoid_anderson_dalonzo',
-        label: 'Anderson-D'Alonzo — Odontoid (Dens) Fracture',
+        label: 'Anderson-D\'Alonzo — Odontoid (Dens) Fracture',
         isGradingScale: true,
         plane: 'Coronal + Sagittal',
-        description: 'Anderson-D'Alonzo classification for odontoid fractures. Type II (waist) is most common and has highest nonunion rate. CT provides definitive characterization; MRI assesses transverse ligament integrity.',
+        description: 'Anderson-D\'Alonzo classification for odontoid fractures. Type II (waist) is most common and has highest nonunion rate. CT provides definitive characterization; MRI assesses transverse ligament integrity.',
         diagram: null,
         citations: [
-          { label: 'Anderson LD & D'Alonzo RT. — Odontoid fractures. J Bone Joint Surg Am 1974;56(8):1663-1674.', url: 'https://pubmed.ncbi.nlm.nih.gov/4434035/' },
+          { label: 'Anderson LD & D\'Alonzo RT. — Odontoid fractures. J Bone Joint Surg Am 1974;56(8):1663-1674.', url: 'https://pubmed.ncbi.nlm.nih.gov/4434035/' },
         ],
         normalValues: [
           { label: 'Type I', value: 'Oblique avulsion fracture of dens TIP — rare; stable if transverse ligament intact' },
