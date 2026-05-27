@@ -4279,6 +4279,7 @@ export default function DashboardPage() {
   const [darkMode, setDarkMode] = useState(false);
   const dm = darkMode;
   const recognitionRef = useRef(null);
+  const isRheumRef = useRef(false); // tracks current modality for STT handler
 
   // ── Incidental findings state ──────────────────────────────────────────────
   // Fleischner (lung nodule)
@@ -4305,6 +4306,7 @@ export default function DashboardPage() {
   const showSide = !BILATERAL.includes(selectedBodyPart);
   const isCT = modality === 'CT';
   const isRheum = modality === 'Rheum';
+  useEffect(() => { isRheumRef.current = isRheum; }, [isRheum]);
   const partLabel = selectedBodyPart === 'spine' ? `${spineRegion} spine` : selectedBodyPart;
   const sideLabel = showSide ? `${side} ` : '';
   const contrastLabel = contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without';
@@ -4471,7 +4473,9 @@ export default function DashboardPage() {
           if (event.results[i].isFinal) finalTranscriptRef.current += t + ' ';
           else interim += t;
         }
-        setDictationText(finalTranscriptRef.current + interim);
+        const transcript = finalTranscriptRef.current + interim;
+        if (isRheumRef.current) setRheumFreeText(transcript);
+        else setDictationText(transcript);
       };
       recognition.onerror = (event) => {
         if (event.error === 'not-allowed') { setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
