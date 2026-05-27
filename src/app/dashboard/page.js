@@ -4026,18 +4026,21 @@ TECHNIQUE:
 ${latLabel} radiograph of the ${jLabel.toLowerCase()}.
 
 FINDINGS RULES:
-1. Not mentioned: write "unremarkable."
+1. Not mentioned: write "unremarkable." EXCEPTION: Soft Tissues — write "No acute soft tissue abnormality."
 2. Positive findings: exact dictated words only.
 3. For joints: address joint space (narrowing pattern, distribution), subchondral bone (sclerosis, cysts), osteophytes, erosions (marginal, central, overhanging), bone density, periosteal reaction, soft-tissue swelling, calcifications, subluxations or deformities.
 4. BONES: address cortex integrity and any fracture or lesion.
 
 IMPRESSION RULES — FOLLOW EXACTLY:
+- The impression must be concise. Do NOT repeat or summarize individual findings from the FINDINGS section.
 - Single best diagnosis: "Imaging patterns are most consistent with the diagnosis of [X]."
-- Secondary consideration present: append "Next consideration includes [Y]." or "Next considerations include [Y] and [Z]."
-- Two entities coexisting: "Imaging patterns are most consistent with [X] superimposed with [Y]."
+- Secondary differential: after the first sentence, add "Next consideration includes [Y]." or "Next considerations include [Y] and [Z]." Keep it brief — one short clause maximum per entity.
+- Two coexisting entities: "Imaging patterns are most consistent with [X] superimposed with [Y]." Then optionally one brief next consideration sentence.
 - Normal: "No radiographic evidence of significant arthropathy of the ${jLabel.toLowerCase()}."
 - Do NOT reference ABCDE or ABCDEs anywhere in the report.
-- Use complete sentences only in the impression — no numbered lists.
+- Do NOT restate or paraphrase findings from the FINDINGS section in the impression.
+- Use complete sentences only — no numbered lists.
+- Maximum 2–3 sentences total in the impression.
 
 FORMAT:
 TECHNIQUE:
@@ -4094,7 +4097,7 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
       {/* DDx result bar */}
       {sortedDiags.length > 0 && (
         <div style={{marginBottom:10,display:'flex',flexDirection:'column',gap:4}}>
-          <p style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',color:dm?'#64748b':'#94a3b8',margin:0}}>Matching Diagnoses ({checkedIds.length} finding{checkedIds.length!==1?'s':''} selected)</p>
+
           {sortedDiags.slice(0,6).map(([diag,score]) => {
             const info = DIAG_INFO[diag] || {label:diag, color:'#64748b', bg:'#f1f5f9', darkBg:'#1e293b', darkColor:'#94a3b8'};
             const pct = Math.round((score/maxScore)*100);
@@ -4126,13 +4129,13 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
                 const info = DIAG_INFO[topDiag] || {color:'#64748b', bg:'#f1f5f9', darkBg:'#1e293b', darkColor:'#94a3b8'};
                 return (
                   <label key={f.id} style={{display:'flex',alignItems:'flex-start',gap:7,cursor:'pointer',padding:'5px 7px',borderRadius:6,
-                    background: checked ? (dm?info.darkBg:info.bg) : (dm?'#0f172a':'#f8fafc'),
-                    border: checked ? `1px solid ${dm?info.darkColor:info.color}` : `1px solid ${dm?'#1e293b':'#f1f5f9'}`,
+                    background: checked ? (dm?'#1e2a3a':'#f0f4ff') : (dm?'#0f172a':'#f8fafc'),
+                    border: `1px solid ${checked?(dm?'#334e6e':'#c7d7f0'):(dm?'#1e293b':'#f1f5f9')}`,
                     transition:'all 0.1s'}}>
                     <input type="checkbox" checked={checked} onChange={() => toggleCheck(f.id)}
                       style={{marginTop:2,accentColor:accent,cursor:'pointer',flexShrink:0}} />
                     <div style={{flex:1,minWidth:0}}>
-                      <span style={{fontSize:12,fontWeight:checked?600:400,color:checked?(dm?info.darkColor:info.color):(dm?'#cbd5e1':'#374151'),lineHeight:1.3,display:'block'}}>
+                      <span style={{fontSize:12,fontWeight:checked?600:400,color:checked?(dm?'#93c5fd':'#1d4ed8'):(dm?'#cbd5e1':'#374151'),lineHeight:1.3,display:'block'}}>
                         {f.label}
                       </span>
                       <span style={{fontSize:10,color:dm?'#475569':'#94a3b8',lineHeight:1.2}}>
@@ -4348,7 +4351,7 @@ export default function DashboardPage() {
           model:'claude-sonnet-4-6',
           max_tokens:1500,
           system: buildRheumPrompt(rheumJoint, rheumLaterality),
-          messages:[{role:'user',content:`Radiographic findings checked by the radiologist:\n\n${findingsSummary}\n\nPlease generate a structured X-ray report. For the impression: if one diagnosis fits best, say "Imaging patterns are most consistent with the diagnosis of [X]." If there is a secondary consideration, add "Next consideration includes [Y] and [Z]." If two entities coexist, say "Imaging patterns are most consistent with [X] superimposed with [Y]." Do NOT reference ABCDE or ABCDEs in the report.`}],
+          messages:[{role:'user',content:`Radiographic findings checked by the radiologist:\n\n${findingsSummary}\n\nPlease generate a structured X-ray report. For the impression (2-3 sentences maximum): if one diagnosis fits, say "Imaging patterns are most consistent with the diagnosis of [X]." If there is a secondary consideration, add "Next consideration includes [Y]." (brief — do not elaborate). If two entities coexist, say "Imaging patterns are most consistent with [X] superimposed with [Y]." Do NOT repeat findings from the FINDINGS section in the impression. Do NOT reference ABCDE or ABCDEs.`}],
         }),
       });
       const data = await res.json();
