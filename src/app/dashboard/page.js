@@ -4264,7 +4264,7 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
             color:isGenerating||checkedIds.length===0?(dm?'#475569':'#94a3b8'):'white',
             fontSize:13,fontWeight:700,letterSpacing:'0.02em',
             boxShadow:isGenerating||checkedIds.length===0?'none':'0 4px 16px rgba(168,85,247,0.4)',transition:'all 0.15s'}}>
-          {isGenerating ? '⏳ Generating…' : '🔬 Generate DDx Report'}
+          {isGenerating ? '⏳ Generating…' : checkedIds.length === 0 ? '🔬 Generate DDx Report (select findings first)' : '🔬 Generate DDx Report'}
         </button>
       </div>
     </div>
@@ -4405,8 +4405,8 @@ export default function DashboardPage() {
   const generateReport = async () => {
     const textToUse = isRheum ? rheumFreeText : dictationText;
     if (!textToUse.trim()) return;
+    setGeneratedReport(''); // always clears center col — any button can override
     setIsGenerating(true);
-    setGeneratedReport('');
     const lat = showSide ? side : '';
     try {
       const layPersonInstruction = layPersonSummary
@@ -4432,7 +4432,7 @@ export default function DashboardPage() {
   // ── Generate Report from DDx checkboxes ───────────────────────────────────
   const generateRheumReport = async () => {
     setIsGeneratingRheum(true);
-    setGeneratedReport('');
+    setGeneratedReport(''); // always clears and replaces center col
     const jLabel = RHEUM_JOINTS[rheumJoint]?.label || rheumJoint;
     // Build a structured finding list from checked boxes
     const checkedFindings = [];
@@ -4695,10 +4695,19 @@ export default function DashboardPage() {
               <input type="checkbox" checked={layPersonSummary} onChange={e=>setLayPersonSummary(e.target.checked)} style={{ width:15,height:15,accentColor:'#2563eb',cursor:'pointer' }}/>
               <span style={{ fontSize:12,fontWeight:600,color:layPersonSummary?(dm?'#93c5fd':'#1d4ed8'):(dm?'#64748b':'#64748b') }}>🧑‍🏫 Add "Understanding Your Results" patient summary</span>
             </label>
-            <button onClick={generateReport} disabled={isGenerating || !dictationText.trim()}
-              style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:(isGenerating||!dictationText.trim())?(dm?'#1e293b':'#e2e8f0'):(isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#2563eb,#4f46e5)'),color:(isGenerating||!dictationText.trim())?(dm?'#475569':'#94a3b8'):'white',fontSize:14,fontWeight:700,cursor:(isGenerating||!dictationText.trim())?'not-allowed':'pointer',boxShadow:(isGenerating||!dictationText.trim())?'none':'0 4px 16px rgba(37,99,235,0.35)',letterSpacing:'0.02em' }}>
-              {isGenerating ? '⏳ Generating…' : `✨ Generate ${isRheum?'X-Ray':isCT?'CT':'MRI'} Report`}
-            </button>
+            {(() => {
+              const leftHasText = isRheum ? !!rheumFreeText.trim() : !!dictationText.trim();
+              const leftDisabled = isGenerating || isGeneratingRheum || !leftHasText;
+              const leftBg = leftDisabled ? (dm?'#1e293b':'#e2e8f0') : isRheum ? 'linear-gradient(135deg,#7c2d92,#a855f7)' : isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#2563eb,#4f46e5)';
+              const leftColor = leftDisabled ? (dm?'#475569':'#94a3b8') : 'white';
+              const leftShadow = leftDisabled ? 'none' : isRheum ? '0 4px 16px rgba(168,85,247,0.35)' : '0 4px 16px rgba(37,99,235,0.35)';
+              return (
+                <button onClick={generateReport} disabled={leftDisabled}
+                  style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:leftBg,color:leftColor,fontSize:14,fontWeight:700,cursor:leftDisabled?'not-allowed':'pointer',boxShadow:leftShadow,letterSpacing:'0.02em' }}>
+                  {(isGenerating||isGeneratingRheum) ? '⏳ Generating…' : `✨ Generate ${isRheum?'X-Ray':isCT?'CT':'MRI'} Report`}
+                </button>
+              );
+            })()}
           </div>
         </div>
 
