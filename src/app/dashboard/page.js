@@ -966,6 +966,7 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
 
 CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
+- - NEVER include any commentary, interpretation notes, or meta-statements about the dictation or speech recognition. Do not write things like 'I interpreted X as Y' or 'I assumed you meant Z'. The report must contain ONLY the formal radiology report content — nothing else.
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 
@@ -4039,6 +4040,7 @@ CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
 - Section headers (TECHNIQUE, FINDINGS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
+- - NEVER include any commentary, interpretation notes, or meta-statements about the dictation or speech recognition. Do not write things like 'I interpreted X as Y' or 'I assumed you meant Z'. The report must contain ONLY the formal radiology report content — nothing else.
 
 TECHNIQUE:
 ${latLabel} radiograph of the ${jLabel.toLowerCase()}${viewsLabel}.
