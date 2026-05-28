@@ -2866,330 +2866,9 @@ const RESEARCH_POSTS = [
   },
 ];
 
-// ─── SUPABASE CLIENT (lazy, no extra package needed) ────────────────────────
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
-const getSupabase = (accessToken) => {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!key) return null;
-  // Use user JWT if provided (required for RLS policies that check auth.uid())
-  const authHeader = accessToken ? `Bearer ${accessToken}` : `Bearer ${key}`;
-  const headers = { 'Content-Type':'application/json', apikey:key, Authorization:authHeader };
-  return {
-    from: (table) => ({
-      select: (cols='*') => ({
-        eq: (col, val) => ({
-          order: (col2, opts={}) => fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${cols}&${col}=eq.${encodeURIComponent(val)}&order=${col2}.${opts.ascending===false?'desc':'asc'}`, { headers }).then(r=>r.json()),
-        }),
-      }),
-      insert: (row) => fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method:'POST', headers:{...headers,'Prefer':'return=representation'}, body:JSON.stringify(row) }).then(async r=>{ const d=await r.json(); if(!r.ok) throw new Error(JSON.stringify(d)); return d; }),
-      delete: () => ({
-        eq: (col, val) => fetch(`${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}`, { method:'DELETE', headers }).then(r => r.status === 204 ? null : r.json()),
-      }),
-    }),
-  };
-};
-
-
-// ─── ARTICLE LIKES ───────────────────────────────────────────────────────────
-function ArticleLikes({ postIdx }) {
-  const [likes, setLikes] = useState(null);
-  const [hasLiked, setHasLiked] = useState(false);
-  const [animating, setAnimating] = useState(false);
-  const storageKey = `liked_post_${postIdx}`;
-  // Use a stable fingerprint: storageKey value stored at like-time
-  const fingerprint = storageKey;
-
-  const fetchCount = () => {
-    // Fetch all rows for this post and count them — simplest approach with our minimal client
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!key) { setLikes(0); return; }
-    fetch(`${SUPABASE_URL}/rest/v1/article_likes?select=id&post_idx=eq.${postIdx}`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    })
-      .then(r => r.json())
-      .then(data => setLikes(Array.isArray(data) ? data.length : 0))
-      .catch(() => setLikes(0));
-  };
-
-  useEffect(() => {
-    try { setHasLiked(!!localStorage.getItem(storageKey)); } catch {}
-    fetchCount();
-  }, [postIdx]);
-
-  const handleLike = async () => {
-    if (animating) return;
-    setAnimating(true);
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!key) { setTimeout(() => setAnimating(false), 400); return; }
-    const headers = { 'Content-Type':'application/json', apikey:key, Authorization:`Bearer ${key}` };
-
-    if (hasLiked) {
-      try {
-        // Delete by fingerprint column
-        await fetch(`${SUPABASE_URL}/rest/v1/article_likes?post_idx=eq.${postIdx}&fingerprint=eq.${encodeURIComponent(fingerprint)}`, {
-          method: 'DELETE', headers,
-        });
-        setHasLiked(false);
-        localStorage.removeItem(storageKey);
-        setLikes(l => Math.max(0, (l || 1) - 1));
-      } catch {}
-    } else {
-      try {
-        await fetch(`${SUPABASE_URL}/rest/v1/article_likes`, {
-          method: 'POST',
-          headers: { ...headers, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ post_idx: postIdx, fingerprint, created_at: new Date().toISOString() }),
-        });
-        setHasLiked(true);
-        localStorage.setItem(storageKey, '1');
-        setLikes(l => (l || 0) + 1);
-      } catch {}
-    }
-    // Re-fetch true count from DB after a short delay
-    setTimeout(() => { fetchCount(); setAnimating(false); }, 600);
-  };
-
-  return (
-    <button onClick={handleLike}
-      style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'5px 12px',borderRadius:20,border:'1px solid',
-        borderColor: hasLiked ? 'rgba(239,68,68,0.5)' : '#1e3a5f',
-        background: hasLiked ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.03)',
-        color: hasLiked ? '#f87171' : '#475569',
-        cursor:'pointer', fontSize:12, fontWeight:600,
-        transform: animating ? 'scale(1.2)' : 'scale(1)',
-        transition:'all 0.15s ease',
-        userSelect:'none' }}>
-      <span style={{ fontSize:14, lineHeight:1 }}>{hasLiked ? '❤️' : '🤍'}</span>
-      <span>{likes === null ? '…' : likes}</span>
-    </button>
-  );
-}
-
-// ─── COMMENT SECTION (per article) ──────────────────────────────────────────
-function ArticleComments({ postIdx, currentUser }) {
-  const [comments, setComments] = useState([]);
-  const [text, setText] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    setComments([]);
-    // Pass user token if available so RLS authenticated read policy passes
-    const sb = getSupabase(currentUser?.access_token);
-    if (!sb) { setLoading(false); return; }
-    sb.from('article_comments').select('*').eq('post_idx', postIdx).order('created_at', { ascending:true })
-      .then(data => {
-        setComments(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load comments:', err);
-        setLoading(false);
-      });
-  }, [postIdx, currentUser?.access_token]);
-
-  const submit = async () => {
-    if (!text.trim() || !currentUser) return;
-    setSubmitting(true); setError('');
-    try {
-      // Moderation check — fail CLOSED
-      try {
-        const modRes = await fetch('/api/moderate-comment', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ text: text.trim() }),
-          cache: 'no-store',
-        });
-        if (!modRes.ok) {
-          setError(`Moderation unavailable (${modRes.status}). Please try again.`);
-          setSubmitting(false); return;
-        }
-        const modData = await modRes.json();
-        if (modData.blocked) {
-          setError(modData.reason || 'Comment not allowed. Please keep discussion professional and on-topic.');
-          setSubmitting(false); return;
-        }
-      } catch (modErr) {
-        setError('Moderation service unavailable. Please try again.');
-        setSubmitting(false); return;
-      }
-
-      // Save to Supabase — pass user JWT so RLS policy (auth.uid() = user_id) passes
-      const sb = getSupabase(currentUser.access_token);
-      const result = await sb.from('article_comments').insert({
-        post_idx: postIdx,
-        user_id: currentUser.id,
-        user_email: currentUser.email,
-        body: text.trim(),
-        created_at: new Date().toISOString(),
-      });
-      const saved = Array.isArray(result) ? result[0] : null;
-      if (saved) { setComments(prev => [...prev, saved]); setText(''); setShowForm(false); }
-      else setError('Failed to save. Please try again.');
-    } catch (e) { setError('Failed to post comment. Please try again.'); }
-    setSubmitting(false);
-  };
-
-  const deleteComment = async (id) => {
-    try {
-      const sb = getSupabase(currentUser?.access_token);
-      await sb.from('article_comments').delete().eq('id', id);
-    } catch (e) { console.error('Delete failed:', e); }
-    // Optimistically remove from UI regardless
-    setComments(prev => prev.filter(c => c.id !== id));
-  };
-
-  const fmt = (iso) => { try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; } };
-
-  return (
-    <div style={{ marginTop:14,borderTop:'1px solid #1e3a5f',paddingTop:12,display:'flex',flexDirection:'column',gap:8 }}>
-
-      {/* Header row */}
-      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
-        <span style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em' }}>
-          💬 Discussion {comments.length > 0 && `(${comments.length})`}
-        </span>
-        {currentUser && (
-          <button onClick={() => { setShowForm(f=>!f); setError(''); setText(''); }}
-            style={{ fontSize:10,fontWeight:600,color:'#059669',background:'rgba(5,150,105,0.1)',border:'1px solid rgba(5,150,105,0.25)',borderRadius:6,padding:'3px 9px',cursor:'pointer' }}>
-            {showForm ? 'Cancel' : '+ Add Comment'}
-          </button>
-        )}
-      </div>
-
-      {/* Scrollable comments list */}
-      {loading ? (
-        <div style={{ fontSize:11,color:'#475569',padding:'4px 0' }}>Loading…</div>
-      ) : (
-        <div style={{ overflowY:'auto',maxHeight:160,display:'flex',flexDirection:'column',gap:7,paddingRight:4,flexShrink:0 }}>
-          {comments.map(c => (
-            <div key={c.id} style={{ background:'rgba(255,255,255,0.03)',border:'1px solid #1e3a5f',borderRadius:7,padding:'8px 11px',display:'flex',gap:8,alignItems:'flex-start',flexShrink:0 }}>
-              <div style={{ flex:1,minWidth:0 }}>
-                <div style={{ display:'flex',gap:6,alignItems:'baseline',marginBottom:3,flexWrap:'wrap' }}>
-                  <span style={{ fontSize:10,fontWeight:700,color:'#60a5fa' }}>{c.user_email?.split('@')[0] || 'User'}</span>
-                  <span style={{ fontSize:9,color:'#334155' }}>{fmt(c.created_at)}</span>
-                </div>
-                <p style={{ fontSize:12,color:'#cbd5e1',lineHeight:1.6,margin:0 }}>{c.body}</p>
-              </div>
-              {currentUser?.id === c.user_id && (
-                <button onClick={() => deleteComment(c.id)}
-                  style={{ fontSize:9,color:'#475569',background:'none',border:'none',cursor:'pointer',flexShrink:0,padding:'2px 4px',borderRadius:4 }}
-                  title="Delete your comment">✕</button>
-              )}
-            </div>
-          ))}
-          {comments.length === 0 && !showForm && (
-            <p style={{ fontSize:11,color:'#334155',fontStyle:'italic',margin:0 }}>No comments yet. {currentUser ? 'Be the first.' : 'Sign in to comment.'}</p>
-          )}
-        </div>
-      )}
-
-      {/* New comment form — always fully visible below comments */}
-      {showForm && currentUser && (
-        <div style={{ display:'flex',flexDirection:'column',gap:6,flexShrink:0,borderTop:'1px solid #1e3a5f',paddingTop:8 }}>
-          <textarea value={text} onChange={e=>setText(e.target.value)}
-            placeholder="Share your clinical perspective or questions about this paper…"
-            style={{ width:'100%',height:64,background:'#0f172a',border:'1px solid #334155',borderRadius:7,color:'#e2e8f0',fontSize:12,padding:'8px 10px',resize:'none',lineHeight:1.5,boxSizing:'border-box' }} />
-          {error && <p style={{ fontSize:11,color:'#f87171',margin:0,lineHeight:1.4 }}>{error}</p>}
-          <div style={{ display:'flex',gap:7,justifyContent:'flex-end' }}>
-            <button onClick={() => { setShowForm(false); setError(''); setText(''); }}
-              style={{ fontSize:11,color:'#64748b',background:'none',border:'1px solid #334155',borderRadius:6,padding:'5px 12px',cursor:'pointer' }}>Cancel</button>
-            <button onClick={submit} disabled={submitting || !text.trim()}
-              style={{ fontSize:11,fontWeight:700,color:'white',background:submitting||!text.trim()?'#1e3a5f':'#059669',border:'none',borderRadius:6,padding:'5px 14px',cursor:submitting||!text.trim()?'not-allowed':'pointer' }}>
-              {submitting ? 'Checking…' : 'Post Comment'}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── RECOMMEND ARTICLE FORM ──────────────────────────────────────────────────
-function RecommendArticleForm({ currentUser, onClose }) {
-  const [form, setForm] = useState({ title:'', authors:'', journal:'', year:'', note:'' });
-  const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState('');
-
-  const set = (k,v) => setForm(f=>({...f,[k]:v}));
-  const inp = { width:'100%', background:'#0f172a', border:'1px solid #334155', borderRadius:7, color:'#e2e8f0', fontSize:12, padding:'7px 10px', boxSizing:'border-box' };
-
-  const submit = async () => {
-    if (!form.title.trim() || !currentUser) return;
-    setSubmitting(true); setError('');
-    try {
-      const sb = getSupabase(currentUser?.access_token);
-      const result = await sb.from('article_recommendations').insert({
-        user_id: currentUser.id,
-        user_email: currentUser.email,
-        title: form.title.trim(),
-        authors: form.authors.trim(),
-        journal: form.journal.trim(),
-        year: form.year.trim(),
-        note: form.note.trim(),
-        created_at: new Date().toISOString(),
-        status: 'pending',
-      });
-      if (Array.isArray(result) && result[0]) setDone(true);
-      else setError('Failed to submit. Please try again.');
-    } catch { setError('Network error. Please try again.'); }
-    setSubmitting(false);
-  };
-
-  if (done) return (
-    <div style={{ padding:'20px',textAlign:'center' }}>
-      <div style={{ fontSize:28,marginBottom:8 }}>✅</div>
-      <p style={{ color:'#a7f3d0',fontWeight:700,fontSize:14 }}>Recommendation submitted!</p>
-      <p style={{ color:'#64748b',fontSize:12 }}>Thank you — it will be reviewed for inclusion.</p>
-      <button onClick={onClose} style={{ marginTop:12,padding:'6px 18px',borderRadius:7,border:'none',background:'#059669',color:'white',fontWeight:700,fontSize:12,cursor:'pointer' }}>Close</button>
-    </div>
-  );
-
-  return (
-    <div style={{ padding:'16px 20px',display:'flex',flexDirection:'column',gap:10 }}>
-      <div style={{ fontSize:13,fontWeight:700,color:'#e2e8f0',marginBottom:4 }}>📬 Recommend an Article</div>
-      <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
-        <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Article Title *</label>
-        <input style={inp} value={form.title} onChange={e=>set('title',e.target.value)} placeholder="Full article title" />
-      </div>
-      <div style={{ display:'flex',gap:8 }}>
-        <div style={{ flex:2,display:'flex',flexDirection:'column',gap:5 }}>
-          <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Authors</label>
-          <input style={inp} value={form.authors} onChange={e=>set('authors',e.target.value)} placeholder="Author A, Author B, et al." />
-        </div>
-        <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
-          <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Year</label>
-          <input style={inp} value={form.year} onChange={e=>set('year',e.target.value)} placeholder="2024" maxLength={4} />
-        </div>
-      </div>
-      <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
-        <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Journal</label>
-        <input style={inp} value={form.journal} onChange={e=>set('journal',e.target.value)} placeholder="e.g. Skeletal Radiology" />
-      </div>
-      <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
-        <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Why relevant to MSK radiology?</label>
-        <textarea style={{...inp,minHeight:60,resize:'vertical'}} value={form.note} onChange={e=>set('note',e.target.value)} placeholder="Brief note on clinical relevance or why this should be included…" />
-      </div>
-      {error && <p style={{ fontSize:11,color:'#f87171',margin:0 }}>{error}</p>}
-      <div style={{ display:'flex',gap:8,justifyContent:'flex-end',marginTop:4 }}>
-        <button onClick={onClose} style={{ fontSize:11,color:'#64748b',background:'none',border:'1px solid #334155',borderRadius:6,padding:'6px 14px',cursor:'pointer' }}>Cancel</button>
-        <button onClick={submit} disabled={submitting || !form.title.trim()}
-          style={{ fontSize:11,fontWeight:700,color:'white',background:submitting||!form.title.trim()?'#1e3a5f':'#059669',border:'none',borderRadius:6,padding:'6px 16px',cursor:submitting||!form.title.trim()?'not-allowed':'pointer' }}>
-          {submitting ? 'Submitting…' : 'Submit Recommendation'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ─── RESEARCH MODAL ────────────────────────────────────────────────────────
-function ResearchModal({ onClose, currentUser }) {
+function ResearchModal({ onClose }) {
   const [expanded, setExpanded] = useState(null);
-  const [showRecommend, setShowRecommend] = useState(false);
 
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'8px' }}>
@@ -3206,13 +2885,6 @@ function ResearchModal({ onClose, currentUser }) {
           </div>
           <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'4px 12px',cursor:'pointer',fontSize:12,fontWeight:600 }}>✕</button>
         </div>
-
-        {/* Recommend panel (inline, below header) */}
-        {showRecommend && (
-          <div style={{ background:'#141f30',borderBottom:'1px solid #1e3a5f',flexShrink:0 }}>
-            <RecommendArticleForm currentUser={currentUser} onClose={() => setShowRecommend(false)} />
-          </div>
-        )}
 
         {/* Posts feed */}
         <div style={{ flex:1,overflowY:'auto',padding:'20px 24px',display:'flex',flexDirection:'column',gap:16 }}>
@@ -3241,9 +2913,9 @@ function ResearchModal({ onClose, currentUser }) {
                   <div style={{ color:'#475569',fontSize:18,fontWeight:300,flexShrink:0,marginTop:2,transition:'transform 0.2s',transform:isOpen?'rotate(90deg)':'none' }}>›</div>
                 </div>
 
-                {/* Expanded content — scrollable so comments/form never get clipped */}
+                {/* Expanded content */}
                 {isOpen && (
-                  <div style={{ padding:'0 18px 18px',borderTop:'1px solid #1e3a5f',overflowY:'auto',maxHeight:'60vh' }}>
+                  <div style={{ padding:'0 18px 18px',borderTop:'1px solid #1e3a5f' }}>
 
                     {/* Citation */}
                     <div style={{ padding:'10px 12px',background:'rgba(255,255,255,0.03)',borderRadius:7,marginTop:12,marginBottom:14 }}>
@@ -3263,25 +2935,18 @@ function ResearchModal({ onClose, currentUser }) {
                     </div>
 
                     {/* Key takeaway */}
-                    <div style={{ background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(6,95,70,0.1))',border:'1px solid rgba(5,150,105,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:12 }}>
+                    <div style={{ background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(6,95,70,0.1))',border:'1px solid rgba(5,150,105,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:post.link?12:0 }}>
                       <span style={{ fontSize:10,fontWeight:800,color:'#059669',textTransform:'uppercase',letterSpacing:'0.08em' }}>🔑 Key Takeaway  </span>
                       <span style={{ fontSize:13,color:'#a7f3d0',lineHeight:1.6,fontWeight:500 }}>{post.keyTakeaway}</span>
                     </div>
 
-                    {/* Google Scholar link + Like button row */}
-                    <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginTop:0 }}>
-                      {post.link && (
-                        <a href={post.link} target="_blank" rel="noopener noreferrer"
-                          style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
-                          🔗 Search on Google Scholar →
-                        </a>
-                      )}
-                      <ArticleLikes postIdx={idx} />
-                    </div>
-
-                    {/* Comments section — in the circled red area */}
-                    <ArticleComments postIdx={idx} currentUser={currentUser} />
-
+                    {/* PubMed link */}
+                    {post.link && (
+                      <a href={post.link} target="_blank" rel="noopener noreferrer"
+                        style={{ display:'inline-flex',alignItems:'center',gap:5,marginTop:10,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
+                        🔗 Search on Google Scholar →
+                      </a>
+                    )}
                   </div>
                 )}
               </div>
@@ -3292,15 +2957,7 @@ function ResearchModal({ onClose, currentUser }) {
         {/* Footer */}
         <div style={{ padding:'10px 24px',borderTop:'1px solid #1e293b',flexShrink:0,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
           <span style={{ fontSize:10,color:'#475569',fontStyle:'italic' }}>Add new posts to the top of RESEARCH_POSTS in page.js — use Google Scholar links</span>
-          <div style={{ display:'flex',gap:8,alignItems:'center' }}>
-            <span style={{ fontSize:10,color:'#334155' }}>{RESEARCH_POSTS.length} post{RESEARCH_POSTS.length !== 1 ? 's' : ''}</span>
-            {currentUser && !showRecommend && (
-              <button onClick={() => setShowRecommend(true)}
-                style={{ fontSize:10,fontWeight:700,color:'#059669',background:'rgba(5,150,105,0.1)',border:'1px solid rgba(5,150,105,0.25)',borderRadius:6,padding:'4px 10px',cursor:'pointer' }}>
-                📬 Recommend Article
-              </button>
-            )}
-          </div>
+          <span style={{ fontSize:10,color:'#334155' }}>{RESEARCH_POSTS.length} post{RESEARCH_POSTS.length !== 1 ? 's' : ''}</span>
         </div>
 
       </div>
@@ -4595,13 +4252,13 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
                     <div style={{flex:1,minWidth:0}}>
                       <span style={{fontSize:12,fontWeight:checked?600:400,color:checked?(dm?'#93c5fd':'#1d4ed8'):(dm?'#cbd5e1':'#374151'),lineHeight:1.3,display:'flex',alignItems:'baseline',gap:6,flexWrap:'wrap'}}>
                         {f.label}
+                        {RHEUM_EXAMPLE_IMAGES[f.id] && (
+                          <span onClick={e => { e.preventDefault(); e.stopPropagation(); setPopupImg(RHEUM_EXAMPLE_IMAGES[f.id]); }}
+                            style={{fontSize:10,fontWeight:600,color:'#a855f7',cursor:'pointer',textDecoration:'underline',whiteSpace:'nowrap',flexShrink:0}}>
+                            Show Example
+                          </span>
+                        )}
                       </span>
-                      {RHEUM_EXAMPLE_IMAGES[f.id] && (
-                        <span onClick={e => { e.preventDefault(); e.stopPropagation(); setPopupImg(RHEUM_EXAMPLE_IMAGES[f.id]); }}
-                          style={{fontSize:9,fontWeight:500,color:'#60a5fa',cursor:'pointer',textDecoration:'underline',display:'block',marginTop:2,WebkitTextFillColor:'#60a5fa'}}>
-                          🔍 Show Example
-                        </span>
-                      )}
 
                     </div>
                   </label>
@@ -4633,308 +4290,7 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
 }
 
 // ─── MAIN DASHBOARD ────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AUTH HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
-const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-async function supaSignUp(email, password) {
-  const r = await fetch(`${SUPA_URL}/auth/v1/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
-    body: JSON.stringify({ email, password }),
-  });
-  return r.json();
-}
-
-async function supaSignIn(email, password) {
-  const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
-    body: JSON.stringify({ email, password }),
-  });
-  return r.json();
-}
-
-async function supaSignOut(accessToken) {
-  await fetch(`${SUPA_URL}/auth/v1/logout`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: getAnonKey(), Authorization: `Bearer ${accessToken}` },
-  });
-}
-
-async function supaGetUser(accessToken) {
-  const r = await fetch(`${SUPA_URL}/auth/v1/user`, {
-    headers: { apikey: getAnonKey(), Authorization: `Bearer ${accessToken}` },
-  });
-  if (!r.ok) return null;
-  return r.json();
-}
-
-function saveSession(session) {
-  try {
-    localStorage.setItem('msk_session', JSON.stringify({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
-      expires_at: Date.now() + (session.expires_in || 3600) * 1000,
-      user: session.user,
-    }));
-  } catch {}
-}
-
-function loadSession() {
-  try {
-    const raw = localStorage.getItem('msk_session');
-    if (!raw) return null;
-    const s = JSON.parse(raw);
-    if (s.expires_at && s.expires_at < Date.now()) { localStorage.removeItem('msk_session'); return null; }
-    return s;
-  } catch { return null; }
-}
-
-function clearSession() {
-  try { localStorage.removeItem('msk_session'); } catch {}
-}
-
-// ─── AVATAR OPTIONS ──────────────────────────────────────────────────────────
-const AVATAR_OPTIONS = [
-  { id:'stethoscope', icon:'🩺' },
-  { id:'xray',        icon:'🩻' },
-  { id:'bone',        icon:'🦴' },
-  { id:'brain',       icon:'🧠' },
-  { id:'microscope',  icon:'🔬' },
-  { id:'dna',         icon:'🧬' },
-  { id:'shield',      icon:'🛡️' },
-  { id:'star',        icon:'⭐' },
-];
-
-function saveUserPrefs(userId, prefs) {
-  try { localStorage.setItem(`msk_prefs_${userId}`, JSON.stringify(prefs)); } catch {}
-}
-function loadUserPrefs(userId) {
-  try {
-    const raw = localStorage.getItem(`msk_prefs_${userId}`);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
-function getInitials(firstName, lastName, email) {
-  if (firstName && lastName) return (firstName[0] + lastName[0]).toUpperCase();
-  if (firstName) return firstName.slice(0,2).toUpperCase();
-  return (email?.[0] || '?').toUpperCase();
-}
-function getAvatarIcon(avatarChoice) {
-  return AVATAR_OPTIONS.find(a => a.id === avatarChoice)?.icon || '👤';
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LOGIN PAGE
-// ─────────────────────────────────────────────────────────────────────────────
-function LoginPage({ onLogin }) {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [avatarMode, setAvatarMode] = useState('initials'); // 'initials' | 'icon'
-  const [avatarChoice, setAvatarChoice] = useState('stethoscope');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  const inp = {
-    width: '100%', padding: '11px 14px', borderRadius: 9,
-    border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)',
-    color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box',
-  };
-
-  const handleSubmit = async () => {
-    setError(''); setSuccess('');
-    if (!email.trim() || !password.trim()) { setError('Please enter your email and password.'); return; }
-    if (mode === 'signup' && password !== confirmPassword) { setError('Passwords do not match.'); return; }
-    if (mode === 'signup' && password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-    setLoading(true);
-    try {
-      if (mode === 'signup') {
-        const data = await supaSignUp(email.trim(), password);
-        if (data.error) { setError(data.error.message || data.msg || 'Sign up failed.'); }
-        else if (data.user && !data.session) {
-          setSuccess('Account created! Please check your email to confirm your address, then sign in.');
-          setMode('signin');
-        } else if (data.access_token) {
-          saveSession(data);
-          const uid = data.user?.id;
-          if (uid) saveUserPrefs(uid, { firstName, lastName, avatarMode, avatarChoice });
-          onLogin({ ...data.user, access_token: data.access_token });
-        } else {
-          setSuccess('Account created! Please sign in.');
-          setMode('signin');
-        }
-      } else {
-        const data = await supaSignIn(email.trim(), password);
-        if (data.error || data.error_description) {
-          setError(data.error_description || data.error || 'Invalid email or password.');
-        } else if (data.access_token) {
-          saveSession(data); onLogin({ ...data.user, access_token: data.access_token });
-        } else {
-          setError('Sign in failed. Please try again.');
-        }
-      }
-    } catch { setError('Network error. Please check your connection.'); }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0a0f1e 0%,#0f172a 50%,#1a0a2e 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      {/* Background decoration */}
-      <div style={{ position:'fixed', inset:0, overflow:'hidden', pointerEvents:'none' }}>
-        <div style={{ position:'absolute', top:'10%', left:'5%', width:400, height:400, borderRadius:'50%', background:'radial-gradient(circle,rgba(37,99,235,0.12),transparent 70%)', filter:'blur(40px)' }} />
-        <div style={{ position:'absolute', bottom:'15%', right:'8%', width:350, height:350, borderRadius:'50%', background:'radial-gradient(circle,rgba(124,58,237,0.12),transparent 70%)', filter:'blur(40px)' }} />
-      </div>
-
-      <div style={{ width:'100%', maxWidth:420, position:'relative' }}>
-        {/* Logo */}
-        <div style={{ textAlign:'center', marginBottom:32 }}>
-          <div style={{ width:56, height:56, background:'linear-gradient(135deg,#2563eb,#7c3aed)', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 16px' }}>🦴</div>
-          <h1 style={{ color:'white', fontWeight:800, fontSize:24, margin:'0 0 6px', letterSpacing:'0.02em' }}>MSK Reporting</h1>
-          <p style={{ color:'rgba(255,255,255,0.45)', fontSize:13, margin:0 }}>Advanced MSK Radiology Tools</p>
-        </div>
-
-        {/* Card */}
-        <div style={{ background:'rgba(255,255,255,0.04)', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:16, padding:'28px 32px', boxShadow:'0 24px 64px rgba(0,0,0,0.4)' }}>
-          {/* Mode tabs */}
-          <div style={{ display:'flex', background:'rgba(255,255,255,0.06)', borderRadius:10, padding:3, marginBottom:24, gap:2 }}>
-            {[['signin','Sign In'],['signup','Create Account']].map(([m,l]) => (
-              <button key={m} onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-                style={{ flex:1, padding:'8px', borderRadius:8, border:'none', cursor:'pointer', fontSize:13, fontWeight:700,
-                  background: mode===m ? 'linear-gradient(135deg,#2563eb,#4f46e5)' : 'transparent',
-                  color: mode===m ? 'white' : 'rgba(255,255,255,0.45)',
-                  boxShadow: mode===m ? '0 2px 8px rgba(0,0,0,0.25)' : 'none',
-                  transition:'all 0.2s' }}>
-                {l}
-              </button>
-            ))}
-          </div>
-
-          {/* Fields */}
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            {mode === 'signup' && (<>
-              <div style={{ display:'flex', gap:10 }}>
-                <div style={{ flex:1 }}>
-                  <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>First Name</label>
-                  <input value={firstName} onChange={e=>setFirstName(e.target.value)} placeholder="Jane" style={inp} />
-                </div>
-                <div style={{ flex:1 }}>
-                  <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Last Name</label>
-                  <input value={lastName} onChange={e=>setLastName(e.target.value)} placeholder="Smith" style={inp} />
-                </div>
-              </div>
-              <div>
-                <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Profile Style</label>
-                <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-                  <button type="button" onClick={()=>setAvatarMode('initials')}
-                    style={{ padding:'6px 14px', borderRadius:8, border:'1px solid', fontSize:12, fontWeight:600, cursor:'pointer', transition:'all 0.15s',
-                      borderColor: avatarMode==='initials' ? '#4f46e5' : 'rgba(255,255,255,0.15)',
-                      background: avatarMode==='initials' ? 'rgba(79,70,229,0.2)' : 'rgba(255,255,255,0.05)',
-                      color: avatarMode==='initials' ? '#a5b4fc' : 'rgba(255,255,255,0.5)' }}>
-                    Initials
-                  </button>
-                  {AVATAR_OPTIONS.map(av => (
-                    <button key={av.id} type="button" onClick={()=>{ setAvatarMode('icon'); setAvatarChoice(av.id); }}
-                      style={{ width:36, height:36, borderRadius:'50%', border:'2px solid', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.15s',
-                        borderColor: avatarMode==='icon' && avatarChoice===av.id ? '#4f46e5' : 'rgba(255,255,255,0.15)',
-                        background: avatarMode==='icon' && avatarChoice===av.id ? 'rgba(79,70,229,0.25)' : 'rgba(255,255,255,0.05)' }}>
-                      {av.icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>)}
-            <div>
-              <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Email</label>
-              <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
-                onKeyDown={e=>e.key==='Enter'&&handleSubmit()}
-                placeholder="you@example.com" style={inp} autoComplete="email" />
-            </div>
-            <div>
-              <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Password</label>
-              <input type="password" value={password} onChange={e=>setPassword(e.target.value)}
-                onKeyDown={e=>e.key==='Enter'&&handleSubmit()}
-                placeholder={mode==='signup'?'Min. 8 characters':'Your password'} style={inp} autoComplete={mode==='signup'?'new-password':'current-password'} />
-            </div>
-            {mode === 'signup' && (
-              <div>
-                <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Confirm Password</label>
-                <input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)}
-                  onKeyDown={e=>e.key==='Enter'&&handleSubmit()}
-                  placeholder="Repeat password" style={inp} autoComplete="new-password" />
-              </div>
-            )}
-
-            {error && <p style={{ margin:0, padding:'8px 12px', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:8, color:'#fca5a5', fontSize:12, lineHeight:1.5 }}>{error}</p>}
-            {success && <p style={{ margin:0, padding:'8px 12px', background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:8, color:'#6ee7b7', fontSize:12, lineHeight:1.5 }}>{success}</p>}
-
-            <button onClick={handleSubmit} disabled={loading}
-              style={{ padding:'12px', borderRadius:10, border:'none', cursor:loading?'not-allowed':'pointer', fontWeight:800, fontSize:14, letterSpacing:'0.04em',
-                background: loading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#2563eb,#4f46e5)',
-                color: loading ? 'rgba(255,255,255,0.4)' : 'white',
-                boxShadow: loading ? 'none' : '0 4px 20px rgba(37,99,235,0.4)',
-                transition:'all 0.15s', marginTop:4 }}>
-              {loading ? '⏳ Please wait…' : mode==='signin' ? '→ Sign In' : '→ Create Account'}
-            </button>
-          </div>
-        </div>
-
-        <p style={{ textAlign:'center', color:'rgba(255,255,255,0.2)', fontSize:11, marginTop:20 }}>
-          MSK Radiology Reporting — Members Only
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function DashboardPage() {
-  // ── Auth state ────────────────────────────────────────────────────────────
-  const [authUser, setAuthUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [userPrefs, setUserPrefs] = useState({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
-  const [showAvatarPopup, setShowAvatarPopup] = useState(false);
-
-  // Restore session + prefs from localStorage on first load
-  useEffect(() => {
-    const s = loadSession();
-    if (s?.user && s?.access_token && localStorage.getItem('msk_session')) {
-      const prefs = loadUserPrefs(s.user.id);
-      if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
-      setAuthUser({ ...s.user, access_token: s.access_token });
-    }
-    setAuthLoading(false);
-  }, []);
-
-  const handleLogin = (user) => {
-    // Load prefs BEFORE setting authUser so auto-save guard doesn't overwrite them
-    const prefs = loadUserPrefs(user.id);
-    if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
-    setAuthUser(user);
-  };
-  const handleSignOut = () => {
-    // Wipe ALL auth-related storage synchronously — no server call needed
-    // (token expires server-side on its own; calling the endpoint risks a redirect)
-    try {
-      localStorage.removeItem('msk_session');
-      // Also clear any Supabase-managed storage keys
-      Object.keys(localStorage).forEach(k => {
-        if (k.startsWith('sb-') || k.includes('supabase')) localStorage.removeItem(k);
-      });
-    } catch {}
-    // Reset React state directly — no redirect needed
-    setAuthUser(null);
-    setUserPrefs({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
-    setShowAvatarPopup(false);
-  };
-
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
   const [side, setSide] = useState('left');
   const [contrast, setContrast] = useState('without');
@@ -5185,44 +4541,12 @@ export default function DashboardPage() {
     </div>
   );
 
-  // Auto-save userPrefs — only when logged in, and only when prefs are non-default
-  // (prevents sign-out state reset from overwriting stored prefs)
-  const prefsInitialized = useRef(false);
-  useEffect(() => {
-    if (!authUser?.id) { prefsInitialized.current = false; return; }
-    // Skip the first fire right after login (that's the restore, not a user change)
-    if (!prefsInitialized.current) { prefsInitialized.current = true; return; }
-    saveUserPrefs(authUser.id, userPrefs);
-  }, [userPrefs, authUser?.id]);
-
-  // Close avatar popup on outside click — uses ref to check if click is outside
-  const avatarPopupRef = useRef(null);
-  useEffect(() => {
-    if (!showAvatarPopup) return;
-    const handleMouseDown = (e) => {
-      if (avatarPopupRef.current && !avatarPopupRef.current.contains(e.target)) {
-        setShowAvatarPopup(false);
-      }
-    };
-    // Use mousedown so it fires before focus/blur on inputs
-    document.addEventListener('mousedown', handleMouseDown);
-    return () => document.removeEventListener('mousedown', handleMouseDown);
-  }, [showAvatarPopup]);
-
-  // ── AUTH GATE ── after all hooks ───────────────────────────────────────────
-  if (authLoading) return (
-    <div style={{ minHeight:'100vh',background:'#0a0f1e',display:'flex',alignItems:'center',justifyContent:'center' }}>
-      <div style={{ color:'rgba(255,255,255,0.4)',fontSize:14 }}>⏳ Loading…</div>
-    </div>
-  );
-  if (!authUser) return <LoginPage onLogin={handleLogin} />;
-
   return (
     <div style={{ minHeight:'100vh',background:'linear-gradient(160deg,#0d1b2a 0%,#1a3a5c 45%,#0d1b2a 100%)',fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
 
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
-      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
+      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} />}
 
       {/* ── HEADER ── */}
       <div style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
@@ -5280,92 +4604,15 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Right: avatar button + sign out */}
-        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0,position:'relative' }}>
-
-          {/* Avatar button — click to open prefs popup */}
-          <button onClick={() => setShowAvatarPopup(p => !p)} title="Profile & Avatar"
-            style={{ width:36,height:36,borderRadius:'50%',border:'2px solid rgba(255,255,255,0.2)',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.15s',boxShadow:showAvatarPopup?'0 0 0 3px rgba(99,102,241,0.4)':'none' }}>
-            {userPrefs.avatarMode === 'icon'
-              ? <span style={{ fontSize:18,lineHeight:1 }}>{getAvatarIcon(userPrefs.avatarChoice)}</span>
-              : <span style={{ fontSize:12,fontWeight:800,color:'white',letterSpacing:'-0.02em' }}>{getInitials(userPrefs.firstName, userPrefs.lastName, authUser?.email)}</span>
-            }
-          </button>
-
-          {/* Sign Out */}
-          <button onClick={handleSignOut}
-            style={{ padding:'7px 13px',borderRadius:8,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap' }}>
+        {/* Right: user + logout */}
+        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:7,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:9,padding:'6px 12px' }}>
+            <div style={{ width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'white',fontWeight:700 }}>A</div>
+            <span style={{ color:'rgba(255,255,255,0.8)',fontSize:12,fontWeight:600 }}>adamsinger82</span>
+          </div>
+          <button style={{ padding:'7px 13px',borderRadius:8,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',fontSize:12,fontWeight:600,cursor:'pointer' }}>
             Sign Out
           </button>
-
-          {/* Avatar preference popup */}
-          {showAvatarPopup && (
-            <div ref={avatarPopupRef}
-              style={{ position:'absolute',top:48,right:0,zIndex:500,background:'#1e293b',border:'1px solid rgba(255,255,255,0.12)',borderRadius:14,padding:18,minWidth:280,boxShadow:'0 16px 48px rgba(0,0,0,0.5)' }}>
-              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14 }}>
-                <span style={{ color:'white',fontWeight:700,fontSize:13 }}>Profile Settings</span>
-                <button onClick={() => setShowAvatarPopup(false)} style={{ background:'none',border:'none',color:'#64748b',fontSize:16,cursor:'pointer',padding:'0 4px' }}>✕</button>
-              </div>
-              <p style={{ color:'#64748b',fontSize:11,margin:'0 0 12px' }}>{authUser?.email}</p>
-
-              {/* Name fields */}
-              <div style={{ display:'flex',gap:8,marginBottom:12 }}>
-                <input value={userPrefs.firstName||''} onChange={e=>setUserPrefs(p=>({...p,firstName:e.target.value}))}
-                  placeholder="First name"
-                  style={{ flex:1,padding:'7px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.06)',color:'white',fontSize:12,outline:'none' }} />
-                <input value={userPrefs.lastName||''} onChange={e=>setUserPrefs(p=>({...p,lastName:e.target.value}))}
-                  placeholder="Last name"
-                  style={{ flex:1,padding:'7px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.06)',color:'white',fontSize:12,outline:'none' }} />
-              </div>
-
-              {/* Style toggle */}
-              <p style={{ color:'rgba(255,255,255,0.5)',fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em',margin:'0 0 8px' }}>Display Style</p>
-              <div style={{ display:'flex',gap:8,marginBottom:14 }}>
-                <button onClick={() => setUserPrefs(p=>({...p,avatarMode:'initials'}))}
-                  style={{ flex:1,padding:'7px',borderRadius:8,border:'1px solid',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 0.15s',
-                    borderColor:userPrefs.avatarMode==='initials'?'#4f46e5':'rgba(255,255,255,0.1)',
-                    background:userPrefs.avatarMode==='initials'?'rgba(79,70,229,0.2)':'rgba(255,255,255,0.04)',
-                    color:userPrefs.avatarMode==='initials'?'#a5b4fc':'rgba(255,255,255,0.4)' }}>
-                  Initials
-                </button>
-                <button onClick={() => setUserPrefs(p=>({...p,avatarMode:'icon'}))}
-                  style={{ flex:1,padding:'7px',borderRadius:8,border:'1px solid',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 0.15s',
-                    borderColor:userPrefs.avatarMode==='icon'?'#4f46e5':'rgba(255,255,255,0.1)',
-                    background:userPrefs.avatarMode==='icon'?'rgba(79,70,229,0.2)':'rgba(255,255,255,0.04)',
-                    color:userPrefs.avatarMode==='icon'?'#a5b4fc':'rgba(255,255,255,0.4)' }}>
-                  Icon
-                </button>
-              </div>
-
-              {/* Avatar icon grid */}
-              {userPrefs.avatarMode === 'icon' && (
-                <div style={{ display:'flex',gap:8,flexWrap:'wrap',marginBottom:14 }}>
-                  {AVATAR_OPTIONS.map(av => (
-                    <button key={av.id} onClick={() => setUserPrefs(p=>({...p,avatarChoice:av.id}))}
-                      style={{ width:40,height:40,borderRadius:'50%',border:'2px solid',fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.12s',
-                        borderColor:userPrefs.avatarChoice===av.id?'#4f46e5':'rgba(255,255,255,0.1)',
-                        background:userPrefs.avatarChoice===av.id?'rgba(79,70,229,0.25)':'rgba(255,255,255,0.04)' }}>
-                      {av.icon}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Preview + Save */}
-              <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                <div style={{ width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                  {userPrefs.avatarMode==='icon'
-                    ? <span style={{ fontSize:20 }}>{getAvatarIcon(userPrefs.avatarChoice)}</span>
-                    : <span style={{ fontSize:13,fontWeight:800,color:'white' }}>{getInitials(userPrefs.firstName,userPrefs.lastName,authUser?.email)}</span>
-                  }
-                </div>
-                <button onClick={() => { setShowAvatarPopup(false); }}
-                  style={{ flex:1,padding:'9px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#2563eb,#4f46e5)',color:'white',fontWeight:700,fontSize:13,cursor:'pointer' }}>
-                  Save
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -5529,7 +4776,7 @@ export default function DashboardPage() {
                   isGenerating={isGeneratingRheum}
                   dm={dm}
                 />
-              : <ReferencePanel selectedBodyPart={selectedBodyPart} modality={modality} dm={dm} />
+              : <ReferencePanel selectedBodyPart={selectedBodyPart} modality={modality} darkMode={dm} />
             }
           </div>
         </div>
