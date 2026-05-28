@@ -2868,11 +2868,12 @@ const RESEARCH_POSTS = [
 
 // ─── SUPABASE CLIENT (lazy, no extra package needed) ────────────────────────
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
-const getSupabase = () => {
+const getSupabase = (accessToken) => {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!key) return null;
-  // Minimal fetch-based Supabase client — no npm package, zero extra cost
-  const headers = { 'Content-Type':'application/json', apikey:key, Authorization:`Bearer ${key}` };
+  // Use user JWT if provided (required for RLS policies that check auth.uid())
+  const authHeader = accessToken ? `Bearer ${accessToken}` : `Bearer ${key}`;
+  const headers = { 'Content-Type':'application/json', apikey:key, Authorization:authHeader };
   return {
     from: (table) => ({
       select: (cols='*') => ({
@@ -2880,7 +2881,7 @@ const getSupabase = () => {
           order: (col2, opts={}) => fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${cols}&${col}=eq.${encodeURIComponent(val)}&order=${col2}.${opts.ascending===false?'desc':'asc'}`, { headers }).then(r=>r.json()),
         }),
       }),
-      insert: (row) => fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method:'POST', headers:{...headers,'Prefer':'return=representation'}, body:JSON.stringify(row) }).then(r=>r.json()),
+      insert: (row) => fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method:'POST', headers:{...headers,'Prefer':'return=representation'}, body:JSON.stringify(row) }).then(async r=>{ const d=await r.json(); if(!r.ok) throw new Error(JSON.stringify(d)); return d; }),
       delete: () => ({
         eq: (col, val) => fetch(`${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}`, { method:'DELETE', headers }).then(r=>r.json()),
       }),
@@ -2994,8 +2995,8 @@ function ArticleComments({ postIdx, currentUser }) {
         // If endpoint returns non-ok (404 = not deployed yet), skip moderation and proceed
       } catch { /* moderation unavailable — proceed without it */ }
 
-      // Save to Supabase
-      const sb = getSupabase();
+      // Save to Supabase — pass user JWT so RLS policy (auth.uid() = user_id) passes
+      const sb = getSupabase(currentUser.access_token);
       const result = await sb.from('article_comments').insert({
         post_idx: postIdx,
         user_id: currentUser.id,
@@ -3011,7 +3012,7 @@ function ArticleComments({ postIdx, currentUser }) {
   };
 
   const deleteComment = async (id) => {
-    const sb = getSupabase();
+    const sb = getSupabase(currentUser?.access_token);
     await sb.from('article_comments').delete().eq('id', id);
     setComments(prev => prev.filter(c => c.id !== id));
   };
@@ -3094,7 +3095,7 @@ function RecommendArticleForm({ currentUser, onClose }) {
     if (!form.title.trim() || !currentUser) return;
     setSubmitting(true); setError('');
     try {
-      const sb = getSupabase();
+      const sb = getSupabase(currentUser?.access_token);
       const result = await sb.from('article_recommendations').insert({
         user_id: currentUser.id,
         user_email: currentUser.email,
