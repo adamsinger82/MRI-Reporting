@@ -2117,6 +2117,139 @@ const SHOULDER_LABELS = {
   ],
 };
 
+const COR_SHOULDER_LABELS = {
+  1: [
+    [20.4, 25, "suprascapular neurovascular bundle"],
+  ],
+  3: [
+    [31.1, 20.5, "clavicle"],
+    [23, 27.7, "suprascapular neurovascular bundle"],
+    [60.9, 33.9, "deltoid, anterior"],
+  ],
+  4: [
+    [24.3, 28.9, "suprascapular neurovascular bundle"],
+  ],
+  5: [
+    [31.4, 27, "coracoclavicular ligament complex"],
+    [29.2, 52.2, "subscapularis"],
+    [68.1, 39, "deltoid, anterior"],
+  ],
+  6: [
+    [32.1, 25.8, "coracoclavicular ligament complex"],
+    [26.2, 32.8, "suprascapular neurovascular bundle"],
+    [44.8, 46.1, "subscapularis"],
+    [23, 53.1, "subscapularis"],
+  ],
+  7: [
+    [38, 18.9, "clavicle"],
+    [67.7, 42.2, "long head of the biceps"],
+    [64.5, 64.5, "long head of the biceps"],
+    [59.4, 32.2, "long head of the biceps"],
+    [65.5, 50.7, "biceps groove"],
+    [75.3, 39.9, "deltoid, anterior"],
+  ],
+  8: [
+    [44.7, 42.6, "anterior labrum"],
+    [47, 34.4, "anterior superior labrum"],
+    [45.2, 49.7, "anterior inferior labrum"],
+    [30.1, 35.1, "suprascapular neurovascular bundle"],
+    [29.2, 33.1, "suprascapular notch"],
+    [62.3, 31.6, "long head of the biceps"],
+  ],
+  9: [
+    [45.7, 32.1, "superior labrum"],
+    [68.1, 30.7, "supraspinatus"],
+    [60.9, 27.2, "supraspinatus"],
+    [29.6, 23.1, "supraspinatus"],
+    [52.5, 29.9, "long head of the biceps"],
+    [78.1, 42.4, "deltoid, lateral"],
+  ],
+  10: [
+    [60.9, 38.3, "humeral head"],
+    [41.9, 43.3, "glenoid cartilage"],
+    [43.6, 33.4, "superior labrum"],
+    [45.5, 55.3, "inferior labrum"],
+    [31.3, 37.3, "suprascapular neurovascular bundle"],
+    [38.9, 74.8, "teres major"],
+    [69.1, 32.4, "superior facet of greater tuberosity"],
+  ],
+  11: [
+    [60.1, 57.8, "surgical neck of the humerus"],
+    [37.9, 44.4, "glenoid"],
+    [54.7, 20, "acromioclavicular joint"],
+    [45.2, 55.8, "inferior labrum"],
+    [43.3, 38.7, "humeral head cartilage"],
+    [54.2, 27.8, "humeral head cartilage"],
+    [33.6, 24.6, "supraspinatus"],
+    [54.2, 26, "supraspinatus"],
+    [63.5, 26.6, "supraspinatus"],
+    [68.6, 29.5, "supraspinatus"],
+    [80.4, 55.1, "deltoid, lateral"],
+    [35, 47.8, "glenoid neck"],
+    [31.8, 41.1, "spinoglenoid notch"],
+    [46, 67.8, "axillary neurovascular bundle"],
+    [45.3, 66.7, "quadrilateral space"],
+    [68.1, 26.8, "subacromial/subdeltoid bursa"],
+  ],
+  12: [
+    [47.4, 61.6, "inferior joint capsule"],
+    [42.1, 36, "posterior superior labrum"],
+    [32.6, 38.9, "suprascapular neurovascular bundle"],
+    [40.6, 78.5, "teres major"],
+    [67.9, 26, "subacromial/subdeltoid bursa"],
+  ],
+  13: [
+    [44.8, 54.5, "posterior inferior labrum"],
+    [41.8, 37, "posterior superior labrum"],
+    [48.6, 69.9, "axillary neurovascular bundle"],
+    [71.3, 31.4, "infraspinatus"],
+    [71.4, 34.4, "middle facet of greater tuberosity"],
+  ],
+  14: [
+    [41.9, 43.4, "posterior labrum"],
+    [71.3, 33.1, "infraspinatus"],
+  ],
+  15: [
+    [48.9, 71.6, "axillary neurovascular bundle"],
+    [69.1, 33.1, "infraspinatus"],
+  ],
+  16: [
+    [30.3, 27.5, "scapular spine"],
+    [67.9, 48.7, "teres minor"],
+    [64.8, 33.9, "infraspinatus"],
+    [26.9, 45, "infraspinatus"],
+    [27.5, 84.6, "teres major"],
+  ],
+  17: [
+    [77, 38.7, "deltoid, posterior"],
+    [46, 55.8, "teres minor"],
+    [58.1, 51.4, "teres minor"],
+    [48.2, 41.1, "infraspinatus"],
+    [27, 45.1, "infraspinatus"],
+    [57.7, 37.2, "infraspinatus"],
+    [45.5, 82.4, "triceps"],
+  ],
+  18: [
+    [48.6, 55.3, "teres minor"],
+    [21.1, 48.3, "infraspinatus"],
+    [43.1, 42.4, "infraspinatus"],
+  ],
+  19: [
+    [35.8, 62.6, "teres minor"],
+    [45.8, 86, "triceps"],
+  ],
+  20: [
+    [66.4, 45.5, "deltoid, posterior"],
+  ],
+  21: [
+    [43.6, 83.4, "triceps"],
+    [64, 46.3, "deltoid, posterior"],
+  ],
+  22: [
+    [59.9, 52.4, "deltoid, posterior"],
+  ],
+};
+
 const SAG_SHOULDER_LABELS = {
   1: [
     [48.2, 7.5, "trapezius"],
@@ -2486,6 +2619,7 @@ const ATLAS_JOINTS = {
         slices: localSlices(22),
         ext: '.jpg',
         pad: 4,
+        permanentLabels: COR_SHOULDER_LABELS,
       },
     },
     view: 'MRI — shoulder',
@@ -2850,19 +2984,19 @@ function AtlasModal({ onClose }) {
 
   const getLabelLayer = (name) => {
     const n = name.toLowerCase();
-    // Anatomic spaces — tunnels, canals, notches, recesses
-    if (/tunnel|canal|notch|recess|foramen|fossa|alcock|hunter|spinoglenoid|suprascapular notch|cubital tunnel|carpal tunnel|guyon/.test(n)) return 'spaces';
-    // Joints
-    if (/\bjoint\b|ac joint|si joint|acromioclavicular|glenohumeral|sacroiliac|radiocarpal|midcarpal|lisfranc joint|patellofemoral|tibiofemoral|tibiotalar|subtalar|facet joint/.test(n)) return 'joints';
+    // Anatomic spaces — tunnels, canals, notches, recesses, bursae, anatomic spaces
+    if (/tunnel|canal|notch|recess|foramen|fossa|alcock|hunter|spinoglenoid|suprascapular notch|cubital tunnel|carpal tunnel|guyon|bursa|quadrilateral space|biceps groove/.test(n)) return 'spaces';
+    // Joints — but NOT capsule (capsule → ligaments)
+    if (/\bjoint\b(?!.*capsule)|ac joint|si joint|acromioclavicular|glenohumeral|sacroiliac|radiocarpal|midcarpal|lisfranc joint|patellofemoral|tibiofemoral|tibiotalar|subtalar|facet joint/.test(n)) return 'joints';
     // Nerves
     if (/nerve|plexus|nvb|ganglion|cutaneous nerve|antebrachial|brachial plexus/.test(n)) return 'nerves';
     // Vessels
     if (/artery|femoral art|iliac a|neurovascular bundle/.test(n)) return 'arteries';
     if (/vein|saphenous|femoral vein|iliac v/.test(n)) return 'veins';
-    // Bones — includes cartilage, glenoid, all named landmarks
-    if (/sacrum|ilium|iliac bone|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|tuberosity|asis|aiis|intertrochanteric|pubic|humerus|radius|ulna|radial tuberosity|olecranon|capitellum|trochlea|epicondyle|sublime tubercle|glenoid|acromion|clavicle|scapula|scapular spine|coracoid|coracoid process|humeral head|femoral head|femoral neck|femoral diaphysis|vertebra|vertebral body|\bL[1-5]\b|\bS[1-5]\b|\bC[1-7]\b|ischial tuberosity|pubic bone|iliac crest|cartilage/.test(n)) return 'bones';
-    // Ligaments — includes labrum, labral, fascia, aponeuroses, UCL etc
-    if (/ligament|ligamentous|sacrospinous|sacrotuberous|aponeurosis|osbourne|lacertus|retinaculum|coracoclavicular|coracoacromial|ucl|lcl|acl|pcl|mcl|collateral|annular|labrum|labral|anchor|fascia/.test(n)) return 'ligaments';
+    // Bones — scapula matched as \bscapula\b to avoid matching subscapularis
+    if (/sacrum|ilium|iliac bone|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|tuberosity|asis|aiis|intertrochanteric|pubic|humerus|radius|ulna|radial tuberosity|olecranon|capitellum|trochlea|epicondyle|sublime tubercle|glenoid|acromion|clavicle|\bscapula\b|scapular spine|coracoid|coracoid process|humeral head|femoral head|femoral neck|femoral diaphysis|vertebra|vertebral body|\bL[1-5]\b|\bS[1-5]\b|\bC[1-7]\b|ischial tuberosity|pubic bone|iliac crest|cartilage/.test(n)) return 'bones';
+    // Ligaments — includes labrum, labral, fascia, aponeuroses, capsule, UCL etc
+    if (/ligament|ligamentous|sacrospinous|sacrotuberous|aponeurosis|osbourne|lacertus|retinaculum|coracoclavicular|coracoacromial|ucl|lcl|acl|pcl|mcl|collateral|annular|labrum|labral|anchor|fascia|capsule/.test(n)) return 'ligaments';
     // Muscles + tendons — all orange
     return 'muscles';
   };
