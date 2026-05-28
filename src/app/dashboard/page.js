@@ -4664,6 +4664,36 @@ function clearSession() {
   try { localStorage.removeItem('msk_session'); } catch {}
 }
 
+// ─── AVATAR OPTIONS ──────────────────────────────────────────────────────────
+const AVATAR_OPTIONS = [
+  { id:'stethoscope', icon:'🩺' },
+  { id:'xray',        icon:'🩻' },
+  { id:'bone',        icon:'🦴' },
+  { id:'brain',       icon:'🧠' },
+  { id:'microscope',  icon:'🔬' },
+  { id:'dna',         icon:'🧬' },
+  { id:'shield',      icon:'🛡️' },
+  { id:'star',        icon:'⭐' },
+];
+
+function saveUserPrefs(userId, prefs) {
+  try { localStorage.setItem(\`msk_prefs_\${userId}\`, JSON.stringify(prefs)); } catch {}
+}
+function loadUserPrefs(userId) {
+  try {
+    const raw = localStorage.getItem(\`msk_prefs_\${userId}\`);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function getInitials(firstName, lastName, email) {
+  if (firstName && lastName) return (firstName[0] + lastName[0]).toUpperCase();
+  if (firstName) return firstName.slice(0,2).toUpperCase();
+  return (email?.[0] || '?').toUpperCase();
+}
+function getAvatarIcon(avatarChoice) {
+  return AVATAR_OPTIONS.find(a => a.id === avatarChoice)?.icon || '👤';
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // LOGIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -4672,6 +4702,10 @@ function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [avatarMode, setAvatarMode] = useState('initials'); // 'initials' | 'icon'
+  const [avatarChoice, setAvatarChoice] = useState('stethoscope');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -4696,7 +4730,10 @@ function LoginPage({ onLogin }) {
           setSuccess('Account created! Please check your email to confirm your address, then sign in.');
           setMode('signin');
         } else if (data.access_token) {
-          saveSession(data); onLogin({ ...data.user, access_token: data.access_token });
+          saveSession(data);
+          const uid = data.user?.id;
+          if (uid) saveUserPrefs(uid, { firstName, lastName, avatarMode, avatarChoice });
+          onLogin({ ...data.user, access_token: data.access_token });
         } else {
           setSuccess('Account created! Please sign in.');
           setMode('signin');
@@ -4757,6 +4794,38 @@ function LoginPage({ onLogin }) {
 
           {/* Fields */}
           <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            {mode === 'signup' && (<>
+              <div style={{ display:'flex', gap:10 }}>
+                <div style={{ flex:1 }}>
+                  <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>First Name</label>
+                  <input value={firstName} onChange={e=>setFirstName(e.target.value)} placeholder="Jane" style={inp} />
+                </div>
+                <div style={{ flex:1 }}>
+                  <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Last Name</label>
+                  <input value={lastName} onChange={e=>setLastName(e.target.value)} placeholder="Smith" style={inp} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8 }}>Profile Style</label>
+                <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                  <button type="button" onClick={()=>setAvatarMode('initials')}
+                    style={{ padding:'6px 14px', borderRadius:8, border:'1px solid', fontSize:12, fontWeight:600, cursor:'pointer', transition:'all 0.15s',
+                      borderColor: avatarMode==='initials' ? '#4f46e5' : 'rgba(255,255,255,0.15)',
+                      background: avatarMode==='initials' ? 'rgba(79,70,229,0.2)' : 'rgba(255,255,255,0.05)',
+                      color: avatarMode==='initials' ? '#a5b4fc' : 'rgba(255,255,255,0.5)' }}>
+                    Initials
+                  </button>
+                  {AVATAR_OPTIONS.map(av => (
+                    <button key={av.id} type="button" onClick={()=>{ setAvatarMode('icon'); setAvatarChoice(av.id); }}
+                      style={{ width:36, height:36, borderRadius:'50%', border:'2px solid', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.15s',
+                        borderColor: avatarMode==='icon' && avatarChoice===av.id ? '#4f46e5' : 'rgba(255,255,255,0.15)',
+                        background: avatarMode==='icon' && avatarChoice===av.id ? 'rgba(79,70,229,0.25)' : 'rgba(255,255,255,0.05)' }}>
+                      {av.icon}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>)}
             <div>
               <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Email</label>
               <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
@@ -4802,23 +4871,36 @@ function LoginPage({ onLogin }) {
 
 export default function DashboardPage() {
   // ── Auth state ────────────────────────────────────────────────────────────
-  const [authUser, setAuthUser] = useState(null);        // null = not logged in
-  const [authLoading, setAuthLoading] = useState(true);  // checking saved session
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [userPrefs, setUserPrefs] = useState({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
+  const [showAvatarPopup, setShowAvatarPopup] = useState(false);
 
-  // Restore session from localStorage on first load
+  // Restore session + prefs from localStorage on first load
   useEffect(() => {
     const s = loadSession();
     if (s?.user && s?.access_token) {
       setAuthUser({ ...s.user, access_token: s.access_token });
+      const prefs = loadUserPrefs(s.user.id);
+      if (prefs) setUserPrefs(prefs);
     }
     setAuthLoading(false);
   }, []);
 
-  const handleLogin = (user) => setAuthUser(user);
+  const handleLogin = (user) => {
+    setAuthUser(user);
+    // Load saved prefs for this user
+    const prefs = loadUserPrefs(user.id);
+    if (prefs) setUserPrefs(prefs);
+  };
   const handleSignOut = async () => {
-    if (authUser?.access_token) await supaSignOut(authUser.access_token);
+    try {
+      if (authUser?.access_token) await supaSignOut(authUser.access_token);
+    } catch {}
     clearSession();
     setAuthUser(null);
+    setUserPrefs({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
+    setShowAvatarPopup(false);
   };
 
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
@@ -5071,6 +5153,14 @@ export default function DashboardPage() {
     </div>
   );
 
+  // Close avatar popup on outside click
+  useEffect(() => {
+    if (!showAvatarPopup) return;
+    const close = () => setShowAvatarPopup(false);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [showAvatarPopup]);
+
   return (
     <div style={{ minHeight:'100vh',background:'linear-gradient(160deg,#0d1b2a 0%,#1a3a5c 45%,#0d1b2a 100%)',fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
 
@@ -5134,20 +5224,92 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Right: user display + sign out */}
-        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0 }}>
-          <div style={{ display:'flex',alignItems:'center',gap:7,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:9,padding:'6px 12px' }}>
-            <div style={{ width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'white',fontWeight:700 }}>
-              {(authUser?.email?.[0] || '?').toUpperCase()}
-            </div>
-            <span style={{ color:'rgba(255,255,255,0.8)',fontSize:12,fontWeight:600,maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
-              {authUser?.email?.split('@')[0] || 'User'}
-            </span>
-          </div>
+        {/* Right: avatar button + sign out */}
+        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0,position:'relative' }}>
+
+          {/* Avatar button — click to open prefs popup */}
+          <button onClick={() => setShowAvatarPopup(p => !p)} title="Profile & Avatar"
+            style={{ width:36,height:36,borderRadius:'50%',border:'2px solid rgba(255,255,255,0.2)',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.15s',boxShadow:showAvatarPopup?'0 0 0 3px rgba(99,102,241,0.4)':'none' }}>
+            {userPrefs.avatarMode === 'icon'
+              ? <span style={{ fontSize:18,lineHeight:1 }}>{getAvatarIcon(userPrefs.avatarChoice)}</span>
+              : <span style={{ fontSize:12,fontWeight:800,color:'white',letterSpacing:'-0.02em' }}>{getInitials(userPrefs.firstName, userPrefs.lastName, authUser?.email)}</span>
+            }
+          </button>
+
+          {/* Sign Out */}
           <button onClick={handleSignOut}
-            style={{ padding:'7px 13px',borderRadius:8,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 0.15s' }}>
+            style={{ padding:'7px 13px',borderRadius:8,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap' }}>
             Sign Out
           </button>
+
+          {/* Avatar preference popup */}
+          {showAvatarPopup && (
+            <div onClick={e=>e.stopPropagation()}
+              style={{ position:'absolute',top:48,right:0,zIndex:500,background:'#1e293b',border:'1px solid rgba(255,255,255,0.12)',borderRadius:14,padding:18,minWidth:280,boxShadow:'0 16px 48px rgba(0,0,0,0.5)' }}>
+              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14 }}>
+                <span style={{ color:'white',fontWeight:700,fontSize:13 }}>Profile Settings</span>
+                <button onClick={() => setShowAvatarPopup(false)} style={{ background:'none',border:'none',color:'#64748b',fontSize:16,cursor:'pointer',padding:'0 4px' }}>✕</button>
+              </div>
+              <p style={{ color:'#64748b',fontSize:11,margin:'0 0 12px' }}>{authUser?.email}</p>
+
+              {/* Name fields */}
+              <div style={{ display:'flex',gap:8,marginBottom:12 }}>
+                <input value={userPrefs.firstName||''} onChange={e=>setUserPrefs(p=>({...p,firstName:e.target.value}))}
+                  placeholder="First name"
+                  style={{ flex:1,padding:'7px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.06)',color:'white',fontSize:12,outline:'none' }} />
+                <input value={userPrefs.lastName||''} onChange={e=>setUserPrefs(p=>({...p,lastName:e.target.value}))}
+                  placeholder="Last name"
+                  style={{ flex:1,padding:'7px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.06)',color:'white',fontSize:12,outline:'none' }} />
+              </div>
+
+              {/* Style toggle */}
+              <p style={{ color:'rgba(255,255,255,0.5)',fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em',margin:'0 0 8px' }}>Display Style</p>
+              <div style={{ display:'flex',gap:8,marginBottom:14 }}>
+                <button onClick={() => setUserPrefs(p=>({...p,avatarMode:'initials'}))}
+                  style={{ flex:1,padding:'7px',borderRadius:8,border:'1px solid',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 0.15s',
+                    borderColor:userPrefs.avatarMode==='initials'?'#4f46e5':'rgba(255,255,255,0.1)',
+                    background:userPrefs.avatarMode==='initials'?'rgba(79,70,229,0.2)':'rgba(255,255,255,0.04)',
+                    color:userPrefs.avatarMode==='initials'?'#a5b4fc':'rgba(255,255,255,0.4)' }}>
+                  Initials
+                </button>
+                <button onClick={() => setUserPrefs(p=>({...p,avatarMode:'icon'}))}
+                  style={{ flex:1,padding:'7px',borderRadius:8,border:'1px solid',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 0.15s',
+                    borderColor:userPrefs.avatarMode==='icon'?'#4f46e5':'rgba(255,255,255,0.1)',
+                    background:userPrefs.avatarMode==='icon'?'rgba(79,70,229,0.2)':'rgba(255,255,255,0.04)',
+                    color:userPrefs.avatarMode==='icon'?'#a5b4fc':'rgba(255,255,255,0.4)' }}>
+                  Icon
+                </button>
+              </div>
+
+              {/* Avatar icon grid */}
+              {userPrefs.avatarMode === 'icon' && (
+                <div style={{ display:'flex',gap:8,flexWrap:'wrap',marginBottom:14 }}>
+                  {AVATAR_OPTIONS.map(av => (
+                    <button key={av.id} onClick={() => setUserPrefs(p=>({...p,avatarChoice:av.id}))}
+                      style={{ width:40,height:40,borderRadius:'50%',border:'2px solid',fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.12s',
+                        borderColor:userPrefs.avatarChoice===av.id?'#4f46e5':'rgba(255,255,255,0.1)',
+                        background:userPrefs.avatarChoice===av.id?'rgba(79,70,229,0.25)':'rgba(255,255,255,0.04)' }}>
+                      {av.icon}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Preview + Save */}
+              <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+                <div style={{ width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                  {userPrefs.avatarMode==='icon'
+                    ? <span style={{ fontSize:20 }}>{getAvatarIcon(userPrefs.avatarChoice)}</span>
+                    : <span style={{ fontSize:13,fontWeight:800,color:'white' }}>{getInitials(userPrefs.firstName,userPrefs.lastName,authUser?.email)}</span>
+                  }
+                </div>
+                <button onClick={() => { if (authUser?.id) saveUserPrefs(authUser.id, userPrefs); setShowAvatarPopup(false); }}
+                  style={{ flex:1,padding:'9px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#2563eb,#4f46e5)',color:'white',fontWeight:700,fontSize:13,cursor:'pointer' }}>
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
