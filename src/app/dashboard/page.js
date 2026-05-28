@@ -3034,24 +3034,26 @@ function ArticleComments({ postIdx, currentUser }) {
   const fmt = (iso) => { try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; } };
 
   return (
-    <div style={{ marginTop:14,borderTop:'1px solid #1e3a5f',paddingTop:12 }}>
-      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
+    <div style={{ marginTop:14,borderTop:'1px solid #1e3a5f',paddingTop:12,display:'flex',flexDirection:'column',gap:8 }}>
+
+      {/* Header row */}
+      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
         <span style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em' }}>
           💬 Discussion {comments.length > 0 && `(${comments.length})`}
         </span>
         {currentUser && (
-          <button onClick={() => { setShowForm(f=>!f); setError(''); }}
+          <button onClick={() => { setShowForm(f=>!f); setError(''); setText(''); }}
             style={{ fontSize:10,fontWeight:600,color:'#059669',background:'rgba(5,150,105,0.1)',border:'1px solid rgba(5,150,105,0.25)',borderRadius:6,padding:'3px 9px',cursor:'pointer' }}>
             {showForm ? 'Cancel' : '+ Add Comment'}
           </button>
         )}
       </div>
 
-      {/* Existing comments — scrollable container */}
+      {/* Scrollable comments list */}
       {loading ? (
         <div style={{ fontSize:11,color:'#475569',padding:'4px 0' }}>Loading…</div>
       ) : (
-        <div style={{ maxHeight: showForm ? 120 : 220, overflowY:'auto', display:'flex',flexDirection:'column',gap:7,paddingRight:4 }}>
+        <div style={{ overflowY:'auto',maxHeight:160,display:'flex',flexDirection:'column',gap:7,paddingRight:4,flexShrink:0 }}>
           {comments.map(c => (
             <div key={c.id} style={{ background:'rgba(255,255,255,0.03)',border:'1px solid #1e3a5f',borderRadius:7,padding:'8px 11px',display:'flex',gap:8,alignItems:'flex-start',flexShrink:0 }}>
               <div style={{ flex:1,minWidth:0 }}>
@@ -3074,14 +3076,14 @@ function ArticleComments({ postIdx, currentUser }) {
         </div>
       )}
 
-      {/* New comment form — fixed height so buttons never go off-screen */}
+      {/* New comment form — always fully visible below comments */}
       {showForm && currentUser && (
-        <div style={{ marginTop:8,display:'flex',flexDirection:'column',gap:6 }}>
+        <div style={{ display:'flex',flexDirection:'column',gap:6,flexShrink:0,borderTop:'1px solid #1e3a5f',paddingTop:8 }}>
           <textarea value={text} onChange={e=>setText(e.target.value)}
-            placeholder="Share your clinical perspective, methodology thoughts, or questions…"
-            style={{ width:'100%',height:70,maxHeight:70,background:'#0f172a',border:'1px solid #334155',borderRadius:7,color:'#e2e8f0',fontSize:12,padding:'8px 10px',resize:'none',lineHeight:1.5,boxSizing:'border-box' }} />
-          {error && <p style={{ fontSize:11,color:'#f87171',margin:'0' }}>{error}</p>}
-          <div style={{ display:'flex',gap:7,justifyContent:'flex-end',flexShrink:0 }}>
+            placeholder="Share your clinical perspective or questions about this paper…"
+            style={{ width:'100%',height:64,background:'#0f172a',border:'1px solid #334155',borderRadius:7,color:'#e2e8f0',fontSize:12,padding:'8px 10px',resize:'none',lineHeight:1.5,boxSizing:'border-box' }} />
+          {error && <p style={{ fontSize:11,color:'#f87171',margin:0,lineHeight:1.4 }}>{error}</p>}
+          <div style={{ display:'flex',gap:7,justifyContent:'flex-end' }}>
             <button onClick={() => { setShowForm(false); setError(''); setText(''); }}
               style={{ fontSize:11,color:'#64748b',background:'none',border:'1px solid #334155',borderRadius:6,padding:'5px 12px',cursor:'pointer' }}>Cancel</button>
             <button onClick={submit} disabled={submitting || !text.trim()}
