@@ -2888,6 +2888,74 @@ const getSupabase = () => {
   };
 };
 
+
+// ─── ARTICLE LIKES ───────────────────────────────────────────────────────────
+function ArticleLikes({ postIdx }) {
+  const [likes, setLikes] = useState(null);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [animating, setAnimating] = useState(false);
+
+  // Use localStorage to track whether this browser has liked each post
+  const storageKey = `liked_post_${postIdx}`;
+
+  useEffect(() => {
+    // Check local like state
+    try { setHasLiked(!!localStorage.getItem(storageKey)); } catch {}
+    // Fetch current count from Supabase
+    const sb = getSupabase();
+    if (!sb) { setLikes(0); return; }
+    sb.from('article_likes').select('count').eq('post_idx', postIdx).order('id', { ascending: true })
+      .then(data => {
+        // Supabase returns array of rows; count is total rows for this post_idx
+        setLikes(Array.isArray(data) ? data.length : 0);
+      })
+      .catch(() => setLikes(0));
+  }, [postIdx]);
+
+  const handleLike = async () => {
+    if (animating) return;
+    const sb = getSupabase();
+    if (!sb) return;
+    setAnimating(true);
+
+    if (hasLiked) {
+      // Unlike: remove one row with this browser fingerprint
+      const fp = storageKey;
+      try {
+        await sb.from('article_likes').delete().eq('post_idx', postIdx).eq('fingerprint', fp);
+        setLikes(l => Math.max(0, (l || 1) - 1));
+        setHasLiked(false);
+        localStorage.removeItem(storageKey);
+      } catch {}
+    } else {
+      // Like: insert a row
+      const fp = storageKey;
+      try {
+        await sb.from('article_likes').insert({ post_idx: postIdx, fingerprint: fp, created_at: new Date().toISOString() });
+        setLikes(l => (l || 0) + 1);
+        setHasLiked(true);
+        localStorage.setItem(storageKey, '1');
+      } catch {}
+    }
+    setTimeout(() => setAnimating(false), 400);
+  };
+
+  return (
+    <button onClick={handleLike}
+      style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'5px 12px',borderRadius:20,border:'1px solid',
+        borderColor: hasLiked ? 'rgba(239,68,68,0.5)' : '#1e3a5f',
+        background: hasLiked ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.03)',
+        color: hasLiked ? '#f87171' : '#475569',
+        cursor:'pointer', fontSize:12, fontWeight:600,
+        transform: animating ? 'scale(1.2)' : 'scale(1)',
+        transition:'all 0.15s ease',
+        userSelect:'none' }}>
+      <span style={{ fontSize:14, lineHeight:1 }}>{hasLiked ? '❤️' : '🤍'}</span>
+      <span>{likes === null ? '…' : likes}</span>
+    </button>
+  );
+}
+
 // ─── COMMENT SECTION (per article) ──────────────────────────────────────────
 function ArticleComments({ postIdx, currentUser }) {
   const [comments, setComments] = useState([]);
@@ -3166,13 +3234,16 @@ function ResearchModal({ onClose, currentUser }) {
                       <span style={{ fontSize:13,color:'#a7f3d0',lineHeight:1.6,fontWeight:500 }}>{post.keyTakeaway}</span>
                     </div>
 
-                    {/* Google Scholar link */}
-                    {post.link && (
-                      <a href={post.link} target="_blank" rel="noopener noreferrer"
-                        style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
-                        🔗 Search on Google Scholar →
-                      </a>
-                    )}
+                    {/* Google Scholar link + Like button row */}
+                    <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginTop:0 }}>
+                      {post.link && (
+                        <a href={post.link} target="_blank" rel="noopener noreferrer"
+                          style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
+                          🔗 Search on Google Scholar →
+                        </a>
+                      )}
+                      <ArticleLikes postIdx={idx} />
+                    </div>
 
                     {/* Comments section — in the circled red area */}
                     <ArticleComments postIdx={idx} currentUser={currentUser} />
@@ -4784,7 +4855,7 @@ export default function DashboardPage() {
 
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
-      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={user} />}
+      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={null} />}
 
       {/* ── HEADER ── */}
       <div style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
