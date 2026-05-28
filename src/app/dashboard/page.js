@@ -2883,7 +2883,7 @@ const getSupabase = (accessToken) => {
       }),
       insert: (row) => fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method:'POST', headers:{...headers,'Prefer':'return=representation'}, body:JSON.stringify(row) }).then(async r=>{ const d=await r.json(); if(!r.ok) throw new Error(JSON.stringify(d)); return d; }),
       delete: () => ({
-        eq: (col, val) => fetch(`${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}`, { method:'DELETE', headers }).then(r=>r.json()),
+        eq: (col, val) => fetch(`${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}`, { method:'DELETE', headers }).then(r => r.status === 204 ? null : r.json()),
       }),
     }),
   };
@@ -3026,8 +3026,11 @@ function ArticleComments({ postIdx, currentUser }) {
   };
 
   const deleteComment = async (id) => {
-    const sb = getSupabase(currentUser?.access_token);
-    await sb.from('article_comments').delete().eq('id', id);
+    try {
+      const sb = getSupabase(currentUser?.access_token);
+      await sb.from('article_comments').delete().eq('id', id);
+    } catch (e) { console.error('Delete failed:', e); }
+    // Optimistically remove from UI regardless
     setComments(prev => prev.filter(c => c.id !== id));
   };
 
