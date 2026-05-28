@@ -3230,9 +3230,9 @@ function ResearchModal({ onClose, currentUser }) {
                   <div style={{ color:'#475569',fontSize:18,fontWeight:300,flexShrink:0,marginTop:2,transition:'transform 0.2s',transform:isOpen?'rotate(90deg)':'none' }}>›</div>
                 </div>
 
-                {/* Expanded content */}
+                {/* Expanded content — scrollable so comments/form never get clipped */}
                 {isOpen && (
-                  <div style={{ padding:'0 18px 18px',borderTop:'1px solid #1e3a5f' }}>
+                  <div style={{ padding:'0 18px 18px',borderTop:'1px solid #1e3a5f',overflowY:'auto',maxHeight:'60vh' }}>
 
                     {/* Citation */}
                     <div style={{ padding:'10px 12px',background:'rgba(255,255,255,0.03)',borderRadius:7,marginTop:12,marginBottom:14 }}>
