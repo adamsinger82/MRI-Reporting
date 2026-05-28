@@ -867,10 +867,10 @@ const CT_GRADING_DATA = {
           { label: 'Sanders R et al. — Operative treatment of intra-articular calcaneal fractures. J Bone Joint Surg Am 1993;75(2):232-252.', url: 'https://scholar.google.com/scholar?q=Sanders%20calcaneal%20fractures%20operative%20treatment%20J%20Bone%20Joint%20Surg%20Am%201993' },
         ],
         normalValues: [
-          { label: 'Type I', value: 'All non-displaced fractures regardless of number of fracture lines — non-operative' },
-          { label: 'Type II (1 fracture line)', value: 'IIA: lateral column; IIB: central; IIC: medial column — 2 articular fragments' },
-          { label: 'Type III (2 fracture lines)', value: 'IIIAB: lateral + central; IIIAC: lateral + medial; IIIBC: central + medial — 3 articular fragments' },
-          { label: 'Type IV (3+ fracture lines)', value: 'Highly comminuted posterior facet — 4+ fragments; primary subtalar arthrodesis often preferred' },
+          { label: 'Type I', value: 'All fractures with <2 mm intra-articular displacement regardless of number of fracture lines — non-operative' },
+          { label: 'Type II (1 fracture line)', value: '≥2 mm intra-articular displacement; 1 fracture line divides posterior facet into 2 articular fragments — IIA: lateral column; IIB: central; IIC: medial column' },
+          { label: 'Type III (2 fracture lines)', value: '≥2 mm intra-articular displacement; 2 fracture lines create 3 articular fragments — IIIAB: lateral + central lines; IIIAC: lateral + medial; IIIBC: central + medial' },
+          { label: 'Type IV (3+ fracture lines)', value: '≥2 mm intra-articular displacement; highly comminuted posterior facet with 4+ articular fragments; primary subtalar arthrodesis often preferred' },
         ],
       },
     ],
@@ -1036,10 +1036,10 @@ const CT_GRADING_DATA = {
           { label: 'Sanders R et al. — Operative calcaneal fractures. J Bone Joint Surg Am 1993;75(2):232-252.', url: 'https://scholar.google.com/scholar?q=Sanders%20calcaneal%20fractures%20operative%20treatment%20J%20Bone%20Joint%20Surg%20Am%201993' },
         ],
         normalValues: [
-          { label: 'Type I', value: 'All non-displaced — non-operative regardless of fracture line count' },
-          { label: 'Type IIA/B/C', value: 'One fracture line; 2 articular fragments — A: lateral, B: central, C: medial column' },
-          { label: 'Type IIIAB/AC/BC', value: 'Two fracture lines; 3 articular fragments — various combinations' },
-          { label: 'Type IV', value: 'Highly comminuted posterior facet — 4+ fragments; consider primary subtalar arthrodesis' },
+          { label: 'Type I', value: 'All fractures with <2 mm intra-articular displacement regardless of fracture line count — non-operative' },
+          { label: 'Type IIA/B/C', value: '≥2 mm intra-articular displacement; 1 fracture line; 2 articular fragments — A: lateral column, B: central, C: medial column' },
+          { label: 'Type IIIAB/AC/BC', value: '≥2 mm intra-articular displacement; 2 fracture lines; 3 articular fragments — AB: lateral + central; AC: lateral + medial; BC: central + medial' },
+          { label: 'Type IV', value: '≥2 mm intra-articular displacement; highly comminuted posterior facet with 4+ articular fragments — consider primary subtalar arthrodesis' },
         ],
       },
     ],
@@ -1467,7 +1467,7 @@ const PELVIS_LABELS = {
   ],
   10: [
     [74.6, 71.2, "gluteus maximus"],
-    [59.5, 63.9, "SI joint, ligamentous portion"],
+    [63.2, 70.5, "SI joint, ligamentous portion"],
   ],
   11: [
     [69.7, 49.5, "lateral femoral cutaneous nerve"],
@@ -1477,7 +1477,7 @@ const PELVIS_LABELS = {
     [60.8, 54.6, "L5"],
     [57.3, 58.8, "S1"],
     [52.6, 56.1, "Sacrum, S1"],
-    [58.5, 64.5, "SI joint, ligamentous portion"],
+    [58.5, 71.2, "SI joint, ligamentous portion"],
   ],
   13: [
     [77.6, 69.9, "gluteus maximus"],
@@ -1487,8 +1487,8 @@ const PELVIS_LABELS = {
   ],
   14: [
     [72.7, 46.8, "lateral femoral cutaneous nerve"],
-    [61.5, 57.3, "SI joint, synovial portion"],
-    [59, 66.3, "SI joint, ligamentous portion"],
+    [63.8, 58.5, "SI joint, synovial portion"],
+    [61.5, 70.8, "SI joint, ligamentous portion"],
   ],
   15: [
     [64.4, 46.3, "psoas muscle"],
@@ -1504,7 +1504,7 @@ const PELVIS_LABELS = {
   17: [
     [81.8, 53.5, "gluteus medius"],
     [80.2, 66.8, "gluteus maximus"],
-    [60.7, 57.7, "SI joint, synovial portion"],
+    [63.5, 58.2, "SI joint, synovial portion"],
   ],
   18: [
     [68.8, 47.7, "femoral nerve"],
@@ -1523,7 +1523,7 @@ const PELVIS_LABELS = {
     [62.4, 59.4, "S1"],
     [60.6, 65.3, "S2"],
     [58.2, 71.6, "S3"],
-    [60, 62.2, "SI joint, synovial portion"],
+    [63.8, 59.0, "SI joint, synovial portion"],
     [67.1, 42.2, "iliacus"],
   ],
   21: [
@@ -1538,7 +1538,7 @@ const PELVIS_LABELS = {
     [64.0, 57.1, "L5"],
     [63.7, 60.3, "S1"],
     [59.4, 71.2, "S3"],
-    [60.4, 62.1, "SI joint, synovial portion"],
+    [63.5, 59.5, "SI joint, synovial portion"],
   ],
   23: [
     [65.0, 53.6, "obturator nerve"],
@@ -2213,7 +2213,7 @@ const SAG_SHOULDER_LABELS = {
     [38.7, 29.2, "coracohumeral ligament"],
     [34.7, 39.2, "subscapularis"],
     [43.1, 68.2, "latissimus dorsi, tendon"],
-    [52.5, 19.9, "AC joint"],
+    [52.5, 19.9, "acromioclavicular joint"],
   ],
   14: [
     [49.2, 25.5, "supraspinatus"],
@@ -2860,7 +2860,7 @@ function AtlasModal({ onClose }) {
     if (/artery|femoral art|iliac a|neurovascular bundle/.test(n)) return 'arteries';
     if (/vein|saphenous|femoral vein|iliac v/.test(n)) return 'veins';
     // Bones — includes cartilage, glenoid, all named landmarks
-    if (/sacrum|ilium|iliac bone|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|asis|aiis|intertrochanteric|pubic|humerus|radius|ulna|radial tuberosity|olecranon|capitellum|trochlea|epicondyle|sublime tubercle|glenoid|acromion|clavicle|scapula|scapular spine|coracoid|coracoid process|humeral head|femoral head|femoral neck|femoral diaphysis|vertebra|vertebral body|\bL[1-5]\b|\bS[1-5]\b|\bC[1-7]\b|ischial tuberosity|pubic bone|iliac crest|cartilage/.test(n)) return 'bones';
+    if (/sacrum|ilium|iliac bone|femur|acetabulum|trochanter|coccyx|symphysis|ramus|tubercle|tuberosity|asis|aiis|intertrochanteric|pubic|humerus|radius|ulna|radial tuberosity|olecranon|capitellum|trochlea|epicondyle|sublime tubercle|glenoid|acromion|clavicle|scapula|scapular spine|coracoid|coracoid process|humeral head|femoral head|femoral neck|femoral diaphysis|vertebra|vertebral body|\bL[1-5]\b|\bS[1-5]\b|\bC[1-7]\b|ischial tuberosity|pubic bone|iliac crest|cartilage/.test(n)) return 'bones';
     // Ligaments — includes labrum, labral, fascia, aponeuroses, UCL etc
     if (/ligament|ligamentous|sacrospinous|sacrotuberous|aponeurosis|osbourne|lacertus|retinaculum|coracoclavicular|coracoacromial|ucl|lcl|acl|pcl|mcl|collateral|annular|labrum|labral|anchor|fascia/.test(n)) return 'ligaments';
     // Muscles + tendons — all orange
