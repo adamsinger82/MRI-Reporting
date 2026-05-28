@@ -2895,50 +2895,58 @@ function ArticleLikes({ postIdx }) {
   const [likes, setLikes] = useState(null);
   const [hasLiked, setHasLiked] = useState(false);
   const [animating, setAnimating] = useState(false);
-
-  // Use localStorage to track whether this browser has liked each post
   const storageKey = `liked_post_${postIdx}`;
+  // Use a stable fingerprint: storageKey value stored at like-time
+  const fingerprint = storageKey;
+
+  const fetchCount = () => {
+    // Fetch all rows for this post and count them — simplest approach with our minimal client
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!key) { setLikes(0); return; }
+    fetch(`${SUPABASE_URL}/rest/v1/article_likes?select=id&post_idx=eq.${postIdx}`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    })
+      .then(r => r.json())
+      .then(data => setLikes(Array.isArray(data) ? data.length : 0))
+      .catch(() => setLikes(0));
+  };
 
   useEffect(() => {
-    // Check local like state
     try { setHasLiked(!!localStorage.getItem(storageKey)); } catch {}
-    // Fetch current count from Supabase
-    const sb = getSupabase();
-    if (!sb) { setLikes(0); return; }
-    sb.from('article_likes').select('count').eq('post_idx', postIdx).order('id', { ascending: true })
-      .then(data => {
-        // Supabase returns array of rows; count is total rows for this post_idx
-        setLikes(Array.isArray(data) ? data.length : 0);
-      })
-      .catch(() => setLikes(0));
+    fetchCount();
   }, [postIdx]);
 
   const handleLike = async () => {
     if (animating) return;
-    const sb = getSupabase();
-    if (!sb) return;
     setAnimating(true);
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!key) { setTimeout(() => setAnimating(false), 400); return; }
+    const headers = { 'Content-Type':'application/json', apikey:key, Authorization:`Bearer ${key}` };
 
     if (hasLiked) {
-      // Unlike: remove one row with this browser fingerprint
-      const fp = storageKey;
       try {
-        await sb.from('article_likes').delete().eq('post_idx', postIdx).eq('fingerprint', fp);
-        setLikes(l => Math.max(0, (l || 1) - 1));
+        // Delete by fingerprint column
+        await fetch(`${SUPABASE_URL}/rest/v1/article_likes?post_idx=eq.${postIdx}&fingerprint=eq.${encodeURIComponent(fingerprint)}`, {
+          method: 'DELETE', headers,
+        });
         setHasLiked(false);
         localStorage.removeItem(storageKey);
+        setLikes(l => Math.max(0, (l || 1) - 1));
       } catch {}
     } else {
-      // Like: insert a row
-      const fp = storageKey;
       try {
-        await sb.from('article_likes').insert({ post_idx: postIdx, fingerprint: fp, created_at: new Date().toISOString() });
-        setLikes(l => (l || 0) + 1);
+        await fetch(`${SUPABASE_URL}/rest/v1/article_likes`, {
+          method: 'POST',
+          headers: { ...headers, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ post_idx: postIdx, fingerprint, created_at: new Date().toISOString() }),
+        });
         setHasLiked(true);
         localStorage.setItem(storageKey, '1');
+        setLikes(l => (l || 0) + 1);
       } catch {}
     }
-    setTimeout(() => setAnimating(false), 400);
+    // Re-fetch true count from DB after a short delay
+    setTimeout(() => { fetchCount(); setAnimating(false); }, 600);
   };
 
   return (
@@ -4587,13 +4595,13 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
                     <div style={{flex:1,minWidth:0}}>
                       <span style={{fontSize:12,fontWeight:checked?600:400,color:checked?(dm?'#93c5fd':'#1d4ed8'):(dm?'#cbd5e1':'#374151'),lineHeight:1.3,display:'flex',alignItems:'baseline',gap:6,flexWrap:'wrap'}}>
                         {f.label}
-                        {RHEUM_EXAMPLE_IMAGES[f.id] && (
-                          <span onClick={e => { e.preventDefault(); e.stopPropagation(); setPopupImg(RHEUM_EXAMPLE_IMAGES[f.id]); }}
-                            style={{fontSize:10,fontWeight:600,color:'#60a5fa',cursor:'pointer',textDecoration:'underline',whiteSpace:'nowrap',flexShrink:0,WebkitTextFillColor:'#60a5fa'}}>
-                            Show Example
-                          </span>
-                        )}
                       </span>
+                      {RHEUM_EXAMPLE_IMAGES[f.id] && (
+                        <span onClick={e => { e.preventDefault(); e.stopPropagation(); setPopupImg(RHEUM_EXAMPLE_IMAGES[f.id]); }}
+                          style={{fontSize:9,fontWeight:500,color:'#60a5fa',cursor:'pointer',textDecoration:'underline',display:'block',marginTop:2,WebkitTextFillColor:'#60a5fa'}}>
+                          🔍 Show Example
+                        </span>
+                      )}
 
                     </div>
                   </label>
