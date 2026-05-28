@@ -4878,12 +4878,14 @@ export default function DashboardPage() {
 
   // Restore session + prefs from localStorage on first load
   useEffect(() => {
+    // Clean up the signedout param from URL if present (cosmetic)
+    if (window.location.search.includes('signedout')) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
     const s = loadSession();
-    // Verify the token is still in storage (guards against race with sign-out)
     if (s?.user && s?.access_token && localStorage.getItem('msk_session')) {
       const prefs = loadUserPrefs(s.user.id);
       if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
-      // Set authUser AFTER prefs so auto-save guard sees initialized prefs
       setAuthUser({ ...s.user, access_token: s.access_token });
     }
     setAuthLoading(false);
@@ -4895,14 +4897,18 @@ export default function DashboardPage() {
     if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
     setAuthUser(user);
   };
-  const handleSignOut = async () => {
-    // 1. Kill the stored session immediately
-    clearSession();
-    // 2. Fire-and-forget server logout (don't block on it)
-    if (authUser?.access_token) supaSignOut(authUser.access_token).catch(() => {});
-    // 3. Navigate to current URL with no hash/query — forces a true fresh page load
-    //    Using href (not reload) is more reliable across Next.js/Vercel environments
-    window.location.href = window.location.pathname;
+  const handleSignOut = () => {
+    // Wipe session from storage synchronously
+    try { localStorage.removeItem('msk_session'); } catch {}
+    // Fire server logout in background
+    if (authUser?.access_token) {
+      fetch(`${SUPA_URL}/auth/v1/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: getAnonKey(), Authorization: 'Bearer ' + authUser.access_token },
+      }).catch(() => {});
+    }
+    // Force a hard browser navigation with no cache
+    window.location.replace(window.location.pathname + '?signedout=' + Date.now());
   };
 
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
