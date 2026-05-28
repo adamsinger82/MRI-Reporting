@@ -4752,14 +4752,6 @@ function LoginPage({ onLogin }) {
     setLoading(false);
   };
 
-  // Auth gate — show login page if not authenticated
-  if (authLoading) return (
-    <div style={{ minHeight:'100vh', background:'#0a0f1e', display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <div style={{ color:'rgba(255,255,255,0.4)', fontSize:14 }}>⏳ Loading…</div>
-    </div>
-  );
-  if (!authUser) return <LoginPage onLogin={handleLogin} />;
-
   return (
     <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0a0f1e 0%,#0f172a 50%,#1a0a2e 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       {/* Background decoration */}
@@ -5182,6 +5174,14 @@ export default function DashboardPage() {
     document.addEventListener('mousedown', handleMouseDown);
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, [showAvatarPopup]);
+
+  // ── AUTH GATE ── after all hooks ───────────────────────────────────────────
+  if (authLoading) return (
+    <div style={{ minHeight:'100vh',background:'#0a0f1e',display:'flex',alignItems:'center',justifyContent:'center' }}>
+      <div style={{ color:'rgba(255,255,255,0.4)',fontSize:14 }}>⏳ Loading…</div>
+    </div>
+  );
+  if (!authUser) return <LoginPage onLogin={handleLogin} />;
 
   return (
     <div style={{ minHeight:'100vh',background:'linear-gradient(160deg,#0d1b2a 0%,#1a3a5c 45%,#0d1b2a 100%)',fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
