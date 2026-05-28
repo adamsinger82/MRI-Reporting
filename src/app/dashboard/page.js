@@ -4878,10 +4878,6 @@ export default function DashboardPage() {
 
   // Restore session + prefs from localStorage on first load
   useEffect(() => {
-    // Clean up the signedout param from URL if present (cosmetic)
-    if (window.location.search.includes('signedout')) {
-      window.history.replaceState({}, '', window.location.pathname);
-    }
     const s = loadSession();
     if (s?.user && s?.access_token && localStorage.getItem('msk_session')) {
       const prefs = loadUserPrefs(s.user.id);
@@ -4898,17 +4894,19 @@ export default function DashboardPage() {
     setAuthUser(user);
   };
   const handleSignOut = () => {
-    // Wipe session from storage synchronously
-    try { localStorage.removeItem('msk_session'); } catch {}
-    // Fire server logout in background
-    if (authUser?.access_token) {
-      fetch(`${SUPA_URL}/auth/v1/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: getAnonKey(), Authorization: 'Bearer ' + authUser.access_token },
-      }).catch(() => {});
-    }
-    // Force a hard browser navigation with no cache
-    window.location.replace(window.location.pathname + '?signedout=' + Date.now());
+    // Wipe ALL auth-related storage synchronously — no server call needed
+    // (token expires server-side on its own; calling the endpoint risks a redirect)
+    try {
+      localStorage.removeItem('msk_session');
+      // Also clear any Supabase-managed storage keys
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('sb-') || k.includes('supabase')) localStorage.removeItem(k);
+      });
+    } catch {}
+    // Reset React state directly — no redirect needed
+    setAuthUser(null);
+    setUserPrefs({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
+    setShowAvatarPopup(false);
   };
 
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
