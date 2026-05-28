@@ -4881,28 +4881,28 @@ export default function DashboardPage() {
     const s = loadSession();
     // Verify the token is still in storage (guards against race with sign-out)
     if (s?.user && s?.access_token && localStorage.getItem('msk_session')) {
-      setAuthUser({ ...s.user, access_token: s.access_token });
       const prefs = loadUserPrefs(s.user.id);
       if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
+      // Set authUser AFTER prefs so auto-save guard sees initialized prefs
+      setAuthUser({ ...s.user, access_token: s.access_token });
     }
     setAuthLoading(false);
   }, []);
 
   const handleLogin = (user) => {
-    setAuthUser(user);
-    // Load saved prefs — merge with defaults so any new fields have fallbacks
+    // Load prefs BEFORE setting authUser so auto-save guard doesn't overwrite them
     const prefs = loadUserPrefs(user.id);
     if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
+    setAuthUser(user);
   };
   const handleSignOut = async () => {
-    // Clear local storage BEFORE any state changes to prevent restore effect re-running
+    // 1. Kill the stored session immediately
     clearSession();
-    // Fire-and-forget server logout — don't await, don't let failure block sign-out
-    if (authUser?.access_token) {
-      supaSignOut(authUser.access_token).catch(() => {});
-    }
-    // Hard reload — cleanest way to kill all state and prevent re-auth from stale closure
-    window.location.reload();
+    // 2. Fire-and-forget server logout (don't block on it)
+    if (authUser?.access_token) supaSignOut(authUser.access_token).catch(() => {});
+    // 3. Navigate to current URL with no hash/query — forces a true fresh page load
+    //    Using href (not reload) is more reliable across Next.js/Vercel environments
+    window.location.href = window.location.pathname;
   };
 
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
@@ -5155,9 +5155,14 @@ export default function DashboardPage() {
     </div>
   );
 
-  // Auto-save userPrefs to localStorage whenever they change
+  // Auto-save userPrefs — only when logged in, and only when prefs are non-default
+  // (prevents sign-out state reset from overwriting stored prefs)
+  const prefsInitialized = useRef(false);
   useEffect(() => {
-    if (authUser?.id) saveUserPrefs(authUser.id, userPrefs);
+    if (!authUser?.id) { prefsInitialized.current = false; return; }
+    // Skip the first fire right after login (that's the restore, not a user change)
+    if (!prefsInitialized.current) { prefsInitialized.current = true; return; }
+    saveUserPrefs(authUser.id, userPrefs);
   }, [userPrefs, authUser?.id]);
 
   // Close avatar popup on outside click — uses ref to check if click is outside
