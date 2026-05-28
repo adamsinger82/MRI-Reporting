@@ -4599,7 +4599,228 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
 }
 
 // ─── MAIN DASHBOARD ────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
+const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+async function supaSignUp(email, password) {
+  const r = await fetch(`${SUPA_URL}/auth/v1/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
+    body: JSON.stringify({ email, password }),
+  });
+  return r.json();
+}
+
+async function supaSignIn(email, password) {
+  const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
+    body: JSON.stringify({ email, password }),
+  });
+  return r.json();
+}
+
+async function supaSignOut(accessToken) {
+  await fetch(`${SUPA_URL}/auth/v1/logout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: getAnonKey(), Authorization: `Bearer ${accessToken}` },
+  });
+}
+
+async function supaGetUser(accessToken) {
+  const r = await fetch(`${SUPA_URL}/auth/v1/user`, {
+    headers: { apikey: getAnonKey(), Authorization: `Bearer ${accessToken}` },
+  });
+  if (!r.ok) return null;
+  return r.json();
+}
+
+function saveSession(session) {
+  try {
+    localStorage.setItem('msk_session', JSON.stringify({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      expires_at: Date.now() + (session.expires_in || 3600) * 1000,
+      user: session.user,
+    }));
+  } catch {}
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem('msk_session');
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (s.expires_at && s.expires_at < Date.now()) { localStorage.removeItem('msk_session'); return null; }
+    return s;
+  } catch { return null; }
+}
+
+function clearSession() {
+  try { localStorage.removeItem('msk_session'); } catch {}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOGIN PAGE
+// ─────────────────────────────────────────────────────────────────────────────
+function LoginPage({ onLogin }) {
+  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const inp = {
+    width: '100%', padding: '11px 14px', borderRadius: 9,
+    border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)',
+    color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  };
+
+  const handleSubmit = async () => {
+    setError(''); setSuccess('');
+    if (!email.trim() || !password.trim()) { setError('Please enter your email and password.'); return; }
+    if (mode === 'signup' && password !== confirmPassword) { setError('Passwords do not match.'); return; }
+    if (mode === 'signup' && password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    setLoading(true);
+    try {
+      if (mode === 'signup') {
+        const data = await supaSignUp(email.trim(), password);
+        if (data.error) { setError(data.error.message || data.msg || 'Sign up failed.'); }
+        else if (data.user && !data.session) {
+          setSuccess('Account created! Please check your email to confirm your address, then sign in.');
+          setMode('signin');
+        } else if (data.access_token) {
+          saveSession(data); onLogin({ ...data.user, access_token: data.access_token });
+        } else {
+          setSuccess('Account created! Please sign in.');
+          setMode('signin');
+        }
+      } else {
+        const data = await supaSignIn(email.trim(), password);
+        if (data.error || data.error_description) {
+          setError(data.error_description || data.error || 'Invalid email or password.');
+        } else if (data.access_token) {
+          saveSession(data); onLogin({ ...data.user, access_token: data.access_token });
+        } else {
+          setError('Sign in failed. Please try again.');
+        }
+      }
+    } catch { setError('Network error. Please check your connection.'); }
+    setLoading(false);
+  };
+
+  // Auth gate — show login page if not authenticated
+  if (authLoading) return (
+    <div style={{ minHeight:'100vh', background:'#0a0f1e', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ color:'rgba(255,255,255,0.4)', fontSize:14 }}>⏳ Loading…</div>
+    </div>
+  );
+  if (!authUser) return <LoginPage onLogin={handleLogin} />;
+
+  return (
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0a0f1e 0%,#0f172a 50%,#1a0a2e 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      {/* Background decoration */}
+      <div style={{ position:'fixed', inset:0, overflow:'hidden', pointerEvents:'none' }}>
+        <div style={{ position:'absolute', top:'10%', left:'5%', width:400, height:400, borderRadius:'50%', background:'radial-gradient(circle,rgba(37,99,235,0.12),transparent 70%)', filter:'blur(40px)' }} />
+        <div style={{ position:'absolute', bottom:'15%', right:'8%', width:350, height:350, borderRadius:'50%', background:'radial-gradient(circle,rgba(124,58,237,0.12),transparent 70%)', filter:'blur(40px)' }} />
+      </div>
+
+      <div style={{ width:'100%', maxWidth:420, position:'relative' }}>
+        {/* Logo */}
+        <div style={{ textAlign:'center', marginBottom:32 }}>
+          <div style={{ width:56, height:56, background:'linear-gradient(135deg,#2563eb,#7c3aed)', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 16px' }}>🦴</div>
+          <h1 style={{ color:'white', fontWeight:800, fontSize:24, margin:'0 0 6px', letterSpacing:'0.02em' }}>MSK Reporting</h1>
+          <p style={{ color:'rgba(255,255,255,0.45)', fontSize:13, margin:0 }}>Advanced MSK Radiology Tools</p>
+        </div>
+
+        {/* Card */}
+        <div style={{ background:'rgba(255,255,255,0.04)', backdropFilter:'blur(20px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:16, padding:'28px 32px', boxShadow:'0 24px 64px rgba(0,0,0,0.4)' }}>
+          {/* Mode tabs */}
+          <div style={{ display:'flex', background:'rgba(255,255,255,0.06)', borderRadius:10, padding:3, marginBottom:24, gap:2 }}>
+            {[['signin','Sign In'],['signup','Create Account']].map(([m,l]) => (
+              <button key={m} onClick={() => { setMode(m); setError(''); setSuccess(''); }}
+                style={{ flex:1, padding:'8px', borderRadius:8, border:'none', cursor:'pointer', fontSize:13, fontWeight:700,
+                  background: mode===m ? 'linear-gradient(135deg,#2563eb,#4f46e5)' : 'transparent',
+                  color: mode===m ? 'white' : 'rgba(255,255,255,0.45)',
+                  boxShadow: mode===m ? '0 2px 8px rgba(0,0,0,0.25)' : 'none',
+                  transition:'all 0.2s' }}>
+                {l}
+              </button>
+            ))}
+          </div>
+
+          {/* Fields */}
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div>
+              <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Email</label>
+              <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+                onKeyDown={e=>e.key==='Enter'&&handleSubmit()}
+                placeholder="you@example.com" style={inp} autoComplete="email" />
+            </div>
+            <div>
+              <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Password</label>
+              <input type="password" value={password} onChange={e=>setPassword(e.target.value)}
+                onKeyDown={e=>e.key==='Enter'&&handleSubmit()}
+                placeholder={mode==='signup'?'Min. 8 characters':'Your password'} style={inp} autoComplete={mode==='signup'?'new-password':'current-password'} />
+            </div>
+            {mode === 'signup' && (
+              <div>
+                <label style={{ display:'block', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Confirm Password</label>
+                <input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)}
+                  onKeyDown={e=>e.key==='Enter'&&handleSubmit()}
+                  placeholder="Repeat password" style={inp} autoComplete="new-password" />
+              </div>
+            )}
+
+            {error && <p style={{ margin:0, padding:'8px 12px', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:8, color:'#fca5a5', fontSize:12, lineHeight:1.5 }}>{error}</p>}
+            {success && <p style={{ margin:0, padding:'8px 12px', background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:8, color:'#6ee7b7', fontSize:12, lineHeight:1.5 }}>{success}</p>}
+
+            <button onClick={handleSubmit} disabled={loading}
+              style={{ padding:'12px', borderRadius:10, border:'none', cursor:loading?'not-allowed':'pointer', fontWeight:800, fontSize:14, letterSpacing:'0.04em',
+                background: loading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#2563eb,#4f46e5)',
+                color: loading ? 'rgba(255,255,255,0.4)' : 'white',
+                boxShadow: loading ? 'none' : '0 4px 20px rgba(37,99,235,0.4)',
+                transition:'all 0.15s', marginTop:4 }}>
+              {loading ? '⏳ Please wait…' : mode==='signin' ? '→ Sign In' : '→ Create Account'}
+            </button>
+          </div>
+        </div>
+
+        <p style={{ textAlign:'center', color:'rgba(255,255,255,0.2)', fontSize:11, marginTop:20 }}>
+          MSK Radiology Reporting — Members Only
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
+  // ── Auth state ────────────────────────────────────────────────────────────
+  const [authUser, setAuthUser] = useState(null);        // null = not logged in
+  const [authLoading, setAuthLoading] = useState(true);  // checking saved session
+
+  // Restore session from localStorage on first load
+  useEffect(() => {
+    const s = loadSession();
+    if (s?.user && s?.access_token) {
+      setAuthUser({ ...s.user, access_token: s.access_token });
+    }
+    setAuthLoading(false);
+  }, []);
+
+  const handleLogin = (user) => setAuthUser(user);
+  const handleSignOut = async () => {
+    if (authUser?.access_token) await supaSignOut(authUser.access_token);
+    clearSession();
+    setAuthUser(null);
+  };
+
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
   const [side, setSide] = useState('left');
   const [contrast, setContrast] = useState('without');
@@ -4855,7 +5076,7 @@ export default function DashboardPage() {
 
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
-      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={null} />}
+      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
 
       {/* ── HEADER ── */}
       <div style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
@@ -4913,13 +5134,18 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Right: user + logout */}
+        {/* Right: user display + sign out */}
         <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0 }}>
           <div style={{ display:'flex',alignItems:'center',gap:7,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:9,padding:'6px 12px' }}>
-            <div style={{ width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'white',fontWeight:700 }}>A</div>
-            <span style={{ color:'rgba(255,255,255,0.8)',fontSize:12,fontWeight:600 }}>adamsinger82</span>
+            <div style={{ width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#2563eb,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'white',fontWeight:700 }}>
+              {(authUser?.email?.[0] || '?').toUpperCase()}
+            </div>
+            <span style={{ color:'rgba(255,255,255,0.8)',fontSize:12,fontWeight:600,maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
+              {authUser?.email?.split('@')[0] || 'User'}
+            </span>
           </div>
-          <button style={{ padding:'7px 13px',borderRadius:8,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',fontSize:12,fontWeight:600,cursor:'pointer' }}>
+          <button onClick={handleSignOut}
+            style={{ padding:'7px 13px',borderRadius:8,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 0.15s' }}>
             Sign Out
           </button>
         </div>
