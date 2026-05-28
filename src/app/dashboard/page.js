@@ -2968,32 +2968,45 @@ function ArticleComments({ postIdx, currentUser }) {
 
   useEffect(() => {
     setLoading(true);
+    setComments([]);
     const sb = getSupabase();
     if (!sb) { setLoading(false); return; }
     sb.from('article_comments').select('*').eq('post_idx', postIdx).order('created_at', { ascending:true })
-      .then(data => { setComments(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(data => {
+        setComments(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load comments:', err);
+        setLoading(false);
+      });
   }, [postIdx]);
 
   const submit = async () => {
     if (!text.trim() || !currentUser) return;
     setSubmitting(true); setError('');
     try {
-      // Moderation check — fail open if endpoint not available
+      // Moderation check — fail CLOSED
       try {
         const modRes = await fetch('/api/moderate-comment', {
-          method:'POST', headers:{'Content-Type':'application/json'},
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ text: text.trim() }),
+          cache: 'no-store',
         });
-        if (modRes.ok) {
-          const modData = await modRes.json();
-          if (modData.blocked) {
-            setError(modData.reason || 'Comment not allowed. Please keep discussion professional and on-topic.');
-            setSubmitting(false); return;
-          }
+        if (!modRes.ok) {
+          setError(`Moderation unavailable (${modRes.status}). Please try again.`);
+          setSubmitting(false); return;
         }
-        // If endpoint returns non-ok (404 = not deployed yet), skip moderation and proceed
-      } catch { /* moderation unavailable — proceed without it */ }
+        const modData = await modRes.json();
+        if (modData.blocked) {
+          setError(modData.reason || 'Comment not allowed. Please keep discussion professional and on-topic.');
+          setSubmitting(false); return;
+        }
+      } catch (modErr) {
+        setError('Moderation service unavailable. Please try again.');
+        setSubmitting(false); return;
+      }
 
       // Save to Supabase — pass user JWT so RLS policy (auth.uid() = user_id) passes
       const sb = getSupabase(currentUser.access_token);
@@ -3033,13 +3046,13 @@ function ArticleComments({ postIdx, currentUser }) {
         )}
       </div>
 
-      {/* Existing comments */}
+      {/* Existing comments — scrollable container */}
       {loading ? (
         <div style={{ fontSize:11,color:'#475569',padding:'4px 0' }}>Loading…</div>
       ) : (
-        <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
+        <div style={{ maxHeight: comments.length > 3 ? 260 : 'none', overflowY: comments.length > 3 ? 'auto' : 'visible', display:'flex',flexDirection:'column',gap:7,paddingRight: comments.length > 3 ? 4 : 0 }}>
           {comments.map(c => (
-            <div key={c.id} style={{ background:'rgba(255,255,255,0.03)',border:'1px solid #1e3a5f',borderRadius:7,padding:'8px 11px',display:'flex',gap:8,alignItems:'flex-start' }}>
+            <div key={c.id} style={{ background:'rgba(255,255,255,0.03)',border:'1px solid #1e3a5f',borderRadius:7,padding:'8px 11px',display:'flex',gap:8,alignItems:'flex-start',flexShrink:0 }}>
               <div style={{ flex:1,minWidth:0 }}>
                 <div style={{ display:'flex',gap:6,alignItems:'baseline',marginBottom:3,flexWrap:'wrap' }}>
                   <span style={{ fontSize:10,fontWeight:700,color:'#60a5fa' }}>{c.user_email?.split('@')[0] || 'User'}</span>
