@@ -4589,7 +4589,7 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
                         {f.label}
                         {RHEUM_EXAMPLE_IMAGES[f.id] && (
                           <span onClick={e => { e.preventDefault(); e.stopPropagation(); setPopupImg(RHEUM_EXAMPLE_IMAGES[f.id]); }}
-                            style={{fontSize:10,fontWeight:600,color:'#a855f7',cursor:'pointer',textDecoration:'underline',whiteSpace:'nowrap',flexShrink:0}}>
+                            style={{fontSize:10,fontWeight:600,color:'#60a5fa',cursor:'pointer',textDecoration:'underline',whiteSpace:'nowrap',flexShrink:0,WebkitTextFillColor:'#60a5fa'}}>
                             Show Example
                           </span>
                         )}
