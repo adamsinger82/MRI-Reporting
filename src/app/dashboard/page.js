@@ -2978,16 +2978,22 @@ function ArticleComments({ postIdx, currentUser }) {
     if (!text.trim() || !currentUser) return;
     setSubmitting(true); setError('');
     try {
-      // Moderation check — haiku, minimal tokens, PASS/BLOCK only
-      const modRes = await fetch('/api/moderate-comment', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ text: text.trim() }),
-      });
-      const modData = await modRes.json();
-      if (modData.blocked) {
-        setError(modData.reason || 'Comment not allowed. Please keep discussion professional and on-topic.');
-        setSubmitting(false); return;
-      }
+      // Moderation check — fail open if endpoint not available
+      try {
+        const modRes = await fetch('/api/moderate-comment', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ text: text.trim() }),
+        });
+        if (modRes.ok) {
+          const modData = await modRes.json();
+          if (modData.blocked) {
+            setError(modData.reason || 'Comment not allowed. Please keep discussion professional and on-topic.');
+            setSubmitting(false); return;
+          }
+        }
+        // If endpoint returns non-ok (404 = not deployed yet), skip moderation and proceed
+      } catch { /* moderation unavailable — proceed without it */ }
+
       // Save to Supabase
       const sb = getSupabase();
       const result = await sb.from('article_comments').insert({
@@ -3000,7 +3006,7 @@ function ArticleComments({ postIdx, currentUser }) {
       const saved = Array.isArray(result) ? result[0] : null;
       if (saved) { setComments(prev => [...prev, saved]); setText(''); setShowForm(false); }
       else setError('Failed to save. Please try again.');
-    } catch { setError('Network error. Please try again.'); }
+    } catch (e) { setError('Failed to post comment. Please try again.'); }
     setSubmitting(false);
   };
 
