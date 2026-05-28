@@ -4677,11 +4677,11 @@ const AVATAR_OPTIONS = [
 ];
 
 function saveUserPrefs(userId, prefs) {
-  try { localStorage.setItem(\`msk_prefs_\${userId}\`, JSON.stringify(prefs)); } catch {}
+  try { localStorage.setItem(`msk_prefs_${userId}`, JSON.stringify(prefs)); } catch {}
 }
 function loadUserPrefs(userId) {
   try {
-    const raw = localStorage.getItem(\`msk_prefs_\${userId}\`);
+    const raw = localStorage.getItem(`msk_prefs_${userId}`);
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
