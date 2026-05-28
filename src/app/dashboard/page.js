@@ -2969,7 +2969,8 @@ function ArticleComments({ postIdx, currentUser }) {
   useEffect(() => {
     setLoading(true);
     setComments([]);
-    const sb = getSupabase();
+    // Pass user token if available so RLS authenticated read policy passes
+    const sb = getSupabase(currentUser?.access_token);
     if (!sb) { setLoading(false); return; }
     sb.from('article_comments').select('*').eq('post_idx', postIdx).order('created_at', { ascending:true })
       .then(data => {
@@ -2980,7 +2981,7 @@ function ArticleComments({ postIdx, currentUser }) {
         console.error('Failed to load comments:', err);
         setLoading(false);
       });
-  }, [postIdx]);
+  }, [postIdx, currentUser?.access_token]);
 
   const submit = async () => {
     if (!text.trim() || !currentUser) return;
@@ -3050,7 +3051,7 @@ function ArticleComments({ postIdx, currentUser }) {
       {loading ? (
         <div style={{ fontSize:11,color:'#475569',padding:'4px 0' }}>Loading…</div>
       ) : (
-        <div style={{ maxHeight: comments.length > 3 ? 260 : 'none', overflowY: comments.length > 3 ? 'auto' : 'visible', display:'flex',flexDirection:'column',gap:7,paddingRight: comments.length > 3 ? 4 : 0 }}>
+        <div style={{ maxHeight: showForm ? 120 : 220, overflowY:'auto', display:'flex',flexDirection:'column',gap:7,paddingRight:4 }}>
           {comments.map(c => (
             <div key={c.id} style={{ background:'rgba(255,255,255,0.03)',border:'1px solid #1e3a5f',borderRadius:7,padding:'8px 11px',display:'flex',gap:8,alignItems:'flex-start',flexShrink:0 }}>
               <div style={{ flex:1,minWidth:0 }}>
@@ -3073,14 +3074,14 @@ function ArticleComments({ postIdx, currentUser }) {
         </div>
       )}
 
-      {/* New comment form */}
+      {/* New comment form — fixed height so buttons never go off-screen */}
       {showForm && currentUser && (
         <div style={{ marginTop:8,display:'flex',flexDirection:'column',gap:6 }}>
           <textarea value={text} onChange={e=>setText(e.target.value)}
-            placeholder="Share your clinical perspective, methodology thoughts, or questions about this paper…"
-            style={{ width:'100%',minHeight:70,background:'#0f172a',border:'1px solid #334155',borderRadius:7,color:'#e2e8f0',fontSize:12,padding:'8px 10px',resize:'vertical',lineHeight:1.5,boxSizing:'border-box' }} />
-          {error && <p style={{ fontSize:11,color:'#f87171',margin:0 }}>{error}</p>}
-          <div style={{ display:'flex',gap:7,justifyContent:'flex-end' }}>
+            placeholder="Share your clinical perspective, methodology thoughts, or questions…"
+            style={{ width:'100%',height:70,maxHeight:70,background:'#0f172a',border:'1px solid #334155',borderRadius:7,color:'#e2e8f0',fontSize:12,padding:'8px 10px',resize:'none',lineHeight:1.5,boxSizing:'border-box' }} />
+          {error && <p style={{ fontSize:11,color:'#f87171',margin:'0' }}>{error}</p>}
+          <div style={{ display:'flex',gap:7,justifyContent:'flex-end',flexShrink:0 }}>
             <button onClick={() => { setShowForm(false); setError(''); setText(''); }}
               style={{ fontSize:11,color:'#64748b',background:'none',border:'1px solid #334155',borderRadius:6,padding:'5px 12px',cursor:'pointer' }}>Cancel</button>
             <button onClick={submit} disabled={submitting || !text.trim()}
