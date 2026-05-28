@@ -4879,28 +4879,30 @@ export default function DashboardPage() {
   // Restore session + prefs from localStorage on first load
   useEffect(() => {
     const s = loadSession();
-    if (s?.user && s?.access_token) {
+    // Verify the token is still in storage (guards against race with sign-out)
+    if (s?.user && s?.access_token && localStorage.getItem('msk_session')) {
       setAuthUser({ ...s.user, access_token: s.access_token });
       const prefs = loadUserPrefs(s.user.id);
-      if (prefs) setUserPrefs(prefs);
+      if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
     }
     setAuthLoading(false);
   }, []);
 
   const handleLogin = (user) => {
     setAuthUser(user);
-    // Load saved prefs for this user
+    // Load saved prefs — merge with defaults so any new fields have fallbacks
     const prefs = loadUserPrefs(user.id);
-    if (prefs) setUserPrefs(prefs);
+    if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
   };
   const handleSignOut = async () => {
-    try {
-      if (authUser?.access_token) await supaSignOut(authUser.access_token);
-    } catch {}
+    // Clear local storage BEFORE any state changes to prevent restore effect re-running
     clearSession();
-    setAuthUser(null);
-    setUserPrefs({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
-    setShowAvatarPopup(false);
+    // Fire-and-forget server logout — don't await, don't let failure block sign-out
+    if (authUser?.access_token) {
+      supaSignOut(authUser.access_token).catch(() => {});
+    }
+    // Hard reload — cleanest way to kill all state and prevent re-auth from stale closure
+    window.location.reload();
   };
 
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
@@ -5153,12 +5155,23 @@ export default function DashboardPage() {
     </div>
   );
 
-  // Close avatar popup on outside click
+  // Auto-save userPrefs to localStorage whenever they change
+  useEffect(() => {
+    if (authUser?.id) saveUserPrefs(authUser.id, userPrefs);
+  }, [userPrefs, authUser?.id]);
+
+  // Close avatar popup on outside click — uses ref to check if click is outside
+  const avatarPopupRef = useRef(null);
   useEffect(() => {
     if (!showAvatarPopup) return;
-    const close = () => setShowAvatarPopup(false);
-    document.addEventListener('click', close);
-    return () => document.removeEventListener('click', close);
+    const handleMouseDown = (e) => {
+      if (avatarPopupRef.current && !avatarPopupRef.current.contains(e.target)) {
+        setShowAvatarPopup(false);
+      }
+    };
+    // Use mousedown so it fires before focus/blur on inputs
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
   }, [showAvatarPopup]);
 
   return (
@@ -5244,7 +5257,7 @@ export default function DashboardPage() {
 
           {/* Avatar preference popup */}
           {showAvatarPopup && (
-            <div onClick={e=>e.stopPropagation()}
+            <div ref={avatarPopupRef}
               style={{ position:'absolute',top:48,right:0,zIndex:500,background:'#1e293b',border:'1px solid rgba(255,255,255,0.12)',borderRadius:14,padding:18,minWidth:280,boxShadow:'0 16px 48px rgba(0,0,0,0.5)' }}>
               <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14 }}>
                 <span style={{ color:'white',fontWeight:700,fontSize:13 }}>Profile Settings</span>
@@ -5303,7 +5316,7 @@ export default function DashboardPage() {
                     : <span style={{ fontSize:13,fontWeight:800,color:'white' }}>{getInitials(userPrefs.firstName,userPrefs.lastName,authUser?.email)}</span>
                   }
                 </div>
-                <button onClick={() => { if (authUser?.id) saveUserPrefs(authUser.id, userPrefs); setShowAvatarPopup(false); }}
+                <button onClick={() => { setShowAvatarPopup(false); }}
                   style={{ flex:1,padding:'9px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#2563eb,#4f46e5)',color:'white',fontWeight:700,fontSize:13,cursor:'pointer' }}>
                   Save
                 </button>
