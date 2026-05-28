@@ -2866,9 +2866,228 @@ const RESEARCH_POSTS = [
   },
 ];
 
+// ─── SUPABASE CLIENT (lazy, no extra package needed) ────────────────────────
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
+const getSupabase = () => {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!key) return null;
+  // Minimal fetch-based Supabase client — no npm package, zero extra cost
+  const headers = { 'Content-Type':'application/json', apikey:key, Authorization:`Bearer ${key}` };
+  return {
+    from: (table) => ({
+      select: (cols='*') => ({
+        eq: (col, val) => ({
+          order: (col2, opts={}) => fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${cols}&${col}=eq.${encodeURIComponent(val)}&order=${col2}.${opts.ascending===false?'desc':'asc'}`, { headers }).then(r=>r.json()),
+        }),
+      }),
+      insert: (row) => fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method:'POST', headers:{...headers,'Prefer':'return=representation'}, body:JSON.stringify(row) }).then(r=>r.json()),
+      delete: () => ({
+        eq: (col, val) => fetch(`${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}`, { method:'DELETE', headers }).then(r=>r.json()),
+      }),
+    }),
+  };
+};
+
+// ─── COMMENT SECTION (per article) ──────────────────────────────────────────
+function ArticleComments({ postIdx, currentUser }) {
+  const [comments, setComments] = useState([]);
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    const sb = getSupabase();
+    if (!sb) { setLoading(false); return; }
+    sb.from('article_comments').select('*').eq('post_idx', postIdx).order('created_at', { ascending:true })
+      .then(data => { setComments(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [postIdx]);
+
+  const submit = async () => {
+    if (!text.trim() || !currentUser) return;
+    setSubmitting(true); setError('');
+    try {
+      // Moderation check — haiku, minimal tokens, PASS/BLOCK only
+      const modRes = await fetch('/api/moderate-comment', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ text: text.trim() }),
+      });
+      const modData = await modRes.json();
+      if (modData.blocked) {
+        setError(modData.reason || 'Comment not allowed. Please keep discussion professional and on-topic.');
+        setSubmitting(false); return;
+      }
+      // Save to Supabase
+      const sb = getSupabase();
+      const result = await sb.from('article_comments').insert({
+        post_idx: postIdx,
+        user_id: currentUser.id,
+        user_email: currentUser.email,
+        body: text.trim(),
+        created_at: new Date().toISOString(),
+      });
+      const saved = Array.isArray(result) ? result[0] : null;
+      if (saved) { setComments(prev => [...prev, saved]); setText(''); setShowForm(false); }
+      else setError('Failed to save. Please try again.');
+    } catch { setError('Network error. Please try again.'); }
+    setSubmitting(false);
+  };
+
+  const deleteComment = async (id) => {
+    const sb = getSupabase();
+    await sb.from('article_comments').delete().eq('id', id);
+    setComments(prev => prev.filter(c => c.id !== id));
+  };
+
+  const fmt = (iso) => { try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; } };
+
+  return (
+    <div style={{ marginTop:14,borderTop:'1px solid #1e3a5f',paddingTop:12 }}>
+      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
+        <span style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em' }}>
+          💬 Discussion {comments.length > 0 && `(${comments.length})`}
+        </span>
+        {currentUser && (
+          <button onClick={() => { setShowForm(f=>!f); setError(''); }}
+            style={{ fontSize:10,fontWeight:600,color:'#059669',background:'rgba(5,150,105,0.1)',border:'1px solid rgba(5,150,105,0.25)',borderRadius:6,padding:'3px 9px',cursor:'pointer' }}>
+            {showForm ? 'Cancel' : '+ Add Comment'}
+          </button>
+        )}
+      </div>
+
+      {/* Existing comments */}
+      {loading ? (
+        <div style={{ fontSize:11,color:'#475569',padding:'4px 0' }}>Loading…</div>
+      ) : (
+        <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
+          {comments.map(c => (
+            <div key={c.id} style={{ background:'rgba(255,255,255,0.03)',border:'1px solid #1e3a5f',borderRadius:7,padding:'8px 11px',display:'flex',gap:8,alignItems:'flex-start' }}>
+              <div style={{ flex:1,minWidth:0 }}>
+                <div style={{ display:'flex',gap:6,alignItems:'baseline',marginBottom:3,flexWrap:'wrap' }}>
+                  <span style={{ fontSize:10,fontWeight:700,color:'#60a5fa' }}>{c.user_email?.split('@')[0] || 'User'}</span>
+                  <span style={{ fontSize:9,color:'#334155' }}>{fmt(c.created_at)}</span>
+                </div>
+                <p style={{ fontSize:12,color:'#cbd5e1',lineHeight:1.6,margin:0 }}>{c.body}</p>
+              </div>
+              {currentUser?.id === c.user_id && (
+                <button onClick={() => deleteComment(c.id)}
+                  style={{ fontSize:9,color:'#475569',background:'none',border:'none',cursor:'pointer',flexShrink:0,padding:'2px 4px',borderRadius:4 }}
+                  title="Delete your comment">✕</button>
+              )}
+            </div>
+          ))}
+          {comments.length === 0 && !showForm && (
+            <p style={{ fontSize:11,color:'#334155',fontStyle:'italic',margin:0 }}>No comments yet. {currentUser ? 'Be the first.' : 'Sign in to comment.'}</p>
+          )}
+        </div>
+      )}
+
+      {/* New comment form */}
+      {showForm && currentUser && (
+        <div style={{ marginTop:8,display:'flex',flexDirection:'column',gap:6 }}>
+          <textarea value={text} onChange={e=>setText(e.target.value)}
+            placeholder="Share your clinical perspective, methodology thoughts, or questions about this paper…"
+            style={{ width:'100%',minHeight:70,background:'#0f172a',border:'1px solid #334155',borderRadius:7,color:'#e2e8f0',fontSize:12,padding:'8px 10px',resize:'vertical',lineHeight:1.5,boxSizing:'border-box' }} />
+          {error && <p style={{ fontSize:11,color:'#f87171',margin:0 }}>{error}</p>}
+          <div style={{ display:'flex',gap:7,justifyContent:'flex-end' }}>
+            <button onClick={() => { setShowForm(false); setError(''); setText(''); }}
+              style={{ fontSize:11,color:'#64748b',background:'none',border:'1px solid #334155',borderRadius:6,padding:'5px 12px',cursor:'pointer' }}>Cancel</button>
+            <button onClick={submit} disabled={submitting || !text.trim()}
+              style={{ fontSize:11,fontWeight:700,color:'white',background:submitting||!text.trim()?'#1e3a5f':'#059669',border:'none',borderRadius:6,padding:'5px 14px',cursor:submitting||!text.trim()?'not-allowed':'pointer' }}>
+              {submitting ? 'Checking…' : 'Post Comment'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── RECOMMEND ARTICLE FORM ──────────────────────────────────────────────────
+function RecommendArticleForm({ currentUser, onClose }) {
+  const [form, setForm] = useState({ title:'', authors:'', journal:'', year:'', note:'' });
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState('');
+
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  const inp = { width:'100%', background:'#0f172a', border:'1px solid #334155', borderRadius:7, color:'#e2e8f0', fontSize:12, padding:'7px 10px', boxSizing:'border-box' };
+
+  const submit = async () => {
+    if (!form.title.trim() || !currentUser) return;
+    setSubmitting(true); setError('');
+    try {
+      const sb = getSupabase();
+      const result = await sb.from('article_recommendations').insert({
+        user_id: currentUser.id,
+        user_email: currentUser.email,
+        title: form.title.trim(),
+        authors: form.authors.trim(),
+        journal: form.journal.trim(),
+        year: form.year.trim(),
+        note: form.note.trim(),
+        created_at: new Date().toISOString(),
+        status: 'pending',
+      });
+      if (Array.isArray(result) && result[0]) setDone(true);
+      else setError('Failed to submit. Please try again.');
+    } catch { setError('Network error. Please try again.'); }
+    setSubmitting(false);
+  };
+
+  if (done) return (
+    <div style={{ padding:'20px',textAlign:'center' }}>
+      <div style={{ fontSize:28,marginBottom:8 }}>✅</div>
+      <p style={{ color:'#a7f3d0',fontWeight:700,fontSize:14 }}>Recommendation submitted!</p>
+      <p style={{ color:'#64748b',fontSize:12 }}>Thank you — it will be reviewed for inclusion.</p>
+      <button onClick={onClose} style={{ marginTop:12,padding:'6px 18px',borderRadius:7,border:'none',background:'#059669',color:'white',fontWeight:700,fontSize:12,cursor:'pointer' }}>Close</button>
+    </div>
+  );
+
+  return (
+    <div style={{ padding:'16px 20px',display:'flex',flexDirection:'column',gap:10 }}>
+      <div style={{ fontSize:13,fontWeight:700,color:'#e2e8f0',marginBottom:4 }}>📬 Recommend an Article</div>
+      <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+        <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Article Title *</label>
+        <input style={inp} value={form.title} onChange={e=>set('title',e.target.value)} placeholder="Full article title" />
+      </div>
+      <div style={{ display:'flex',gap:8 }}>
+        <div style={{ flex:2,display:'flex',flexDirection:'column',gap:5 }}>
+          <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Authors</label>
+          <input style={inp} value={form.authors} onChange={e=>set('authors',e.target.value)} placeholder="Author A, Author B, et al." />
+        </div>
+        <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
+          <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Year</label>
+          <input style={inp} value={form.year} onChange={e=>set('year',e.target.value)} placeholder="2024" maxLength={4} />
+        </div>
+      </div>
+      <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+        <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Journal</label>
+        <input style={inp} value={form.journal} onChange={e=>set('journal',e.target.value)} placeholder="e.g. Skeletal Radiology" />
+      </div>
+      <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+        <label style={{ fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.05em' }}>Why relevant to MSK radiology?</label>
+        <textarea style={{...inp,minHeight:60,resize:'vertical'}} value={form.note} onChange={e=>set('note',e.target.value)} placeholder="Brief note on clinical relevance or why this should be included…" />
+      </div>
+      {error && <p style={{ fontSize:11,color:'#f87171',margin:0 }}>{error}</p>}
+      <div style={{ display:'flex',gap:8,justifyContent:'flex-end',marginTop:4 }}>
+        <button onClick={onClose} style={{ fontSize:11,color:'#64748b',background:'none',border:'1px solid #334155',borderRadius:6,padding:'6px 14px',cursor:'pointer' }}>Cancel</button>
+        <button onClick={submit} disabled={submitting || !form.title.trim()}
+          style={{ fontSize:11,fontWeight:700,color:'white',background:submitting||!form.title.trim()?'#1e3a5f':'#059669',border:'none',borderRadius:6,padding:'6px 16px',cursor:submitting||!form.title.trim()?'not-allowed':'pointer' }}>
+          {submitting ? 'Submitting…' : 'Submit Recommendation'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── RESEARCH MODAL ────────────────────────────────────────────────────────
-function ResearchModal({ onClose }) {
+function ResearchModal({ onClose, currentUser }) {
   const [expanded, setExpanded] = useState(null);
+  const [showRecommend, setShowRecommend] = useState(false);
 
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'8px' }}>
@@ -2885,6 +3104,13 @@ function ResearchModal({ onClose }) {
           </div>
           <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'4px 12px',cursor:'pointer',fontSize:12,fontWeight:600 }}>✕</button>
         </div>
+
+        {/* Recommend panel (inline, below header) */}
+        {showRecommend && (
+          <div style={{ background:'#141f30',borderBottom:'1px solid #1e3a5f',flexShrink:0 }}>
+            <RecommendArticleForm currentUser={currentUser} onClose={() => setShowRecommend(false)} />
+          </div>
+        )}
 
         {/* Posts feed */}
         <div style={{ flex:1,overflowY:'auto',padding:'20px 24px',display:'flex',flexDirection:'column',gap:16 }}>
@@ -2935,18 +3161,22 @@ function ResearchModal({ onClose }) {
                     </div>
 
                     {/* Key takeaway */}
-                    <div style={{ background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(6,95,70,0.1))',border:'1px solid rgba(5,150,105,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:post.link?12:0 }}>
+                    <div style={{ background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(6,95,70,0.1))',border:'1px solid rgba(5,150,105,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:12 }}>
                       <span style={{ fontSize:10,fontWeight:800,color:'#059669',textTransform:'uppercase',letterSpacing:'0.08em' }}>🔑 Key Takeaway  </span>
                       <span style={{ fontSize:13,color:'#a7f3d0',lineHeight:1.6,fontWeight:500 }}>{post.keyTakeaway}</span>
                     </div>
 
-                    {/* PubMed link */}
+                    {/* Google Scholar link */}
                     {post.link && (
                       <a href={post.link} target="_blank" rel="noopener noreferrer"
-                        style={{ display:'inline-flex',alignItems:'center',gap:5,marginTop:10,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
+                        style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
                         🔗 Search on Google Scholar →
                       </a>
                     )}
+
+                    {/* Comments section — in the circled red area */}
+                    <ArticleComments postIdx={idx} currentUser={currentUser} />
+
                   </div>
                 )}
               </div>
@@ -2957,7 +3187,15 @@ function ResearchModal({ onClose }) {
         {/* Footer */}
         <div style={{ padding:'10px 24px',borderTop:'1px solid #1e293b',flexShrink:0,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
           <span style={{ fontSize:10,color:'#475569',fontStyle:'italic' }}>Add new posts to the top of RESEARCH_POSTS in page.js — use Google Scholar links</span>
-          <span style={{ fontSize:10,color:'#334155' }}>{RESEARCH_POSTS.length} post{RESEARCH_POSTS.length !== 1 ? 's' : ''}</span>
+          <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+            <span style={{ fontSize:10,color:'#334155' }}>{RESEARCH_POSTS.length} post{RESEARCH_POSTS.length !== 1 ? 's' : ''}</span>
+            {currentUser && !showRecommend && (
+              <button onClick={() => setShowRecommend(true)}
+                style={{ fontSize:10,fontWeight:700,color:'#059669',background:'rgba(5,150,105,0.1)',border:'1px solid rgba(5,150,105,0.25)',borderRadius:6,padding:'4px 10px',cursor:'pointer' }}>
+                📬 Recommend Article
+              </button>
+            )}
+          </div>
         </div>
 
       </div>
@@ -4546,7 +4784,7 @@ export default function DashboardPage() {
 
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
-      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} />}
+      {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={user} />}
 
       {/* ── HEADER ── */}
       <div style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
