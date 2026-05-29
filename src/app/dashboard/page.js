@@ -1,6 +1,14 @@
 'use client';
 export const dynamic = 'force-dynamic'; // v2026-05-22 03:00
 import { useState, useRef, useEffect } from 'react';
+// LucidMSK logo font
+if (typeof document !== 'undefined' && !document.getElementById('rajdhani-font')) {
+  const link = document.createElement('link');
+  link.id = 'rajdhani-font';
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&display=swap';
+  document.head.appendChild(link);
+}
 import { JOINT_DATA, DIAGRAM_SVGS } from './referenceData';
 import CopyButton from './CopyButton';
 
@@ -5587,10 +5595,50 @@ function LoginPage({ onLogin }) {
 
       <div style={{ width:'100%', maxWidth:420, position:'relative' }}>
         {/* Logo */}
-        <div style={{ textAlign:'center', marginBottom:32 }}>
-          <div style={{ width:56, height:56, background:'linear-gradient(135deg,#2563eb,#7c3aed)', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 16px' }}>🦴</div>
-          <h1 style={{ color:'white', fontWeight:800, fontSize:24, margin:'0 0 6px', letterSpacing:'0.02em' }}>MSK Reporting</h1>
-          <p style={{ color:'rgba(255,255,255,0.45)', fontSize:13, margin:0 }}>Advanced MSK Radiology Tools</p>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:16, marginBottom:32 }}>
+          <svg width="64" height="64" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+            <defs>
+              <filter id="login-glow" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur stdDeviation="3.5" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <circle cx="36" cy="36" r="33" stroke="#1a3a6b" strokeWidth="1.2"/>
+            <rect x="32" y="18" width="8" height="36" rx="4" fill="#5b9ef7" opacity="0.08"/>
+            <ellipse cx="36" cy="18" rx="7" ry="5" fill="#5b9ef7" opacity="0.18"/>
+            <ellipse cx="36" cy="54" rx="7" ry="5" fill="#5b9ef7" opacity="0.18"/>
+            <line x1="33" y1="22" x2="33" y2="50" stroke="#5b9ef7" strokeWidth="1.5" opacity="0.35"/>
+            <line x1="39" y1="22" x2="39" y2="50" stroke="#5b9ef7" strokeWidth="1.5" opacity="0.35"/>
+            <line x1="36" y1="14" x2="20" y2="28" stroke="#4a90d9" strokeWidth="0.9" className="ll"/>
+            <line x1="36" y1="14" x2="52" y2="28" stroke="#4a90d9" strokeWidth="0.9" className="ll"/>
+            <line x1="20" y1="28" x2="36" y2="36" stroke="#5b9ef7" strokeWidth="1"/>
+            <line x1="52" y1="28" x2="36" y2="36" stroke="#5b9ef7" strokeWidth="1"/>
+            <line x1="20" y1="28" x2="16" y2="44" stroke="#4a90d9" strokeWidth="0.8" className="ll"/>
+            <line x1="52" y1="28" x2="56" y2="44" stroke="#4a90d9" strokeWidth="0.8" className="ll"/>
+            <line x1="36" y1="36" x2="26" y2="44" stroke="#7ab8f5" strokeWidth="0.8"/>
+            <line x1="36" y1="36" x2="46" y2="44" stroke="#7ab8f5" strokeWidth="0.8"/>
+            <line x1="16" y1="44" x2="36" y2="58" stroke="#4a90d9" strokeWidth="0.9" className="ll"/>
+            <line x1="56" y1="44" x2="36" y2="58" stroke="#4a90d9" strokeWidth="0.9" className="ll"/>
+            <line x1="26" y1="44" x2="36" y2="58" stroke="#7ab8f5" strokeWidth="0.8"/>
+            <line x1="46" y1="44" x2="36" y2="58" stroke="#7ab8f5" strokeWidth="0.8"/>
+            <circle cx="36" cy="14" r="3.2" fill="#5b9ef7" filter="url(#login-glow)" className="ln1"/>
+            <circle cx="20" cy="28" r="2.5" fill="#4a90d9" filter="url(#login-glow)" className="ln2"/>
+            <circle cx="52" cy="28" r="2.5" fill="#4a90d9" filter="url(#login-glow)" className="ln2"/>
+            <circle cx="16" cy="44" r="2.5" fill="#4a90d9" filter="url(#login-glow)" className="ln3"/>
+            <circle cx="56" cy="44" r="2.5" fill="#4a90d9" filter="url(#login-glow)" className="ln3"/>
+            <circle cx="26" cy="44" r="2"   fill="#7ab8f5" filter="url(#login-glow)" className="ln2"/>
+            <circle cx="46" cy="44" r="2"   fill="#7ab8f5" filter="url(#login-glow)" className="ln2"/>
+            <circle cx="36" cy="58" r="3.2" fill="#5b9ef7" filter="url(#login-glow)" className="ln1"/>
+            <circle cx="36" cy="36" r="3.8" fill="#90caf9" filter="url(#login-glow)" className="ln3"/>
+          </svg>
+          <div>
+            <div style={{ color:'#e0eaff', fontWeight:700, fontSize:34, letterSpacing:'2px', fontFamily:'Rajdhani, sans-serif', lineHeight:1 }}>
+              Lucid<span style={{ color:'#5b9ef7' }}>MSK</span>
+            </div>
+            <div style={{ color:'#3a6aaa', fontSize:9, letterSpacing:'4px', textTransform:'uppercase', fontWeight:300, marginTop:4 }}>
+              AI-Powered MSK Radiology Assistant
+            </div>
+          </div>
         </div>
 
         {/* Card */}
@@ -6040,13 +6088,59 @@ export default function DashboardPage() {
 
       {/* ── HEADER ── */}
       <div style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
-        {/* Left: logo + title */}
+        {/* Left: LucidMSK logo */}
         <div style={{ display:'flex',alignItems:'center',gap:10,flexShrink:0 }}>
-          <div style={{ width:36,height:36,background:'linear-gradient(135deg,#2563eb,#7c3aed)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0 }}>🦴</div>
-          <div>
-            <div style={{ color:'white',fontWeight:700,fontSize:16,letterSpacing:'0.02em' }}>MSK Reporting</div>
-            <div style={{ color:'rgba(255,255,255,0.45)',fontSize:11 }}>Advanced MSK Radiology Tools</div>
-          </div>
+          <svg width="36" height="36" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+            <defs>
+              <filter id="hdr-glow" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur stdDeviation="3" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <style>{`
+                @keyframes lucidNodeGlow {
+                  0%,100%{filter:drop-shadow(0 0 4px #5b9ef7) drop-shadow(0 0 8px #90CAF9);opacity:1}
+                  50%{filter:drop-shadow(0 0 8px #1976D2) drop-shadow(0 0 16px #42A5F5);opacity:0.7}
+                }
+                @keyframes lucidLineFade {
+                  0%,100%{opacity:0.55} 50%{opacity:0.25}
+                }
+                .ln1{animation:lucidNodeGlow 2.6s ease-in-out infinite}
+                .ln2{animation:lucidNodeGlow 2.6s ease-in-out infinite 0.65s}
+                .ln3{animation:lucidNodeGlow 2.6s ease-in-out infinite 1.3s}
+                .ll {animation:lucidLineFade  2.6s ease-in-out infinite}
+              `}</style>
+            </defs>
+            <circle cx="36" cy="36" r="33" stroke="#1a3a6b" strokeWidth="1.2"/>
+            <rect x="32" y="18" width="8" height="36" rx="4" fill="#5b9ef7" opacity="0.08"/>
+            <ellipse cx="36" cy="18" rx="7" ry="5" fill="#5b9ef7" opacity="0.18"/>
+            <ellipse cx="36" cy="54" rx="7" ry="5" fill="#5b9ef7" opacity="0.18"/>
+            <line x1="33" y1="22" x2="33" y2="50" stroke="#5b9ef7" strokeWidth="1.5" opacity="0.35"/>
+            <line x1="39" y1="22" x2="39" y2="50" stroke="#5b9ef7" strokeWidth="1.5" opacity="0.35"/>
+            <line x1="36" y1="14" x2="20" y2="28" stroke="#4a90d9" strokeWidth="0.9" className="ll"/>
+            <line x1="36" y1="14" x2="52" y2="28" stroke="#4a90d9" strokeWidth="0.9" className="ll"/>
+            <line x1="20" y1="28" x2="36" y2="36" stroke="#5b9ef7" strokeWidth="1"/>
+            <line x1="52" y1="28" x2="36" y2="36" stroke="#5b9ef7" strokeWidth="1"/>
+            <line x1="20" y1="28" x2="16" y2="44" stroke="#4a90d9" strokeWidth="0.8" className="ll"/>
+            <line x1="52" y1="28" x2="56" y2="44" stroke="#4a90d9" strokeWidth="0.8" className="ll"/>
+            <line x1="36" y1="36" x2="26" y2="44" stroke="#7ab8f5" strokeWidth="0.8"/>
+            <line x1="36" y1="36" x2="46" y2="44" stroke="#7ab8f5" strokeWidth="0.8"/>
+            <line x1="16" y1="44" x2="36" y2="58" stroke="#4a90d9" strokeWidth="0.9" className="ll"/>
+            <line x1="56" y1="44" x2="36" y2="58" stroke="#4a90d9" strokeWidth="0.9" className="ll"/>
+            <line x1="26" y1="44" x2="36" y2="58" stroke="#7ab8f5" strokeWidth="0.8"/>
+            <line x1="46" y1="44" x2="36" y2="58" stroke="#7ab8f5" strokeWidth="0.8"/>
+            <circle cx="36" cy="14" r="3.2" fill="#5b9ef7" filter="url(#hdr-glow)" className="ln1"/>
+            <circle cx="20" cy="28" r="2.5" fill="#4a90d9" filter="url(#hdr-glow)" className="ln2"/>
+            <circle cx="52" cy="28" r="2.5" fill="#4a90d9" filter="url(#hdr-glow)" className="ln2"/>
+            <circle cx="16" cy="44" r="2.5" fill="#4a90d9" filter="url(#hdr-glow)" className="ln3"/>
+            <circle cx="56" cy="44" r="2.5" fill="#4a90d9" filter="url(#hdr-glow)" className="ln3"/>
+            <circle cx="26" cy="44" r="2"   fill="#7ab8f5" filter="url(#hdr-glow)" className="ln2"/>
+            <circle cx="46" cy="44" r="2"   fill="#7ab8f5" filter="url(#hdr-glow)" className="ln2"/>
+            <circle cx="36" cy="58" r="3.2" fill="#5b9ef7" filter="url(#hdr-glow)" className="ln1"/>
+            <circle cx="36" cy="36" r="3.8" fill="#90caf9" filter="url(#hdr-glow)" className="ln3"/>
+          </svg>
+          <span style={{ color:'#e0eaff', fontWeight:700, fontSize:22, letterSpacing:'2px', fontFamily:'Rajdhani, sans-serif', lineHeight:1 }}>
+            Lucid<span style={{ color:'#5b9ef7' }}>MSK</span>
+          </span>
         </div>
 
         {/* Center: MRI/CT toggle + tool buttons */}
