@@ -5577,21 +5577,21 @@ function AdminPanel({ currentUser, onClose }) {
   const flash = (msg) => { setActionMsg(msg); setTimeout(() => setActionMsg(''), 3000); };
 
   const handleApprove = async (userId, email) => {
-    const ok = await setApproved(userId, currentUser.access_token);
-    if (ok) { flash(`✅ Approved: ${email}`); load(); }
-    else flash('❌ Error — check Supabase RLS policy');
+    const res = await setApproved(userId, currentUser.access_token);
+    if (res.ok) { flash(`✅ Approved: ${email}`); load(); }
+    else flash(`❌ ${res.error}`);
   };
 
   const handleReject = async (userId, email) => {
-    const ok = await setRejected(userId, currentUser.access_token);
-    if (ok) { flash(`🚫 Rejected: ${email}`); load(); }
-    else flash('❌ Error — check Supabase RLS policy');
+    const res = await setRejected(userId, currentUser.access_token);
+    if (res.ok) { flash(`🚫 Rejected: ${email}`); load(); }
+    else flash(`❌ ${res.error}`);
   };
 
   const handleRevoke = async (userId, email) => {
-    const ok = await revokeAccess(userId, currentUser.access_token);
-    if (ok) { flash(`↩️ Access revoked: ${email}`); load(); }
-    else flash('❌ Error — check Supabase RLS policy');
+    const res = await revokeAccess(userId, currentUser.access_token);
+    if (res.ok) { flash(`↩️ Access revoked: ${email}`); load(); }
+    else flash(`❌ ${res.error}`);
   };
 
   const rowStyle = { display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.07)' };
