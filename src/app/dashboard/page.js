@@ -2785,6 +2785,7 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:30},(_,i)=>i+128),
         ext: '.jpg',
         pad: 4,
+        permanentLabels: ELBOW_LABELS,
       },
       cor_pdfs: {
         label: 'Cor PDFS',
