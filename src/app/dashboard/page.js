@@ -5797,6 +5797,10 @@ export default function DashboardPage() {
     setShowAvatarPopup(false);
   };
 
+  // ── Mobile state ──────────────────────────────────────────────────────────
+  const [mobileTab, setMobileTab] = useState(0); // 0=Dictation, 1=Report, 2=Reference
+  const [mobileDrawer, setMobileDrawer] = useState(false);
+
   const [selectedBodyPart, setSelectedBodyPart] = useState('knee');
   const [side, setSide] = useState('left');
   const [contrast, setContrast] = useState('without');
@@ -5948,7 +5952,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.');
+      else { setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.'); setMobileTab(1); }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGenerating(false);
   };
@@ -5984,7 +5988,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.');
+      else { setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.'); setMobileTab(1); }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGeneratingRheum(false);
   };
@@ -6087,9 +6091,9 @@ export default function DashboardPage() {
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
 
       {/* ── HEADER ── */}
-      <div style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
+      <div className="msk-header" style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
         {/* Left: LucidMSK logo */}
-        <div style={{ display:'flex',alignItems:'center',gap:10,flexShrink:0 }}>
+        <div className="msk-header-logo" style={{ display:'flex',alignItems:'center',gap:10,flexShrink:0 }}>
           <svg width="36" height="36" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
             <defs>
               <filter id="hdr-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -6144,7 +6148,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Center: MRI/CT toggle + tool buttons */}
-        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-evenly',gap:16,flex:1,margin:'0 20px' }}>
+        <div className="msk-header-center" style={{ display:'flex',alignItems:'center',justifyContent:'space-evenly',gap:16,flex:1,margin:'0 20px' }}>
           {/* MRI / CT / Rheum toggle */}
           <div style={{ display:'flex',alignItems:'center',background:'rgba(255,255,255,0.08)',borderRadius:10,padding:3,gap:2 }}>
             {[
@@ -6188,8 +6192,18 @@ export default function DashboardPage() {
           </button>
         </div>
 
+        {/* Mobile: hamburger */}
+        <button className="msk-hamburger" onClick={() => setMobileDrawer(d => !d)}
+          style={{ display:'none',alignItems:'center',justifyContent:'center',width:38,height:38,borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:'rgba(255,255,255,0.08)',cursor:'pointer',flexShrink:0,marginLeft:'auto' }}>
+          <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+            <rect y="0" width="18" height="2" rx="1" fill="rgba(255,255,255,0.8)"/>
+            <rect y="6" width="18" height="2" rx="1" fill="rgba(255,255,255,0.8)"/>
+            <rect y="12" width="18" height="2" rx="1" fill="rgba(255,255,255,0.8)"/>
+          </svg>
+        </button>
+
         {/* Right: avatar button + sign out */}
-        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0,position:'relative' }}>
+        <div className="msk-header-right" style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0,position:'relative' }}>
 
           {/* Avatar button — click to open prefs popup */}
           <button onClick={() => setShowAvatarPopup(p => !p)} title="Profile & Avatar"
@@ -6277,11 +6291,68 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ── MOBILE DRAWER (hidden on desktop via CSS) ── */}
+      {mobileDrawer && (
+        <div className="msk-drawer" style={{ display:'none',flexDirection:'column',background:'#0d1b2a',borderBottom:'1px solid rgba(255,255,255,0.1)',padding:'12px 14px',gap:8,zIndex:200 }}>
+          {/* Modality toggle */}
+          <div style={{ display:'flex',alignItems:'center',background:'rgba(255,255,255,0.08)',borderRadius:10,padding:3,gap:2 }}>
+            {[
+              {id:'MRI', label:'MRI', active:'linear-gradient(135deg,#1d4ed8,#4f46e5)'},
+              {id:'CT',  label:'CT',  active:'linear-gradient(135deg,#0e7490,#0891b2)'},
+              {id:'Rheum',label:'Rheum', active:'linear-gradient(135deg,#7c2d92,#a855f7)'},
+            ].map(({id,label,active}) => (
+              <button key={id} onClick={() => { setModality(id); setMobileDrawer(false); }}
+                style={{ flex:1,padding:'10px 8px',borderRadius:8,border:'none',cursor:'pointer',fontSize:14,fontWeight:700,letterSpacing:'0.06em',transition:'all 0.2s',
+                  background:modality===id?active:'transparent',
+                  color:modality===id?'white':'rgba(255,255,255,0.45)',
+                  boxShadow:modality===id?'0 2px 8px rgba(0,0,0,0.25)':'none' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* Tool buttons */}
+          {[
+            { label:'🫁 MRI Anatomy Atlas', onClick:() => { setShowAtlas(true); setMobileDrawer(false); }, color:'rgba(255,255,255,0.08)', border:'rgba(255,255,255,0.2)', textColor:'white' },
+            { label:'📰 Latest MSK Research', onClick:() => { setShowResearch(true); setMobileDrawer(false); }, color:'rgba(16,185,129,0.12)', border:'rgba(16,185,129,0.5)', textColor:'#6ee7b7' },
+            { label:'🔬 MSK Lesion DDx', onClick:() => { setShowDdx(true); setMobileDrawer(false); }, color:'rgba(124,58,237,0.15)', border:'rgba(124,58,237,0.5)', textColor:'#c4b5fd' },
+            { label:dm?'☀️ Light Mode':'🌙 Dark Mode', onClick:() => { setDarkMode(d=>!d); setMobileDrawer(false); }, color:'rgba(255,255,255,0.08)', border:'rgba(255,255,255,0.2)', textColor:'white' },
+          ].map((btn,i) => (
+            <button key={i} onClick={btn.onClick}
+              style={{ width:'100%',padding:'12px 14px',borderRadius:10,border:`1px solid ${btn.border}`,background:btn.color,color:btn.textColor,fontSize:14,fontWeight:700,cursor:'pointer',textAlign:'left',letterSpacing:'0.03em' }}>
+              {btn.label}
+            </button>
+          ))}
+          <button onClick={() => { handleSignOut(); setMobileDrawer(false); }}
+            style={{ width:'100%',padding:'12px 14px',borderRadius:10,border:'1px solid rgba(255,100,100,0.3)',background:'rgba(239,68,68,0.08)',color:'#fca5a5',fontSize:14,fontWeight:700,cursor:'pointer',textAlign:'left' }}>
+            ← Sign Out
+          </button>
+        </div>
+      )}
+
+      {/* ── MOBILE TAB BAR (hidden on desktop via CSS) ── */}
+      <div className="msk-tab-bar" style={{ display:'none',position:'sticky',top:0,zIndex:100,background:'rgba(13,27,42,0.97)',backdropFilter:'blur(8px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'6px 12px',gap:6 }}>
+        {[
+          { label:'📝 Dictation', icon:'📝' },
+          { label:'📄 Report',    icon:'📄' },
+          { label:'📐 Reference', icon:'📐' },
+        ].map((t,i) => (
+          <button key={i} onClick={() => setMobileTab(i)}
+            style={{ flex:1,padding:'10px 4px',borderRadius:9,border:'none',cursor:'pointer',fontSize:12,fontWeight:700,transition:'all 0.2s',
+              background: mobileTab===i
+                ? (i===0 ? (isRheum?'linear-gradient(135deg,#7c2d92,#a855f7)':isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#4f46e5)') : i===1 ? 'linear-gradient(135deg,#5b21b6,#7c3aed)' : (isRheum?'linear-gradient(135deg,#7c2d92,#a855f7)':isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#4f46e5)'))
+                : 'rgba(255,255,255,0.05)',
+              color: mobileTab===i ? 'white' : 'rgba(255,255,255,0.4)',
+              boxShadow: mobileTab===i ? '0 2px 8px rgba(0,0,0,0.3)' : 'none' }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {/* ── THREE COLUMN GRID ── */}
       <div className="msk-grid">
 
         {/* Col 1 — Dictation */}
-        <div style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div className={`msk-col${mobileTab===0?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr(isRheum?'linear-gradient(135deg,#7c2d92,#a855f7)':isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#2563eb)', isRheum?'🩻':isCT?'🔬':'📝', isRheum?'X-Ray Dictation (Rheum)':isCT?'CT Dictation Input':'MRI Dictation Input')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
             <div style={{ display:'flex',gap:8 }}>
@@ -6391,7 +6462,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Col 2 — Report */}
-        <div style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div className={`msk-col${mobileTab===1?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
             <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(dm?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
@@ -6423,7 +6494,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Col 3 — Reference */}
-        <div style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div className={`msk-col${mobileTab===2?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr(isRheum ? 'linear-gradient(135deg,#7c2d92,#a855f7)' : isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#1d4ed8,#4f46e5)', isRheum ? '🩻' : isCT ? '🦴' : '📐', isRheum ? 'Rheum DDx Builder' : isCT ? 'CT Fracture Classification' : 'MRI Grading Reference')}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
             {isRheum
@@ -6446,12 +6517,51 @@ export default function DashboardPage() {
 
       <style>{`
         .msk-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; padding:16px; box-sizing:border-box; }
-        @media (max-width:900px) {
-          .msk-grid { grid-template-columns:1fr !important; gap:12px; padding:10px; }
-          .msk-report-box { min-height:200px !important; max-height:50vh !important; }
-          .msk-textarea { min-height:120px !important; }
-          .msk-ref-panel { max-height:400px; overflow-y:auto; }
+
+        /* ── MOBILE STYLES (≤768px) — desktop completely unaffected ── */
+        @media (max-width:768px) {
+
+          /* Grid: single column, no gap */
+          .msk-grid { grid-template-columns:1fr !important; gap:0 !important; padding:0 !important; }
+
+          /* Hide all panels by default on mobile; show only active */
+          .msk-col { display:none !important; }
+          .msk-col.mobile-active { display:flex !important; flex-direction:column; min-height:calc(100vh - 120px); }
+
+          /* Textarea + report box sizing */
+          .msk-report-box { min-height:260px !important; max-height:55vh !important; }
+          .msk-textarea { min-height:140px !important; font-size:16px !important; }
+          .msk-ref-panel { max-height:none !important; overflow-y:visible !important; }
+
+          /* Header: compact single row */
+          .msk-header { padding:10px 14px !important; gap:8px !important; flex-wrap:nowrap !important; }
+          .msk-header-logo span[style] { font-size:17px !important; }
+          .msk-header-center { display:none !important; }
+          .msk-header-right { margin-left:auto; }
+
+          /* Hamburger menu (mobile only) */
+          .msk-hamburger { display:flex !important; }
+
+          /* Mobile nav drawer */
+          .msk-drawer { display:flex !important; }
+
+          /* Mobile tab bar */
+          .msk-tab-bar { display:flex !important; }
+
+          /* Touch-friendly select/input sizing */
+          select, input[type="text"], input[type="email"], input[type="password"] {
+            font-size:16px !important;
+            min-height:42px !important;
+          }
+
+          /* Larger tap targets for buttons */
+          .msk-col button { min-height:44px !important; }
         }
+
+        /* Desktop: hide mobile-only elements */
+        .msk-hamburger { display:none; }
+        .msk-drawer { display:none; }
+        .msk-tab-bar { display:none; }
       `}</style>
     </div>
   );
