@@ -5438,6 +5438,230 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
 // ─────────────────────────────────────────────────────────────────────────────
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
 const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const ADMIN_EMAIL = 'adamsinger82@gmail.com';
+
+// ── Approval helpers ─────────────────────────────────────────────────────────
+async function getApprovalStatus(userId, accessToken) {
+  const key = getAnonKey();
+  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}&select=approved`, {
+    headers: { apikey: key, Authorization: `Bearer ${accessToken}` },
+  });
+  if (!r.ok) return null;
+  const rows = await r.json();
+  if (!rows || rows.length === 0) return null;
+  return rows[0].approved === true;
+}
+
+async function getPendingUsers(accessToken) {
+  const key = getAnonKey();
+  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?approved=eq.false&rejected=eq.false&select=id,email,created_at`, {
+    headers: { apikey: key, Authorization: `Bearer ${accessToken}` },
+  });
+  if (!r.ok) return [];
+  return r.json();
+}
+
+async function getApprovedUsers(accessToken) {
+  const key = getAnonKey();
+  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?approved=eq.true&select=id,email,created_at`, {
+    headers: { apikey: key, Authorization: `Bearer ${accessToken}` },
+  });
+  if (!r.ok) return [];
+  return r.json();
+}
+
+async function setApproved(userId, accessToken) {
+  const key = getAnonKey();
+  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: { apikey: key, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ approved: true, rejected: false }),
+  });
+  return r.ok;
+}
+
+async function setRejected(userId, accessToken) {
+  const key = getAnonKey();
+  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: { apikey: key, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ approved: false, rejected: true }),
+  });
+  return r.ok;
+}
+
+async function revokeAccess(userId, accessToken) {
+  const key = getAnonKey();
+  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: { apikey: key, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ approved: false, rejected: false }),
+  });
+  return r.ok;
+}
+
+// ── Waiting screen ────────────────────────────────────────────────────────────
+function PendingApprovalPage({ onSignOut }) {
+  return (
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0a0f1e 0%,#0f172a 50%,#1a0a2e 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ position:'fixed', inset:0, overflow:'hidden', pointerEvents:'none' }}>
+        <div style={{ position:'absolute', top:'10%', left:'5%', width:400, height:400, borderRadius:'50%', background:'radial-gradient(circle,rgba(37,99,235,0.12),transparent 70%)', filter:'blur(40px)' }} />
+        <div style={{ position:'absolute', bottom:'15%', right:'8%', width:350, height:350, borderRadius:'50%', background:'radial-gradient(circle,rgba(124,58,237,0.12),transparent 70%)', filter:'blur(40px)' }} />
+      </div>
+      <div style={{ width:'100%', maxWidth:420, position:'relative', textAlign:'center' }}>
+        <div style={{ marginBottom:28 }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>⏳</div>
+          <h2 style={{ color:'white', fontSize:22, fontWeight:700, margin:'0 0 12px', letterSpacing:'-0.02em' }}>Account Pending Approval</h2>
+          <p style={{ color:'rgba(255,255,255,0.55)', fontSize:14, lineHeight:1.6, margin:'0 0 24px' }}>
+            Your account has been created and is awaiting admin approval.<br/>
+            You'll have full access once approved. This typically takes 1–2 business days.
+          </p>
+          <p style={{ color:'rgba(255,255,255,0.3)', fontSize:12, margin:'0 0 32px' }}>
+            Questions? Contact <span style={{ color:'rgba(148,163,255,0.7)' }}>adamsinger82@gmail.com</span>
+          </p>
+        </div>
+        <button
+          onClick={onSignOut}
+          style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', color:'rgba(255,255,255,0.7)', padding:'10px 28px', borderRadius:9, fontSize:14, cursor:'pointer' }}
+        >
+          Sign out
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Rejected screen ────────────────────────────────────────────────────────────
+function RejectedPage({ onSignOut }) {
+  return (
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0a0f1e 0%,#0f172a 50%,#1a0a2e 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ width:'100%', maxWidth:420, position:'relative', textAlign:'center' }}>
+        <div style={{ fontSize:48, marginBottom:12 }}>🚫</div>
+        <h2 style={{ color:'white', fontSize:22, fontWeight:700, margin:'0 0 12px' }}>Access Not Approved</h2>
+        <p style={{ color:'rgba(255,255,255,0.55)', fontSize:14, lineHeight:1.6, margin:'0 0 32px' }}>
+          Your account was not approved for access to LucidMSK.<br/>
+          Contact <span style={{ color:'rgba(148,163,255,0.7)' }}>adamsinger82@gmail.com</span> if you believe this is an error.
+        </p>
+        <button
+          onClick={onSignOut}
+          style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', color:'rgba(255,255,255,0.7)', padding:'10px 28px', borderRadius:9, fontSize:14, cursor:'pointer' }}
+        >
+          Sign out
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Admin panel ────────────────────────────────────────────────────────────────
+function AdminPanel({ currentUser, onClose }) {
+  const [tab, setTab] = useState('pending'); // 'pending' | 'approved'
+  const [pending, setPending] = useState([]);
+  const [approved, setApproved] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionMsg, setActionMsg] = useState('');
+
+  const load = async () => {
+    setLoading(true);
+    const [p, a] = await Promise.all([
+      getPendingUsers(currentUser.access_token),
+      getApprovedUsers(currentUser.access_token),
+    ]);
+    setPending(p || []);
+    setApproved(a || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const flash = (msg) => { setActionMsg(msg); setTimeout(() => setActionMsg(''), 3000); };
+
+  const handleApprove = async (userId, email) => {
+    const ok = await setApproved(userId, currentUser.access_token);
+    if (ok) { flash(`✅ Approved: ${email}`); load(); }
+    else flash('❌ Error — check Supabase RLS policy');
+  };
+
+  const handleReject = async (userId, email) => {
+    const ok = await setRejected(userId, currentUser.access_token);
+    if (ok) { flash(`🚫 Rejected: ${email}`); load(); }
+    else flash('❌ Error — check Supabase RLS policy');
+  };
+
+  const handleRevoke = async (userId, email) => {
+    const ok = await revokeAccess(userId, currentUser.access_token);
+    if (ok) { flash(`↩️ Access revoked: ${email}`); load(); }
+    else flash('❌ Error — check Supabase RLS policy');
+  };
+
+  const rowStyle = { display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.07)' };
+  const btnStyle = (color) => ({ background:`rgba(${color},0.15)`, border:`1px solid rgba(${color},0.35)`, color:`rgb(${color})`, padding:'5px 14px', borderRadius:7, fontSize:12, cursor:'pointer', whiteSpace:'nowrap' });
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:'#0f172a', border:'1px solid rgba(255,255,255,0.12)', borderRadius:14, width:'100%', maxWidth:560, maxHeight:'80vh', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        {/* Header */}
+        <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div>
+            <div style={{ color:'white', fontSize:16, fontWeight:700 }}>🛡️ Admin Panel</div>
+            <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11, marginTop:2 }}>LucidMSK Member Management</div>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.5)', fontSize:20, cursor:'pointer', padding:'2px 6px' }}>✕</button>
+        </div>
+        {/* Tabs */}
+        <div style={{ display:'flex', gap:0, borderBottom:'1px solid rgba(255,255,255,0.08)', flexShrink:0 }}>
+          {[['pending',`Pending (${pending.length})`],['approved',`Approved (${approved.length})`]].map(([key,label]) => (
+            <button key={key} onClick={() => setTab(key)} style={{ flex:1, background:'none', border:'none', borderBottom: tab===key ? '2px solid #5b9ef7' : '2px solid transparent', color: tab===key ? 'white' : 'rgba(255,255,255,0.4)', padding:'10px 0', fontSize:13, cursor:'pointer', transition:'all 0.15s' }}>{label}</button>
+          ))}
+        </div>
+        {/* Flash message */}
+        {actionMsg && (
+          <div style={{ margin:'8px 16px 0', padding:'8px 14px', background:'rgba(255,255,255,0.07)', borderRadius:7, color:'rgba(255,255,255,0.8)', fontSize:13 }}>{actionMsg}</div>
+        )}
+        {/* Content */}
+        <div style={{ overflowY:'auto', padding:'12px 20px', flex:1 }}>
+          {loading ? (
+            <div style={{ color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'32px 0', fontSize:13 }}>Loading…</div>
+          ) : tab === 'pending' ? (
+            pending.length === 0 ? (
+              <div style={{ color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'32px 0', fontSize:13 }}>No pending users 🎉</div>
+            ) : pending.map(u => (
+              <div key={u.id} style={rowStyle}>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ color:'white', fontSize:13, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email}</div>
+                  <div style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginTop:2 }}>{u.created_at ? new Date(u.created_at).toLocaleDateString() : 'Unknown date'}</div>
+                </div>
+                <button onClick={() => handleApprove(u.id, u.email)} style={btnStyle('100,200,100')}>Approve</button>
+                <button onClick={() => handleReject(u.id, u.email)} style={btnStyle('255,100,100')}>Reject</button>
+              </div>
+            ))
+          ) : (
+            approved.length === 0 ? (
+              <div style={{ color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'32px 0', fontSize:13 }}>No approved users yet</div>
+            ) : approved.map(u => (
+              <div key={u.id} style={rowStyle}>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ color:'white', fontSize:13, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email}</div>
+                  <div style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginTop:2 }}>{u.created_at ? new Date(u.created_at).toLocaleDateString() : ''}</div>
+                </div>
+                {u.email !== ADMIN_EMAIL && (
+                  <button onClick={() => handleRevoke(u.id, u.email)} style={btnStyle('255,180,80')}>Revoke</button>
+                )}
+                {u.email === ADMIN_EMAIL && (
+                  <span style={{ color:'rgba(148,163,255,0.6)', fontSize:11 }}>Admin</span>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+        {/* Footer */}
+        <div style={{ padding:'10px 20px', borderTop:'1px solid rgba(255,255,255,0.08)', flexShrink:0 }}>
+          <button onClick={load} style={{ background:'none', border:'1px solid rgba(255,255,255,0.15)', color:'rgba(255,255,255,0.5)', padding:'6px 16px', borderRadius:7, fontSize:12, cursor:'pointer' }}>↻ Refresh</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 async function supaSignUp(email, password) {
   const r = await fetch(`${SUPA_URL}/auth/v1/signup`, {
@@ -5445,7 +5669,22 @@ async function supaSignUp(email, password) {
     headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
     body: JSON.stringify({ email, password }),
   });
-  return r.json();
+  const data = await r.json();
+  // Create profiles row immediately after signup; admin email auto-approved
+  if (data?.user?.id) {
+    const isAdmin = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    await fetch(`${SUPA_URL}/rest/v1/profiles`, {
+      method: 'POST',
+      headers: {
+        apikey: getAnonKey(),
+        Authorization: `Bearer ${data.access_token || getAnonKey()}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal,resolution=ignore-duplicates',
+      },
+      body: JSON.stringify({ id: data.user.id, email: email.trim().toLowerCase(), approved: isAdmin, rejected: false }),
+    });
+  }
+  return data;
 }
 
 async function supaSignIn(email, password) {
@@ -5738,6 +5977,8 @@ export default function DashboardPage() {
   // ── Auth state ────────────────────────────────────────────────────────────
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [approvalStatus, setApprovalStatus] = useState(null); // null=checking, true=approved, false=pending, 'rejected'=rejected
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [userPrefs, setUserPrefs] = useState({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
   const [showAvatarPopup, setShowAvatarPopup] = useState(false);
 
@@ -5769,17 +6010,44 @@ export default function DashboardPage() {
       }
       const prefs = loadUserPrefs(s.user.id);
       if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
-      setAuthUser({ ...s.user, access_token: accessToken });
+      const restoredUser = { ...s.user, access_token: accessToken };
+      setAuthUser(restoredUser);
+      // Re-check approval on session restore
+      if (restoredUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        setApprovalStatus(true);
+      } else {
+        try {
+          const rows = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${restoredUser.id}&select=approved,rejected`, {
+            headers: { apikey: getAnonKey(), Authorization: `Bearer ${accessToken}` },
+          }).then(r => r.json());
+          if (!rows || rows.length === 0) setApprovalStatus(false);
+          else if (rows[0].rejected) setApprovalStatus('rejected');
+          else setApprovalStatus(rows[0].approved === true);
+        } catch { setApprovalStatus(false); }
+      }
       setAuthLoading(false);
     };
     doRestore();
   }, []);
 
-  const handleLogin = (user) => {
+  const handleLogin = async (user) => {
     // Load prefs BEFORE setting authUser so auto-save guard doesn't overwrite them
     const prefs = loadUserPrefs(user.id);
     if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
     setAuthUser(user);
+    // Check approval status immediately after login (admin always bypasses)
+    if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+      setApprovalStatus(true);
+    } else {
+      try {
+        const rows = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${user.id}&select=approved,rejected`, {
+          headers: { apikey: getAnonKey(), Authorization: `Bearer ${user.access_token}` },
+        }).then(r => r.json());
+        if (!rows || rows.length === 0) { setApprovalStatus(false); } // no row yet = pending
+        else if (rows[0].rejected) { setApprovalStatus('rejected'); }
+        else { setApprovalStatus(rows[0].approved === true); }
+      } catch { setApprovalStatus(false); }
+    }
   };
   const handleSignOut = () => {
     // Wipe ALL auth-related storage synchronously — no server call needed
@@ -5793,6 +6061,8 @@ export default function DashboardPage() {
     } catch {}
     // Reset React state directly — no redirect needed
     setAuthUser(null);
+    setApprovalStatus(null);
+    setShowAdminPanel(false);
     setUserPrefs({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
     setShowAvatarPopup(false);
   };
@@ -6082,6 +6352,14 @@ export default function DashboardPage() {
     </div>
   );
   if (!authUser) return <LoginPage onLogin={handleLogin} />;
+  // Approval gate — show while checking or if not yet approved
+  if (approvalStatus === null) return (
+    <div style={{ minHeight:'100vh',background:'#0a0f1e',display:'flex',alignItems:'center',justifyContent:'center' }}>
+      <div style={{ color:'rgba(255,255,255,0.4)',fontSize:14 }}>⏳ Checking access…</div>
+    </div>
+  );
+  if (approvalStatus === 'rejected') return <RejectedPage onSignOut={handleSignOut} />;
+  if (approvalStatus === false) return <PendingApprovalPage onSignOut={handleSignOut} />;
 
   return (
     <div style={{ minHeight:'100vh',background:'linear-gradient(160deg,#0d1b2a 0%,#1a3a5c 45%,#0d1b2a 100%)',fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
@@ -6089,6 +6367,9 @@ export default function DashboardPage() {
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
+      {showAdminPanel && authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
+        <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
+      )}
 
       {/* ── HEADER ── */}
       <div className="msk-header" style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
@@ -6213,6 +6494,14 @@ export default function DashboardPage() {
               : <span style={{ fontSize:12,fontWeight:800,color:'white',letterSpacing:'-0.02em' }}>{getInitials(userPrefs.firstName, userPrefs.lastName, authUser?.email)}</span>
             }
           </button>
+
+          {/* Admin button — only for admin email */}
+          {authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
+            <button onClick={() => setShowAdminPanel(true)}
+              style={{ padding:'7px 13px',borderRadius:8,border:'1px solid rgba(148,163,255,0.35)',background:'rgba(148,163,255,0.1)',color:'rgba(148,163,255,0.9)',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap' }}>
+              🛡️ Admin
+            </button>
+          )}
 
           {/* Sign Out */}
           <button onClick={handleSignOut}
