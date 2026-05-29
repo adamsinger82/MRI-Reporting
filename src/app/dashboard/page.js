@@ -2700,7 +2700,6 @@ const ATLAS_JOINTS = {
         slices: localSlices(26),
         ext: '.jpg',
         pad: 4,
-        permanentLabels: SHOULDER_LABELS,
       },
       sag_t1: {
         label: 'Sag T1',
@@ -2742,7 +2741,6 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:30},(_,i)=>i+79),
         ext: '.jpg',
         pad: 4,
-        permanentLabels: ELBOW_LABELS,
       },
       ax_t1: {
         label: 'Ax T1',
