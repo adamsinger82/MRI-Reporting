@@ -2700,7 +2700,6 @@ const ATLAS_JOINTS = {
         slices: localSlices(26),
         ext: '.jpg',
         pad: 4,
-        permanentLabels: SHOULDER_LABELS,
       },
       sag_t1: {
         label: 'Sag T1',
@@ -2742,7 +2741,6 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:30},(_,i)=>i+79),
         ext: '.jpg',
         pad: 4,
-        permanentLabels: ELBOW_LABELS,
       },
       ax_t1: {
         label: 'Ax T1',
@@ -3292,13 +3290,11 @@ function AtlasModal({ onClose }) {
                         }
                         return (
                           <g key={'p'+origIdx}>
-                            {/* Dot on structure */}
                             <circle cx={px} cy={py} r="4" fill={col} opacity="0.95"
                               stroke="rgba(0,0,0,0.7)" strokeWidth="1"/>
                             <polyline
                               points={`${lineStartX},${ty} ${jogX},${ty} ${jogX},${py} ${px-1},${py}`}
                               fill="none" stroke={col} strokeWidth="0.9" opacity="0.65"/>
-                            {/* Label text shadow */}
                             <text x={textX} y={ty} fontSize={fontSize} fill="rgba(0,0,0,0.9)"
                               fontFamily="system-ui,sans-serif" fontWeight="700"
                               textAnchor="start" dominantBaseline="middle" dx="1" dy="1">{name}</text>
