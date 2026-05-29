@@ -5470,34 +5470,35 @@ async function getApprovedUsers(accessToken) {
   return r.json();
 }
 
-async function setApproved(userId, accessToken) {
+async function callAdminFunc(funcName, userId, accessToken) {
   const key = getAnonKey();
-  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}`, {
-    method: 'PATCH',
-    headers: { apikey: key, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify({ approved: true, rejected: false }),
-  });
-  return r.ok;
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/rpc/${funcName}`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_user_id: userId }),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      console.error(`${funcName} failed`, r.status, t);
+      return { ok: false, error: `${r.status}: ${t}` };
+    }
+    return { ok: true };
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function setApproved(userId, accessToken) {
+  return callAdminFunc('approve_user', userId, accessToken);
 }
 
 async function setRejected(userId, accessToken) {
-  const key = getAnonKey();
-  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}`, {
-    method: 'PATCH',
-    headers: { apikey: key, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify({ approved: false, rejected: true }),
-  });
-  return r.ok;
+  return callAdminFunc('reject_user', userId, accessToken);
 }
 
 async function revokeAccess(userId, accessToken) {
-  const key = getAnonKey();
-  const r = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}`, {
-    method: 'PATCH',
-    headers: { apikey: key, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify({ approved: false, rejected: false }),
-  });
-  return r.ok;
+  return callAdminFunc('revoke_user', userId, accessToken);
 }
 
 // ── Waiting screen ────────────────────────────────────────────────────────────
