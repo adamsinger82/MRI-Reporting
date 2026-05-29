@@ -2541,6 +2541,179 @@ const COR_ELBOW_LABELS = {
   ],
 };
 
+const AX_T1_ELBOW_LABELS = {
+  128: [
+    [61.2, 46.3, "median nerve"],
+    [68.1, 59.5, "ulnar nerve"],
+    [60.7, 68, "triceps"],
+    [49, 35, "biceps"],
+  ],
+  130: [
+    [62, 45.6, "median nerve"],
+    [49.5, 33.9, "biceps"],
+  ],
+  131: [
+    [69.5, 60.2, "ulnar nerve"],
+    [40.3, 37.8, "musculocutaneous nerve"],
+  ],
+  132: [
+    [62.5, 69.7, "triceps"],
+    [41.4, 46, "brachialis"],
+    [51.7, 33.6, "biceps"],
+  ],
+  133: [
+    [38.5, 51.1, "radial nerve"],
+    [63.6, 42.8, "median nerve"],
+    [71.5, 60.9, "ulnar nerve"],
+    [51.2, 57.2, "humerus"],
+    [49.2, 32.6, "biceps"],
+    [41.9, 45.5, "brachialis"],
+    [40.5, 35.8, "lateral antebrachial cutaneous nerve"],
+  ],
+  135: [
+    [39.2, 48.5, "radial nerve"],
+    [72.5, 61.7, "ulnar nerve"],
+    [62.2, 69.9, "triceps"],
+    [41.4, 34.6, "lateral antebrachial cutaneous nerve"],
+    [59.8, 64.5, "medial head triceps"],
+  ],
+  136: [
+    [50.7, 31.7, "biceps"],
+    [45.4, 43.9, "brachialis"],
+    [67.8, 65.5, "long head, triceps"],
+    [51.7, 68.9, "lateral head, triceps"],
+  ],
+  137: [
+    [39.2, 46.8, "radial nerve"],
+    [41.9, 33.9, "lateral antebrachial cutaneous nerve"],
+  ],
+  138: [
+    [64.2, 37.5, "median nerve"],
+    [72.9, 63.4, "ulnar nerve"],
+    [61.2, 69.5, "triceps"],
+    [60, 57.7, "posterior fat pad"],
+    [56.8, 48.7, "anterior fat pad"],
+  ],
+  139: [
+    [37.5, 43.6, "radial nerve"],
+    [60.7, 69.2, "triceps"],
+    [51.9, 30.7, "biceps"],
+    [42.4, 33.6, "lateral antebrachial cutaneous nerve"],
+  ],
+  140: [
+    [73.9, 63.1, "ulnar nerve"],
+    [77.8, 56.3, "medial humeral epicondyle"],
+    [39.2, 60.7, "lateral humeral epicondyle"],
+    [48.3, 40.4, "brachialis"],
+    [79.7, 51.9, "pronator teres"],
+  ],
+  141: [
+    [37.8, 38.9, "superficial branch of the radial nerve"],
+    [35.9, 41.2, "deep branch of the radial nerve"],
+    [65.1, 33.9, "median nerve"],
+    [74.8, 63.6, "Osbourne's aponeurosis"],
+    [79.8, 54.8, "common flexor tendon"],
+    [29.1, 43.4, "brachioradialis"],
+    [72.2, 61.9, "cubital tunnel"],
+  ],
+  142: [
+    [59.3, 29.4, "lacertus fibrosus"],
+    [77, 45.1, "pronator teres"],
+    [80.5, 53.9, "common flexor tendon"],
+  ],
+  143: [
+    [37.5, 37, "superficial branch of the radial nerve"],
+    [35.6, 39.9, "deep branch of the radial nerve"],
+    [74.2, 59.7, "ulnar nerve"],
+    [49.7, 31.9, "biceps"],
+    [33.6, 53.1, "common extensor tendon"],
+    [70.7, 59.5, "UCL, posterior bundle"],
+  ],
+  144: [
+    [61.5, 29.4, "lacertus fibrosus"],
+    [51.2, 39, "brachialis"],
+    [33.4, 50.4, "common extensor tendon"],
+    [35.4, 49.9, "RCL"],
+    [34.1, 55.8, "LUCL"],
+    [73.2, 50.6, "UCL, anterior bundle"],
+    [71.5, 57.8, "UCL, posterior bundle"],
+    [45.4, 66.7, "anconeus"],
+    [42.2, 42.6, "capitellum"],
+    [62.9, 44.1, "trochlea"],
+  ],
+  145: [
+    [63.7, 35.3, "median nerve"],
+    [50.5, 39.7, "brachialis"],
+    [35.4, 48.7, "RCL"],
+    [72.9, 50.2, "UCL, anterior bundle"],
+    [72, 57.2, "UCL, posterior bundle"],
+  ],
+  146: [
+    [40.2, 36.8, "superficial branch of the radial nerve"],
+    [36.4, 39.5, "deep branch of the radial nerve"],
+    [51, 34.4, "biceps"],
+    [71.2, 36.7, "pronator teres"],
+    [36.1, 57.7, "LUCL"],
+    [72.7, 52.2, "UCL, anterior bundle"],
+    [72, 56.7, "UCL, posterior bundle"],
+  ],
+  147: [
+    [63.1, 37.7, "median nerve"],
+    [72.7, 60, "ulnar nerve"],
+    [40, 60.2, "LUCL"],
+    [50.5, 42.2, "Annular ligament"],
+    [43.6, 49.2, "radial head"],
+    [53.4, 51.9, "proximal radioulnar joint"],
+  ],
+  148: [
+    [40.5, 37.2, "superficial branch of the radial nerve"],
+    [37.3, 39.5, "deep branch of the radial nerve"],
+    [40, 59.9, "LUCL"],
+  ],
+  149: [
+    [70.7, 59, "ulnar nerve"],
+    [51.7, 38.9, "biceps"],
+    [54.4, 45.1, "brachialis"],
+  ],
+  150: [
+    [40.2, 37.7, "superficial branch of the radial nerve"],
+    [38, 41.2, "deep branch of the radial nerve"],
+    [60.7, 43.4, "median nerve"],
+  ],
+  151: [
+    [69.3, 58.3, "ulnar nerve"],
+    [56.8, 48.7, "brachialis"],
+  ],
+  152: [
+    [40.2, 38.7, "superficial branch of the radial nerve"],
+    [37.3, 42.8, "deep branch of the radial nerve"],
+    [52.2, 44.8, "biceps"],
+  ],
+  153: [
+    [52.5, 48, "biceps"],
+    [50.3, 52.4, "radial tuberosity"],
+    [58, 53.8, "brachialis"],
+  ],
+  154: [
+    [38.8, 37.8, "superficial branch of the radial nerve"],
+    [36.8, 45.3, "deep branch of the radial nerve"],
+    [58.5, 45.1, "median nerve"],
+    [65.8, 56.8, "ulnar nerve"],
+  ],
+  156: [
+    [40.2, 37.8, "superficial branch of the radial nerve"],
+    [35.9, 48.2, "deep branch of the radial nerve"],
+  ],
+  157: [
+    [39.7, 38.3, "superficial branch of the radial nerve"],
+    [35.3, 49.5, "deep branch of the radial nerve"],
+    [41.9, 49.2, "radius"],
+    [53.1, 65, "ulna"],
+    [56.4, 45, "median nerve"],
+    [62.7, 55.3, "ulnar nerve"],
+  ],
+};
+
 const ELBOW_LABELS = {
   79: [
     [61.2, 46.3, "median nerve"],
@@ -2785,7 +2958,7 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:30},(_,i)=>i+128),
         ext: '.jpg',
         pad: 4,
-        permanentLabels: ELBOW_LABELS,
+        permanentLabels: AX_T1_ELBOW_LABELS,
       },
       cor_pdfs: {
         label: 'Cor PDFS',
