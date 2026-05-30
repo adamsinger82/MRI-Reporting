@@ -5558,7 +5558,7 @@ function RejectedPage({ onSignOut }) {
 function AdminPanel({ currentUser, onClose }) {
   const [tab, setTab] = useState('pending'); // 'pending' | 'approved'
   const [pending, setPending] = useState([]);
-  const [approved, setApproved] = useState([]);
+  const [approvedList, setApprovedList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState('');
 
@@ -5569,7 +5569,7 @@ function AdminPanel({ currentUser, onClose }) {
       getApprovedUsers(currentUser.access_token),
     ]);
     setPending(p || []);
-    setApproved(a || []);
+    setApprovedList(a || []);
     setLoading(false);
   };
 
