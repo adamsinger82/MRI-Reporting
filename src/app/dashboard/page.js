@@ -5966,9 +5966,7 @@ function LoginPage({ onLogin }) {
           </div>
         </div>
 
-        <p style={{ textAlign:'center', color:'rgba(255,255,255,0.2)', fontSize:11, marginTop:20 }}>
-          MSK Radiology Reporting — Members Only
-        </p>
+
       </div>
     </div>
   );
