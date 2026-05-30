@@ -5440,6 +5440,48 @@ const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujc
 const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const ADMIN_EMAIL = 'adamsinger82@gmail.com';
 
+const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
+const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const ADMIN_EMAIL = 'adamsinger82@gmail.com';
+
+// ── Terms of Use text (rendered as JSX) ──────────────────────────────────────
+const TOU_TEXT = (
+  <div style={{ fontFamily: 'inherit' }}>
+    <h2 style={{ color:'white', fontSize:16, fontWeight:700, marginBottom:4 }}>LucidMSK — Terms of Use Agreement</h2>
+    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:11, marginBottom:20 }}>Effective Date: May 30, 2026</p>
+
+    {[
+      ['1. Acceptance of Terms', 'By creating an account, accessing, or using the LucidMSK application ("Application"), you ("User") agree to be bound by these Terms of Use ("Terms"). If you do not agree to these Terms, you must not access or use the Application. Your continued use of the Application constitutes your ongoing acceptance of these Terms as they may be updated from time to time.'],
+      ['2. Description of the Application', 'LucidMSK is an AI-assisted platform designed to support musculoskeletal (MSK) radiology reporting and reference. The Application is intended to assist fellowship-trained radiologists and qualified medical professionals in the drafting, structuring, and referencing of radiology reports. LucidMSK utilizes artificial intelligence to provide decision support, reference material, and reporting assistance.\n\nThe Application is provided as a professional reference and drafting tool only. It does not constitute the practice of medicine and is not a substitute for the independent clinical judgment of a licensed medical professional.'],
+      ['3. Intended Users', 'The Application is intended for use exclusively by licensed medical professionals, including but not limited to radiologists, physicians, and other qualified healthcare providers. By using the Application, you represent and warrant that:\n\n• You are a licensed medical professional in good standing in your jurisdiction;\n• You have the training, qualifications, and licensure necessary to interpret and apply radiology reports and medical information;\n• You will use the Application only in connection with your professional duties and in compliance with all applicable laws and regulations.'],
+      ['4. Educational and Assistive Purpose Only', 'ALL content, output, suggestions, draft reports, reference material, and information provided by the Application are for EDUCATIONAL AND ASSISTIVE PURPOSES ONLY. The Application is a drafting and reference aid — not a diagnostic tool, not a clinical decision-making system, and not a replacement for independent professional judgment.\n\nLucidMSK AI-generated content:\n• May contain errors, omissions, or inaccuracies;\n• Has not been reviewed or approved by the FDA or any regulatory authority as a medical device;\n• Does not constitute a final radiology report or medical opinion;\n• Must be independently reviewed, verified, and approved by the licensed medical professional before use in any clinical context.'],
+      ['5. User Responsibility and Assumption of Risk', 'YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT YOUR USE OF THE APPLICATION IS AT YOUR SOLE RISK. As a licensed medical professional, you bear full and exclusive responsibility for:\n\n• All clinical decisions, diagnoses, interpretations, and medical opinions you make in connection with your use of the Application;\n• The accuracy, completeness, and appropriateness of any radiology report or medical documentation you produce, whether or not assisted by the Application;\n• Independently verifying all Application output before relying upon it in any clinical context;\n• Compliance with all applicable professional standards, institutional policies, and legal requirements governing the practice of radiology and medicine in your jurisdiction;\n• Patient safety and the standard of care owed to your patients.\n\nThe Application is a tool to assist your professional judgment — it does not replace it. You remain solely responsible for all patient care decisions.'],
+      ['6. Disclaimer of Warranties', 'THE APPLICATION IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, LUCIDMSK AND ITS OWNERS, DEVELOPERS, EMPLOYEES, AGENTS, AND AFFILIATES ("LUCIDMSK PARTIES") EXPRESSLY DISCLAIM ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:\n\n• Any implied warranty of merchantability, fitness for a particular purpose, or non-infringement;\n• Any warranty that the Application will be uninterrupted, error-free, secure, or free of viruses or harmful components;\n• Any warranty regarding the accuracy, reliability, completeness, or timeliness of any content or output generated by the Application;\n• Any warranty that the Application is suitable for clinical, diagnostic, or therapeutic use.'],
+      ['7. Limitation of Liability and Release', 'TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, YOU AGREE THAT THE LUCIDMSK PARTIES SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF, OR INABILITY TO USE, THE APPLICATION, INCLUDING BUT NOT LIMITED TO:\n\n• Any harm to patients or third parties arising from clinical decisions made with or without reference to the Application;\n• Any errors, inaccuracies, or omissions in Application output;\n• Any loss of data, revenue, reputation, or professional standing;\n• Any claim arising from your reliance on Application-generated content.\n\nTHIS LIMITATION APPLIES REGARDLESS OF THE THEORY OF LIABILITY (CONTRACT, TORT, NEGLIGENCE, STRICT LIABILITY, OR OTHERWISE) AND EVEN IF LUCIDMSK HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.'],
+      ['8. Indemnification and Waiver of Claims', 'By using the Application, you agree to indemnify, defend, and hold harmless the LucidMSK Parties from and against any and all claims, liabilities, damages, losses, costs, and expenses (including reasonable attorneys\' fees) arising out of or in any way connected with:\n\n• Your use of or reliance upon the Application;\n• Any clinical decision, diagnosis, report, or medical action you take in connection with the Application;\n• Your violation of these Terms;\n• Your violation of any applicable law, regulation, or professional standard;\n• Any claim by a patient, employer, insurer, or third party arising from your use of the Application.\n\nYOU EXPRESSLY WAIVE ANY AND ALL CLAIMS, CAUSES OF ACTION, AND RIGHTS TO BRING LEGAL ACTION OF ANY KIND AGAINST THE LUCIDMSK PARTIES ARISING FROM OR RELATED TO YOUR USE OF THE APPLICATION. This waiver includes but is not limited to claims in contract, tort, negligence, product liability, medical malpractice, and any statutory cause of action.'],
+      ['9. No Doctor-Patient Relationship', 'Use of the Application does not create a doctor-patient relationship, a physician-patient relationship, or any other professional-client relationship between the User and LucidMSK or its owners, developers, or employees. LucidMSK is not a licensed healthcare provider and does not provide medical advice, diagnosis, or treatment.'],
+      ['10. Privacy, Data, and Prohibition on PHI', '10.1 Prohibition on PHI Input. YOU ARE STRICTLY PROHIBITED from entering, uploading, transmitting, or otherwise providing any Protected Health Information ("PHI") or Personally Identifiable Information ("PII") — as defined under HIPAA and its implementing regulations, or any other applicable law — into the Application. This prohibition includes but is not limited to patient names, dates of birth, addresses, medical record numbers, social security numbers, or any other information that could reasonably be used to identify an individual patient. You agree to de-identify all patient information in accordance with HIPAA Safe Harbor or Expert Determination standards.\n\n10.2 No Liability for Inadvertently Provided PHI. LucidMSK is not designed, intended, or approved as a HIPAA-compliant platform and does not function as a Business Associate under HIPAA. TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, THE LUCIDMSK PARTIES SHALL HAVE NO LIABILITY WHATSOEVER FOR ANY PHI OR PII THAT IS INADVERTENTLY, ACCIDENTALLY, OR OTHERWISE PROVIDED TO THE APPLICATION BY ANY USER. Any such disclosure is entirely the responsibility of the User who provided it.\n\n10.3 Your Compliance Responsibility. You are solely responsible for ensuring your use of the Application complies with all applicable privacy laws and regulations, including HIPAA, HITECH, state privacy laws, and any institutional policies governing patient data.'],
+      ['11. Modifications to Terms', 'LucidMSK reserves the right to modify these Terms at any time. Updated Terms will be posted within the Application. Your continued use of the Application following the posting of updated Terms constitutes your acceptance of the revised Terms.'],
+      ['12. Governing Law', 'These Terms shall be governed by and construed in accordance with the laws of the State of Georgia, United States of America, without regard to its conflict of law provisions. Any dispute arising under these Terms shall be subject to the exclusive jurisdiction of the state and federal courts located in Georgia.'],
+      ['13. Severability', 'If any provision of these Terms is found to be unenforceable or invalid under applicable law, that provision shall be limited or eliminated to the minimum extent necessary so that these Terms shall otherwise remain in full force and effect and enforceable.'],
+      ['14. Entire Agreement', 'These Terms constitute the entire agreement between you and LucidMSK with respect to the subject matter herein and supersede all prior or contemporaneous agreements, representations, warranties, and understandings.'],
+    ].map(([title, body]) => (
+      <div key={title} style={{ marginBottom:18 }}>
+        <h3 style={{ color:'rgba(255,255,255,0.9)', fontSize:13, fontWeight:700, marginBottom:6 }}>{title}</h3>
+        {body.split('\n\n').map((para, i) => (
+          <p key={i} style={{ margin:'0 0 8px', color:'rgba(255,255,255,0.65)', fontSize:12.5, lineHeight:1.7, whiteSpace:'pre-line' }}>{para}</p>
+        ))}
+      </div>
+    ))}
+
+    <div style={{ marginTop:24, padding:'14px 16px', background:'rgba(79,70,229,0.12)', border:'1px solid rgba(79,70,229,0.3)', borderRadius:8 }}>
+      <p style={{ color:'rgba(255,255,255,0.85)', fontSize:12, fontWeight:600, margin:0, lineHeight:1.6 }}>
+        USER ACKNOWLEDGMENT: BY CLICKING "I AGREE," CREATING AN ACCOUNT, OR USING THE LUCIDMSK APPLICATION, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREE TO BE BOUND BY THESE TERMS OF USE IN THEIR ENTIRETY. YOU ACKNOWLEDGE THAT YOU ARE A LICENSED MEDICAL PROFESSIONAL AND THAT YOU ARE SOLELY RESPONSIBLE FOR ALL CLINICAL DECISIONS YOU MAKE IN CONNECTION WITH YOUR USE OF THIS APPLICATION.
+      </p>
+    </div>
+  </div>
+);
+
 // ── Approval helpers ─────────────────────────────────────────────────────────
 async function getApprovalStatus(userId, accessToken) {
   const key = getAnonKey();
@@ -5782,6 +5824,9 @@ function LoginPage({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [touChecked, setTouChecked] = useState(false);
+  const [touModalOpen, setTouModalOpen] = useState(false);
+  const [touViewed, setTouViewed] = useState(false);
 
   const inp = {
     width: '100%', padding: '11px 14px', borderRadius: 9,
@@ -5794,6 +5839,7 @@ function LoginPage({ onLogin }) {
     if (!email.trim() || !password.trim()) { setError('Please enter your email and password.'); return; }
     if (mode === 'signup' && password !== confirmPassword) { setError('Passwords do not match.'); return; }
     if (mode === 'signup' && password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (mode === 'signup' && !touChecked) { setError('You must read and agree to the Terms of Use to create an account.'); return; }
     setLoading(true);
     try {
       if (mode === 'signup') {
@@ -5955,6 +6001,50 @@ function LoginPage({ onLogin }) {
             {error && <p style={{ margin:0, padding:'8px 12px', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:8, color:'#fca5a5', fontSize:12, lineHeight:1.5 }}>{error}</p>}
             {success && <p style={{ margin:0, padding:'8px 12px', background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:8, color:'#6ee7b7', fontSize:12, lineHeight:1.5 }}>{success}</p>}
 
+            {/* Terms of Use checkbox — signup only */}
+            {mode === 'signup' && (
+              <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:9 }}>
+                <input
+                  type="checkbox"
+                  id="tou-checkbox"
+                  checked={touChecked}
+                  onChange={e => setTouChecked(e.target.checked)}
+                  disabled={!touViewed}
+                  style={{ marginTop:2, cursor: touViewed ? 'pointer' : 'not-allowed', accentColor:'#4f46e5', width:15, height:15, flexShrink:0 }}
+                />
+                <label htmlFor="tou-checkbox" style={{ color:'rgba(255,255,255,0.6)', fontSize:12, lineHeight:1.5, cursor: touViewed ? 'pointer' : 'default' }}>
+                  I have read and agree to the{' '}
+                  <button type="button" onClick={() => { setTouModalOpen(true); setTouViewed(true); }}
+                    style={{ background:'none', border:'none', color:'#818cf8', fontSize:12, cursor:'pointer', textDecoration:'underline', padding:0 }}>
+                    Terms of Use
+                  </button>
+                  {!touViewed && <span style={{ color:'rgba(255,255,255,0.3)', fontSize:11 }}> — click to read first</span>}
+                </label>
+              </div>
+            )}
+
+            {/* ToU Modal Overlay */}
+            {touModalOpen && (
+              <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+                onClick={e => { if (e.target === e.currentTarget) setTouModalOpen(false); }}>
+                <div style={{ background:'#1e293b', border:'1px solid rgba(255,255,255,0.12)', borderRadius:14, width:'100%', maxWidth:680, maxHeight:'80vh', display:'flex', flexDirection:'column', boxShadow:'0 24px 64px rgba(0,0,0,0.6)' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', borderBottom:'1px solid rgba(255,255,255,0.1)', flexShrink:0 }}>
+                    <span style={{ color:'white', fontWeight:700, fontSize:15 }}>LucidMSK — Terms of Use</span>
+                    <button onClick={() => setTouModalOpen(false)} style={{ background:'none', border:'none', color:'#64748b', fontSize:18, cursor:'pointer', lineHeight:1 }}>✕</button>
+                  </div>
+                  <div style={{ overflowY:'auto', padding:'20px 24px', flex:1, color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.75 }}>
+                    {TOU_TEXT}
+                  </div>
+                  <div style={{ padding:'14px 20px', borderTop:'1px solid rgba(255,255,255,0.1)', display:'flex', justifyContent:'flex-end', gap:10, flexShrink:0 }}>
+                    <button onClick={() => setTouModalOpen(false)}
+                      style={{ padding:'9px 22px', borderRadius:9, border:'none', background:'linear-gradient(135deg,#2563eb,#4f46e5)', color:'white', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button onClick={handleSubmit} disabled={loading}
               style={{ padding:'12px', borderRadius:10, border:'none', cursor:loading?'not-allowed':'pointer', fontWeight:800, fontSize:14, letterSpacing:'0.04em',
                 background: loading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#2563eb,#4f46e5)',
@@ -5978,6 +6068,7 @@ export default function DashboardPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [approvalStatus, setApprovalStatus] = useState(null); // null=checking, true=approved, false=pending, 'rejected'=rejected
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showTouModal, setShowTouModal] = useState(false);
   const [userPrefs, setUserPrefs] = useState({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
   const [showAvatarPopup, setShowAvatarPopup] = useState(false);
 
@@ -6370,6 +6461,28 @@ export default function DashboardPage() {
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
       )}
 
+      {/* ── ToU Modal (accessible from profile settings) ── */}
+      {showTouModal && (
+        <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+          onClick={e => { if (e.target === e.currentTarget) setShowTouModal(false); }}>
+          <div style={{ background:'#1e293b', border:'1px solid rgba(255,255,255,0.12)', borderRadius:14, width:'100%', maxWidth:720, maxHeight:'82vh', display:'flex', flexDirection:'column', boxShadow:'0 24px 64px rgba(0,0,0,0.6)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 22px', borderBottom:'1px solid rgba(255,255,255,0.1)', flexShrink:0 }}>
+              <span style={{ color:'white', fontWeight:700, fontSize:15 }}>LucidMSK — Terms of Use</span>
+              <button onClick={() => setShowTouModal(false)} style={{ background:'none', border:'none', color:'#64748b', fontSize:18, cursor:'pointer', lineHeight:1 }}>✕</button>
+            </div>
+            <div style={{ overflowY:'auto', padding:'20px 26px', flex:1, color:'rgba(255,255,255,0.75)', fontSize:13, lineHeight:1.75 }}>
+              {TOU_TEXT}
+            </div>
+            <div style={{ padding:'14px 22px', borderTop:'1px solid rgba(255,255,255,0.1)', display:'flex', justifyContent:'flex-end', flexShrink:0 }}>
+              <button onClick={() => setShowTouModal(false)}
+                style={{ padding:'9px 24px', borderRadius:9, border:'none', background:'linear-gradient(135deg,#2563eb,#4f46e5)', color:'white', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── HEADER ── */}
       <div className="msk-header" style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
         {/* Left: LucidMSK logo */}
@@ -6560,6 +6673,13 @@ export default function DashboardPage() {
                   ))}
                 </div>
               )}
+
+              {/* Terms of Use link */}
+              <button
+                onClick={() => setShowTouModal(true)}
+                style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(148,163,255,0.25)', background:'rgba(148,163,255,0.06)', color:'rgba(148,163,255,0.8)', fontSize:12, fontWeight:600, cursor:'pointer', textAlign:'left', marginBottom:10 }}>
+                📋 View Terms of Use
+              </button>
 
               {/* Preview + Save */}
               <div style={{ display:'flex',alignItems:'center',gap:10 }}>
