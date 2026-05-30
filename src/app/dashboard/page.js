@@ -5611,7 +5611,7 @@ function AdminPanel({ currentUser, onClose }) {
         </div>
         {/* Tabs */}
         <div style={{ display:'flex', gap:0, borderBottom:'1px solid rgba(255,255,255,0.08)', flexShrink:0 }}>
-          {[['pending',`Pending (${pending.length})`],['approved',`Approved (${approved.length})`]].map(([key,label]) => (
+          {[['pending',`Pending (${pending.length})`],['approved',`Approved (${approvedList.length})`]].map(([key,label]) => (
             <button key={key} onClick={() => setTab(key)} style={{ flex:1, background:'none', border:'none', borderBottom: tab===key ? '2px solid #5b9ef7' : '2px solid transparent', color: tab===key ? 'white' : 'rgba(255,255,255,0.4)', padding:'10px 0', fontSize:13, cursor:'pointer', transition:'all 0.15s' }}>{label}</button>
           ))}
         </div>
@@ -5637,9 +5637,9 @@ function AdminPanel({ currentUser, onClose }) {
               </div>
             ))
           ) : (
-            approved.length === 0 ? (
+            approvedList.length === 0 ? (
               <div style={{ color:'rgba(255,255,255,0.3)', textAlign:'center', padding:'32px 0', fontSize:13 }}>No approved users yet</div>
-            ) : approved.map(u => (
+            ) : approvedList.map(u => (
               <div key={u.id} style={rowStyle}>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ color:'white', fontSize:13, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{u.email}</div>
