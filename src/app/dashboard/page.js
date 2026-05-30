@@ -5720,7 +5720,7 @@ async function supaSignUp(email, password) {
         'Content-Type': 'application/json',
         Prefer: 'return=minimal,resolution=ignore-duplicates',
       },
-      body: JSON.stringify({ id: data.user.id, email: email.trim().toLowerCase(), approved: isAdmin, rejected: false }),
+      body: JSON.stringify({ id: data.user.id, email: email.trim().toLowerCase(), approved: isAdmin, rejected: false, terms_accepted_at: new Date().toISOString() }),
     });
   }
   return data;
