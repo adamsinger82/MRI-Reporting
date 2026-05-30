@@ -5706,7 +5706,7 @@ async function supaSignUp(email, password) {
   const r = await fetch(`${SUPA_URL}/auth/v1/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, data: {}, gotrue_meta_security: {}, options: { emailRedirectTo: 'https://lucidmsk.com' } }),
   });
   const data = await r.json();
   // Create profiles row immediately after signup; admin email auto-approved
