@@ -5856,11 +5856,16 @@ function LoginPage({ onLogin }) {
       } else {
         const data = await supaSignIn(email.trim(), password);
         if (data.error || data.error_description) {
-          setError(data.error_description || data.error || 'Invalid email or password.');
+          const errMsg = (data.error_description || data.error || '').toLowerCase();
+          if (errMsg.includes('email not confirmed') || errMsg.includes('not confirmed')) {
+            setError('Your email address is not yet confirmed. Please check your inbox for a verification email.');
+          } else {
+            setError(data.error_description || data.error || 'Invalid email or password.');
+          }
         } else if (data.access_token) {
           saveSession(data); onLogin({ ...data.user, access_token: data.access_token });
         } else {
-          setError('Sign in failed. Please try again.');
+          setError('Account verification pending. You will be notified when your account is approved.');
         }
       }
     } catch { setError('Network error. Please check your connection.'); }
