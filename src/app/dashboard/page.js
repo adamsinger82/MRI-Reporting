@@ -5440,10 +5440,6 @@ const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujc
 const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const ADMIN_EMAIL = 'adamsinger82@gmail.com';
 
-const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
-const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const ADMIN_EMAIL = 'adamsinger82@gmail.com';
-
 // ── Terms of Use text (rendered as JSX) ──────────────────────────────────────
 const TOU_TEXT = (
   <div style={{ fontFamily: 'inherit' }}>
