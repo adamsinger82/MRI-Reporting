@@ -4120,7 +4120,7 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin }) {
   const [loadingJobs, setLoadingJobs] = useState(false);
 
   const sbHeaders = () => {
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const token = currentUser?.access_token || key;
     return { 'Content-Type':'application/json', 'apikey': key, 'Authorization': `Bearer ${token}` };
   };
@@ -4174,7 +4174,13 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin }) {
         headers: { ...sbHeaders(), 'Prefer': 'return=representation' },
         body: JSON.stringify({ ...form, user_id: currentUser.id, status:'pending', expires_at: expires })
       });
-      if (!res.ok) { const e = await res.json(); throw new Error(JSON.stringify(e)); }
+      if (!res.ok) {
+        const e = await res.json();
+        console.error('Supabase insert error:', JSON.stringify(e));
+        console.error('user_id being sent:', currentUser.id);
+        console.error('access_token present:', !!currentUser?.access_token);
+        throw new Error(JSON.stringify(e));
+      }
       // Notify admin
       try {
         await fetch('/api/notify-admin', { method:'POST', headers:{'Content-Type':'application/json'},
