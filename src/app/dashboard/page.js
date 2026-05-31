@@ -6740,7 +6740,7 @@ export default function DashboardPage() {
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
       {showHub && <MSKHubModal initialTab={hubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
-      {showAdminPanel && authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
+      {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
       )}
 
