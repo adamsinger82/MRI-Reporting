@@ -4239,7 +4239,7 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
             ...(isAdmin     ? [{ id:'admin', label:`🛡️ Admin${pending.length > 0 ? ` (${pending.length})` : ''}` }] : []),
           ].map(t => (
             <button key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTab(t.id); if (t.id === 'admin') fetchPending(); if (t.id === 'jobs') fetchJobs(); }}
               style={{ padding:'9px 16px',borderRadius:'8px 8px 0 0',border:'1px solid '+(tab===t.id?'rgba(99,179,237,0.3)':'rgba(99,179,237,0.1)'),borderBottom:'none',background:tab===t.id?'#1a2332':'rgba(99,179,237,0.05)',color:tab===t.id?'#90cdf4':'#94a3b8',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap',pointerEvents:'auto',zIndex:1,position:'relative' }}>
               {t.label}
             </button>
@@ -4277,12 +4277,15 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
                     <span>⏳ Expires {new Date(job.expires_at).toLocaleDateString()}</span>
                   </div>
                   <p style={{ color:'#a0aec0',fontSize:13,lineHeight:1.6,margin:'10px 0' }}>{job.description}</p>
-                  <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
-                    <a href={job.apply_link.startsWith('http') ? job.apply_link : `mailto:${job.apply_link}`} target="_blank" rel="noopener noreferrer"
-                      style={{ display:'inline-block',padding:'7px 18px',background:'rgba(99,179,237,0.1)',border:'1px solid rgba(99,179,237,0.3)',borderRadius:8,color:'#90cdf4',fontSize:12,fontWeight:700,textDecoration:'none' }}>
-                      Apply / Learn More →
-                    </a>
-                    {isAdmin && <button onClick={() => removePost(job.id)} style={{ padding:'7px 14px',background:'rgba(245,101,101,0.1)',border:'1px solid rgba(245,101,101,0.25)',borderRadius:8,color:'#fc8181',fontSize:12,fontWeight:600,cursor:'pointer' }}>Remove</button>}
+                  <div style={{ display:'flex',gap:8,flexWrap:'wrap',alignItems:'center' }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); window.open(job.apply_link.startsWith('http') ? job.apply_link : `mailto:${job.apply_link}`, '_blank'); }}
+                      style={{ display:'inline-block',padding:'7px 18px',background:'rgba(99,179,237,0.1)',border:'1px solid rgba(99,179,237,0.3)',borderRadius:8,color:'#90cdf4',fontSize:12,fontWeight:700,textDecoration:'none',cursor:'pointer' }}>
+                      {job.apply_link.startsWith('http') ? '🔗 Apply / Learn More →' : '✉️ Email to Apply →'}
+                    </button>
+                    <span style={{ color:'#4a5568',fontSize:11 }}>or copy:</span>
+                    <span style={{ color:'#64748b',fontSize:11,fontFamily:'monospace',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:5,padding:'3px 8px',userSelect:'all',cursor:'text' }}>{job.apply_link}</span>
+                    {isAdmin && <button onClick={(e) => { e.stopPropagation(); removePost(job.id); }} style={{ padding:'7px 14px',background:'rgba(245,101,101,0.1)',border:'1px solid rgba(245,101,101,0.25)',borderRadius:8,color:'#fc8181',fontSize:12,fontWeight:600,cursor:'pointer' }}>Remove</button>}
                   </div>
                 </div>
               ))}
