@@ -4000,7 +4000,7 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs }) {
       <button
         onClick={() => setOpen(o => !o)}
         style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(99,179,237,0.4)',background:'rgba(99,179,237,0.1)',color:'#90cdf4',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)',whiteSpace:'nowrap' }}>
-        <span>🗂️</span> MSK Hub {open ? '▲' : '▾'}
+        <span>🗂️</span> MSK Hub
       </button>
       {open && (
         <div style={{ position:'absolute',top:'calc(100% + 6px)',left:0,background:'#1a2332',border:'1px solid rgba(99,179,237,0.2)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.5)',zIndex:9999,minWidth:200,overflow:'hidden' }}>
@@ -4020,6 +4020,87 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs }) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── RESEARCH MODAL INNER ────────────────────────────────────────────────────
+function ResearchModalInner({ currentUser }) {
+  const [expanded, setExpanded] = useState(null);
+  const [showRecommend, setShowRecommend] = useState(false);
+  return (
+    <div style={{ display:'flex',flexDirection:'column',gap:0 }}>
+      {showRecommend && (
+        <div style={{ background:'#141f30',borderBottom:'1px solid #1e3a5f',marginBottom:16,borderRadius:10,overflow:'hidden' }}>
+          <RecommendArticleForm currentUser={currentUser} onClose={() => setShowRecommend(false)} />
+        </div>
+      )}
+      <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
+        {RESEARCH_POSTS.map((post, idx) => {
+          const isOpen = expanded === idx;
+          const isLatest = idx === 0;
+          return (
+            <div key={idx} style={{ background:isOpen?'#1e293b':'#141f30',border:'1px solid '+(isOpen?'#059669':'#1e3a5f'),borderRadius:12,overflow:'hidden',transition:'border-color 0.2s' }}>
+              <div onClick={() => setExpanded(isOpen ? null : idx)}
+                style={{ padding:'14px 18px',cursor:'pointer',display:'flex',gap:14,alignItems:'flex-start' }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:5,flexWrap:'wrap' }}>
+                    {isLatest && <span style={{ background:'#059669',color:'white',fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:999,letterSpacing:'0.08em',textTransform:'uppercase' }}>NEW</span>}
+                    {post.tags.map(tag => <span key={tag} style={{ background:'rgba(99,102,241,0.2)',color:'#a5b4fc',fontSize:9,fontWeight:600,padding:'2px 7px',borderRadius:999 }}>{tag}</span>)}
+                    <span style={{ fontSize:10,color:'#475569',marginLeft:'auto' }}>{post.date}</span>
+                  </div>
+                  <div style={{ fontSize:14,fontWeight:700,color:'#e2e8f0',lineHeight:1.4,marginBottom:3 }}>{post.title}</div>
+                  <div style={{ fontSize:11,color:'#64748b',fontStyle:'italic' }}>{post.journal}</div>
+                </div>
+                <div style={{ color:'#475569',fontSize:18,fontWeight:300,flexShrink:0,marginTop:2,transition:'transform 0.2s',transform:isOpen?'rotate(90deg)':'none' }}>›</div>
+              </div>
+              {isOpen && (
+                <div style={{ padding:'0 18px 18px',borderTop:'1px solid #1e3a5f',overflowY:'auto',maxHeight:'55vh' }}>
+                  <div style={{ padding:'10px 12px',background:'rgba(255,255,255,0.03)',borderRadius:7,marginTop:12,marginBottom:14 }}>
+                    <span style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em' }}>Citation  </span>
+                    <span style={{ fontSize:11,color:'#94a3b8',lineHeight:1.6 }}>{post.citation}</span>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8 }}>Summary</div>
+                    {post.summary.map((bullet, bi) => (
+                      <div key={bi} style={{ display:'flex',gap:8,marginBottom:6 }}>
+                        <span style={{ color:'#059669',fontWeight:700,fontSize:13,flexShrink:0,marginTop:1 }}>›</span>
+                        <span style={{ fontSize:13,color:'#cbd5e1',lineHeight:1.7 }}>{bullet}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(6,95,70,0.1))',border:'1px solid rgba(5,150,105,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:12 }}>
+                    <span style={{ fontSize:10,fontWeight:800,color:'#059669',textTransform:'uppercase',letterSpacing:'0.08em' }}>🔑 Key Takeaway  </span>
+                    <span style={{ fontSize:13,color:'#a7f3d0',lineHeight:1.6,fontWeight:500 }}>{post.keyTakeaway}</span>
+                  </div>
+                  <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginTop:0 }}>
+                    {post.link && (
+                      <a href={post.link} target="_blank" rel="noopener noreferrer"
+                        style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
+                        🔗 Search on Google Scholar →
+                      </a>
+                    )}
+                    <ArticleLikes postIdx={idx} />
+                  </div>
+                  <ArticleComments postIdx={idx} currentUser={currentUser} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ marginTop:16,paddingTop:12,borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+        <span style={{ fontSize:10,color:'#475569',fontStyle:'italic' }}>Add new posts to the top of RESEARCH_POSTS in page.js</span>
+        <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+          <span style={{ fontSize:10,color:'#334155' }}>{RESEARCH_POSTS.length} post{RESEARCH_POSTS.length !== 1 ? 's' : ''}</span>
+          {currentUser && !showRecommend && (
+            <button onClick={() => setShowRecommend(true)}
+              style={{ fontSize:10,fontWeight:700,color:'#059669',background:'rgba(5,150,105,0.1)',border:'1px solid rgba(5,150,105,0.25)',borderRadius:6,padding:'4px 10px',cursor:'pointer' }}>
+              📬 Recommend Article
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -4237,86 +4318,6 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin, supabase }) {
 
 // ─── RESEARCH MODAL INNER (extracted so it works inside MSKHub) ───────────────
 // This is the original ResearchModal body, refactored as a sub-component
-function ResearchModalInner({ currentUser }) {
-  const [expanded, setExpanded] = useState(null);
-  const [showRecommend, setShowRecommend] = useState(false);
-  return (
-    <div style={{ display:'flex',flexDirection:'column',gap:0 }}>
-      {showRecommend && (
-        <div style={{ background:'#141f30',borderBottom:'1px solid #1e3a5f',marginBottom:16,borderRadius:10,overflow:'hidden' }}>
-          <RecommendArticleForm currentUser={currentUser} onClose={() => setShowRecommend(false)} />
-        </div>
-      )}
-      <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
-        {RESEARCH_POSTS.map((post, idx) => {
-          const isOpen = expanded === idx;
-          const isLatest = idx === 0;
-          return (
-            <div key={idx} style={{ background:isOpen?'#1e293b':'#141f30',border:'1px solid '+(isOpen?'#059669':'#1e3a5f'),borderRadius:12,overflow:'hidden',transition:'border-color 0.2s' }}>
-              <div onClick={() => setExpanded(isOpen ? null : idx)}
-                style={{ padding:'14px 18px',cursor:'pointer',display:'flex',gap:14,alignItems:'flex-start' }}>
-                <div style={{ flex:1 }}>
-                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:5,flexWrap:'wrap' }}>
-                    {isLatest && <span style={{ background:'#059669',color:'white',fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:999,letterSpacing:'0.08em',textTransform:'uppercase' }}>NEW</span>}
-                    {post.tags.map(tag => <span key={tag} style={{ background:'rgba(99,102,241,0.2)',color:'#a5b4fc',fontSize:9,fontWeight:600,padding:'2px 7px',borderRadius:999 }}>{tag}</span>)}
-                    <span style={{ fontSize:10,color:'#475569',marginLeft:'auto' }}>{post.date}</span>
-                  </div>
-                  <div style={{ fontSize:14,fontWeight:700,color:'#e2e8f0',lineHeight:1.4,marginBottom:3 }}>{post.title}</div>
-                  <div style={{ fontSize:11,color:'#64748b',fontStyle:'italic' }}>{post.journal}</div>
-                </div>
-                <div style={{ color:'#475569',fontSize:18,fontWeight:300,flexShrink:0,marginTop:2,transition:'transform 0.2s',transform:isOpen?'rotate(90deg)':'none' }}>›</div>
-              </div>
-              {isOpen && (
-                <div style={{ padding:'0 18px 18px',borderTop:'1px solid #1e3a5f',overflowY:'auto',maxHeight:'55vh' }}>
-                  <div style={{ padding:'10px 12px',background:'rgba(255,255,255,0.03)',borderRadius:7,marginTop:12,marginBottom:14 }}>
-                    <span style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em' }}>Citation  </span>
-                    <span style={{ fontSize:11,color:'#94a3b8',lineHeight:1.6 }}>{post.citation}</span>
-                  </div>
-                  <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8 }}>Summary</div>
-                    {post.summary.map((bullet, bi) => (
-                      <div key={bi} style={{ display:'flex',gap:8,marginBottom:6 }}>
-                        <span style={{ color:'#059669',fontWeight:700,fontSize:13,flexShrink:0,marginTop:1 }}>›</span>
-                        <span style={{ fontSize:13,color:'#cbd5e1',lineHeight:1.7 }}>{bullet}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(6,95,70,0.1))',border:'1px solid rgba(5,150,105,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:12 }}>
-                    <span style={{ fontSize:10,fontWeight:800,color:'#059669',textTransform:'uppercase',letterSpacing:'0.08em' }}>🔑 Key Takeaway  </span>
-                    <span style={{ fontSize:13,color:'#a7f3d0',lineHeight:1.6,fontWeight:500 }}>{post.keyTakeaway}</span>
-                  </div>
-                  <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginTop:0 }}>
-                    {post.link && (
-                      <a href={post.link} target="_blank" rel="noopener noreferrer"
-                        style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
-                        🔗 Search on Google Scholar →
-                      </a>
-                    )}
-                    <ArticleLikes postIdx={idx} />
-                  </div>
-                  <ArticleComments postIdx={idx} currentUser={currentUser} />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div style={{ marginTop:16,paddingTop:12,borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-        <span style={{ fontSize:10,color:'#475569',fontStyle:'italic' }}>Add new posts to the top of RESEARCH_POSTS in page.js</span>
-        <div style={{ display:'flex',gap:8,alignItems:'center' }}>
-          <span style={{ fontSize:10,color:'#334155' }}>{RESEARCH_POSTS.length} post{RESEARCH_POSTS.length !== 1 ? 's' : ''}</span>
-          {currentUser && !showRecommend && (
-            <button onClick={() => setShowRecommend(true)}
-              style={{ fontSize:10,fontWeight:700,color:'#059669',background:'rgba(5,150,105,0.1)',border:'1px solid rgba(5,150,105,0.25)',borderRadius:6,padding:'4px 10px',cursor:'pointer' }}>
-              📬 Recommend Article
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ResearchModal({ onClose, currentUser }) {
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'8px' }}>
