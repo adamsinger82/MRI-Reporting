@@ -3114,14 +3114,20 @@ const ATLAS_JOINTS = {
     label: 'Brachial Plexus',
     region: 'Upper Extremity',
     isBrachialPlexus: true,
-    totalSlides: 44,
-    sections: [
-      { startSlide: 1,  label: 'Roots — C5–T1 (coronal/oblique)' },
-      { startSlide: 5,  label: 'Roots → Trunks (coronal)' },
-      { startSlide: 12, label: 'Trunks — UT / MT / LT (axial)' },
-      { startSlide: 21, label: 'Divisions & Cords — LC / PC / MC (axial)' },
-      { startSlide: 28, label: 'Terminal Nerves — MCN / AN / RN / UN / MN' },
-    ],
+    useLocalMRI: true,
+    defaultSlice: 1,
+    sequences: {
+      mri: {
+        label: 'MRI',
+        path: '/atlas/brachial-plexus/Slide',
+        slices: Array.from({length:44},(_,i)=>i+1),
+        ext: '.PNG',
+        pad: 0,
+        permanentLabels: [],
+      },
+    },
+    view: 'Brachial plexus MRI — left = unlabeled · right = labeled',
+    labels: {},
   },
 };
 
@@ -3213,7 +3219,7 @@ function AtlasModal({ onClose }) {
     if (!src) return;
     const sliceArr = sq ? sq.slices : (jointData.slices || []);
     const pathFn = sq
-      ? (i) => `${sq.path}${String(sliceArr[i]).padStart(sq.pad||3,'0')}${sq.ext}`
+      ? (i) => `${sq.path}${sq.pad===0?sliceArr[i]:String(sliceArr[i]).padStart(sq.pad||3,'0')}${sq.ext}`
       : (i) => `${jointData.localPath}${String(sliceArr[i]).padStart(3,'0')}${jointData.localExt||'.webp'}`;
     const center = sliceIdx || Math.floor(sliceArr.length / 2);
     // Tier 1: ±10 slices — load immediately (covers fast local scrolling)
@@ -3246,7 +3252,7 @@ function AtlasModal({ onClose }) {
   const currentSlice = activeSlices[sliceIdx] ?? null;
   const imgUrl = jointData && currentSlice
     ? seqData
-      ? `${seqData.path}${String(currentSlice).padStart(seqData.pad||3,'0')}${seqData.ext}`
+      ? `${seqData.path}${seqData.pad===0?currentSlice:String(currentSlice).padStart(seqData.pad||3,'0')}${seqData.ext}`
       : jointData.useLocalMRI
         ? `${jointData.localPath}${String(currentSlice).padStart(3,'0')}${jointData.localExt||'.webp'}`
         : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
@@ -3388,44 +3394,7 @@ function AtlasModal({ onClose }) {
           {/* Col 2+3 — IMAGE + SIDEBAR in a shared flex row with SVG leader lines */}
           <div style={{ flex:1,display:'flex',flexDirection:'row',overflow:'hidden',position:'relative' }}>
 
-          {/* ── BRACHIAL PLEXUS — scrollable image stack ── */}
-          {jointData?.isBrachialPlexus && (
-            <div style={{ flex:1,overflowY:'auto',background:'#020617',padding:'12px 16px',display:'flex',flexDirection:'column' }}>
-              <div style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:12,padding:'7px 10px',background:'#0a0f1a',borderRadius:7,border:'1px solid #1e293b',flexShrink:0 }}>
-                {[
-                  {t:'UT/MT/LT = Upper/Middle/Lower trunk',c:'#60a5fa'},
-                  {t:'LC/PC/MC = Lateral/Posterior/Medial cord',c:'#60a5fa'},
-                  {t:'MCN = Musculocutaneous',c:'#60a5fa'},
-                  {t:'AN = Axillary · RN = Radial',c:'#ef4444'},
-                  {t:'UN = Ulnar · MN = Median',c:'#4ade80'},
-                  {t:'A/P = Anterior/Posterior division',c:'#94a3b8'},
-                ].map(({t,c}) => <span key={t} style={{fontSize:10,color:c,fontWeight:600,whiteSpace:'nowrap'}}>{t}</span>)}
-              </div>
-              {Array.from({length: jointData.totalSlides}, (_,i) => {
-                const num = i + 1;
-                const section = jointData.sections.slice().reverse().find(s => num >= s.startSlide);
-                const isFirst = section && section.startSlide === num;
-                return (
-                  <div key={num}>
-                    {isFirst && (
-                      <div style={{display:'flex',alignItems:'center',gap:10,margin:'14px 0 8px'}}>
-                        <div style={{flex:1,height:1,background:'#1e3a5f'}}/>
-                        <span style={{fontSize:10,fontWeight:700,color:'#60a5fa',letterSpacing:'0.07em',textTransform:'uppercase',whiteSpace:'nowrap',padding:'0 8px'}}>{section.label}</span>
-                        <div style={{flex:1,height:1,background:'#1e3a5f'}}/>
-                      </div>
-                    )}
-                    <div style={{marginBottom:6,borderRadius:6,overflow:'hidden',border:'1px solid #1e293b',background:'#000',position:'relative'}}>
-                      <div style={{position:'absolute',top:5,left:6,background:'rgba(0,0,0,0.6)',borderRadius:4,padding:'1px 6px',fontSize:10,fontWeight:700,color:'#93c5fd',zIndex:1}}>{num} / {jointData.totalSlides}</div>
-                      <img src={`/atlas/brachial-plexus/Slide${num}.PNG`} alt={`Slide ${num}`} loading="lazy" style={{width:'100%',display:'block',objectFit:'contain'}}/>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Col 2 — IMAGE (standard joints only) */}
-          {!jointData?.isBrachialPlexus && <>
+          {/* Col 2 — IMAGE */}
           <div ref={imgContainerRef}
             style={{ flex:'1 1 0',minWidth:0,display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
 
@@ -3683,8 +3652,6 @@ function AtlasModal({ onClose }) {
               </div>
             )}
           </div>
-
-          </>}{/* end !isBrachialPlexus cols */}
 
           </div>{/* end Col 2+3 wrapper */}
 
