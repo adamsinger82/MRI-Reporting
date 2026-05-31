@@ -4110,7 +4110,7 @@ const JOB_TYPES = ['Full-Time','Part-Time','Fellowship','Locums','Research','Ind
 const ADMIN_NOTIFY_EMAIL = 'admin@lucidmsk.com';
 const emptyJobForm = { title:'', institution:'', location:'', job_type:'Full-Time', salary_range:'', apply_link:'', description:'' };
 
-function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin, supabase }) {
+function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin }) {
   const [jobs, setJobs]               = useState([]);
   const [pending, setPending]         = useState([]);
   const [form, setForm]               = useState(emptyJobForm);
@@ -4119,17 +4119,21 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin, supabase }) {
   const [submitting, setSubmitting]   = useState(false);
   const [loadingJobs, setLoadingJobs] = useState(false);
 
+  const getSB = () => getSupabase(currentUser?.access_token);
+
   const fetchJobs = async () => {
     setLoadingJobs(true);
+    const sb = getSB(); if (!sb) { setLoadingJobs(false); return; }
     const today = new Date().toISOString().split('T')[0];
-    const { data } = await supabase.from('job_posts').select('*').eq('status','approved').gte('expires_at', today).order('created_at',{ascending:false});
+    const { data } = await sb.from('job_posts').select('*').eq('status','approved').gte('expires_at', today).order('created_at',{ascending:false});
     setJobs(data || []);
     setLoadingJobs(false);
   };
 
   const fetchPending = async () => {
     if (!isAdmin) return;
-    const { data } = await supabase.from('job_posts').select('*').eq('status','pending').order('created_at',{ascending:false});
+    const sb = getSB(); if (!sb) return;
+    const { data } = await sb.from('job_posts').select('*').eq('status','pending').order('created_at',{ascending:false});
     setPending(data || []);
   };
 
@@ -4148,8 +4152,10 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin, supabase }) {
     if (!form.apply_link.trim())  return setFormErr('Application link or contact email is required.');
     if (!form.description.trim()) return setFormErr('Job description is required.');
     setSubmitting(true);
+    const sb = getSB();
+    if (!sb) { setFormErr('Session error. Please refresh and try again.'); setSubmitting(false); return; }
     const expires = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
-    const { error } = await supabase.from('job_posts').insert({ ...form, user_id: currentUser.id, status:'pending', expires_at: expires });
+    const { error } = await sb.from('job_posts').insert({ ...form, user_id: currentUser.id, status:'pending', expires_at: expires });
     if (error) { setFormErr('Submission failed. Please try again.'); setSubmitting(false); return; }
     // Notify admin (best-effort via Supabase edge function or your API route)
     try {
@@ -4162,8 +4168,8 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin, supabase }) {
     setSubmitting(false);
   };
 
-  const approvePost = async id => { await supabase.from('job_posts').update({status:'approved'}).eq('id',id); fetchPending(); fetchJobs(); };
-  const removePost  = async id => { await supabase.from('job_posts').update({status:'removed'}).eq('id',id);  fetchPending(); fetchJobs(); };
+  const approvePost = async id => { const sb = getSB(); if (sb) { await sb.from('job_posts').update({status:'approved'}).eq('id',id); fetchPending(); fetchJobs(); }};
+  const removePost  = async id => { const sb = getSB(); if (sb) { await sb.from('job_posts').update({status:'removed'}).eq('id',id);  fetchPending(); fetchJobs(); }};
 
   // ── shared styles ──
   const inp = { background:'#1a2332', border:'1px solid rgba(99,179,237,0.2)', borderRadius:8, color:'#e2e8f0', fontSize:13, padding:'9px 12px', outline:'none', width:'100%', boxSizing:'border-box', fontFamily:'inherit' };
@@ -6693,7 +6699,7 @@ export default function DashboardPage() {
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
-      {showHub && <MSKHubModal tab={hubTab} setTab={setHubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()} supabase={supabase} />}
+      {showHub && <MSKHubModal tab={hubTab} setTab={setHubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()} />}
       {showAdminPanel && authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
       )}
