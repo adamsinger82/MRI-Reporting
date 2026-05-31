@@ -4003,7 +4003,7 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs }) {
         <span>🗂️</span> MSK Hub
       </button>
       {open && (
-        <div style={{ position:'fixed',top:'auto',left:'auto',background:'#1a2332',border:'1px solid rgba(99,179,237,0.2)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.8)',zIndex:99999,minWidth:200,overflow:'hidden',isolation:'isolate' }}>
+        <div style={{ position:'absolute',top:'calc(100% + 6px)',left:0,background:'#1a2332',border:'1px solid rgba(99,179,237,0.2)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.9)',zIndex:99999,minWidth:200,overflow:'hidden' }}>
           <button
             onClick={() => { setOpen(false); onOpenResearch(); }}
             style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
@@ -4120,7 +4120,7 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin }) {
   const [loadingJobs, setLoadingJobs] = useState(false);
 
   const sbHeaders = () => {
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
     const token = currentUser?.access_token || key;
     return { 'Content-Type':'application/json', 'apikey': key, 'Authorization': `Bearer ${token}` };
   };
@@ -6759,7 +6759,7 @@ export default function DashboardPage() {
       )}
 
       {/* ── HEADER ── */}
-      <div className="msk-header" style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' }}>
+      <div className="msk-header" style={{ background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'12px 20px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',position:'relative',zIndex:500 }}>
         {/* Left: LucidMSK logo */}
         <div className="msk-header-logo" style={{ display:'flex',alignItems:'center',gap:10,flexShrink:0 }}>
           <svg width="36" height="36" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
@@ -6882,8 +6882,8 @@ export default function DashboardPage() {
             }
           </button>
 
-          {/* Admin button — only for admin email */}
-          {authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
+          {/* Admin button — only for admin users */}
+          {['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
             <button onClick={() => setShowAdminPanel(true)}
               style={{ padding:'7px 13px',borderRadius:8,border:'1px solid rgba(148,163,255,0.35)',background:'rgba(148,163,255,0.1)',color:'rgba(148,163,255,0.9)',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap' }}>
               🛡️ Admin
