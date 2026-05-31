@@ -4110,7 +4110,8 @@ const JOB_TYPES = ['Full-Time','Part-Time','Fellowship','Locums','Research','Ind
 const ADMIN_NOTIFY_EMAIL = 'admin@lucidmsk.com';
 const emptyJobForm = { title:'', institution:'', location:'', job_type:'Full-Time', salary_range:'', apply_link:'', description:'' };
 
-function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin }) {
+function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
+  const [tab, setTab]                 = useState(initialTab || 'research');
   const [jobs, setJobs]               = useState([]);
   const [pending, setPending]         = useState([]);
   const [form, setForm]               = useState(emptyJobForm);
@@ -6737,7 +6738,7 @@ export default function DashboardPage() {
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
-      {showHub && <MSKHubModal tab={hubTab} setTab={setHubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
+      {showHub && <MSKHubModal initialTab={hubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showAdminPanel && authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
       )}
