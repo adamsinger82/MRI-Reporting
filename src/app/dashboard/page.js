@@ -4237,8 +4237,8 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin }) {
             ...(currentUser ? [{ id:'post', label:'➕ Post a Job' }] : []),
             ...(isAdmin     ? [{ id:'admin', label:`🛡️ Admin${pending.length > 0 ? ` (${pending.length})` : ''}` }] : []),
           ].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              style={{ padding:'9px 16px',borderRadius:'8px 8px 0 0',border:'1px solid '+(tab===t.id?'rgba(99,179,237,0.3)':'transparent'),borderBottom:'none',background:tab===t.id?'#1a2332':'transparent',color:tab===t.id?'#90cdf4':'#4a5568',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap' }}>
+            <button key={t.id} onClick={() => { setTab(t.id); if (t.id === 'admin') fetchPending(); if (t.id === 'jobs') fetchJobs(); }}
+              style={{ padding:'9px 16px',borderRadius:'8px 8px 0 0',border:'1px solid '+(tab===t.id?'rgba(99,179,237,0.3)':'rgba(99,179,237,0.1)'),borderBottom:'none',background:tab===t.id?'#1a2332':'rgba(99,179,237,0.05)',color:tab===t.id?'#90cdf4':'#94a3b8',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap' }}>
               {t.label}
             </button>
           ))}
