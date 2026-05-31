@@ -4216,7 +4216,7 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
 
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.78)',backdropFilter:'blur(4px)',zIndex:1000,display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'16px',overflowY:'auto' }}>
-      <div style={{ background:'#0f172a',borderRadius:16,width:'min(99vw,880px)',maxHeight:'90vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)',border:'1px solid rgba(99,179,237,0.15)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background:'#0f172a',borderRadius:16,width:'min(99vw,880px)',maxHeight:'90vh',display:'flex',flexDirection:'column',boxShadow:'0 30px 80px rgba(0,0,0,0.7)',border:'1px solid rgba(99,179,237,0.15)' }}>
 
         {/* Header */}
         <div style={{ background:'linear-gradient(135deg,#0c2340,#153a5c)',padding:'14px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0,borderBottom:'1px solid rgba(99,179,237,0.15)' }}>
@@ -4231,7 +4231,7 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
         </div>
 
         {/* Tab bar */}
-        <div style={{ display:'flex',gap:3,padding:'10px 16px 0',background:'#0f172a',flexShrink:0 }}>
+        <div onClick={e => e.stopPropagation()} style={{ display:'flex',gap:3,padding:'10px 16px 0',background:'#0f172a',flexShrink:0,position:'relative',zIndex:10 }}>
           {[
             { id:'research', label:'📰 Latest Research' },
             { id:'jobs',     label:'💼 Jobs Board' },
