@@ -3110,7 +3110,6 @@ const ATLAS_JOINTS = {
       veins:    [[61,48,'Iliac v. (R)','#4c1d95'],[39,48,'Iliac v. (L)','#4c1d95']],
     },
   },
-  // ── Brachial Plexus ──────────────────────────────────────────────────────
   brachialPlexus: {
     label: 'Brachial Plexus',
     region: 'Upper Extremity',
@@ -3163,14 +3162,14 @@ function AtlasModal({ onClose }) {
     if (keys.length > 0) {
       setSelectedJoint(keys[0]);
       const j = ATLAS_JOINTS[keys[0]];
-      const idx = j ? (j.useLocalMRI ? j.defaultSlice-1 : j.slices.indexOf(j.defaultSlice)) : 0;
+      const idx = j && !j.isBrachialPlexus ? (j.useLocalMRI ? j.defaultSlice-1 : (j.slices||[]).indexOf(j.defaultSlice)) : 0;
       setSliceIdx(Math.max(0, idx));
     }
   }, [selectedRegion]);
 
   useEffect(() => {
-    if (jointData) {
-      const idx = jointData.useLocalMRI ? jointData.defaultSlice-1 : jointData.slices.indexOf(jointData.defaultSlice);
+    if (jointData && !jointData.isBrachialPlexus) {
+      const idx = jointData.useLocalMRI ? jointData.defaultSlice-1 : (jointData.slices||[]).indexOf(jointData.defaultSlice);
       setSliceIdx(Math.max(0, idx));
       setImgLoaded(false); setImgError(false);
       // Reset sequence to first available for this joint
@@ -3207,7 +3206,7 @@ function AtlasModal({ onClose }) {
   // Smart preload — ±10 immediately on joint/sequence change, rest lazily after 1s
   // Keeps initial load snappy; browser cache handles subsequent scrolls
   useEffect(() => {
-    if (!jointData) return;
+    if (!jointData || jointData.isBrachialPlexus) return;
     const preloadSqKey = jointData?.sequences?.[sequenceRef.current] ? sequenceRef.current : Object.keys(jointData?.sequences||{})[0];
     const sq = jointData?.sequences?.[preloadSqKey] || null;
     const src = sq || (jointData?.useLocalMRI ? jointData : null);
@@ -3389,18 +3388,16 @@ function AtlasModal({ onClose }) {
           {/* Col 2+3 — IMAGE + SIDEBAR in a shared flex row with SVG leader lines */}
           <div style={{ flex:1,display:'flex',flexDirection:'row',overflow:'hidden',position:'relative' }}>
 
-          {/* ── BRACHIAL PLEXUS — scrollable stack (no labeling) ── */}
+          {/* ── BRACHIAL PLEXUS — scrollable image stack, no labeling ── */}
           {jointData?.isBrachialPlexus && (
-            <div style={{ flex:1,overflowY:'auto',background:'#020617',padding:'12px 16px',display:'flex',flexDirection:'column',gap:0 }}>
-              <div style={{ display:'flex',gap:14,flexWrap:'wrap',marginBottom:12,padding:'7px 10px',background:'#0a0f1a',borderRadius:7,border:'1px solid #1e293b',flexShrink:0 }}>
+            <div style={{ flex:1,overflowY:'auto',background:'#020617',padding:'12px 16px',display:'flex',flexDirection:'column' }}>
+              <div style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:12,padding:'7px 10px',background:'#0a0f1a',borderRadius:7,border:'1px solid #1e293b',flexShrink:0 }}>
                 {[
                   {t:'UT/MT/LT = Upper/Middle/Lower trunk',c:'#60a5fa'},
                   {t:'LC/PC/MC = Lateral/Posterior/Medial cord',c:'#60a5fa'},
                   {t:'MCN = Musculocutaneous',c:'#60a5fa'},
-                  {t:'AN = Axillary',c:'#ef4444'},
-                  {t:'RN = Radial',c:'#ef4444'},
-                  {t:'UN = Ulnar',c:'#4ade80'},
-                  {t:'MN = Median',c:'#4ade80'},
+                  {t:'AN = Axillary · RN = Radial',c:'#ef4444'},
+                  {t:'UN = Ulnar · MN = Median',c:'#4ade80'},
                   {t:'A/P = Anterior/Posterior division',c:'#94a3b8'},
                 ].map(({t,c}) => <span key={t} style={{fontSize:10,color:c,fontWeight:600,whiteSpace:'nowrap'}}>{t}</span>)}
               </div>
@@ -3411,14 +3408,14 @@ function AtlasModal({ onClose }) {
                 return (
                   <div key={num}>
                     {isFirst && (
-                      <div style={{display:'flex',alignItems:'center',gap:10,margin:'16px 0 8px'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:10,margin:'14px 0 8px'}}>
                         <div style={{flex:1,height:1,background:'#1e3a5f'}}/>
                         <span style={{fontSize:10,fontWeight:700,color:'#60a5fa',letterSpacing:'0.07em',textTransform:'uppercase',whiteSpace:'nowrap',padding:'0 8px'}}>{section.label}</span>
                         <div style={{flex:1,height:1,background:'#1e3a5f'}}/>
                       </div>
                     )}
                     <div style={{marginBottom:6,borderRadius:6,overflow:'hidden',border:'1px solid #1e293b',background:'#000',position:'relative'}}>
-                      <div style={{position:'absolute',top:5,left:6,background:'rgba(0,0,0,0.6)',borderRadius:4,padding:'1px 6px',fontSize:10,fontWeight:700,color:'#93c5fd',zIndex:1}}>{num} / {jointData.totalSlides}</div>
+                      <div style={{position:'absolute',top:5,left:6,background:'rgba(0,0,0,0.6)',borderRadius:4,padding:'1px 6px',fontSize:10,fontWeight:700,color:'#93c5fd',zIndex:1,letterSpacing:'0.04em'}}>{num} / {jointData.totalSlides}</div>
                       <img src={`/brachial-plexus/Slide${num}.PNG`} alt={`Slide ${num}`} loading="lazy" style={{width:'100%',display:'block',objectFit:'contain'}}/>
                     </div>
                   </div>
@@ -3428,7 +3425,7 @@ function AtlasModal({ onClose }) {
           )}
 
           {/* Col 2 — IMAGE (standard joints only) */}
-          {!jointData?.isBrachialPlexus && (<>
+          {!jointData?.isBrachialPlexus && <>
           <div ref={imgContainerRef}
             style={{ flex:'1 1 0',minWidth:0,display:'flex',flexDirection:'column',background:'#020617',overflow:'hidden',position:'relative' }}>
 
@@ -3687,7 +3684,7 @@ function AtlasModal({ onClose }) {
             )}
           </div>
 
-          </>)}{/* end !isBrachialPlexus */}
+          </>}{/* end !isBrachialPlexus cols */}
 
           </div>{/* end Col 2+3 wrapper */}
 
