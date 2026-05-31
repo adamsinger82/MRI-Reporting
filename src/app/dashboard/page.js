@@ -3123,6 +3123,92 @@ Object.entries(ATLAS_JOINTS).forEach(([k, v]) => {
 // Rebuilt with split layout: image on left (dots only), labels sidebar on right
 // Label editor uses imgRef.getBoundingClientRect() to record clicks relative
 // to the ACTUAL image pixels — not the container — fixing coordinate drift.
+// ─── BRACHIAL PLEXUS ATLAS MODAL ─────────────────────────────────────────────
+const BRACHIAL_PLEXUS_SLIDES = Array.from({ length: 44 }, (_, i) => ({
+  num: i + 1,
+  src: `/brachial-plexus/Slide${i + 1}.PNG`,
+}));
+
+// Section dividers for visual grouping
+const BRACHIAL_SECTIONS = [
+  { startSlide: 1,  label: 'Roots — C5–T1 (coronal/oblique)' },
+  { startSlide: 5,  label: 'Roots → Trunks (coronal)' },
+  { startSlide: 12, label: 'Trunks — UT / MT / LT (axial)' },
+  { startSlide: 21, label: 'Divisions & Cords — LC / PC / MC (axial)' },
+  { startSlide: 28, label: 'Terminal Nerves — MCN / AN / RN / UN / MN' },
+];
+
+function BrachialPlexusModal({ onClose }) {
+  return (
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.82)',zIndex:1100,display:'flex',alignItems:'center',justifyContent:'center',padding:'8px' }}>
+      <div style={{ background:'#0f172a',borderRadius:16,width:'min(99vw,1200px)',height:'min(96vh,960px)',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
+
+        {/* Header */}
+        <div style={{ background:'linear-gradient(135deg,#1e3a5f,#1d4ed8)',padding:'10px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+            <span style={{ fontSize:16 }}>🧠</span>
+            <span style={{ color:'white',fontWeight:800,fontSize:13,letterSpacing:'0.08em' }}>BRACHIAL PLEXUS ATLAS — MRI</span>
+            <span style={{ color:'rgba(255,255,255,0.45)',fontSize:11,marginLeft:6 }}>44 slides · left = unlabeled · right = labeled</span>
+          </div>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'4px 12px',cursor:'pointer',fontSize:12,fontWeight:600 }}>✕ Close</button>
+        </div>
+
+        {/* Legend bar */}
+        <div style={{ background:'#0a0f1a',borderBottom:'1px solid #1e293b',padding:'6px 20px',display:'flex',gap:20,flexShrink:0,flexWrap:'wrap' }}>
+          {[
+            { label:'UT = Upper trunk', color:'#60a5fa' },
+            { label:'MT = Middle trunk', color:'#60a5fa' },
+            { label:'LT = Lower trunk', color:'#60a5fa' },
+            { label:'LC/PC/MC = Lateral/Posterior/Medial cord', color:'#60a5fa' },
+            { label:'MCN = Musculocutaneous', color:'#60a5fa' },
+            { label:'AN = Axillary', color:'#ef4444' },
+            { label:'RN = Radial', color:'#ef4444' },
+            { label:'UN = Ulnar', color:'#4ade80' },
+            { label:'MN = Median', color:'#4ade80' },
+            { label:'A = Anterior division', color:'#a3a3a3' },
+            { label:'P = Posterior division', color:'#a3a3a3' },
+          ].map(({ label, color }) => (
+            <span key={label} style={{ fontSize:10,color,fontWeight:600,whiteSpace:'nowrap' }}>{label}</span>
+          ))}
+        </div>
+
+        {/* Scrollable image list */}
+        <div style={{ flex:1,overflowY:'auto',padding:'16px 20px',display:'flex',flexDirection:'column',gap:0 }}>
+          {BRACHIAL_PLEXUS_SLIDES.map(({ num, src }) => {
+            const section = BRACHIAL_SECTIONS.slice().reverse().find(s => num >= s.startSlide);
+            const isFirstOfSection = section && section.startSlide === num;
+            return (
+              <div key={num}>
+                {isFirstOfSection && (
+                  <div style={{ display:'flex',alignItems:'center',gap:10,margin:'18px 0 10px',flexShrink:0 }}>
+                    <div style={{ flex:1,height:1,background:'#1e3a5f' }} />
+                    <span style={{ fontSize:10,fontWeight:700,color:'#60a5fa',letterSpacing:'0.08em',textTransform:'uppercase',whiteSpace:'nowrap',background:'#0f172a',padding:'0 8px' }}>
+                      {section.label}
+                    </span>
+                    <div style={{ flex:1,height:1,background:'#1e3a5f' }} />
+                  </div>
+                )}
+                <div style={{ marginBottom:8,borderRadius:8,overflow:'hidden',border:'1px solid #1e293b',background:'#020617',position:'relative' }}>
+                  <div style={{ position:'absolute',top:6,left:8,background:'rgba(0,0,0,0.65)',borderRadius:4,padding:'2px 7px',fontSize:10,fontWeight:700,color:'#93c5fd',zIndex:1,letterSpacing:'0.05em' }}>
+                    {num} / 44
+                  </div>
+                  <img
+                    src={src}
+                    alt={`Brachial plexus slide ${num}`}
+                    loading="lazy"
+                    style={{ width:'100%',display:'block',objectFit:'contain' }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 function AtlasModal({ onClose }) {
   const [selectedRegion, setSelectedRegion] = useState('Pelvis & Spine');
   const [selectedJoint, setSelectedJoint] = useState('pelvis');
@@ -6456,6 +6542,7 @@ export default function DashboardPage() {
   const [micError, setMicError] = useState('');
   const [spineRegion, setSpineRegion] = useState('lumbar');
   const [showAtlas, setShowAtlas] = useState(false);
+  const [showBrachialAtlas, setShowBrachialAtlas] = useState(false);
   const [showDdx, setShowDdx] = useState(false);
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
@@ -6741,6 +6828,7 @@ export default function DashboardPage() {
     <div style={{ minHeight:'100vh',background:'linear-gradient(160deg,#0d1b2a 0%,#1a3a5c 45%,#0d1b2a 100%)',fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
 
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
+      {showBrachialAtlas && <BrachialPlexusModal onClose={() => setShowBrachialAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
       {showHub && <MSKHubModal initialTab={hubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
@@ -6850,6 +6938,12 @@ export default function DashboardPage() {
           <button onClick={() => setShowAtlas(true)}
             style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:'rgba(255,255,255,0.08)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
             <span>🫁</span> MRI Anatomy Atlas
+          </button>
+
+          {/* Brachial Plexus Atlas button */}
+          <button onClick={() => setShowBrachialAtlas(true)}
+            style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(96,165,250,0.35)',background:'rgba(29,78,216,0.15)',color:'#93c5fd',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
+            <span>🧠</span> Brachial Plexus
           </button>
 
           {/* Dark mode toggle */}
@@ -7008,6 +7102,7 @@ export default function DashboardPage() {
           {/* Tool buttons */}
           {[
             { label:'🫁 MRI Anatomy Atlas', onClick:() => { setShowAtlas(true); setMobileDrawer(false); }, color:'rgba(255,255,255,0.08)', border:'rgba(255,255,255,0.2)', textColor:'white' },
+            { label:'🧠 Brachial Plexus', onClick:() => { setShowBrachialAtlas(true); setMobileDrawer(false); }, color:'rgba(29,78,216,0.15)', border:'rgba(96,165,250,0.35)', textColor:'#93c5fd' },
             { label:'📰 Latest MSK Research', onClick:() => { setHubTab('research'); setShowHub(true); setMobileDrawer(false); }, color:'rgba(16,185,129,0.12)', border:'rgba(16,185,129,0.5)', textColor:'#6ee7b7' },
             { label:'💼 MSK Jobs Board', onClick:() => { setHubTab('jobs'); setShowHub(true); setMobileDrawer(false); }, color:'rgba(99,179,237,0.12)', border:'rgba(99,179,237,0.4)', textColor:'#90cdf4' },
             { label:'🔬 MSK Lesion DDx', onClick:() => { setShowDdx(true); setMobileDrawer(false); }, color:'rgba(124,58,237,0.15)', border:'rgba(124,58,237,0.5)', textColor:'#c4b5fd' },
