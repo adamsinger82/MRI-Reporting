@@ -3388,7 +3388,7 @@ function AtlasModal({ onClose }) {
           {/* Col 2+3 — IMAGE + SIDEBAR in a shared flex row with SVG leader lines */}
           <div style={{ flex:1,display:'flex',flexDirection:'row',overflow:'hidden',position:'relative' }}>
 
-          {/* ── BRACHIAL PLEXUS — scrollable image stack, no labeling ── */}
+          {/* ── BRACHIAL PLEXUS — scrollable image stack ── */}
           {jointData?.isBrachialPlexus && (
             <div style={{ flex:1,overflowY:'auto',background:'#020617',padding:'12px 16px',display:'flex',flexDirection:'column' }}>
               <div style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:12,padding:'7px 10px',background:'#0a0f1a',borderRadius:7,border:'1px solid #1e293b',flexShrink:0 }}>
@@ -3415,8 +3415,8 @@ function AtlasModal({ onClose }) {
                       </div>
                     )}
                     <div style={{marginBottom:6,borderRadius:6,overflow:'hidden',border:'1px solid #1e293b',background:'#000',position:'relative'}}>
-                      <div style={{position:'absolute',top:5,left:6,background:'rgba(0,0,0,0.6)',borderRadius:4,padding:'1px 6px',fontSize:10,fontWeight:700,color:'#93c5fd',zIndex:1,letterSpacing:'0.04em'}}>{num} / {jointData.totalSlides}</div>
-                      <img src={`/brachial-plexus/Slide${num}.PNG`} alt={`Slide ${num}`} loading="lazy" style={{width:'100%',display:'block',objectFit:'contain'}}/>
+                      <div style={{position:'absolute',top:5,left:6,background:'rgba(0,0,0,0.6)',borderRadius:4,padding:'1px 6px',fontSize:10,fontWeight:700,color:'#93c5fd',zIndex:1}}>{num} / {jointData.totalSlides}</div>
+                      <img src={`/atlas/brachial-plexus/Slide${num}.PNG`} alt={`Slide ${num}`} loading="lazy" style={{width:'100%',display:'block',objectFit:'contain'}}/>
                     </div>
                   </div>
                 );
