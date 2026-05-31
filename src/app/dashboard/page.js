@@ -3986,7 +3986,360 @@ function RecommendArticleForm({ currentUser, onClose }) {
 }
 
 // ─── RESEARCH MODAL ────────────────────────────────────────────────────────
+// ─── MSK HUB DROPDOWN ────────────────────────────────────────────────────────
+function MSKHubDropdown({ onOpenResearch, onOpenJobs }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+  return (
+    <div ref={ref} style={{ position:'relative', display:'inline-block' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(99,179,237,0.4)',background:'rgba(99,179,237,0.1)',color:'#90cdf4',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)',whiteSpace:'nowrap' }}>
+        <span>🗂️</span> MSK Hub {open ? '▲' : '▾'}
+      </button>
+      {open && (
+        <div style={{ position:'absolute',top:'calc(100% + 6px)',left:0,background:'#1a2332',border:'1px solid rgba(99,179,237,0.2)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.5)',zIndex:9999,minWidth:200,overflow:'hidden' }}>
+          <button
+            onClick={() => { setOpen(false); onOpenResearch(); }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+            📰 Latest MSK Research
+          </button>
+          <button
+            onClick={() => { setOpen(false); onOpenJobs(); }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+            💼 Jobs Board
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MSK HUB MODAL ───────────────────────────────────────────────────────────
+const JOB_TYPES = ['Full-Time','Part-Time','Fellowship','Locums','Research','Industry'];
+const ADMIN_NOTIFY_EMAIL = 'admin@lucidmsk.com';
+const emptyJobForm = { title:'', institution:'', location:'', job_type:'Full-Time', salary_range:'', apply_link:'', description:'' };
+
+function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin, supabase }) {
+  const [jobs, setJobs]               = useState([]);
+  const [pending, setPending]         = useState([]);
+  const [form, setForm]               = useState(emptyJobForm);
+  const [formErr, setFormErr]         = useState('');
+  const [formOk, setFormOk]           = useState('');
+  const [submitting, setSubmitting]   = useState(false);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+
+  const fetchJobs = async () => {
+    setLoadingJobs(true);
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase.from('job_posts').select('*').eq('status','approved').gte('expires_at', today).order('created_at',{ascending:false});
+    setJobs(data || []);
+    setLoadingJobs(false);
+  };
+
+  const fetchPending = async () => {
+    if (!isAdmin) return;
+    const { data } = await supabase.from('job_posts').select('*').eq('status','pending').order('created_at',{ascending:false});
+    setPending(data || []);
+  };
+
+  useEffect(() => {
+    if (tab === 'jobs') fetchJobs();
+    if (tab === 'admin') fetchPending();
+  }, [tab]);
+
+  const setField = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const submitJob = async () => {
+    setFormErr(''); setFormOk('');
+    if (!form.title.trim())       return setFormErr('Job title is required.');
+    if (!form.institution.trim()) return setFormErr('Institution is required.');
+    if (!form.location.trim())    return setFormErr('Location is required.');
+    if (!form.apply_link.trim())  return setFormErr('Application link or contact email is required.');
+    if (!form.description.trim()) return setFormErr('Job description is required.');
+    setSubmitting(true);
+    const expires = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+    const { error } = await supabase.from('job_posts').insert({ ...form, user_id: currentUser.id, status:'pending', expires_at: expires });
+    if (error) { setFormErr('Submission failed. Please try again.'); setSubmitting(false); return; }
+    // Notify admin (best-effort via Supabase edge function or your API route)
+    try {
+      await fetch('/api/notify-admin', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ to: ADMIN_NOTIFY_EMAIL, subject: `[LucidMSK] New Job Post Pending: ${form.title}`,
+          html: `<div style="font-family:sans-serif;padding:24px;background:#0f1923;color:#e2e8f0;border-radius:12px;"><h2 style="color:#90cdf4;">New Job Post Pending Approval</h2><p><b>Title:</b> ${form.title}</p><p><b>Institution:</b> ${form.institution}</p><p><b>Location:</b> ${form.location}</p><p><b>Type:</b> ${form.job_type}</p><p><b>Submitted by:</b> ${currentUser.email}</p><p style="margin-top:20px;color:#718096;">Log in to LucidMSK → MSK Hub → Admin to approve or remove this post.</p></div>` }) });
+    } catch(_) {}
+    setForm(emptyJobForm);
+    setFormOk('Submitted! Your post will appear on the board once approved by an admin (usually within 24 hours).');
+    setSubmitting(false);
+  };
+
+  const approvePost = async id => { await supabase.from('job_posts').update({status:'approved'}).eq('id',id); fetchPending(); fetchJobs(); };
+  const removePost  = async id => { await supabase.from('job_posts').update({status:'removed'}).eq('id',id);  fetchPending(); fetchJobs(); };
+
+  // ── shared styles ──
+  const inp = { background:'#1a2332', border:'1px solid rgba(99,179,237,0.2)', borderRadius:8, color:'#e2e8f0', fontSize:13, padding:'9px 12px', outline:'none', width:'100%', boxSizing:'border-box', fontFamily:'inherit' };
+  const lbl = { color:'#90cdf4', fontSize:12, fontWeight:700, letterSpacing:'0.04em', display:'block', marginBottom:4 };
+
+  return (
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.78)',backdropFilter:'blur(4px)',zIndex:1000,display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'16px',overflowY:'auto' }}>
+      <div style={{ background:'#0f172a',borderRadius:16,width:'min(99vw,880px)',maxHeight:'90vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)',border:'1px solid rgba(99,179,237,0.15)' }}>
+
+        {/* Header */}
+        <div style={{ background:'linear-gradient(135deg,#0c2340,#153a5c)',padding:'14px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0,borderBottom:'1px solid rgba(99,179,237,0.15)' }}>
+          <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+            <span style={{ fontSize:20 }}>🗂️</span>
+            <div>
+              <div style={{ color:'white',fontWeight:800,fontSize:14,letterSpacing:'0.08em' }}>MSK HUB</div>
+              <div style={{ color:'rgba(255,255,255,0.5)',fontSize:11,marginTop:1 }}>MSK Radiology Research · Careers · Opportunities</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'4px 12px',cursor:'pointer',fontSize:12,fontWeight:600 }}>✕</button>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display:'flex',gap:3,padding:'10px 16px 0',background:'#0f172a',flexShrink:0 }}>
+          {[
+            { id:'research', label:'📰 Latest Research' },
+            { id:'jobs',     label:'💼 Jobs Board' },
+            ...(currentUser ? [{ id:'post', label:'➕ Post a Job' }] : []),
+            ...(isAdmin     ? [{ id:'admin', label:`🛡️ Admin${pending.length > 0 ? ` (${pending.length})` : ''}` }] : []),
+          ].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              style={{ padding:'9px 16px',borderRadius:'8px 8px 0 0',border:'1px solid '+(tab===t.id?'rgba(99,179,237,0.3)':'transparent'),borderBottom:'none',background:tab===t.id?'#1a2332':'transparent',color:tab===t.id?'#90cdf4':'#4a5568',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all 0.15s',whiteSpace:'nowrap' }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div style={{ flex:1,overflowY:'auto',padding:'20px 24px',background:'#1a2332' }}>
+
+          {/* ── Research tab — existing ResearchModal content ── */}
+          {tab === 'research' && <ResearchModalInner currentUser={currentUser} />}
+
+          {/* ── Jobs Board tab ── */}
+          {tab === 'jobs' && (
+            <div>
+              <div style={{ color:'#90cdf4',fontSize:15,fontWeight:700,marginBottom:16,paddingBottom:10,borderBottom:'1px solid rgba(99,179,237,0.1)' }}>MSK Radiology Opportunities</div>
+              {loadingJobs && <p style={{ color:'#718096',fontSize:13 }}>Loading...</p>}
+              {!loadingJobs && jobs.length === 0 && (
+                <div style={{ textAlign:'center',color:'#4a5568',padding:'48px 24px' }}>
+                  <div style={{ fontSize:40,marginBottom:12 }}>🩻</div>
+                  <div style={{ fontSize:14 }}>No active job postings yet.</div>
+                  {currentUser && <div style={{ fontSize:12,marginTop:8,color:'#374151' }}>Use "Post a Job" tab to add the first listing.</div>}
+                </div>
+              )}
+              {jobs.map(job => (
+                <div key={job.id} style={{ background:'#0f172a',border:'1px solid rgba(99,179,237,0.1)',borderRadius:12,padding:'18px 20px',marginBottom:12 }}>
+                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8,flexWrap:'wrap' }}>
+                    <div style={{ color:'#e2e8f0',fontSize:16,fontWeight:700 }}>{job.title}</div>
+                    <span style={{ background:'rgba(99,179,237,0.1)',color:'#90cdf4',borderRadius:6,padding:'2px 10px',fontSize:11,fontWeight:700,border:'1px solid rgba(99,179,237,0.2)',flexShrink:0 }}>{job.job_type}</span>
+                  </div>
+                  <div style={{ display:'flex',flexWrap:'wrap',gap:12,margin:'8px 0',color:'#718096',fontSize:12 }}>
+                    <span>🏥 {job.institution}</span>
+                    <span>📍 {job.location}</span>
+                    {job.salary_range && <span>💰 {job.salary_range}</span>}
+                    <span>⏳ Expires {new Date(job.expires_at).toLocaleDateString()}</span>
+                  </div>
+                  <p style={{ color:'#a0aec0',fontSize:13,lineHeight:1.6,margin:'10px 0' }}>{job.description}</p>
+                  <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
+                    <a href={job.apply_link.startsWith('http') ? job.apply_link : `mailto:${job.apply_link}`} target="_blank" rel="noopener noreferrer"
+                      style={{ display:'inline-block',padding:'7px 18px',background:'rgba(99,179,237,0.1)',border:'1px solid rgba(99,179,237,0.3)',borderRadius:8,color:'#90cdf4',fontSize:12,fontWeight:700,textDecoration:'none' }}>
+                      Apply / Learn More →
+                    </a>
+                    {isAdmin && <button onClick={() => removePost(job.id)} style={{ padding:'7px 14px',background:'rgba(245,101,101,0.1)',border:'1px solid rgba(245,101,101,0.25)',borderRadius:8,color:'#fc8181',fontSize:12,fontWeight:600,cursor:'pointer' }}>Remove</button>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Post a Job tab ── */}
+          {tab === 'post' && currentUser && (
+            <div>
+              <div style={{ color:'#90cdf4',fontSize:15,fontWeight:700,marginBottom:6,paddingBottom:10,borderBottom:'1px solid rgba(99,179,237,0.1)' }}>Submit a Job Posting</div>
+              <p style={{ color:'#4a5568',fontSize:12,marginBottom:20 }}>MSK radiology clinical, research, and industry roles only. Posts are reviewed before going live and expire after 30 days.</p>
+              {formErr && <div style={{ color:'#fc8181',background:'rgba(245,101,101,0.08)',border:'1px solid rgba(245,101,101,0.2)',borderRadius:8,padding:'10px 14px',fontSize:13,marginBottom:16 }}>{formErr}</div>}
+              {formOk  && <div style={{ color:'#68d391',background:'rgba(104,211,145,0.08)',border:'1px solid rgba(104,211,145,0.2)',borderRadius:8,padding:'10px 14px',fontSize:13,marginBottom:16 }}>{formOk}</div>}
+              {!formOk && (
+                <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14 }}>
+                    <div><label style={lbl}>Job Title *</label><input style={inp} value={form.title} onChange={setField('title')} placeholder="e.g. MSK Radiologist — Academic Practice" /></div>
+                    <div><label style={lbl}>Institution / Organization *</label><input style={inp} value={form.institution} onChange={setField('institution')} placeholder="e.g. Mayo Clinic" /></div>
+                  </div>
+                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14 }}>
+                    <div><label style={lbl}>Location *</label><input style={inp} value={form.location} onChange={setField('location')} placeholder="City, State / Remote" /></div>
+                    <div><label style={lbl}>Job Type *</label>
+                      <select style={inp} value={form.job_type} onChange={setField('job_type')}>
+                        {JOB_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14 }}>
+                    <div><label style={lbl}>Salary Range <span style={{ color:'#374151',fontWeight:400 }}>(optional)</span></label><input style={inp} value={form.salary_range} onChange={setField('salary_range')} placeholder="e.g. $400k–$500k / Competitive" /></div>
+                    <div><label style={lbl}>Application Link or Email *</label><input style={inp} value={form.apply_link} onChange={setField('apply_link')} placeholder="https://careers.org/job or hr@org.com" /></div>
+                  </div>
+                  <div><label style={lbl}>Job Description *</label>
+                    <textarea style={{ ...inp, minHeight:100, resize:'vertical' }} value={form.description} onChange={setField('description')} placeholder="Describe the role, responsibilities, qualifications, and any relevant details..." />
+                  </div>
+                  <button onClick={submitJob} disabled={submitting}
+                    style={{ alignSelf:'flex-start',padding:'11px 26px',background:'linear-gradient(135deg,rgba(99,179,237,0.25),rgba(99,179,237,0.1))',border:'1px solid rgba(99,179,237,0.4)',borderRadius:10,color:'#90cdf4',fontSize:14,fontWeight:700,cursor:submitting?'not-allowed':'pointer',transition:'all 0.2s' }}>
+                    {submitting ? '⏳ Submitting...' : '📤 Submit for Review'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Admin tab ── */}
+          {tab === 'admin' && isAdmin && (
+            <div>
+              <div style={{ color:'#90cdf4',fontSize:15,fontWeight:700,marginBottom:16,paddingBottom:10,borderBottom:'1px solid rgba(99,179,237,0.1)' }}>
+                Pending Approval
+                {pending.length > 0 && <span style={{ background:'rgba(245,101,101,0.15)',color:'#fc8181',border:'1px solid rgba(245,101,101,0.3)',borderRadius:6,padding:'2px 10px',fontSize:11,fontWeight:700,marginLeft:10 }}>{pending.length} pending</span>}
+              </div>
+              {pending.length === 0 && <div style={{ textAlign:'center',color:'#4a5568',padding:'48px 24px',fontSize:14 }}>✅ No posts pending approval.</div>}
+              {pending.map(job => (
+                <div key={job.id} style={{ background:'#0f172a',border:'1px solid rgba(245,189,64,0.2)',borderRadius:12,padding:'18px 20px',marginBottom:12 }}>
+                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8,flexWrap:'wrap' }}>
+                    <div style={{ color:'#e2e8f0',fontSize:15,fontWeight:700 }}>{job.title}</div>
+                    <span style={{ background:'rgba(245,189,64,0.1)',color:'#f6bd40',borderRadius:6,padding:'2px 10px',fontSize:11,fontWeight:700,border:'1px solid rgba(245,189,64,0.3)',flexShrink:0 }}>{job.job_type}</span>
+                  </div>
+                  <div style={{ display:'flex',flexWrap:'wrap',gap:12,margin:'8px 0',color:'#718096',fontSize:12 }}>
+                    <span>🏥 {job.institution}</span>
+                    <span>📍 {job.location}</span>
+                    {job.salary_range && <span>💰 {job.salary_range}</span>}
+                    <span>📅 Submitted {new Date(job.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <p style={{ color:'#a0aec0',fontSize:13,lineHeight:1.6,margin:'10px 0' }}>{job.description}</p>
+                  <div style={{ display:'flex',gap:8 }}>
+                    <button onClick={() => approvePost(job.id)} style={{ padding:'7px 16px',background:'rgba(104,211,145,0.12)',border:'1px solid rgba(104,211,145,0.3)',borderRadius:8,color:'#68d391',fontSize:13,fontWeight:600,cursor:'pointer' }}>✅ Approve</button>
+                    <button onClick={() => removePost(job.id)}  style={{ padding:'7px 16px',background:'rgba(245,101,101,0.1)', border:'1px solid rgba(245,101,101,0.25)',borderRadius:8,color:'#fc8181', fontSize:13,fontWeight:600,cursor:'pointer' }}>🗑️ Remove</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── RESEARCH MODAL INNER (extracted so it works inside MSKHub) ───────────────
+// This is the original ResearchModal body, refactored as a sub-component
+function ResearchModalInner({ currentUser }) {
+  const [expanded, setExpanded] = useState(null);
+  const [showRecommend, setShowRecommend] = useState(false);
+  return (
+    <div style={{ display:'flex',flexDirection:'column',gap:0 }}>
+      {showRecommend && (
+        <div style={{ background:'#141f30',borderBottom:'1px solid #1e3a5f',marginBottom:16,borderRadius:10,overflow:'hidden' }}>
+          <RecommendArticleForm currentUser={currentUser} onClose={() => setShowRecommend(false)} />
+        </div>
+      )}
+      <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
+        {RESEARCH_POSTS.map((post, idx) => {
+          const isOpen = expanded === idx;
+          const isLatest = idx === 0;
+          return (
+            <div key={idx} style={{ background:isOpen?'#1e293b':'#141f30',border:'1px solid '+(isOpen?'#059669':'#1e3a5f'),borderRadius:12,overflow:'hidden',transition:'border-color 0.2s' }}>
+              <div onClick={() => setExpanded(isOpen ? null : idx)}
+                style={{ padding:'14px 18px',cursor:'pointer',display:'flex',gap:14,alignItems:'flex-start' }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:5,flexWrap:'wrap' }}>
+                    {isLatest && <span style={{ background:'#059669',color:'white',fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:999,letterSpacing:'0.08em',textTransform:'uppercase' }}>NEW</span>}
+                    {post.tags.map(tag => <span key={tag} style={{ background:'rgba(99,102,241,0.2)',color:'#a5b4fc',fontSize:9,fontWeight:600,padding:'2px 7px',borderRadius:999 }}>{tag}</span>)}
+                    <span style={{ fontSize:10,color:'#475569',marginLeft:'auto' }}>{post.date}</span>
+                  </div>
+                  <div style={{ fontSize:14,fontWeight:700,color:'#e2e8f0',lineHeight:1.4,marginBottom:3 }}>{post.title}</div>
+                  <div style={{ fontSize:11,color:'#64748b',fontStyle:'italic' }}>{post.journal}</div>
+                </div>
+                <div style={{ color:'#475569',fontSize:18,fontWeight:300,flexShrink:0,marginTop:2,transition:'transform 0.2s',transform:isOpen?'rotate(90deg)':'none' }}>›</div>
+              </div>
+              {isOpen && (
+                <div style={{ padding:'0 18px 18px',borderTop:'1px solid #1e3a5f',overflowY:'auto',maxHeight:'55vh' }}>
+                  <div style={{ padding:'10px 12px',background:'rgba(255,255,255,0.03)',borderRadius:7,marginTop:12,marginBottom:14 }}>
+                    <span style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em' }}>Citation  </span>
+                    <span style={{ fontSize:11,color:'#94a3b8',lineHeight:1.6 }}>{post.citation}</span>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:10,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8 }}>Summary</div>
+                    {post.summary.map((bullet, bi) => (
+                      <div key={bi} style={{ display:'flex',gap:8,marginBottom:6 }}>
+                        <span style={{ color:'#059669',fontWeight:700,fontSize:13,flexShrink:0,marginTop:1 }}>›</span>
+                        <span style={{ fontSize:13,color:'#cbd5e1',lineHeight:1.7 }}>{bullet}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background:'linear-gradient(135deg,rgba(5,150,105,0.15),rgba(6,95,70,0.1))',border:'1px solid rgba(5,150,105,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:12 }}>
+                    <span style={{ fontSize:10,fontWeight:800,color:'#059669',textTransform:'uppercase',letterSpacing:'0.08em' }}>🔑 Key Takeaway  </span>
+                    <span style={{ fontSize:13,color:'#a7f3d0',lineHeight:1.6,fontWeight:500 }}>{post.keyTakeaway}</span>
+                  </div>
+                  <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginTop:0 }}>
+                    {post.link && (
+                      <a href={post.link} target="_blank" rel="noopener noreferrer"
+                        style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'6px 12px',borderRadius:7,border:'1px solid #1e3a5f',background:'rgba(255,255,255,0.04)',color:'#60a5fa',fontSize:11,fontWeight:600,textDecoration:'none' }}>
+                        🔗 Search on Google Scholar →
+                      </a>
+                    )}
+                    <ArticleLikes postIdx={idx} />
+                  </div>
+                  <ArticleComments postIdx={idx} currentUser={currentUser} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ marginTop:16,paddingTop:12,borderTop:'1px solid #1e293b',display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+        <span style={{ fontSize:10,color:'#475569',fontStyle:'italic' }}>Add new posts to the top of RESEARCH_POSTS in page.js</span>
+        <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+          <span style={{ fontSize:10,color:'#334155' }}>{RESEARCH_POSTS.length} post{RESEARCH_POSTS.length !== 1 ? 's' : ''}</span>
+          {currentUser && !showRecommend && (
+            <button onClick={() => setShowRecommend(true)}
+              style={{ fontSize:10,fontWeight:700,color:'#059669',background:'rgba(5,150,105,0.1)',border:'1px solid rgba(5,150,105,0.25)',borderRadius:6,padding:'4px 10px',cursor:'pointer' }}>
+              📬 Recommend Article
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ResearchModal({ onClose, currentUser }) {
+  return (
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'8px' }}>
+      <div style={{ background:'#0f172a',borderRadius:16,width:'min(99vw,860px)',height:'min(96vh,1000px)',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.7)' }}>
+        <div style={{ background:'linear-gradient(135deg,#065f46,#059669)',padding:'14px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+            <span style={{ fontSize:18 }}>📰</span>
+            <div>
+              <div style={{ color:'white',fontWeight:800,fontSize:14,letterSpacing:'0.08em' }}>LATEST MSK RADIOLOGY RESEARCH</div>
+              <div style={{ color:'rgba(255,255,255,0.6)',fontSize:11,marginTop:1 }}>Weekly article reviews — key findings distilled for clinical practice</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)',color:'white',borderRadius:8,padding:'4px 12px',cursor:'pointer',fontSize:12,fontWeight:600 }}>✕</button>
+        </div>
+        <div style={{ flex:1,overflowY:'auto',padding:'20px 24px' }}>
+          <ResearchModalInner currentUser={currentUser} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
   const [expanded, setExpanded] = useState(null);
   const [showRecommend, setShowRecommend] = useState(false);
 
@@ -5438,7 +5791,7 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
 // ─────────────────────────────────────────────────────────────────────────────
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
 const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const ADMIN_EMAIL = 'adamsinger82@gmail.com';
+const ADMIN_EMAIL = 'admin@lucidmsk.com';
 
 // ── Terms of Use text (rendered as JSX) ──────────────────────────────────────
 const TOU_TEXT = (
@@ -5556,7 +5909,7 @@ function PendingApprovalPage({ onSignOut }) {
             You'll have full access once approved. This typically takes 1–2 business days.
           </p>
           <p style={{ color:'rgba(255,255,255,0.3)', fontSize:12, margin:'0 0 32px' }}>
-            Questions? Contact <span style={{ color:'rgba(148,163,255,0.7)' }}>adamsinger82@gmail.com</span>
+            Questions? Contact <span style={{ color:'rgba(148,163,255,0.7)' }}>admin@lucidmsk.com</span>
           </p>
         </div>
         <button
@@ -5579,7 +5932,7 @@ function RejectedPage({ onSignOut }) {
         <h2 style={{ color:'white', fontSize:22, fontWeight:700, margin:'0 0 12px' }}>Access Not Approved</h2>
         <p style={{ color:'rgba(255,255,255,0.55)', fontSize:14, lineHeight:1.6, margin:'0 0 32px' }}>
           Your account was not approved for access to LucidMSK.<br/>
-          Contact <span style={{ color:'rgba(148,163,255,0.7)' }}>adamsinger82@gmail.com</span> if you believe this is an error.
+          Contact <span style={{ color:'rgba(148,163,255,0.7)' }}>admin@lucidmsk.com</span> if you believe this is an error.
         </p>
         <button
           onClick={onSignOut}
@@ -6175,6 +6528,8 @@ export default function DashboardPage() {
   const [showAtlas, setShowAtlas] = useState(false);
   const [showDdx, setShowDdx] = useState(false);
   const [showResearch, setShowResearch] = useState(false);
+  const [showHub, setShowHub] = useState(false);
+  const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs'
   const [darkMode, setDarkMode] = useState(false);
   const dm = darkMode;
   const recognitionRef = useRef(null);
@@ -6458,6 +6813,7 @@ export default function DashboardPage() {
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
+      {showHub && <MSKHubModal tab={hubTab} setTab={setHubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()} supabase={supabase} />}
       {showAdminPanel && authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
       )}
@@ -6573,11 +6929,11 @@ export default function DashboardPage() {
             <span>{dm ? '☀️' : '🌙'}</span> {dm ? 'Light' : 'Dark'}
           </button>
 
-          {/* Latest MSK Research button */}
-          <button onClick={() => setShowResearch(true)}
-            style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:9,border:'1px solid rgba(16,185,129,0.5)',background:'rgba(16,185,129,0.12)',color:'#6ee7b7',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
-            <span>📰</span> Latest MSK Research
-          </button>
+          {/* MSK Hub dropdown */}
+          <MSKHubDropdown
+            onOpenResearch={() => { setHubTab('research'); setShowHub(true); }}
+            onOpenJobs={() => { setHubTab('jobs'); setShowHub(true); }}
+          />
 
           {/* DDx button */}
           <button onClick={() => setShowDdx(true)}
@@ -6722,7 +7078,8 @@ export default function DashboardPage() {
           {/* Tool buttons */}
           {[
             { label:'🫁 MRI Anatomy Atlas', onClick:() => { setShowAtlas(true); setMobileDrawer(false); }, color:'rgba(255,255,255,0.08)', border:'rgba(255,255,255,0.2)', textColor:'white' },
-            { label:'📰 Latest MSK Research', onClick:() => { setShowResearch(true); setMobileDrawer(false); }, color:'rgba(16,185,129,0.12)', border:'rgba(16,185,129,0.5)', textColor:'#6ee7b7' },
+            { label:'📰 Latest MSK Research', onClick:() => { setHubTab('research'); setShowHub(true); setMobileDrawer(false); }, color:'rgba(16,185,129,0.12)', border:'rgba(16,185,129,0.5)', textColor:'#6ee7b7' },
+            { label:'💼 MSK Jobs Board', onClick:() => { setHubTab('jobs'); setShowHub(true); setMobileDrawer(false); }, color:'rgba(99,179,237,0.12)', border:'rgba(99,179,237,0.4)', textColor:'#90cdf4' },
             { label:'🔬 MSK Lesion DDx', onClick:() => { setShowDdx(true); setMobileDrawer(false); }, color:'rgba(124,58,237,0.15)', border:'rgba(124,58,237,0.5)', textColor:'#c4b5fd' },
             { label:dm?'☀️ Light Mode':'🌙 Dark Mode', onClick:() => { setDarkMode(d=>!d); setMobileDrawer(false); }, color:'rgba(255,255,255,0.08)', border:'rgba(255,255,255,0.2)', textColor:'white' },
           ].map((btn,i) => (
