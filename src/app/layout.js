@@ -1,6 +1,6 @@
 export const metadata = {
   title: "MSK MRI Report Generator",
-  description: "AI-powered structured MSK MRI report generation",
+  description: "MSK Radiology AI Assistant",
 };
 
 export default function RootLayout({ children }) {

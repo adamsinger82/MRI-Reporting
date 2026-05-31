@@ -4003,7 +4003,7 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs }) {
         <span>🗂️</span> MSK Hub
       </button>
       {open && (
-        <div style={{ position:'absolute',top:'calc(100% + 6px)',left:0,background:'#1a2332',border:'1px solid rgba(99,179,237,0.2)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.5)',zIndex:9999,minWidth:200,overflow:'hidden' }}>
+        <div style={{ position:'fixed',top:'auto',left:'auto',background:'#1a2332',border:'1px solid rgba(99,179,237,0.2)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.8)',zIndex:99999,minWidth:200,overflow:'hidden',isolation:'isolate' }}>
           <button
             onClick={() => { setOpen(false); onOpenResearch(); }}
             style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
@@ -4119,22 +4119,37 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin }) {
   const [submitting, setSubmitting]   = useState(false);
   const [loadingJobs, setLoadingJobs] = useState(false);
 
-  const getSB = () => getSupabase(currentUser?.access_token);
+  const sbHeaders = () => {
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const token = currentUser?.access_token || key;
+    return { 'Content-Type':'application/json', 'apikey': key, 'Authorization': `Bearer ${token}` };
+  };
+  const sbUrl = (path) => `${SUPABASE_URL}/rest/v1/${path}`;
 
   const fetchJobs = async () => {
     setLoadingJobs(true);
-    const sb = getSB(); if (!sb) { setLoadingJobs(false); return; }
-    const today = new Date().toISOString().split('T')[0];
-    const { data } = await sb.from('job_posts').select('*').eq('status','approved').gte('expires_at', today).order('created_at',{ascending:false});
-    setJobs(data || []);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const res = await fetch(
+        sbUrl(`job_posts?select=*&status=eq.approved&expires_at=gte.${today}&order=created_at.desc`),
+        { headers: sbHeaders() }
+      );
+      const data = await res.json();
+      setJobs(Array.isArray(data) ? data : []);
+    } catch(e) { console.error('fetchJobs error:', e); }
     setLoadingJobs(false);
   };
 
   const fetchPending = async () => {
     if (!isAdmin) return;
-    const sb = getSB(); if (!sb) return;
-    const { data } = await sb.from('job_posts').select('*').eq('status','pending').order('created_at',{ascending:false});
-    setPending(data || []);
+    try {
+      const res = await fetch(
+        sbUrl(`job_posts?select=*&status=eq.pending&order=created_at.desc`),
+        { headers: sbHeaders() }
+      );
+      const data = await res.json();
+      setPending(Array.isArray(data) ? data : []);
+    } catch(e) { console.error('fetchPending error:', e); }
   };
 
   useEffect(() => {
@@ -4152,24 +4167,41 @@ function MSKHubModal({ tab, setTab, onClose, currentUser, isAdmin }) {
     if (!form.apply_link.trim())  return setFormErr('Application link or contact email is required.');
     if (!form.description.trim()) return setFormErr('Job description is required.');
     setSubmitting(true);
-    const sb = getSB();
-    if (!sb) { setFormErr('Session error. Please refresh and try again.'); setSubmitting(false); return; }
-    const expires = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
-    const { error } = await sb.from('job_posts').insert({ ...form, user_id: currentUser.id, status:'pending', expires_at: expires });
-    if (error) { setFormErr('Submission failed. Please try again.'); setSubmitting(false); return; }
-    // Notify admin (best-effort via Supabase edge function or your API route)
     try {
-      await fetch('/api/notify-admin', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ to: ADMIN_NOTIFY_EMAIL, subject: `[LucidMSK] New Job Post Pending: ${form.title}`,
-          html: `<div style="font-family:sans-serif;padding:24px;background:#0f1923;color:#e2e8f0;border-radius:12px;"><h2 style="color:#90cdf4;">New Job Post Pending Approval</h2><p><b>Title:</b> ${form.title}</p><p><b>Institution:</b> ${form.institution}</p><p><b>Location:</b> ${form.location}</p><p><b>Type:</b> ${form.job_type}</p><p><b>Submitted by:</b> ${currentUser.email}</p><p style="margin-top:20px;color:#718096;">Log in to LucidMSK → MSK Hub → Admin to approve or remove this post.</p></div>` }) });
-    } catch(_) {}
-    setForm(emptyJobForm);
-    setFormOk('Submitted! Your post will appear on the board once approved by an admin (usually within 24 hours).');
+      const expires = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+      const res = await fetch(sbUrl('job_posts'), {
+        method: 'POST',
+        headers: { ...sbHeaders(), 'Prefer': 'return=representation' },
+        body: JSON.stringify({ ...form, user_id: currentUser.id, status:'pending', expires_at: expires })
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(JSON.stringify(e)); }
+      // Notify admin
+      try {
+        await fetch('/api/notify-admin', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ to: ADMIN_NOTIFY_EMAIL, subject: `[LucidMSK] New Job Post Pending: ${form.title}`,
+            html: `<div style="font-family:sans-serif;padding:24px;background:#0f1923;color:#e2e8f0;border-radius:12px;"><h2 style="color:#90cdf4;">New Job Post Pending Approval</h2><p><b>Title:</b> ${form.title}</p><p><b>Institution:</b> ${form.institution}</p><p><b>Location:</b> ${form.location}</p><p><b>Type:</b> ${form.job_type}</p><p><b>Submitted by:</b> ${currentUser.email}</p><p style="margin-top:20px;color:#718096;">Log in to LucidMSK → MSK Hub → Admin tab to approve or remove this post.</p></div>` }) });
+      } catch(_) {}
+      setForm(emptyJobForm);
+      setFormOk('Submitted! Your post will appear on the board once approved (usually within 24 hours).');
+    } catch(e) {
+      console.error('submitJob error:', e);
+      setFormErr('Submission failed. Please try again.');
+    }
     setSubmitting(false);
   };
 
-  const approvePost = async id => { const sb = getSB(); if (sb) { await sb.from('job_posts').update({status:'approved'}).eq('id',id); fetchPending(); fetchJobs(); }};
-  const removePost  = async id => { const sb = getSB(); if (sb) { await sb.from('job_posts').update({status:'removed'}).eq('id',id);  fetchPending(); fetchJobs(); }};
+  const approvePost = async id => {
+    try {
+      await fetch(sbUrl(`job_posts?id=eq.${id}`), { method:'PATCH', headers:{ ...sbHeaders(),'Prefer':'return=minimal' }, body: JSON.stringify({status:'approved'}) });
+      fetchPending(); fetchJobs();
+    } catch(e) { console.error('approvePost error:', e); }
+  };
+  const removePost = async id => {
+    try {
+      await fetch(sbUrl(`job_posts?id=eq.${id}`), { method:'PATCH', headers:{ ...sbHeaders(),'Prefer':'return=minimal' }, body: JSON.stringify({status:'removed'}) });
+      fetchPending(); fetchJobs();
+    } catch(e) { console.error('removePost error:', e); }
+  };
 
   // ── shared styles ──
   const inp = { background:'#1a2332', border:'1px solid rgba(99,179,237,0.2)', borderRadius:8, color:'#e2e8f0', fontSize:13, padding:'9px 12px', outline:'none', width:'100%', boxSizing:'border-box', fontFamily:'inherit' };
@@ -6699,7 +6731,7 @@ export default function DashboardPage() {
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
-      {showHub && <MSKHubModal tab={hubTab} setTab={setHubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()} />}
+      {showHub && <MSKHubModal tab={hubTab} setTab={setHubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showAdminPanel && authUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
       )}
