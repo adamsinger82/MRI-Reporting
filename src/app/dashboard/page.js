@@ -1147,6 +1147,23 @@ function buildReportHeading(modality, part, lat, con, spineRegion) {
   return (isCT ? 'CT' : 'MRI') + ' ' + latPart + partLabel + (conLabel ? ' ' + conLabel : '');
 }
 
+
+// REPORT HEADING BUILDER
+function buildReportHeading(modality, part, lat, con, spineRegion) {
+  const isCT = modality === 'CT';
+  const isRheum = modality === 'XR';
+  const partLabel = (part === 'spine' && spineRegion ? spineRegion + ' spine' : part).toUpperCase();
+  const latStr = lat ? (lat.toUpperCase() === 'BILATERAL' ? 'BILATERAL' : lat.toUpperCase()) : '';
+  const latPart = latStr ? latStr + ' ' : '';
+  if (isRheum) return 'RADIOGRAPHS ' + latPart + partLabel;
+  const conUpper = (con || '').toUpperCase();
+  let conLabel = '';
+  if (conUpper.includes('WITHOUT AND WITH') || conUpper.includes('WITH AND WITHOUT')) conLabel = 'WITH AND WITHOUT CONTRAST';
+  else if (conUpper.includes('WITHOUT')) conLabel = 'WITHOUT CONTRAST';
+  else if (conUpper.includes('WITH')) conLabel = 'WITH CONTRAST';
+  return (isCT ? 'CT' : 'MRI') + ' ' + latPart + partLabel + (conLabel ? ' ' + conLabel : '');
+}
+
 function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
   const isCT = modality === 'CT';
   const modalityName = isCT ? 'CT' : 'MRI';
@@ -1407,6 +1424,10 @@ function formatReport(txt, colors = {}) {
     if (inReferences) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
 
     const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
+    const isMetaLine = /^(HISTORY|COMPARISON):?/.test(t);
+    const isExamHeading = /^(MRI|CT|RADIOGRAPHS)\b/.test(t) && t === t.toUpperCase() && t.length > 3;
+    if (isExamHeading) return <div key={i} style={{ marginBottom:10 }}><span style={{ fontSize:13, fontWeight:900, letterSpacing:'0.1em', color:colors.hdr||'#1e3a5f' }}>{t}</span></div>;
+    if (isMetaLine) return <div key={i} style={{ marginTop: i > 0 ? 16 : 0, marginBottom:4, fontSize:12, fontWeight:700, letterSpacing:'0.08em', color:colors.hdr||'#1e3a5f' }}>{t}</div>;
     const isMetaLine = /^(HISTORY|COMPARISON):?/.test(t);
     const isExamHeading = /^(MRI|CT|RADIOGRAPHS)\b/.test(t) && t === t.toUpperCase() && t.length > 3;
     if (isExamHeading) return <div key={i} style={{ marginBottom:10 }}><span style={{ fontSize:13, fontWeight:900, letterSpacing:'0.1em', color:colors.hdr||'#1e3a5f' }}>{t}</span></div>;
@@ -3230,7 +3251,7 @@ function AtlasModal({ onClose }) {
   // Smart preload — ±10 immediately on joint/sequence change, rest lazily after 1s
   // Keeps initial load snappy; browser cache handles subsequent scrolls
   useEffect(() => {
-    if (!jointData || jointData.isBrachialPlexus) return;
+    if (!jointData) return;
     const preloadSqKey = jointData?.sequences?.[sequenceRef.current] ? sequenceRef.current : Object.keys(jointData?.sequences||{})[0];
     const sq = jointData?.sequences?.[preloadSqKey] || null;
     const src = sq || (jointData?.useLocalMRI ? jointData : null);
@@ -3626,6 +3647,31 @@ function AtlasModal({ onClose }) {
           {/* Col 3 — LABEL SIDEBAR with Y-aligned labels + leader lines */}
           <div style={{ flex:'0 0 180px',width:180,background:'#000000',borderLeft:'1px solid #1e293b',display:'flex',flexDirection:'column',overflow:'hidden',position:'relative' }}>
 
+          {/* BP legend replaces normal sidebar content */}
+          {jointData?.isBrachialPlexus && (
+            <div style={{ overflowY:'auto',padding:'10px 8px',display:'flex',flexDirection:'column',gap:2,height:'100%' }}>
+              <div style={{ fontSize:9,fontWeight:800,letterSpacing:'0.12em',color:'#60a5fa',textTransform:'uppercase',marginBottom:8,paddingBottom:5,borderBottom:'1px solid #1e293b' }}>Key</div>
+              {[
+                { section:'Roots', color:'#60a5fa', items:[['C5–T1','Nerve roots']] },
+                { section:'Trunks', color:'#60a5fa', items:[['UT','Upper trunk'],['MT','Middle trunk'],['LT','Lower trunk']] },
+                { section:'Divisions', color:'#94a3b8', items:[['A','Anterior div.'],['P','Posterior div.']] },
+                { section:'Cords', color:'#a78bfa', items:[['LC','Lateral cord'],['PC','Posterior cord'],['MC','Medial cord']] },
+                { section:'Terminal', color:'#4ade80', items:[['MCN','Musculocutaneous'],['AN','Axillary'],['RN','Radial'],['UN','Ulnar'],['MN','Median']] },
+              ].map(({section,color,items}) => (
+                <div key={section} style={{ marginBottom:10 }}>
+                  <div style={{ fontSize:8,fontWeight:700,letterSpacing:'0.1em',color:'#475569',textTransform:'uppercase',marginBottom:4 }}>{section}</div>
+                  {items.map(([abbr,full]) => (
+                    <div key={abbr} style={{ display:'flex',gap:5,alignItems:'baseline',marginBottom:4,paddingLeft:2 }}>
+                      <span style={{ fontSize:11,fontWeight:800,color,minWidth:34,flexShrink:0 }}>{abbr}</span>
+                      <span style={{ fontSize:10,color:'#94a3b8',lineHeight:1.3 }}>{full}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+          {!jointData?.isBrachialPlexus && (<>
+
             {/* Label input at top when in label mode */}
             {pendingClick && (
               <div style={{ padding:'8px 10px',background:'#1e3a5f',borderBottom:'2px solid #3b82f6',flexShrink:0,zIndex:10 }}>
@@ -3669,6 +3715,7 @@ function AtlasModal({ onClose }) {
                 </button>
               </div>
             )}
+          </>)}{/* end BP legend */}
           </div>
 
           </div>{/* end Col 2+3 wrapper */}
