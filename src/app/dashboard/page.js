@@ -1147,23 +1147,6 @@ function buildReportHeading(modality, part, lat, con, spineRegion) {
   return (isCT ? 'CT' : 'MRI') + ' ' + latPart + partLabel + (conLabel ? ' ' + conLabel : '');
 }
 
-
-// REPORT HEADING BUILDER
-function buildReportHeading(modality, part, lat, con, spineRegion) {
-  const isCT = modality === 'CT';
-  const isRheum = modality === 'XR';
-  const partLabel = (part === 'spine' && spineRegion ? spineRegion + ' spine' : part).toUpperCase();
-  const latStr = lat ? (lat.toUpperCase() === 'BILATERAL' ? 'BILATERAL' : lat.toUpperCase()) : '';
-  const latPart = latStr ? latStr + ' ' : '';
-  if (isRheum) return 'RADIOGRAPHS ' + latPart + partLabel;
-  const conUpper = (con || '').toUpperCase();
-  let conLabel = '';
-  if (conUpper.includes('WITHOUT AND WITH') || conUpper.includes('WITH AND WITHOUT')) conLabel = 'WITH AND WITHOUT CONTRAST';
-  else if (conUpper.includes('WITHOUT')) conLabel = 'WITHOUT CONTRAST';
-  else if (conUpper.includes('WITH')) conLabel = 'WITH CONTRAST';
-  return (isCT ? 'CT' : 'MRI') + ' ' + latPart + partLabel + (conLabel ? ' ' + conLabel : '');
-}
-
 function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
   const isCT = modality === 'CT';
   const modalityName = isCT ? 'CT' : 'MRI';
@@ -1406,7 +1389,16 @@ function formatReport(txt, colors = {}) {
       );
     }
     if (inPatientSummary) {
-      if (t === 'PROVIDER_LINK' || t.includes('PROVIDER_LINK') || t.includes('<a href=')) { return null; }
+      if (t === 'PROVIDER_LINK' || t.includes('PROVIDER_LINK') || t.includes('<a href=')) {
+        return (
+          <div key={i} style={{ marginTop:14, paddingBottom:8 }}>
+            <a href="https://mri-reporting.vercel.app/providers" target="_blank" rel="noopener noreferrer"
+              style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:8,background:'linear-gradient(135deg,#2563eb,#4f46e5)',color:'white',fontSize:12,fontWeight:700,textDecoration:'none',boxShadow:'0 2px 8px rgba(37,99,235,0.3)' }}>
+              🔍 Find a local specialist who treats these conditions →
+            </a>
+          </div>
+        );
+      }
       return <div key={i} style={{ fontSize:13, color:'#1e3a5f', lineHeight:1.9, paddingLeft:4, borderLeft:'3px solid #bfdbfe', marginBottom:4 }}>{t}</div>;
     }
 
@@ -1424,10 +1416,6 @@ function formatReport(txt, colors = {}) {
     if (inReferences) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
 
     const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
-    const isMetaLine = /^(HISTORY|COMPARISON):?/.test(t);
-    const isExamHeading = /^(MRI|CT|RADIOGRAPHS)\b/.test(t) && t === t.toUpperCase() && t.length > 3;
-    if (isExamHeading) return <div key={i} style={{ marginBottom:10 }}><span style={{ fontSize:13, fontWeight:900, letterSpacing:'0.1em', color:colors.hdr||'#1e3a5f' }}>{t}</span></div>;
-    if (isMetaLine) return <div key={i} style={{ marginTop: i > 0 ? 16 : 0, marginBottom:4, fontSize:12, fontWeight:700, letterSpacing:'0.08em', color:colors.hdr||'#1e3a5f' }}>{t}</div>;
     const isMetaLine = /^(HISTORY|COMPARISON):?/.test(t);
     const isExamHeading = /^(MRI|CT|RADIOGRAPHS)\b/.test(t) && t === t.toUpperCase() && t.length > 3;
     if (isExamHeading) return <div key={i} style={{ marginBottom:10 }}><span style={{ fontSize:13, fontWeight:900, letterSpacing:'0.1em', color:colors.hdr||'#1e3a5f' }}>{t}</span></div>;
@@ -3646,8 +3634,6 @@ function AtlasModal({ onClose }) {
 
           {/* Col 3 — LABEL SIDEBAR with Y-aligned labels + leader lines */}
           <div style={{ flex:'0 0 180px',width:180,background:'#000000',borderLeft:'1px solid #1e293b',display:'flex',flexDirection:'column',overflow:'hidden',position:'relative' }}>
-
-          {/* BP legend replaces normal sidebar content */}
           {jointData?.isBrachialPlexus && (
             <div style={{ overflowY:'auto',padding:'10px 8px',display:'flex',flexDirection:'column',gap:2,height:'100%' }}>
               <div style={{ fontSize:9,fontWeight:800,letterSpacing:'0.12em',color:'#60a5fa',textTransform:'uppercase',marginBottom:8,paddingBottom:5,borderBottom:'1px solid #1e293b' }}>Key</div>
@@ -3715,7 +3701,7 @@ function AtlasModal({ onClose }) {
                 </button>
               </div>
             )}
-          </>)}{/* end BP legend */}
+          </>)}
           </div>
 
           </div>{/* end Col 2+3 wrapper */}
