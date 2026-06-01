@@ -1130,35 +1130,6 @@ function buildGradingContext(part, modality) {
   }).join('\n\n');
 }
 
-
-// ─── REPORT HEADING BUILDER ───────────────────────────────────────────────────
-// Produces the mandatory first line of every report in ALL CAPS.
-// MRI/CT: MODALITY BODYPART [LATERALITY] [CONTRAST]
-// Rheum:  RADIOGRAPHS BODYPART [LATERALITY]
-function buildReportHeading(modality, part, lat, con, spineRegion) {
-  const isCT    = modality === 'CT';
-  const isRheum = modality === 'XR';
-  // Body part label — Title Case → upper
-  const partLabel = (part === 'spine' && spineRegion
-    ? spineRegion + ' spine'
-    : part
-  ).toUpperCase();
-  // Laterality — omit if bilateral exam or not applicable
-  const latStr = lat ? (lat.toUpperCase() === 'BILATERAL' ? 'BILATERAL' : lat.toUpperCase()) : '';
-  const latPart = latStr ? latStr + ' ' : '';
-  if (isRheum) {
-    return `RADIOGRAPHS ${latPart}${partLabel}`;
-  }
-  // Contrast label
-  const conUpper = (con || '').toUpperCase();
-  let conLabel = '';
-  if (conUpper.includes('WITHOUT AND WITH') || conUpper.includes('WITH AND WITHOUT')) conLabel = 'WITH AND WITHOUT CONTRAST';
-  else if (conUpper.includes('WITHOUT'))  conLabel = 'WITHOUT CONTRAST';
-  else if (conUpper.includes('WITH'))     conLabel = 'WITH CONTRAST';
-  const modalityLabel = isCT ? 'CT' : 'MRI';
-  return `${modalityLabel} ${latPart}${partLabel}${conLabel ? ' ' + conLabel : ''}`;
-}
-
 function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
   const isCT = modality === 'CT';
   const modalityName = isCT ? 'CT' : 'MRI';
@@ -1336,13 +1307,7 @@ STYLE RULES:
 - CARTILAGE / OA RULE (knee): If Modified Outerbridge grading in 2+ compartments → single DEGENERATIVE line, not per-compartment.
 - OSTEOCHONDRAL EXCEPTION: OCD/osteochondral lesion/subchondral fracture always listed separately.${gradingBlock}
 
-FORMAT — output EXACTLY this structure, one blank line between each section:
-${buildReportHeading(modalityName, part, lat, con, spineRegion)}
-
-HISTORY:
-
-COMPARISON: None.
-
+FORMAT:
 TECHNIQUE:
 ${techniqueText}
 
@@ -1402,7 +1367,14 @@ function formatReport(txt, colors = {}) {
     }
     if (inPatientSummary) {
       if (t === 'PROVIDER_LINK' || t.includes('PROVIDER_LINK') || t.includes('<a href=')) {
-        return null;
+        return (
+          <div key={i} style={{ marginTop:14, paddingBottom:8 }}>
+            <a href="https://mri-reporting.vercel.app/providers" target="_blank" rel="noopener noreferrer"
+              style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:8,background:'linear-gradient(135deg,#2563eb,#4f46e5)',color:'white',fontSize:12,fontWeight:700,textDecoration:'none',boxShadow:'0 2px 8px rgba(37,99,235,0.3)' }}>
+              🔍 Find a local specialist who treats these conditions →
+            </a>
+          </div>
+        );
       }
       return <div key={i} style={{ fontSize:13, color:'#1e3a5f', lineHeight:1.9, paddingLeft:4, borderLeft:'3px solid #bfdbfe', marginBottom:4 }}>{t}</div>;
     }
@@ -1420,20 +1392,12 @@ function formatReport(txt, colors = {}) {
     }
     if (inReferences) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
 
-    const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS|HISTORY|COMPARISON):?/.test(t);
-    const isExamHeading = /^(MRI|CT|RADIOGRAPHS)\b/.test(t) && t === t.toUpperCase() && t.length > 3;
-    if (isExamHeading) {
-      return (
-        <div key={i} style={{ marginBottom:10, paddingBottom:8, borderBottom:'2px solid '+(colors.hdr||'#1e3a5f') }}>
-          <span style={{ fontSize:13, fontWeight:900, letterSpacing:'0.1em', color:colors.hdr||'#1e3a5f' }}>{t}</span>
-        </div>
-      );
-    }
+    const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
     if (isHeader) {
       inImpression = t.startsWith('IMPRESSION');
       return (
         <div key={i} style={{ marginTop: i > 0 ? 20 : 0, marginBottom: 6 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: colors.hdr || '#1e3a5f', borderBottom: '2px solid #2563eb', paddingBottom: 3, display: 'inline-block' }}>{t}</span>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: colors.hdr || '#1e3a5f', display: 'inline-block' }}>{t}</span>
         </div>
       );
     }
@@ -5523,13 +5487,7 @@ IMPRESSION RULES — FOLLOW EXACTLY:
 - Use complete sentences only — no numbered lists.
 - Maximum 2–3 sentences total in the impression.
 
-FORMAT — output EXACTLY this structure, one blank line between each section:
-${buildReportHeading('XR', jLabel.toLowerCase(), laterality === 'bilateral' ? 'bilateral' : (laterality === 'left' ? 'left' : 'right'), '', '')}
-
-HISTORY:
-
-COMPARISON: None.
-
+FORMAT:
 TECHNIQUE:
 ${latLabel} radiograph of the ${jLabel.toLowerCase()}${viewsLabel}.
 
@@ -6626,7 +6584,7 @@ export default function DashboardPage() {
     const lat = showSide ? side : '';
     try {
       const layPersonInstruction = layPersonSummary
-        ? `\n\nADDITIONAL SECTION — IMPORTANT: After you have completed the full formal radiology report including TECHNIQUE, FINDINGS, IMPRESSION, and any REFERENCES/FOOTNOTE sections, append one final separate section at the very end. Do not modify the formal report sections in any way. The additional section must begin with the exact header "UNDERSTANDING YOUR RESULTS:" on its own line in ALL CAPS. Then write 2-5 plain-language sentences summarizing the key findings for a patient with a high school education. Rules: no medical jargon — use "wear and tear" not "osteoarthritis", "cartilage damage" not "chondromalacia", "torn" not "ruptured", "fluid buildup" not "effusion", "pinched nerve" not "radiculopathy". Be clear but reassuring in tone. Do not repeat the formal impression verbatim`
+        ? `\n\nADDITIONAL SECTION — IMPORTANT: After you have completed the full formal radiology report including TECHNIQUE, FINDINGS, IMPRESSION, and any REFERENCES/FOOTNOTE sections, append one final separate section at the very end. Do not modify the formal report sections in any way. The additional section must begin with the exact header "UNDERSTANDING YOUR RESULTS:" on its own line in ALL CAPS. Then write 2-5 plain-language sentences summarizing the key findings for a patient with a high school education. Rules: no medical jargon — use "wear and tear" not "osteoarthritis", "cartilage damage" not "chondromalacia", "torn" not "ruptured", "fluid buildup" not "effusion", "pinched nerve" not "radiculopathy". Be clear but reassuring in tone. Do not repeat the formal impression verbatim. After the sentences, on a new line, write exactly: PROVIDER_LINK`
         : '';
       const res = await fetch('/api/generate', {
         method:'POST',
