@@ -1066,7 +1066,8 @@ function getEffectiveJointData(bodyPart, modality) {
   return MRI_GRADING_DATA[bodyPart] || JOINT_DATA[bodyPart] || null;
 }
 
-const BODY_PARTS = ['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot','femur/thigh','tibia/fibula','humerus','forearm'];
+const BODY_PARTS = ['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot','hand','thumb','fingers','femur/thigh','tibia/fibula','humerus','forearm'];
+const BODY_PARTS_CT = ['knee','shoulder','hip','wrist','elbow','ankle','spine','pelvis','foot','hand','femur/thigh','tibia/fibula','humerus','forearm'];
 const BILATERAL = ['spine','pelvis'];
 
 // Structures that should read "absent" when not mentioned
@@ -1078,19 +1079,22 @@ const ABSENT_STRUCTURES = [
 
 // MRI anatomy — full soft tissue detail
 const ANATOMY_MRI = {
-  knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Soft Tissues',
-  shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenohumeral Joint, Glenoid Labrum, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
-  hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Soft Tissues',
-  wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve, Articular Cartilage, Bones, Soft Tissues',
-  elbow:'Ulnar Collateral Ligament, Radial Collateral Ligament Complex, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Triceps Tendon, Ulnar Nerve, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
-  ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Soft Tissues',
-  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs (each level), Spinal Canal, Neural Foramina, Facet Joints, Paraspinal Soft Tissues',
+  knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Muscles, Soft Tissues',
+  shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenoid Labrum, Acromial Undersurface, Subacromial and Subdeltoid Bursa, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
+  hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Muscles, Soft Tissues',
+  wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Articular Cartilage, Bones, Muscles, Soft Tissues',
+  elbow:'UCL (Ulnar Collateral Ligament — medial), LUCL (Lateral Ulnar Collateral Ligament — lateral), RCL (Radial Collateral Ligament — lateral), Annular Ligament, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Brachialis Tendon, Triceps Tendon, Ulnar Nerve, Median Nerve, Radial Nerve / Posterior Interosseous Nerve, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
+  ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
+  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Facet Joints, Bones, Paraspinal Soft Tissues',
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues',
   foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
   'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
   'tibia/fibula':'Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, Posterior Tibial Tendon, Flexor Digitorum Longus, Flexor Hallucis Longus, Peroneus Longus, Peroneus Brevis, Anterior Compartment Musculature, Posterior Compartment Musculature, Lateral Compartment Musculature, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Soft Tissues',
   humerus:'Deltoid Muscle, Biceps Brachii, Brachialis, Triceps Brachii, Coracobrachialis, Radial Nerve, Axillary Nerve, Ulnar Nerve, Humerus (cortex / medullary canal / periosteum), Bone Marrow Signal, Soft Tissues',
   forearm:'Flexor Carpi Radialis, Flexor Carpi Ulnaris, Flexor Digitorum Superficialis, Flexor Digitorum Profundus, Flexor Pollicis Longus, Pronator Teres, Pronator Quadratus, Extensor Carpi Radialis Longus and Brevis, Extensor Carpi Ulnaris, Extensor Digitorum, Extensor Pollicis Longus and Brevis, Abductor Pollicis Longus, Brachioradialis, Supinator, Radius, Ulna, Interosseous Membrane, Radial Nerve, Median Nerve, Ulnar Nerve, Bone Marrow Signal, Soft Tissues',
+  hand:'Flexor Tendons (FDS and FDP per ray), Extensor Tendons (per ray), Intrinsic Muscles (interossei and lumbricals), Thenar Muscles, Hypothenar Muscles, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Metacarpals, Metacarpophalangeal Joints, Articular Cartilage, Bones, Muscles, Soft Tissues',
+  thumb:'Flexor Pollicis Longus Tendon, Extensor Pollicis Longus Tendon, Extensor Pollicis Brevis Tendon, Abductor Pollicis Longus Tendon, Ulnar Collateral Ligament (UCL — gamekeeper / skier thumb), Radial Collateral Ligament, Volar Plate, Adductor Pollicis Aponeurosis, Thenar Muscles, Sesamoids, First CMC Joint (trapeziometacarpal), MCP Joint, IP Joint, Articular Cartilage, Bones, Soft Tissues',
+  fingers:'Flexor Digitorum Superficialis Tendon, Flexor Digitorum Profundus Tendon, Central Slip and Extensor Hood, Lateral Bands, Annular Pulleys (A1 through A5 per finger), Collateral Ligaments (radial and ulnar per joint), Volar Plate, PIP Joint, DIP Joint, MCP Joint, Articular Cartilage, Bones, Soft Tissues',
 };
 
 // CT anatomy — bone/joint/soft tissue only, no tendons/ligaments/labrum
@@ -1108,6 +1112,7 @@ const ANATOMY_CT = {
   'tibia/fibula':'Tibia (cortex / medullary canal / periosteum), Fibula, Interosseous Membrane, Soft Tissues',
   humerus:'Humerus (cortex / medullary canal / periosteum), Soft Tissues',
   forearm:'Radius, Ulna, Interosseous Membrane, Soft Tissues',
+  hand:'Metacarpals, Phalanges, CMC Joints, MCP Joints, IP Joints, Dislocation or Subluxation, Soft Tissues',
 };
 
 const ANATOMY = ANATOMY_MRI; // backward compat
@@ -1192,6 +1197,15 @@ KNEE:
 - DEGENERATIVE: Cartilage loss + degenerative meniscus tear + osteophytes → "[Mild/moderate/advanced/severe] osteoarthrosis, most significant in the [compartment] compartment, with associated degenerative [meniscus] tear, as above."
 - ROTATOR CUFF ARTHROPATHY (if applicable): Superior migration humeral head + cuff tears → "Rotator cuff arthropathy with [massive cuff tear pattern], as above."
 
+
+SHOULDER-SPECIFIC FINDINGS DEFAULTS AND RULES:
+- Acromial Undersurface: default "Bigliani type 2 morphology." (change only if dictated otherwise)
+- Subacromial and Subdeltoid Bursa: SEPARATE heading — do NOT include in Soft Tissues. Default: "No subacromial or subdeltoid bursitis."
+- Biceps Tendon Long Head: default "Intact tendon. No tenosynovitis."
+- Coracoclavicular ligament complex / coracoacromial ligament complex: if dictated, place findings under the AC Joint heading — NOT as a separate heading.
+- Do NOT generate a "Glenohumeral Joint: intact" heading. This heading does not exist.
+- crescent zone: do NOT capitalize — write "crescent zone" not "Crescent Zone"
+
 SHOULDER:
 - MASSIVE ROTATOR CUFF TEAR: Tears of 2+ tendons with muscle atrophy/fatty infiltration → "Massive rotator cuff tear involving the [tendons] with [Goutallier grade] fatty infiltration and [Patte stage] muscle retraction, as above." If superior humeral head migration or glenohumeral arthritis present add: "findings consistent with rotator cuff arthropathy."
 - BANKART / ANTERIOR INSTABILITY: Anterior labral tear + Hill-Sachs + osseous Bankart → "Anterior glenohumeral instability pattern with Bankart lesion[/osseous Bankart], Hill-Sachs deformity, as above."
@@ -1214,6 +1228,20 @@ HIP:
 - MIXED FAI: Both → "Mixed-type FAI with labral pathology, as above."
 - AVN: Always own line with Ficat stage if determinable.
 
+
+NON-ARTHROGRAPHIC DISCLAIMER LOGIC (applies to wrist, shoulder, and hip):
+If the dictation includes "allowing for non-arthrographic technique" or "allowing for lack of joint distention" in context of a structure:
+1. Place the disclaimer WITHIN the subheading for that structure — NOT in TECHNIQUE section.
+2. Findings phrasing: "Allowing for non-arthrographic technique, no tear of the [structure] is identified."
+   Structure name mappings:
+   - TFC/TFCC → "triangular fibrocartilage complex (TFC)"
+   - SL ligament → "scapholunate (SL) ligament"
+   - LT ligament → "lunotriquetral (LT) ligament"
+   - Labrum (shoulder or hip) → "labrum" (qualify by location as dictated)
+3. Impression phrasing: "Allowing for non-arthrographic technique, no tear of the [full structure name]. If there is continued clinical concern, MR arthrogram may be obtained for further assessment."
+4. This disclaimer applies ONLY when no tear is the conclusion. If a tear IS identified, omit the disclaimer entirely.
+5. NEVER place this disclaimer in the TECHNIQUE section.
+
 WRIST:
 - DE QUERVAIN'S: First dorsal compartment tenosynovitis (APL/EPB) → "De Quervain tenosynovitis of the first dorsal compartment, as above."
 - INTERSECTION SYNDROME (1ST/2ND): First/second compartment intersection edema → "First/second compartment intersection syndrome, as above."
@@ -1227,6 +1255,7 @@ ELBOW:
 - MEDIAL EPICONDYLOSIS/TEAR: Common flexor origin → "Medial epicondylosis[/partial tear of common flexor origin], as above." (golfer's elbow)
 - UCL INJURY: UCL tear ± valgus instability → "Ulnar collateral ligament tear with [complete/partial] disruption, as above."
 - POSTEROLATERAL ROTATORY INSTABILITY: RCL complex tear → "Lateral collateral ligament complex tear with posterolateral rotatory instability pattern, as above."
+- ELBOW IMPRESSION DEDUPLICATION RULE: Each finding must appear ONCE only in the impression. If a finding (e.g., common extensor tendon tearing) is already stated, do not restate it under a different name or heading. Review the full impression before finalizing and remove any repeated findings.
 - DISLOCATION: "Sequela of [simple/complex] elbow dislocation with [associated fractures/ligament injuries], as above."
 - PANNER / OCD: Capitellum OCD → "Osteochondral lesion of the capitellum[/Panner disease], as above." — always own line.
 
@@ -1294,6 +1323,18 @@ FOREARM (RADIUS/ULNA):
 - ISOLATED RADIAL/ULNAR SHAFT FRACTURE: Note location, pattern, and DRUJ/proximal RU joint integrity
 - BONE LESION: Always own line
 
+
+SPINE-SPECIFIC FINDINGS RULES:
+
+INTERVERTEBRAL DISCS heading — INCLUDE: desiccation (global or by level), annular fissures (by level), Schmorl nodes (by level), Modic changes (type and level).
+INTERVERTEBRAL DISCS heading — DO NOT INCLUDE: disc herniations, protrusions, bulges, spinal canal stenosis, or foraminal stenosis. These belong only under LEVELS.
+
+PARASPINAL SOFT TISSUES: default text is "No acute abnormality." — NOT "intact."
+
+CANAL AND NEURAL FORAMINA: Do NOT generate this as a standalone FINDINGS heading. Canal and foraminal stenosis belongs exclusively under individual LEVELS entries.
+
+BONES heading — include if dictated: pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas, fractures, marrow signal abnormality.
+
 SPINE:
 - MULTILEVEL DISC DISEASE: → "Multilevel degenerative disc disease most significant at [worst level(s)] with [worst complication — e.g. moderate spinal stenosis, neural foraminal narrowing], as above."
 - SINGLE LEVEL: → "[Level] disc herniation/protrusion with [nerve involvement if present], as above."
@@ -1315,6 +1356,12 @@ WHAT ALWAYS GETS ITS OWN LINE (never grouped):
 - Incidental finding unrelated to primary pathology (e.g. renal cyst on hip MRI)
 - Normal exam → ${normalImpressionText}
 
+
+GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
+- Muscles: "No high-grade fatty infiltration or volume loss. No intramuscular edema to suggest denervation, myositis, or strain."
+- Articular Cartilage: "Preserved." (NOT "intact" — use "preserved" for all joints)
+- Soft Tissues: "No acute abnormality." (NOT "intact")
+
 STYLE RULES:
 - Number each item. Most important/urgent first.
 - Use named syndromes and clinical mechanisms — not signal descriptions or grade numbers
@@ -1323,6 +1370,41 @@ STYLE RULES:
 - ${normalImpressionText}
 - CARTILAGE / OA RULE (knee): If Modified Outerbridge grading in 2+ compartments → single DEGENERATIVE line, not per-compartment.
 - OSTEOCHONDRAL EXCEPTION: OCD/osteochondral lesion/subchondral fracture always listed separately.${gradingBlock}
+MASS / TUMOR / CANCER RULES (apply whenever dictation mentions a mass, tumor, cancer, malignancy, neoplasm, carcinoma, sarcoma, lymphoma, metastasis, or similar):
+
+FINDINGS — MASS HEADING:
+Generate a separate MASS heading in the FINDINGS section.
+Describe: location, size (up to 3 dimensions if provided), signal characteristics, morphology, margins, and involvement of adjacent structures as dictated.
+
+Determine case type from context clues in the dictation — infer from what is said, do not ask:
+
+NEW CASE (no prior comparison mentioned; no treatment history; no post-surgical context):
+- Include a differential diagnosis based on imaging features described. List most likely first.
+- Do not include a comparison statement.
+
+FOLLOW-UP CASE (prior comparison mentioned, prior treatment mentioned — chemotherapy, radiation, immunotherapy — or comparison imaging referenced):
+- Do NOT include a differential diagnosis.
+- If the radiologist dictates a size or signal change vs. prior: incorporate that naturally.
+- If no comparison is dictated, do not fabricate one.
+
+POST-RESECTION CASE (prior surgical resection, "post-op," "post-resection," "surgical bed," "post-treatment change," or similar context):
+- Do NOT include a differential diagnosis.
+- Describe the surgical bed findings as dictated.
+
+IMPRESSION — MASS PRESENT / BEING FOLLOWED:
+Lead with exactly one of:
+- "Tumor progression." — mass grown, new lesions, or worsening
+- "Mixed response to therapy." — some areas improved, others progressed
+- "Complete response to therapy." — mass resolved or no residual viable tumor
+State size and key change in the same sentence after the lead phrase.
+
+IMPRESSION — POST-RESECTION:
+Lead the impression with recurrence status:
+- "No local tumor recurrence identified."
+- "Findings suspicious for local tumor recurrence."
+- "Findings consistent with local tumor recurrence."
+This must be the first or second impression line.
+
 
 FORMAT — one blank line between each section:
 ${buildReportHeading(modalityName, part, lat, con, spineRegion)}
@@ -6540,6 +6622,7 @@ export default function DashboardPage() {
   const dm = darkMode;
   const recognitionRef = useRef(null);
   const isRheumRef = useRef(false); // tracks current modality for STT handler
+  const finalTranscriptPersistRef = useRef(''); // persists transcript across recognition restarts
 
   // ── Incidental findings state ──────────────────────────────────────────────
   // Fleischner (lung nodule)
@@ -6720,7 +6803,7 @@ export default function DashboardPage() {
     const SR = window.webkitSpeechRecognition || window.SpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
-    const finalTranscriptRef = { current: '' };
+    finalTranscriptPersistRef.current = ''; // reset transcript on fresh dictation start
     try {
       const recognition = new SR();
       recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US'; recognition.maxAlternatives = 1;
@@ -6730,10 +6813,10 @@ export default function DashboardPage() {
         let interim = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const t = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalTranscriptRef.current += t + ' ';
+          if (event.results[i].isFinal) finalTranscriptPersistRef.current += t + ' ';
           else interim += t;
         }
-        const transcript = finalTranscriptRef.current + interim;
+        const transcript = finalTranscriptPersistRef.current + interim;
         if (isRheumRef.current) setRheumFreeText(transcript);
         else setDictationText(transcript);
       };
@@ -7153,8 +7236,8 @@ export default function DashboardPage() {
               </>) : (<>
                 <div style={{ flex:2 }}><label style={lbl}>Body Part</label>
                   <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetIncidentals(); }}>
-                    {BODY_PARTS.map(b => {
-                      const LABELS = {'femur/thigh':'Femur / Thigh','tibia/fibula':'Tibia / Fibula','humerus':'Humerus','forearm':'Forearm'};
+                    {(isCT ? BODY_PARTS_CT : BODY_PARTS).map(b => {
+                      const LABELS = {'femur/thigh':'Femur / Thigh','tibia/fibula':'Tibia / Fibula','humerus':'Humerus','forearm':'Forearm','fingers':'Fingers'};
                       const label = LABELS[b] || (b.charAt(0).toUpperCase()+b.slice(1));
                       return <option key={b} value={b}>{label}</option>;
                     })}
