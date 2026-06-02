@@ -1389,7 +1389,7 @@ function buildReportHeading(modality, part, lat, con, spineRegion) {
   return (isCT ? 'CT' : 'MRI') + ' ' + latPart + partLabel + (conLabel ? ' ' + conLabel : '');
 }
 
-function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true) {
+function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, massMode = 'auto') {
   const isCT = modality === 'CT';
   const modalityName = isCT ? 'CT' : 'MRI';
   const doseOptSentence = doseOpt ? ' One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.' : '';
@@ -1607,40 +1607,56 @@ STYLE RULES:
 - ${normalImpressionText}
 - CARTILAGE / OA RULE (knee): If Modified Outerbridge grading in 2+ compartments → single DEGENERATIVE line, not per-compartment.
 - OSTEOCHONDRAL EXCEPTION: OCD/osteochondral lesion/subchondral fracture always listed separately.${gradingBlock}
-MASS / TUMOR / CANCER RULES (apply whenever dictation mentions a mass, tumor, cancer, malignancy, neoplasm, carcinoma, sarcoma, lymphoma, metastasis, or similar):
+MASS / TUMOR / CANCER RULES — apply whenever dictation mentions a mass, tumor, cancer, malignancy, neoplasm, carcinoma, sarcoma, lymphoma, metastasis, lesion with oncologic context, or recurrence:
 
 FINDINGS — MASS HEADING:
 Generate a separate MASS heading in the FINDINGS section.
-Describe: location, size (up to 3 dimensions if provided), signal characteristics, morphology, margins, and involvement of adjacent structures as dictated.
+Describe: location, size (in centimeters, three dimensions if provided), signal characteristics or density, morphology, margins, and involvement of adjacent structures as dictated.
+Do not fabricate features not present in the dictation.
 
-Determine case type from context clues in the dictation — infer from what is said, do not ask:
+CASE TYPE — apply exactly one of the following three sets of rules:
+${massMode === 'new' ? `ACTIVE CASE TYPE: NEW CASE (explicitly set by user)
+- Include a differential diagnosis based on the imaging features described. List most likely first. Do not fabricate features not in the dictation.
+- Do not include a comparison statement.` :
+  massMode === 'followup' ? `ACTIVE CASE TYPE: FOLLOW-UP CASE (explicitly set by user)
+- Do NOT include a differential diagnosis.
+- If the radiologist dictates a comparison to prior imaging (size change, signal change, new or resolved features): incorporate that comparison into the MASS description naturally (e.g., "decreased in size compared to [date] MRI measuring X cm, previously Y cm").
+- If no comparison is dictated, do not fabricate one.` :
+  massMode === 'postresection' ? `ACTIVE CASE TYPE: POST-RESECTION CASE (explicitly set by user)
+- Do NOT include a differential diagnosis.
+- Describe the surgical bed and any signal abnormality present.
+- Specifically evaluate and describe: enhancement pattern, restricted diffusion, mass effect, involvement of margins or neurovascular structures as dictated.` :
+`AUTO-DETECT CASE TYPE from context clues in the dictation — infer from what is said, do not ask:
 
 NEW CASE (no prior comparison mentioned; no treatment history; no post-surgical context):
-- Include a differential diagnosis based on imaging features described. List most likely first.
+- Include a differential diagnosis based on imaging features described. List most likely first. Do not fabricate features not in the dictation.
 - Do not include a comparison statement.
 
 FOLLOW-UP CASE (prior comparison mentioned, prior treatment mentioned — chemotherapy, radiation, immunotherapy — or comparison imaging referenced):
 - Do NOT include a differential diagnosis.
-- If the radiologist dictates a size or signal change vs. prior: incorporate that naturally.
+- If the radiologist dictates a size or signal change vs. prior: incorporate that naturally into the MASS description (e.g., "decreased in size compared to [date] MRI measuring X cm, previously Y cm").
 - If no comparison is dictated, do not fabricate one.
 
 POST-RESECTION CASE (prior surgical resection, "post-op," "post-resection," "surgical bed," "post-treatment change," or similar context):
 - Do NOT include a differential diagnosis.
 - Describe the surgical bed findings as dictated.
+- Specifically evaluate and describe: enhancement pattern, restricted diffusion, mass effect, involvement of margins or neurovascular structures as dictated.`}
 
-IMPRESSION — MASS PRESENT / BEING FOLLOWED:
-Lead with exactly one of:
-- "Tumor progression." — mass grown, new lesions, or worsening
-- "Mixed response to therapy." — some areas improved, others progressed
-- "Complete response to therapy." — mass resolved or no residual viable tumor
-State size and key change in the same sentence after the lead phrase.
+IMPRESSION — FOLLOW-UP MASS (mass still present, being followed):
+Lead the impression with exactly one of the following phrases based on what the radiologist dictated — do not infer or choose on your own unless dictation clearly supports it:
+  - "Tumor progression." — if mass has grown, new lesions appear, or features are worsening
+  - "Mixed response to therapy." — if partial response, some areas improved and others progressed
+  - "Complete response to therapy." — if mass has resolved or shows no residual viable tumor
+State size and key change (or stability) in the same sentence after the lead phrase.
+Example: "Tumor progression. The [location] mass has increased in size from X cm to Y cm compared to [date]."
 
 IMPRESSION — POST-RESECTION:
-Lead the impression with recurrence status:
-- "No local tumor recurrence identified."
-- "Findings suspicious for local tumor recurrence."
-- "Findings consistent with local tumor recurrence."
-This must be the first or second impression line.
+The primary impression point must address tumor recurrence status. Use exactly one of:
+  - "No local tumor recurrence identified."
+  - "Findings suspicious for local tumor recurrence." — if concerning but not definitive
+  - "Findings consistent with local tumor recurrence." — if definitive
+This must be the FIRST or SECOND line of the impression.
+Do NOT lead with soft tissue edema, fluid, or secondary findings when recurrence status is the clinical question.
 
 
 FORMAT — one blank line between each section:
@@ -6920,6 +6936,7 @@ export default function DashboardPage() {
   const [patientSex, setPatientSex] = useState('');
   const [layPersonSummary, setLayPersonSummary] = useState(false);
   const [includeDoseOpt, setIncludeDoseOpt] = useState(true);
+  const [massMode, setMassMode] = useState('auto'); // 'auto' | 'new' | 'followup' | 'postresection'
   // ── Rheum module state ──────────────────────────────────────────────────
   const [rheumJoint, setRheumJoint] = useState('knee');
   const [rheumLaterality, setRheumLaterality] = useState('left');
@@ -7024,6 +7041,16 @@ export default function DashboardPage() {
     setGeneratedReport(''); // always clears center col — any button can override
     setIsGenerating(true);
     const lat = showSide ? side : '';
+    // ── Mass mode resolution ─────────────────────────────────────────────────
+    const massKeywords = [
+      'mass','tumor','tumour','cancer','malignancy','malignant',
+      'carcinoma','sarcoma','lymphoma','metastasis','metastatic',
+      'metastases','neoplasm','neoplastic','lesion','recurrence',
+      'recurrent','oncology','oncologic'
+    ];
+    const hasMassKeyword = massKeywords.some(k => textToUse.toLowerCase().includes(k));
+    // Resolve effective mode: if user pinned a mode, use it; otherwise 'auto' passes through to prompt
+    const resolvedMassMode = massMode; // 'auto' lets the prompt do its own detection
     try {
       const layPersonInstruction = layPersonSummary
         ? `\n\nADDITIONAL SECTION — IMPORTANT: After you have completed the full formal radiology report including TECHNIQUE, FINDINGS, IMPRESSION, and any REFERENCES/FOOTNOTE sections, append one final separate section at the very end. Do not modify the formal report sections in any way. The additional section must begin with the exact header "UNDERSTANDING YOUR RESULTS:" on its own line in ALL CAPS. Then write 2-5 plain-language sentences summarizing the key findings for a patient with a high school education. Rules: no medical jargon — use "wear and tear" not "osteoarthritis", "cartilage damage" not "chondromalacia", "torn" not "ruptured", "fluid buildup" not "effusion", "pinched nerve" not "radiculopathy". Be clear but reassuring in tone. Do not repeat the formal impression verbatim`
@@ -7034,7 +7061,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:2000,
-          system: isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt) + layPersonInstruction,
+          system: isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction,
           messages:[{role:'user',content:`Dictated findings:\n\n${isRheum ? rheumFreeText : dictationText}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS TO ADD TO IMPRESSION AND REFERENCES:\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
@@ -7583,6 +7610,27 @@ export default function DashboardPage() {
               <input type="checkbox" checked={layPersonSummary} onChange={e=>setLayPersonSummary(e.target.checked)} style={{ width:15,height:15,accentColor:'#2563eb',cursor:'pointer' }}/>
               <span style={{ fontSize:12,fontWeight:600,color:layPersonSummary?(dm?'#93c5fd':'#1d4ed8'):(dm?'#64748b':'#64748b') }}>🧑‍🏫 Add "Understanding Your Results" patient summary</span>
             </label>
+            {!isRheum && (
+              <div style={{ padding:'8px 12px',borderRadius:8,border:'1px solid '+(massMode!=='auto'?(dm?'#7c2d12':'#fed7aa'):(dm?'#334155':'#e2e8f0')),background:massMode!=='auto'?(dm?'#3b0f02':'#fff7ed'):(dm?'#0f172a':'#f8fafc'),transition:'all 0.15s' }}>
+                <div style={{ fontSize:11,fontWeight:600,color:massMode!=='auto'?(dm?'#fb923c':'#c2410c'):(dm?'#64748b':'#94a3b8'),letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:6 }}>🔬 Mass / Tumor Case Type</div>
+                <div style={{ display:'flex',gap:6,flexWrap:'wrap' }}>
+                  {[
+                    { val:'auto', label:'Auto-detect' },
+                    { val:'new',  label:'New case' },
+                    { val:'followup', label:'Follow-up' },
+                    { val:'postresection', label:'Post-resection' },
+                  ].map(({ val, label }) => {
+                    const active = massMode === val;
+                    return (
+                      <button key={val} onClick={() => setMassMode(val)}
+                        style={{ padding:'4px 10px',borderRadius:6,border:'1px solid '+(active?(dm?'#f97316':'#ea580c'):(dm?'#334155':'#d1d5db')),background:active?(dm?'#7c2d12':'#ffedd5'):'transparent',color:active?(dm?'#fb923c':'#c2410c'):(dm?'#94a3b8':'#6b7280'),fontSize:11,fontWeight:active?700:500,cursor:'pointer',transition:'all 0.12s' }}>
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {(() => {
               const leftHasText = isRheum ? !!rheumFreeText.trim() : !!dictationText.trim();
               const leftDisabled = isGenerating || isGeneratingRheum || !leftHasText;
