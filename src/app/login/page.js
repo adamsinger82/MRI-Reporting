@@ -4962,7 +4962,7 @@ Be concise and clinically actionable. Use WHO 2020 bone tumor classification, Kr
 
 IMPORTANT: If the pattern fits a USP6-driven neoplasm (myositis ossificans, ABC, nodular fasciitis, FOPD, fibroma of tendon sheath), explicitly flag this in your response with a USP6 FAMILY ALERT. These lesions mimic malignancy but are benign.
 
-IMPORTANT: If a vertebral or sacrococcygeal lesion is described as T1 hypointense, T2 hyperintense, non-enhancing, centrally located, ± mild sclerosis, ± multifocal, WITHOUT lysis / extraosseous mass / avid enhancement — place BENIGN NOTOCHORDAL CELL TUMOR (BNCT) at the top of the differential. Flag with a BNCT ALERT and state that biopsy is NOT recommended for typical BNCT; imaging surveillance is appropriate.
+IMPORTANT: If a vertebral or sacrococcygeal lesion is described as T1 hypointense, T2 hyperintense, non-enhancing, centrally located, ± mild sclerosis, ± multifocal, WITHOUT lysis / extraosseous mass / avid enhancement — place BENIGN NOTOCHORDAL CELL TUMOR (BNCT) at the top of the differential. Flag with a BNCT ALERT and state that biopsy is NOT recommended for typical BNCT; imaging surveillance is appropriate.`;
 
     try {
       const res = await fetch('/api/generate', {
