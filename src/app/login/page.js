@@ -1323,8 +1323,8 @@ const ANATOMY_MRI = {
   elbow:'UCL (Ulnar Collateral Ligament — medial), LUCL (Lateral Ulnar Collateral Ligament — lateral), RCL (Radial Collateral Ligament — lateral), Annular Ligament, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Brachialis Tendon, Triceps Tendon, Ulnar Nerve, Median Nerve, Radial Nerve / Posterior Interosseous Nerve, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
   ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
   spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Paraspinal Soft Tissues, Facet Joints, Bones, Cord / Conus / Cauda Equina',
-  pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Regional Neurovascular Structures, Soft Tissues',
-  foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Regional Neurovascular Structures, Soft Tissues',
+  foot:'Plantar Fascia, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
   'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
   'tibia/fibula':'Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, Posterior Tibial Tendon, Flexor Digitorum Longus, Flexor Hallucis Longus, Peroneus Longus, Peroneus Brevis, Anterior Compartment Musculature, Posterior Compartment Musculature, Lateral Compartment Musculature, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Regional Neurovascular Structures, Soft Tissues',
   humerus:'Deltoid Muscle, Biceps Brachii, Brachialis, Triceps Brachii, Coracobrachialis, Radial Nerve, Axillary Nerve, Ulnar Nerve, Humerus (cortex / medullary canal / periosteum), Bone Marrow Signal, Soft Tissues',
@@ -1399,8 +1399,7 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
 
   const findingsRules = isCT
     ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent." Soft Tissues — write "No acute soft tissue abnormality." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR language. 4. BONES RULE — all three on same line: Fracture/cortical disruption (or "No fracture or cortical disruption."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). 5. JOINT SPACE RULE — for each joint space: address narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis."`
-    : `FINDINGS RULES: 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses — write "absent" not "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — address all three: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion."`;
-
+    : `FINDINGS RULES: 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses — write "absent" not "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — use a SINGLE heading "Bones:" for ALL bone findings. Address all three on the same line: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion." BONES SCOPE: include acute fractures, bone contusions, stress reactions/stress fractures, AVN, bone lesions (benign or malignant), marrow infiltration. Do NOT include chronic degenerative changes (osteophytes, subchondral sclerosis/cysts from OA) — those belong under Articular Cartilage or joint headings. CRITICAL: Do NOT create any subheading named after an individual bone (e.g. do NOT write "Femur:", "Tibia:", "Patella:", "Fibula:", "Calcaneus:", "Talus:" etc. as standalone findings headings). All bone findings consolidate under the single "Bones:" heading.`;
   const normalImpressionText = isCT
     ? `If entirely normal: "No significant CT findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`
     : `If entirely normal: "No significant MRI findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`;
@@ -1414,7 +1413,7 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
 
 CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
-- - NEVER include any commentary, interpretation notes, or meta-statements about the dictation or speech recognition. Do not write things like 'I interpreted X as Y' or 'I assumed you meant Z'. The report must contain ONLY the formal radiology report content — nothing else.
+- ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes — but is not limited to — phrases like "I interpreted X as Y", "I assumed you meant Z", "Note: I understood [term] to mean [term]", "I corrected [word] to [word]", "[term] interpreted as [term]", or any similar phrasing. If speech recognition produced garbled text, silently use your best clinical interpretation without any comment. The output must contain ONLY the formal radiology report sections: the exam heading, HISTORY, COMPARISON, TECHNIQUE, FINDINGS, IMPRESSION, and optionally FOOTNOTE/REFERENCES. Any sentence that is not part of the formal report is strictly forbidden.
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 
@@ -1458,6 +1457,11 @@ ANKLE:
 - HIGH ANKLE SPRAIN: Syndesmosis injury ± Maisonneuve → "High ankle sprain with syndesmotic injury, as above." If Maisonneuve: add "findings consistent with Maisonneuve fracture pattern, clinical correlation recommended."
 - HAGLUND SYNDROME: Insertional Achilles tendinopathy + Haglund deformity + retrocalcaneal bursitis → "Haglund syndrome with insertional Achilles tendinopathy, Haglund deformity, and retrocalcaneal bursitis, as above."
 - OSTEOCHONDRAL LESION TALUS: OLT → always own line: "Osteochondral lesion of the talar [medial/lateral] dome, as above."
+
+FOOT MRI — FINDINGS HEADING RULES:
+- PLANTAR FASCIA: default when not dictated: "No fibroma or acute injury." Do NOT default to "intact."
+- DO NOT include Achilles tendon, peroneal tendons, or posterior tibial tendon headings in a foot MRI UNLESS they are specifically dictated. These are ankle structures.
+- BONES — REACTIVE OSTEITIS RULE: When dictation describes high T2/STIR signal in bone WITHOUT corresponding low T1 signal change, report as: "Reactive osteitis versus early osteomyelitis cannot be excluded. Clinical and laboratory correlation recommended." when infection is a clinical concern. If clearly post-traumatic or mechanical context, use "reactive marrow edema."
 
 HIP:
 - FAI CAM: CAM deformity + labral tear + cartilage damage → "CAM-type femoroacetabular impingement with anterosuperior labral tear[/cartilage injury], as above."
@@ -1505,6 +1509,12 @@ PELVIS:
   → "Pelvic ring fracture, [Young-Burgess classification] pattern, as above."
 - AVULSION: Apophyseal avulsion → "[ASIS/AIIS/ischial tuberosity/iliac crest] avulsion fracture, as above."
 - SACRAL INSUFFICIENCY: Bilateral sacral ala fractures in elderly → "Sacral insufficiency fractures, as above."
+
+PELVIS MRI — FINDINGS HEADING RULES:
+- ILIOPSOAS heading: use exactly "Iliopsoas:" (NOT "Iliopsoas Muscles:"). Default when not dictated: "No tear or bursitis."
+- SACROILIAC JOINTS heading: report ONLY findings directly related to the SI joints — trauma, OA, sacroiliitis, infection. Do NOT place lumbar spine, surgical hardware, or any non-SI-joint findings here.
+- PUBIC SYMPHYSIS heading: default when not dictated: "No acute abnormality." (NOT "intact")
+- HIP JOINTS heading: default when not dictated: "No acute abnormality." (NOT "intact")
 
 FEMUR/THIGH — BAMIC GRADING (British Athletics Muscle Injury Classification):
 Apply BAMIC grading when a hamstring or thigh muscle injury is identified. BAMIC classifies injuries by anatomic location (muscle belly vs. myotendinous junction vs. central/intramuscular tendon) and cross-sectional area (CSA) involvement:
@@ -1595,6 +1605,12 @@ GENERAL NAMED SYNDROMES (any joint):
 - NERVE ENTRAPMENT: → "[Nerve] entrapment at [site — e.g. carpal tunnel, cubital tunnel, tarsal tunnel], as above."
 - TRANSIENT BONE MARROW EDEMA SYNDROME: Diffuse marrow edema without fracture/AVN → "Transient bone marrow edema syndrome of the [bone/joint], as above."
 
+OSTEOMYELITIS / SEPTIC ARTHRITIS IMPRESSION RULES:
+- OSTEOMYELITIS: When osteomyelitis is dictated at any bone, it MUST have its own dedicated impression line. State as: "Osteomyelitis, [bone name]." — do NOT include T1/T2/STIR signal descriptions in the impression, just the diagnosis and location.
+- SEPTIC ARTHRITIS: When septic arthritis is dictated at a joint, it may be combined with osteomyelitis of the same bones on a single impression line if both are present at the same location: e.g., "Osteomyelitis of the [bone] with adjacent septic arthritis of the [joint]."
+- Multiple sites: each affected bone with osteomyelitis gets its own impression line.
+- Do NOT repeat MRI signal characteristics (T1 hypointense, T2/STIR hyperintense) in the impression — state only the diagnosis.
+
 WHAT ALWAYS GETS ITS OWN LINE (never grouped):
 - Osteochondral lesion / OCD / subchondral fracture
 - AVN (with Ficat/ARCO stage)
@@ -1610,6 +1626,7 @@ GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
 - Soft Tissues: "No acute abnormality." (NOT "intact")
 - Bones (MRI): always include "No marrow infiltration or aggressive osseous lesion." as part of the Bones subheading unless a specific lesion is dictated.
 - Regional Neurovascular Structures (all non-spine, non-wrist MRI joints): default "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
+- POSTSURGICAL CHANGE (ALL MRI joints): If the dictation describes any surgical changes, postoperative findings, or hardware at any location, generate a separate "Postsurgical Change:" heading in the FINDINGS section and place ALL such findings there. Do NOT scatter postsurgical findings under other headings (e.g. Soft Tissues, Bones, joint-specific headings). If no surgical changes are dictated, do NOT generate this heading.
 
 STYLE RULES:
 - Number each item. Most important/urgent first.
@@ -1619,6 +1636,22 @@ STYLE RULES:
 - ${normalImpressionText}
 - CARTILAGE / OA RULE (knee): If Modified Outerbridge grading in 2+ compartments → single DEGENERATIVE line, not per-compartment.
 - OSTEOCHONDRAL EXCEPTION: OCD/osteochondral lesion/subchondral fracture always listed separately.
+
+KNEE CARTILAGE SURFACE VOCABULARY — CRITICAL:
+Speech recognition frequently garbles anatomic cartilage surface names. When cartilage loss or grading is dictated for the knee, map the dictated phrase to the correct anatomic surface using this reference — always use the correct term in the report:
+  Patellofemoral compartment surfaces:
+    - "medial patellar facet" / "medial facet of the patella" / "medial patella"
+    - "lateral patellar facet" / "lateral facet of the patella" / "lateral patella"
+    - "central ridge of the patella" / "central patellar ridge"
+    - "medial trochlear facet" / "medial trochlea" — garbled forms: "medical truck layer for set", "medial trochlear for set"
+    - "lateral trochlear facet" / "lateral trochlea" — garbled forms: "lateral truck layer for set", "lateral trochlear for set", "lateral trochlear facet"
+    - "trochlear groove" / "central trochlea"
+  Tibiofemoral compartment surfaces:
+    - "medial femoral condyle"
+    - "lateral femoral condyle"
+    - "medial tibial plateau"
+    - "lateral tibial plateau"
+When speech recognition produces garbled text that phonetically resembles one of these surfaces, silently correct to the proper anatomic term and include it in the report. Never ignore a cartilage grade because the surface name was garbled — always attempt to match to the nearest anatomic surface above.
 - SIMPLIFIED IMPRESSION PRINCIPLE: Synthesize findings into a single clinical diagnosis where possible. DO NOT list every individual finding component — name the pattern, then add only the most clinically critical features.
   WRONG: "Advanced glenohumeral osteoarthrosis with modified Outerbridge grade 3 to 4 cartilage loss involving both articular surfaces, marginal osteophytes, multifocal subchondral marrow edema preferentially at the glenoid, circumferential labral tearing, osteochondral debris and/or synovitis within a small joint effusion."
   RIGHT: "Severe glenohumeral joint osteoarthrosis with circumferential labral tearing and small debris-containing joint effusion."
@@ -5994,7 +6027,7 @@ CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
 - Section headers (TECHNIQUE, FINDINGS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
-- - NEVER include any commentary, interpretation notes, or meta-statements about the dictation or speech recognition. Do not write things like 'I interpreted X as Y' or 'I assumed you meant Z'. The report must contain ONLY the formal radiology report content — nothing else.
+- ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes phrases like "I interpreted X as Y", "I assumed you meant Z", or any notation about speech recognition corrections. Silently apply best clinical interpretation. Output must contain ONLY formal radiology report content.
 
 TECHNIQUE:
 ${latLabel} radiograph of the ${jLabel.toLowerCase()}${viewsLabel}.
@@ -7187,8 +7220,25 @@ export default function DashboardPage() {
     setIsGeneratingRheum(false);
   };
 
+  const keepaliveTimerRef = useRef(null);
+
+  const startKeepalive = (getRecRef) => {
+    stopKeepalive();
+    keepaliveTimerRef.current = setInterval(() => {
+      const rec = getRecRef();
+      if (!rec) { stopKeepalive(); return; }
+      // Restart recognition before browser's ~60s silence timeout fires
+      // We do this by stopping; onend will immediately restart with persisted transcript
+      try { rec.stop(); } catch {}
+    }, 8000);
+  };
+
+  const stopKeepalive = () => {
+    if (keepaliveTimerRef.current) { clearInterval(keepaliveTimerRef.current); keepaliveTimerRef.current = null; }
+  };
+
   const toggleListening = () => {
-    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
+    if (isListening) { stopKeepalive(); recognitionRef.current?.stop(); setIsListening(false); return; }
     const SR = window.webkitSpeechRecognition || window.SpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
@@ -7210,7 +7260,7 @@ export default function DashboardPage() {
         else setDictationText(transcript);
       };
       recognition.onerror = (event) => {
-        if (event.error === 'not-allowed') { setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
+        if (event.error === 'not-allowed') { stopKeepalive(); setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
       };
       recognition.onend = () => {
         if (recognitionRef.current === recognition) {
@@ -7223,17 +7273,18 @@ export default function DashboardPage() {
               rec2.onstart = recognition.onstart; rec2.onaudiostart = recognition.onaudiostart;
               rec2.onresult = recognition.onresult; rec2.onerror = recognition.onerror; rec2.onend = recognition.onend;
               rec2.start(); recognitionRef.current = rec2;
-            } catch { setIsListening(false); }
+            } catch { stopKeepalive(); setIsListening(false); }
           }, 150);
         }
       };
       recognition.start();
       recognitionRef.current = recognition;
-    } catch (err) { setIsListening(false); setMicError('Could not start microphone: ' + err.message); }
+      startKeepalive(() => recognitionRef.current);
+    } catch (err) { stopKeepalive(); setIsListening(false); setMicError('Could not start microphone: ' + err.message); }
   };
 
-  const stopListening = () => { const rec = recognitionRef.current; recognitionRef.current = null; try { rec?.stop(); } catch {} setIsListening(false); };
-  useEffect(() => () => { recognitionRef.current?.stop(); }, []);
+  const stopListening = () => { stopKeepalive(); const rec = recognitionRef.current; recognitionRef.current = null; try { rec?.stop(); } catch {} setIsListening(false); };
+  useEffect(() => () => { stopKeepalive(); recognitionRef.current?.stop(); }, []);
 
   const inp = { width:'100%',padding:'9px 12px',border:'1px solid '+(dm?'#334155':'#dde3ed'),borderRadius:8,fontSize:14,boxSizing:'border-box',color:dm?'#e2e8f0':'#1e293b',outline:'none',background:dm?'#0f172a':'white' };
   const lbl = { fontSize:11,fontWeight:600,color:dm?'#94a3b8':'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
@@ -7677,7 +7728,7 @@ export default function DashboardPage() {
             )}
             <div style={{ flex:1,display:'flex',flexDirection:'column' }}><label style={lbl}>Findings</label>
               <textarea className="msk-textarea" style={{ ...inp,flex:1,minHeight:160,resize:'vertical',lineHeight:1.7,fontFamily:'inherit',border:isListening?'1.5px solid #ef4444':'1px solid #dde3ed',boxShadow:isListening?'0 0 0 3px rgba(239,68,68,0.1)':'none',transition:'all 0.15s' }}
-                value={isRheum ? rheumFreeText : dictationText} onChange={e => isRheum ? setRheumFreeText(e.target.value) : setDictationText(e.target.value)} placeholder={`Type or dictate ${isRheum?'X-ray':isCT?'CT':'MRI'} findings here…`}
+                value={isRheum ? rheumFreeText : dictationText} onChange={e => { if (isRheum) { setRheumFreeText(e.target.value); } else { setDictationText(e.target.value); finalTranscriptPersistRef.current = e.target.value; } }} placeholder={`Type or dictate ${isRheum?'X-ray':isCT?'CT':'MRI'} findings here…`}
                 spellCheck={false} autoCorrect="off" autoCapitalize="off" />
             </div>
             {micError && <div style={{ fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:7,padding:'7px 10px',lineHeight:1.5 }}>{micError}</div>}
@@ -7726,6 +7777,7 @@ export default function DashboardPage() {
                   </button>
                   <button onClick={() => {
                     if (isListening) stopListening();
+                    stopKeepalive();
                     finalTranscriptPersistRef.current = '';
                     setDictationText('');
                     setRheumFreeText('');
