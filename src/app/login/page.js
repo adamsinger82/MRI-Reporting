@@ -3630,7 +3630,7 @@ function AtlasModal({ onClose }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [renderTick, setRenderTick] = useState(0);
-  const [sequence, setSequence] = useState('t1');
+  const [loadedSet, setLoadedSet] = useState(new Set());  const [sequence, setSequence] = useState('t1');
   const sequenceRef = useRef('t1');
   const [labelMode, setLabelMode] = useState(false);
   const [visibleLayers, setVisibleLayers] = useState({ nerves:true, muscles:true, arteries:true, veins:true, bones:true, ligaments:true, joints:true, spaces:true });
@@ -3659,6 +3659,7 @@ function AtlasModal({ onClose }) {
       const idx = jointData.useLocalMRI ? jointData.defaultSlice-1 : (jointData.slices||[]).indexOf(jointData.defaultSlice);
       setSliceIdx(Math.max(0, idx));
       setImgLoaded(false); setImgError(false);
+      setLoadedSet(new Set());
       // Reset sequence to first available for this joint
       if (jointData.sequences) {
         const firstSeq = Object.keys(jointData.sequences)[0];
@@ -3723,7 +3724,7 @@ function AtlasModal({ onClose }) {
     return () => { clearTimeout(t2); clearTimeout(t3); };
   }, [selectedJoint, sequence]);
 
-  useEffect(() => { setSliceIdx(0); setImgLoaded(false); setImgError(false); }, [sequence]);
+  useEffect(() => { setSliceIdx(0); setImgLoaded(false); setImgError(false); setLoadedSet(new Set()); }, [sequence]);
 
   // seqData / imgUrl — must be defined BEFORE any useEffect that depends on imgUrl
   const seqData = jointData?.sequences
@@ -3739,19 +3740,10 @@ function AtlasModal({ onClose }) {
         : `${VHP_BASE}/${jointData.folder}/a_vm${currentSlice}.png`
     : null;
 
-  // Only show spinner if new image takes >150ms — eliminates flash for cached slices
-  const prevImgUrlRef = useRef(null);
-  useEffect(() => {
-    if (!imgUrl || imgUrl === prevImgUrlRef.current) return;
-    prevImgUrlRef.current = imgUrl;
-    const probe = new Image();
-    let timer = null;
-    probe.onload = () => { clearTimeout(timer); };
-    timer = setTimeout(() => { setImgLoaded(false); setImgError(false); }, 150);
-    probe.src = imgUrl;
-    if (probe.complete) { clearTimeout(timer); }
-    return () => clearTimeout(timer);
-  }, [imgUrl]);
+  // imgLoaded = current slice is in the loadedSet
+  const imgLoaded = imgUrl ? loadedSet.has(imgUrl) : false;
+
+  // No probe needed — onLoad handler on each img populates loadedSet
 
   // ── Label click handler — coords relative to ACTUAL image pixels ──────────
   const handleImageClick = (e) => {
@@ -3916,7 +3908,7 @@ function AtlasModal({ onClose }) {
             {/* Image area — click handler here so coords are relative to image area only */}
             <div ref={imgAreaRef} onClick={handleImageClick}
               style={{ flex:'1 1 0',minHeight:0,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',cursor:labelMode?'crosshair':'default' }}>
-              {!imgLoaded && !imgError && !imgRef.current?.src && (
+              {!imgLoaded && !imgError && (
                 <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,color:'#475569',zIndex:2 }}>
                   <div style={{ width:32,height:32,border:'3px solid #1d4ed8',borderTop:'3px solid transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite' }}/>
                   <span style={{ fontSize:11 }}>Loading…</span>
@@ -3928,19 +3920,31 @@ function AtlasModal({ onClose }) {
                   <div>Image unavailable — Slice {currentSlice}</div>
                 </div>
               )}
-              {imgUrl && (
-                <img src={imgUrl} ref={imgRef}
-                  onLoad={() => { setImgLoaded(true); requestAnimationFrame(() => setRenderTick(t => t+1)); }}
-                  onError={() => { setImgError(true); setImgLoaded(false); }}
-                  style={{ width:'100%',height:'100%',objectFit:'contain',
-                    opacity: imgLoaded ? 1 : 0,
-                    transition: 'opacity 0.05s',
-                    position:'absolute', inset:0, borderRadius:4, userSelect:'none' }}
-                  loading="eager"
-                  decoding="sync"
-                  alt={`Slice ${currentSlice}`}
-                />
-              )}
+              {/* Pre-render all slices — visible one shows instantly from cache, others hidden */}
+              {activeSlices.map((sl, i) => {
+                const url = seqData
+                  ? `${seqData.path}${seqData.pad===0?sl:String(sl).padStart(seqData.pad||3,'0')}${seqData.ext}`
+                  : jointData?.useLocalMRI
+                    ? `${jointData.localPath}${String(sl).padStart(3,'0')}${jointData.localExt||'.webp'}`
+                    : `${VHP_BASE}/${jointData.folder}/a_vm${sl}.png`;
+                const isActive = i === sliceIdx;
+                return (
+                  <img key={url} src={url}
+                    ref={isActive ? imgRef : null}
+                    onLoad={() => {
+                      setLoadedSet(prev => { const n = new Set(prev); n.add(url); return n; });
+                      if (isActive) requestAnimationFrame(() => setRenderTick(t => t+1));
+                    }}
+                    onError={() => { if (isActive) setImgError(true); }}
+                    style={{ width:'100%',height:'100%',objectFit:'contain',
+                      display: isActive ? 'block' : 'none',
+                      position:'absolute', inset:0, borderRadius:4, userSelect:'none' }}
+                    loading="eager"
+                    decoding="async"
+                    alt={`Slice ${sl}`}
+                  />
+                );
+              })}
 
               {/* DOTS ONLY on image — no text labels */}
               {/* Single SVG overlay — dots + lines + labels all in one coordinate space */}
