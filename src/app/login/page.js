@@ -3399,17 +3399,39 @@ const ATLAS_JOINTS = {
   hip: {
     label: 'Hip',
     region: 'Lower Extremity',
-    folder: 'pelvis',
-    slices: [1760, 1770, 1780, 1790, 1800, 1810],
-    defaultSlice: 1780,
-    view: 'Axial cryosection — femoral head level',
+    useLocalMRI: true,
+    defaultSlice: 15,
+    sequences: {
+      ax_pdfs: {
+        label: 'Ax PDFS',
+        path: '/atlas/hip/hip_ax_pdfs_',
+        slices: Array.from({length:30},(_,i)=>i+1),
+        ext: '.webp',
+        pad: 0,
+      },
+      cor_pdfs: {
+        label: 'Cor PDFS',
+        path: '/atlas/hip/hip_cor_pdfs_',
+        slices: Array.from({length:25},(_,i)=>i+1),
+        ext: '.webp',
+        pad: 0,
+      },
+      sag_pdfs: {
+        label: 'Sag PDFS',
+        path: '/atlas/hip/hip_sag_pdfs_',
+        slices: Array.from({length:25},(_,i)=>i+1),
+        ext: '.webp',
+        pad: 0,
+      },
+    },
+    view: 'MRI — hip',
     labels: {
-      bones:    [[70,50,'Femoral head','#1e3a8a'],[30,50,'Femoral head (L)','#1e3a8a'],[50,30,'Sacrum','#1e3a8a'],[22,38,'Ilium (L)','#1e3a8a'],[78,38,'Ilium (R)','#1e3a8a']],
-      tendons:  [[65,60,'Iliopsoas tendon','#14532d'],[35,60,'Iliopsoas (L)','#14532d'],[72,45,'Labrum','#14532d']],
-      muscles:  [[80,50,'Gluteus max','#7c2d12'],[20,50,'Gluteus max (L)','#7c2d12'],[65,42,'Gluteus med','#7c2d12']],
-      nerves:   [[62,68,'Sciatic n.','#92400e'],[38,68,'Sciatic n. (L)','#92400e'],[67,35,'Femoral n.','#92400e']],
-      arteries: [[68,56,'Femoral a.','#991b1b'],[32,56,'Femoral a. (L)','#991b1b']],
-      veins:    [[70,60,'Femoral v.','#4c1d95'],[30,60,'Femoral v. (L)','#4c1d95']],
+      bones:    [[68,48,'Femoral head','#1e3a8a'],[50,28,'Acetabulum','#1e3a8a'],[22,35,'Ilium','#1e3a8a'],[50,72,'Femoral neck','#1e3a8a']],
+      tendons:  [[58,55,'Iliopsoas t.','#14532d'],[72,42,'Labrum','#14532d'],[80,58,'Conjoined hamstring t.','#14532d'],[40,62,'Adductor t.','#14532d']],
+      muscles:  [[82,48,'Gluteus max','#7c2d12'],[68,32,'Gluteus med/min','#7c2d12'],[30,50,'Iliopsoas m.','#7c2d12'],[60,68,'Short ext. rotators','#7c2d12']],
+      nerves:   [[75,62,'Sciatic n.','#92400e'],[42,45,'Femoral n.','#92400e'],[55,60,'Obturator n.','#92400e']],
+      arteries: [[45,52,'Femoral a.','#991b1b'],[62,38,'Med. circumflex fem. a.','#991b1b']],
+      veins:    [[47,55,'Femoral v.','#4c1d95']],
     },
   },
   knee: {
@@ -3797,8 +3819,11 @@ function AtlasModal({ onClose }) {
                 <span style={{ fontSize:9,color:'#475569',fontWeight:600,alignSelf:'center',marginRight:4 }}>SEQUENCE:</span>
                 {Object.entries(jointData.sequences).map(([key, sq]) => (
                   <button key={key} onClick={() => { setSequence(key); sequenceRef.current = key; }}
-                    style={{ padding:'3px 10px',borderRadius:5,border:'1px solid '+(sequence===key?'#3b82f6':'#334155'),background:sequence===key?'#1d4ed8':'#1e293b',color:sequence===key?'white':'#64748b',fontSize:10,fontWeight:sequence===key?700:400,cursor:'pointer' }}>
+                    style={{ padding:'3px 10px',borderRadius:5,border:'1px solid '+(sequence===key?'#3b82f6':'#334155'),background:sequence===key?'#1d4ed8':'#1e293b',color:sequence===key?'white':'#64748b',fontSize:10,fontWeight:sequence===key?700:400,cursor:'pointer',display:'flex',alignItems:'center',gap:5 }}>
                     {sq.label}
+                    {!sq.permanentLabels && (
+                      <span style={{ fontSize:8,fontWeight:700,color:'#f59e0b',background:'rgba(245,158,11,0.15)',border:'1px solid rgba(245,158,11,0.4)',borderRadius:3,padding:'1px 4px',letterSpacing:'0.04em' }}>LABELS PENDING</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -4843,6 +4868,11 @@ function DdxModal({ onClose }) {
   const [gender, setGender] = useState('');
   const [ctDensity, setCtDensity] = useState('');
   const [macroFat, setMacroFat] = useState(false);
+  const [softTissueExt, setSoftTissueExt] = useState(false);
+  const [endostalScalloping, setEndostalScalloping] = useState(false);
+  const [periostealRxn, setPeriostealRxn] = useState(false);
+  const [fluidFluidLevels, setFluidFluidLevels] = useState(false);
+  const [marrowEdema, setMarrowEdema] = useState(false);
   const [ddxResult, setDdxResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -4853,6 +4883,13 @@ function DdxModal({ onClose }) {
     setIsGenerating(true);
     setDdxResult('');
     const ctFindings = [ctLytic&&'lytic',ctSclerotic&&'sclerotic/blastic',ctGroundGlass&&'ground glass',ctChondroid&&'chondroid matrix'].filter(Boolean).join(', ');
+    const aggressiveFeatures = [
+      softTissueExt&&'extra-osseous soft tissue extension',
+      endostalScalloping&&'deep endosteal scalloping (>2/3 cortical thickness)',
+      periostealRxn&&'periosteal reaction',
+      fluidFluidLevels&&'fluid-fluid levels',
+      marrowEdema&&'marrow edema around intraosseous lesion',
+    ].filter(Boolean).join(', ');
     const prompt = `You are a subspecialty MSK radiologist. Generate a prioritized differential diagnosis.
 
 Patient: Age ${age||'unknown'}, Gender: ${gender||'not specified'}, Location: ${location||'not specified'}
@@ -4861,6 +4898,7 @@ ${tissueType==='bone' ? `Bone location (epiphysis/metaphysis/diaphysis): ${boneL
 ${ctFindings ? `CT matrix/density: ${ctFindings}` : ''}
 ${ctDensity ? `CT density relative to muscle: ${ctDensity}` : ''}
 ${macroFat ? 'Macroscopic fat present (T1 bright, drops on fat-sat)' : ''}
+${aggressiveFeatures ? `Aggressive/additional features: ${aggressiveFeatures}` : ''}
 ${mriT1 ? `MRI T1: ${mriT1}` : ''}
 ${mriT2 ? `MRI T2: ${mriT2}` : ''}
 ${mriContrast ? `MRI enhancement: ${mriContrast}` : ''}
@@ -5177,6 +5215,16 @@ ANGIOLIPOMA vs LIPOMA CHEAT SHEET:
               <label style={lbl}>Macroscopic Fat</label>
               <div style={{ display:'flex',gap:6 }}>
                 {chk('Fat present (T1 bright / CT -50 to -150 HU)', macroFat, setMacroFat)}
+              </div>
+            </div>
+            <div>
+              <label style={lbl}>Aggressive / Additional Features</label>
+              <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
+                {chk('Extra-osseous soft tissue extension', softTissueExt, setSoftTissueExt)}
+                {chk('Deep endosteal scalloping (>2/3 cortex)', endostalScalloping, setEndostalScalloping)}
+                {chk('Periosteal reaction', periostealRxn, setPeriostealRxn)}
+                {chk('Fluid-fluid levels', fluidFluidLevels, setFluidFluidLevels)}
+                {chk('Marrow edema around intraosseous lesion', marrowEdema, setMarrowEdema)}
               </div>
             </div>
             <div>
