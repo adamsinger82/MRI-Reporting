@@ -1316,17 +1316,17 @@ const ABSENT_STRUCTURES = [
 
 // MRI anatomy — full soft tissue detail
 const ANATOMY_MRI = {
-  knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Muscles, Soft Tissues',
-  shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenoid Labrum, Acromial Undersurface, Subacromial and Subdeltoid Bursa, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
-  hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Muscles, Soft Tissues',
+  knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenoid Labrum, Acromial Undersurface, Subacromial and Subdeltoid Bursa, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
   wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Articular Cartilage, Bones, Muscles, Soft Tissues',
   elbow:'UCL (Ulnar Collateral Ligament — medial), LUCL (Lateral Ulnar Collateral Ligament — lateral), RCL (Radial Collateral Ligament — lateral), Annular Ligament, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Brachialis Tendon, Triceps Tendon, Ulnar Nerve, Median Nerve, Radial Nerve / Posterior Interosseous Nerve, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
-  ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
-  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Facet Joints, Bones, Paraspinal Soft Tissues',
-  pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Soft Tissues',
-  foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Soft Tissues',
+  ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Paraspinal Soft Tissues, Facet Joints, Bones, Cord / Conus / Cauda Equina',
+  pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas Muscles, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Regional Neurovascular Structures, Soft Tissues',
+  foot:'Plantar Fascia, Achilles Tendon Insertion, Peroneal Tendons, Posterior Tibial Tendon, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
   'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
-  'tibia/fibula':'Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, Posterior Tibial Tendon, Flexor Digitorum Longus, Flexor Hallucis Longus, Peroneus Longus, Peroneus Brevis, Anterior Compartment Musculature, Posterior Compartment Musculature, Lateral Compartment Musculature, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Soft Tissues',
+  'tibia/fibula':'Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, Posterior Tibial Tendon, Flexor Digitorum Longus, Flexor Hallucis Longus, Peroneus Longus, Peroneus Brevis, Anterior Compartment Musculature, Posterior Compartment Musculature, Lateral Compartment Musculature, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Regional Neurovascular Structures, Soft Tissues',
   humerus:'Deltoid Muscle, Biceps Brachii, Brachialis, Triceps Brachii, Coracobrachialis, Radial Nerve, Axillary Nerve, Ulnar Nerve, Humerus (cortex / medullary canal / periosteum), Bone Marrow Signal, Soft Tissues',
   forearm:'Flexor Carpi Radialis, Flexor Carpi Ulnaris, Flexor Digitorum Superficialis, Flexor Digitorum Profundus, Flexor Pollicis Longus, Pronator Teres, Pronator Quadratus, Extensor Carpi Radialis Longus and Brevis, Extensor Carpi Ulnaris, Extensor Digitorum, Extensor Pollicis Longus and Brevis, Abductor Pollicis Longus, Brachioradialis, Supinator, Radius, Ulna, Interosseous Membrane, Radial Nerve, Median Nerve, Ulnar Nerve, Bone Marrow Signal, Soft Tissues',
   hand:'Flexor Tendons (FDS and FDP per ray), Extensor Tendons (per ray), Intrinsic Muscles (interossei and lumbricals), Thenar Muscles, Hypothenar Muscles, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Metacarpals, Metacarpophalangeal Joints, Articular Cartilage, Bones, Muscles, Soft Tissues',
@@ -1563,14 +1563,24 @@ FOREARM (RADIUS/ULNA):
 
 SPINE-SPECIFIC FINDINGS RULES:
 
-INTERVERTEBRAL DISCS heading — INCLUDE: desiccation (global or by level), annular fissures (by level), Schmorl nodes (by level), Modic changes (type and level).
-INTERVERTEBRAL DISCS heading — DO NOT INCLUDE: disc herniations, protrusions, bulges, spinal canal stenosis, or foraminal stenosis. These belong only under LEVELS.
+INTERVERTEBRAL DISCS heading — INCLUDE ONLY: desiccation (global or by level), annular fissures/tears (by level), Schmorl nodes (by level), Modic changes (type and level).
+INTERVERTEBRAL DISCS heading — DO NOT INCLUDE: disc herniations, protrusions, extrusions, bulges, spinal canal stenosis, foraminal stenosis. These belong exclusively under LEVELS.
+INTERVERTEBRAL DISCS default when nothing abnormal: "No acute abnormality." — NOT "intact."
 
 PARASPINAL SOFT TISSUES: default text is "No acute abnormality." — NOT "intact."
 
 CANAL AND NEURAL FORAMINA: Do NOT generate this as a standalone FINDINGS heading. Canal and foraminal stenosis belongs exclusively under individual LEVELS entries.
 
-BONES heading — include if dictated: pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas, fractures, marrow signal abnormality.
+FACET JOINTS: Facet joint edema, effusion, erosion, synovitis, arthrosis — report under individual LEVELS entries, NOT as a standalone FINDINGS heading.
+
+BONES heading — include if dictated: pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas, fractures, marrow signal abnormality. Default marrow text when nothing abnormal: "No marrow infiltration or aggressive osseous lesion."
+
+DISCITIS / OSTEOMYELITIS ALERT — apply when dictation mentions increased STIR or T2 signal in a disc:
+Search the dictation for additional signs: endplate erosion, paraspinal collection/abscess, epidural collection/abscess, enhancement pattern.
+- IF additional signs of infection ARE present (endplate erosion, paraspinal/epidural collection or abscess): Use impression language "Findings are concerning for discitis/osteomyelitis at [level]. Paraspinal/epidural involvement as above. Urgent clinical and laboratory correlation recommended."
+- IF ONLY increased STIR/T2 disc signal, no additional signs mentioned: Use impression language "Increased STIR/T2 signal is present within the [level] disc, which in isolation is nonspecific and may reflect degenerative change; however, early discitis can have a similar appearance. Correlation with clinical symptoms and laboratory values (ESR, CRP, WBC) is recommended. If there is concern for early infection, short-interval follow-up MRI with contrast is recommended."
+
+REGIONAL NEUROVASCULAR STRUCTURES: Generate this heading for ALL non-spine MRI joints. Default text when not dictated: "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
 
 SPINE:
 - MULTILEVEL DISC DISEASE: → "Multilevel degenerative disc disease most significant at [worst level(s)] with [worst complication — e.g. moderate spinal stenosis, neural foraminal narrowing], as above."
@@ -1598,15 +1608,21 @@ GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
 - Muscles: "No high-grade fatty infiltration or volume loss. No intramuscular edema to suggest denervation, myositis, or strain."
 - Articular Cartilage: "Preserved." (NOT "intact" — use "preserved" for all joints)
 - Soft Tissues: "No acute abnormality." (NOT "intact")
+- Bones (MRI): always include "No marrow infiltration or aggressive osseous lesion." as part of the Bones subheading unless a specific lesion is dictated.
+- Regional Neurovascular Structures (all non-spine, non-wrist MRI joints): default "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
 
 STYLE RULES:
 - Number each item. Most important/urgent first.
 - Use named syndromes and clinical mechanisms — not signal descriptions or grade numbers
-- "as above" replaces repeating measurements, grades, signal characteristics
+- "as above" replaces repeating measurements, grades, signal characteristics — but use it SPARINGLY: maximum one "as above" per impression line, and only when the finding has genuine complexity worth referencing. DO NOT use "as above" for simple, self-evident findings.
 - Do NOT write "modified Outerbridge grade X", "T2 hyperintensity", "low signal on T1" in the impression
 - ${normalImpressionText}
 - CARTILAGE / OA RULE (knee): If Modified Outerbridge grading in 2+ compartments → single DEGENERATIVE line, not per-compartment.
-- OSTEOCHONDRAL EXCEPTION: OCD/osteochondral lesion/subchondral fracture always listed separately.${gradingBlock}
+- OSTEOCHONDRAL EXCEPTION: OCD/osteochondral lesion/subchondral fracture always listed separately.
+- SIMPLIFIED IMPRESSION PRINCIPLE: Synthesize findings into a single clinical diagnosis where possible. DO NOT list every individual finding component — name the pattern, then add only the most clinically critical features.
+  WRONG: "Advanced glenohumeral osteoarthrosis with modified Outerbridge grade 3 to 4 cartilage loss involving both articular surfaces, marginal osteophytes, multifocal subchondral marrow edema preferentially at the glenoid, circumferential labral tearing, osteochondral debris and/or synovitis within a small joint effusion."
+  RIGHT: "Severe glenohumeral joint osteoarthrosis with circumferential labral tearing and small debris-containing joint effusion."
+  The rule: name the overarching diagnosis + at most 2 clinically actionable features. Everything else is implicit in the diagnosis or detailed in FINDINGS.${gradingBlock}
 MASS / TUMOR / CANCER RULES — apply whenever dictation mentions a mass, tumor, cancer, malignancy, neoplasm, carcinoma, sarcoma, lymphoma, metastasis, lesion with oncologic context, or recurrence:
 
 FINDINGS — MASS HEADING:
@@ -7598,7 +7614,8 @@ export default function DashboardPage() {
             )}
             <div style={{ flex:1,display:'flex',flexDirection:'column' }}><label style={lbl}>Findings</label>
               <textarea className="msk-textarea" style={{ ...inp,flex:1,minHeight:160,resize:'vertical',lineHeight:1.7,fontFamily:'inherit',border:isListening?'1.5px solid #ef4444':'1px solid #dde3ed',boxShadow:isListening?'0 0 0 3px rgba(239,68,68,0.1)':'none',transition:'all 0.15s' }}
-                value={isRheum ? rheumFreeText : dictationText} onChange={e => isRheum ? setRheumFreeText(e.target.value) : setDictationText(e.target.value)} placeholder={`Type or dictate ${isRheum?'X-ray':isCT?'CT':'MRI'} findings here…`} />
+                value={isRheum ? rheumFreeText : dictationText} onChange={e => isRheum ? setRheumFreeText(e.target.value) : setDictationText(e.target.value)} placeholder={`Type or dictate ${isRheum?'X-ray':isCT?'CT':'MRI'} findings here…`}
+                spellCheck={false} autoCorrect="off" autoCapitalize="off" />
             </div>
             {micError && <div style={{ fontSize:11,color:'#dc2626',background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:7,padding:'7px 10px',lineHeight:1.5 }}>{micError}</div>}
             <button onClick={isListening ? stopListening : toggleListening}
@@ -7637,11 +7654,27 @@ export default function DashboardPage() {
               const leftBg = leftDisabled ? (dm?'#1e293b':'#e2e8f0') : isRheum ? 'linear-gradient(135deg,#7c2d92,#a855f7)' : isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#2563eb,#4f46e5)';
               const leftColor = leftDisabled ? (dm?'#475569':'#94a3b8') : 'white';
               const leftShadow = leftDisabled ? 'none' : isRheum ? '0 4px 16px rgba(168,85,247,0.35)' : '0 4px 16px rgba(37,99,235,0.35)';
+              const canReset = !!(leftHasText || generatedReport);
               return (
-                <button onClick={generateReport} disabled={leftDisabled}
-                  style={{ width:'100%',padding:12,borderRadius:9,border:'none',background:leftBg,color:leftColor,fontSize:14,fontWeight:700,cursor:leftDisabled?'not-allowed':'pointer',boxShadow:leftShadow,letterSpacing:'0.02em' }}>
-                  {(isGenerating||isGeneratingRheum) ? '⏳ Generating…' : `✨ Generate ${isRheum?'X-Ray':isCT?'CT':'MRI'} Report`}
-                </button>
+                <div style={{ display:'flex',gap:8 }}>
+                  <button onClick={generateReport} disabled={leftDisabled}
+                    style={{ flex:1,padding:12,borderRadius:9,border:'none',background:leftBg,color:leftColor,fontSize:14,fontWeight:700,cursor:leftDisabled?'not-allowed':'pointer',boxShadow:leftShadow,letterSpacing:'0.02em' }}>
+                    {(isGenerating||isGeneratingRheum) ? '⏳ Generating…' : `✨ Generate ${isRheum?'X-Ray':isCT?'CT':'MRI'} Report`}
+                  </button>
+                  <button onClick={() => {
+                    if (isListening) stopListening();
+                    finalTranscriptPersistRef.current = '';
+                    setDictationText('');
+                    setRheumFreeText('');
+                    setGeneratedReport('');
+                  }} disabled={!canReset}
+                    title="Clear dictation and report — start next case"
+                    style={{ padding:'12px 14px',borderRadius:9,border:'1.5px solid '+(canReset?(dm?'#475569':'#cbd5e1'):(dm?'#1e293b':'#e2e8f0')),background:canReset?(dm?'#1e293b':'#f8fafc'):(dm?'#0f172a':'#f1f5f9'),color:canReset?(dm?'#94a3b8':'#64748b'):(dm?'#334155':'#cbd5e1'),fontSize:16,cursor:canReset?'pointer':'not-allowed',transition:'all 0.15s',flexShrink:0 }}
+                    onMouseEnter={e => { if (canReset) e.currentTarget.style.background = dm?'#dc2626':'#fee2e2'; e.currentTarget.style.color = dm?'#fca5a5':'#dc2626'; e.currentTarget.style.borderColor = dm?'#ef4444':'#fca5a5'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = canReset?(dm?'#1e293b':'#f8fafc'):(dm?'#0f172a':'#f1f5f9'); e.currentTarget.style.color = canReset?(dm?'#94a3b8':'#64748b'):(dm?'#334155':'#cbd5e1'); e.currentTarget.style.borderColor = canReset?(dm?'#475569':'#cbd5e1'):(dm?'#1e293b':'#e2e8f0'); }}>
+                    🗑
+                  </button>
+                </div>
               );
             })()}
           </div>
