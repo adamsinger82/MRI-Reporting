@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "MSK MRI Report Generator",
+  title: "AI-Powered MSK Radiology Assistant",
   description: "MSK Radiology AI Assistant",
 };
 
