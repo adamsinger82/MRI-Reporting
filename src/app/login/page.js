@@ -3627,7 +3627,6 @@ function AtlasModal({ onClose }) {
   const [selectedRegion, setSelectedRegion] = useState('Pelvis & Spine');
   const [selectedJoint, setSelectedJoint] = useState('pelvis');
   const [sliceIdx, setSliceIdx] = useState(0);
-  const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [renderTick, setRenderTick] = useState(0);
   const [loadedSet, setLoadedSet] = useState(new Set());  const [sequence, setSequence] = useState('t1');
@@ -3658,7 +3657,7 @@ function AtlasModal({ onClose }) {
     if (jointData && !jointData.isBrachialPlexus) {
       const idx = jointData.useLocalMRI ? jointData.defaultSlice-1 : (jointData.slices||[]).indexOf(jointData.defaultSlice);
       setSliceIdx(Math.max(0, idx));
-      setImgLoaded(false); setImgError(false);
+      setImgError(false);
       setLoadedSet(new Set());
       // Reset sequence to first available for this joint
       if (jointData.sequences) {
@@ -3724,7 +3723,7 @@ function AtlasModal({ onClose }) {
     return () => { clearTimeout(t2); clearTimeout(t3); };
   }, [selectedJoint, sequence]);
 
-  useEffect(() => { setSliceIdx(0); setImgLoaded(false); setImgError(false); setLoadedSet(new Set()); }, [sequence]);
+  useEffect(() => { setSliceIdx(0); setImgError(false); setLoadedSet(new Set()); }, [sequence]);
 
   // seqData / imgUrl — must be defined BEFORE any useEffect that depends on imgUrl
   const seqData = jointData?.sequences
