@@ -1658,6 +1658,13 @@ When speech recognition produces garbled text that phonetically resembles one of
   The rule: name the overarching diagnosis + at most 2 clinically actionable features. Everything else is implicit in the diagnosis or detailed in FINDINGS.${gradingBlock}
 MASS / TUMOR / CANCER RULES — apply whenever dictation mentions a mass, tumor, cancer, malignancy, neoplasm, carcinoma, sarcoma, lymphoma, metastasis, lesion with oncologic context, or recurrence:
 
+BNCT PATTERN RECOGNITION — REPORT GENERATOR:
+When a vertebral body or sacrococcygeal bone lesion is described, actively check for the BNCT pattern:
+  BNCT-COMPATIBLE (all must be present): T1 hypointense, T2 hyperintense, no enhancement, central vertebral location, ± mild sclerosis, ± multifocal
+  BNCT-INCOMPATIBLE (any one excludes BNCT): frank lysis, extraosseous/soft tissue mass, avid or moderate enhancement
+If BNCT-compatible: in the FINDINGS Bones section describe the lesion, then in IMPRESSION write: "Imaging features are most consistent with benign notochordal cell tumor (BNCT). Biopsy is not recommended for lesions with this typical appearance; imaging surveillance is appropriate. Development of lysis, soft tissue extension, or enhancement would warrant upgrading to atypical notochordal cell tumor (ANCT) and further evaluation."
+If BNCT-incompatible features are present: raise chordoma in the differential and note which features exclude BNCT.
+
 FINDINGS — MASS HEADING:
 Generate a separate MASS heading in the FINDINGS section.
 Describe: location, size (in centimeters, three dimensions if provided), signal characteristics or density, morphology, margins, and involvement of adjacent structures as dictated.
@@ -4953,7 +4960,9 @@ RED FLAGS suggesting malignancy
 
 Be concise and clinically actionable. Use WHO 2020 bone tumor classification, Kransdorf/Murphey criteria, and USP6 family recognition criteria (Broski & Wenger, Skeletal Radiol 2023).
 
-IMPORTANT: If the pattern fits a USP6-driven neoplasm (myositis ossificans, ABC, nodular fasciitis, FOPD, fibroma of tendon sheath), explicitly flag this in your response with a USP6 FAMILY ALERT. These lesions mimic malignancy but are benign.`;
+IMPORTANT: If the pattern fits a USP6-driven neoplasm (myositis ossificans, ABC, nodular fasciitis, FOPD, fibroma of tendon sheath), explicitly flag this in your response with a USP6 FAMILY ALERT. These lesions mimic malignancy but are benign.
+
+IMPORTANT: If a vertebral or sacrococcygeal lesion is described as T1 hypointense, T2 hyperintense, non-enhancing, centrally located, ± mild sclerosis, ± multifocal, WITHOUT lysis / extraosseous mass / avid enhancement — place BENIGN NOTOCHORDAL CELL TUMOR (BNCT) at the top of the differential. Flag with a BNCT ALERT and state that biopsy is NOT recommended for typical BNCT; imaging surveillance is appropriate.
 
     try {
       const res = await fetch('/api/generate', {
@@ -5091,6 +5100,13 @@ BNCT vs CC KEY DISCRIMINATORS:
 - CC: cortical destruction + soft tissue mass + enhancement = MALIGNANT, aggressive treatment
 - ANCT: between these two; biopsy + follow-up required
 - TREATMENT: wide en-bloc resection + proton beam RT (50-60% local control at 5yr); local recurrence 19-75%; 5-yr survival 45-86%
+
+BNCT PATTERN RECOGNITION — ACTIVE TRIGGER RULE:
+When a vertebral or sacrococcygeal bone lesion is described with ALL of the following features, place BNCT at the TOP of the differential diagnosis list:
+  REQUIRED POSITIVE features: T1 hypointense (marrow replacement), T2 hyperintense, NO contrast enhancement, central location within the vertebral body/segment, ± mild sclerosis on CT, ± multifocal involvement
+  REQUIRED NEGATIVE features (must be absent): NO lytic destruction, NO extraosseous/soft tissue mass, NO avid or moderate enhancement
+If ANY of the following are present, remove BNCT from the differential and elevate chordoma or dedifferentiated chordoma: frank osteolysis, extraosseous soft tissue extension, avid enhancement. Flag this exclusion explicitly.
+Format when BNCT is top diagnosis: "1. Benign notochordal cell tumor (BNCT) — imaging features are characteristic: T1 hypointense, T2 hyperintense, no enhancement, no soft tissue mass, [± patchy sclerosis], central vertebral location. Biopsy is NOT recommended for typical BNCT; imaging surveillance is appropriate. If any atypical features develop (soft tissue extension, enhancement, lysis), upgrade to atypical notochordal cell tumor (ANCT) and consider biopsy."
 
 PAPER E — WHO 2020 BONE TUMOR CLASSIFICATION (Hwang, Hameed, Kransdorf, Skel Radiol 2023):
 KEY RECLASSIFICATIONS:
