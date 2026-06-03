@@ -3440,28 +3440,132 @@ const ATLAS_JOINTS = {
     label: 'Hip',
     region: 'Lower Extremity',
     useLocalMRI: true,
-    defaultSlice: 15,
+    defaultSlice: 10,
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
         path: '/atlas/hip/hip_ax_pdfs_',
-        slices: Array.from({length:30},(_,i)=>i+1),
+        slices: Array.from({length:24},(_,i)=>i+1),
         ext: '.webp',
         pad: 0,
+        permanentLabels: {
+          // Slices 1-2: superior ilium / ASIS level — iliopsoas just entering field, gluteals
+          1:  [[18,38,'Gluteus medius','#7c2d12'],[44,30,'Iliopsoas m.','#7c2d12'],[55,30,'Femoral a/v','#991b1b'],[62,30,'Femoral n.','#92400e']],
+          2:  [[18,38,'Gluteus medius','#7c2d12'],[44,32,'Iliopsoas m.','#7c2d12'],[55,32,'Femoral vessels','#991b1b'],[62,32,'Femoral n.','#92400e']],
+          // Slices 3-4: femoral head entering — acetabulum roof, iliopsoas anterior, gluteus med/min lateral
+          3:  [[18,38,'Gluteus medius','#7c2d12'],[15,52,'Gluteus maximus','#7c2d12'],[43,35,'Iliopsoas m.','#7c2d12'],[56,36,'Femoral vessels','#991b1b'],[63,30,'Femoral n.','#92400e'],[47,45,'Femoral head','#1e3a8a'],[37,38,'Acetabular roof','#1e3a8a']],
+          4:  [[17,40,'Gluteus medius','#7c2d12'],[15,55,'Gluteus maximus','#7c2d12'],[42,36,'Iliopsoas m.','#7c2d12'],[56,35,'Femoral vessels','#991b1b'],[63,30,'Femoral n.','#92400e'],[47,44,'Femoral head','#1e3a8a'],[36,38,'Acetabulum','#1e3a8a']],
+          // Slices 5-7: mid femoral head — labrum visible, articular cartilage, joint space
+          5:  [[17,42,'Gluteus medius','#7c2d12'],[15,57,'Gluteus maximus','#7c2d12'],[42,37,'Iliopsoas m.','#7c2d12'],[57,36,'Femoral vessels','#991b1b'],[46,43,'Femoral head','#1e3a8a'],[36,39,'Acetabulum','#1e3a8a'],[38,43,'Ant. labrum','#14532d'],[54,43,'Post. labrum','#14532d']],
+          6:  [[16,43,'Gluteus medius','#7c2d12'],[14,58,'Gluteus maximus','#7c2d12'],[40,38,'Iliopsoas m.','#7c2d12'],[57,37,'Femoral vessels','#991b1b'],[46,44,'Femoral head','#1e3a8a'],[36,40,'Acetabulum','#1e3a8a'],[37,44,'Ant. labrum','#14532d'],[54,44,'Post. labrum','#14532d'],[46,57,'Obturator int. m.','#7c2d12']],
+          7:  [[15,43,'Gluteus medius','#7c2d12'],[13,58,'Gluteus maximus','#7c2d12'],[40,38,'Iliopsoas m.','#7c2d12'],[57,37,'Femoral vessels','#991b1b'],[46,44,'Femoral head','#1e3a8a'],[35,40,'Acetabulum','#1e3a8a'],[36,45,'Ant. labrum','#14532d'],[54,44,'Post. labrum','#14532d'],[46,58,'Obturator int. m.','#7c2d12'],[64,52,'Sciatic n.','#92400e']],
+          // Slices 8-10: equatorial femoral head — femoral neck appearing, short external rotators
+          8:  [[15,42,'Gluteus medius','#7c2d12'],[13,57,'Gluteus maximus','#7c2d12'],[39,38,'Iliopsoas m.','#7c2d12'],[57,37,'Femoral vessels','#991b1b'],[46,45,'Femoral head','#1e3a8a'],[35,42,'Acetabulum','#1e3a8a'],[36,46,'Ant. labrum','#14532d'],[53,45,'Post. labrum','#14532d'],[46,60,'Obturator int. m.','#7c2d12'],[63,53,'Sciatic n.','#92400e']],
+          9:  [[15,42,'Gluteus medius','#7c2d12'],[13,57,'Gluteus maximus','#7c2d12'],[38,39,'Iliopsoas m.','#7c2d12'],[56,36,'Femoral vessels','#991b1b'],[46,46,'Femoral head','#1e3a8a'],[36,43,'Acetabulum','#1e3a8a'],[36,47,'Ant. labrum','#14532d'],[52,46,'Post. labrum','#14532d'],[47,61,'Obturator ext. m.','#7c2d12'],[63,55,'Sciatic n.','#92400e']],
+          10: [[14,42,'Gluteus medius','#7c2d12'],[12,57,'Gluteus maximus','#7c2d12'],[37,39,'Iliopsoas m.','#7c2d12'],[55,36,'Femoral vessels','#991b1b'],[46,46,'Femoral head','#1e3a8a'],[36,44,'Acetabulum','#1e3a8a'],[37,48,'Ant. labrum','#14532d'],[52,47,'Post. labrum','#14532d'],[47,62,'Obturator ext. m.','#7c2d12'],[62,56,'Sciatic n.','#92400e']],
+          // Slices 11-13: inferior femoral head / femoral neck junction
+          11: [[14,40,'Gluteus medius','#7c2d12'],[12,56,'Gluteus maximus','#7c2d12'],[37,38,'Iliopsoas m.','#7c2d12'],[55,35,'Femoral vessels','#991b1b'],[46,46,'Femoral head','#1e3a8a'],[36,44,'Acetabulum','#1e3a8a'],[48,64,'Obturator ext. m.','#7c2d12'],[62,57,'Sciatic n.','#92400e'],[52,54,'Inf. retinacular vessels','#991b1b']],
+          12: [[13,40,'Gluteus minimus','#7c2d12'],[12,55,'Gluteus maximus','#7c2d12'],[36,40,'Iliopsoas m.','#7c2d12'],[54,36,'Femoral vessels','#991b1b'],[46,46,'Femoral head','#1e3a8a'],[38,44,'Acetabulum','#1e3a8a'],[42,62,'Iliopsoas t. insertion','#14532d'],[48,66,'Obturator ext. m.','#7c2d12'],[62,58,'Sciatic n.','#92400e']],
+          13: [[12,40,'Gluteus minimus','#7c2d12'],[11,54,'Gluteus maximus','#7c2d12'],[35,42,'Iliopsoas m.','#7c2d12'],[53,37,'Femoral vessels','#991b1b'],[45,46,'Femoral head','#1e3a8a'],[40,44,'Acetabulum','#1e3a8a'],[41,63,'Obturator ext. m.','#7c2d12'],[61,59,'Sciatic n.','#92400e'],[48,56,'Ligamentum teres','#14532d']],
+          // Slices 14-16: femoral neck — short external rotators posterior, iliopsoas anterior
+          14: [[12,40,'Gluteus minimus','#7c2d12'],[11,53,'Gluteus maximus','#7c2d12'],[34,43,'Iliopsoas m.','#7c2d12'],[52,38,'Femoral vessels','#991b1b'],[44,46,'Femoral head','#1e3a8a'],[42,44,'Acetabular fossa','#1e3a8a'],[40,64,'Obturator ext. m.','#7c2d12'],[60,59,'Sciatic n.','#92400e'],[49,55,'Ligamentum teres','#14532d']],
+          15: [[12,40,'Gluteus minimus','#7c2d12'],[11,53,'Gluteus maximus','#7c2d12'],[33,44,'Iliopsoas m.','#7c2d12'],[51,39,'Femoral vessels','#991b1b'],[43,47,'Femoral head','#1e3a8a'],[42,52,'Obturator ext. m.','#7c2d12'],[59,59,'Sciatic n.','#92400e']],
+          16: [[11,40,'Gluteus minimus','#7c2d12'],[11,52,'Gluteus maximus','#7c2d12'],[33,45,'Iliopsoas m.','#7c2d12'],[51,40,'Femoral vessels','#991b1b'],[43,47,'Femoral neck','#1e3a8a'],[43,52,'Obturator ext. m.','#7c2d12'],[59,59,'Sciatic n.','#92400e']],
+          // Slices 17-20: subtrochanteric — greater trochanter, lesser trochanter, gluteus med insertion
+          17: [[11,40,'Gluteus medius (insertion)','#7c2d12'],[11,52,'Gluteus maximus','#7c2d12'],[32,46,'Iliopsoas m.','#7c2d12'],[50,40,'Femoral vessels','#991b1b'],[43,46,'Femoral neck','#1e3a8a'],[16,46,'Greater trochanter','#1e3a8a'],[58,59,'Sciatic n.','#92400e']],
+          18: [[11,40,'Gluteus medius t.','#14532d'],[11,52,'Gluteus maximus','#7c2d12'],[32,47,'Iliopsoas m.','#7c2d12'],[50,41,'Femoral vessels','#991b1b'],[43,46,'Femoral neck','#1e3a8a'],[16,47,'Greater trochanter','#1e3a8a'],[58,60,'Sciatic n.','#92400e'],[40,66,'Lesser trochanter','#1e3a8a']],
+          19: [[11,40,'Gluteus medius t.','#14532d'],[11,52,'Gluteus maximus','#7c2d12'],[31,47,'Iliopsoas t.','#14532d'],[49,41,'Femoral vessels','#991b1b'],[43,46,'Femoral neck','#1e3a8a'],[16,48,'Greater trochanter','#1e3a8a'],[57,60,'Sciatic n.','#92400e'],[39,67,'Lesser trochanter','#1e3a8a'],[28,54,'Trochanteric bursa','#14532d']],
+          20: [[10,40,'Gluteus medius t.','#14532d'],[11,52,'Gluteus maximus','#7c2d12'],[31,47,'Iliopsoas t.','#14532d'],[49,41,'Femoral vessels','#991b1b'],[43,46,'Prox. femoral shaft','#1e3a8a'],[16,48,'Greater trochanter','#1e3a8a'],[57,60,'Sciatic n.','#92400e'],[38,68,'Lesser trochanter','#1e3a8a']],
+          // Slices 21-24: proximal femoral shaft — adductors medial, hamstrings posterior
+          21: [[10,40,'Gluteus medius t.','#14532d'],[11,52,'Gluteus maximus','#7c2d12'],[32,46,'Iliopsoas t.','#14532d'],[49,42,'Femoral vessels','#991b1b'],[43,46,'Prox. femoral shaft','#1e3a8a'],[57,60,'Sciatic n.','#92400e'],[35,56,'Adductor m.','#7c2d12']],
+          22: [[10,40,'Gluteus maximus','#7c2d12'],[32,46,'Iliopsoas t.','#14532d'],[49,42,'Femoral vessels','#991b1b'],[43,46,'Prox. femoral shaft','#1e3a8a'],[57,60,'Sciatic n.','#92400e'],[35,56,'Adductor m.','#7c2d12'],[25,55,'Conjoined hamstring t.','#14532d']],
+          23: [[10,40,'Gluteus maximus','#7c2d12'],[49,42,'Femoral vessels','#991b1b'],[43,46,'Proximal femur','#1e3a8a'],[57,60,'Sciatic n.','#92400e'],[35,56,'Adductor m.','#7c2d12'],[25,55,'Conjoined hamstring t.','#14532d']],
+          24: [[10,40,'Gluteus maximus','#7c2d12'],[49,43,'Femoral vessels','#991b1b'],[43,47,'Proximal femur','#1e3a8a'],[57,61,'Sciatic n.','#92400e'],[35,57,'Adductor m.','#7c2d12'],[25,56,'Conjoined hamstring t.','#14532d']],
+        },
       },
       cor_pdfs: {
         label: 'Cor PDFS',
         path: '/atlas/hip/hip_cor_pdfs_',
-        slices: Array.from({length:25},(_,i)=>i+1),
+        slices: Array.from({length:22},(_,i)=>i+1),
         ext: '.webp',
         pad: 0,
+        permanentLabels: {
+          // Slices 1-3: posterior coronal — posterior capsule, short external rotators, ischium
+          1:  [[30,42,'Iliopsoas m.','#7c2d12'],[60,28,'Iliotibial band','#14532d'],[55,50,'Conjoined hamstring t.','#14532d'],[68,55,'Biceps femoris','#7c2d12']],
+          2:  [[30,42,'Iliopsoas m.','#7c2d12'],[58,30,'IT band','#14532d'],[53,52,'Conjoined hamstring t.','#14532d'],[66,56,'Biceps femoris','#7c2d12'],[40,58,'Ischium','#1e3a8a']],
+          3:  [[30,42,'Iliopsoas m.','#7c2d12'],[57,30,'Gluteus maximus','#7c2d12'],[52,54,'Conjoined hamstring t.','#14532d'],[40,58,'Ischium','#1e3a8a'],[60,52,'Sciatic n.','#92400e']],
+          // Slices 4-6: mid-posterior — piriformis, obturator internus, sciatic nerve
+          4:  [[28,40,'Iliopsoas m.','#7c2d12'],[55,30,'Gluteus maximus','#7c2d12'],[50,56,'Obturator int. m.','#7c2d12'],[60,52,'Sciatic n.','#92400e'],[38,58,'Ischium','#1e3a8a'],[72,40,'Gluteus medius','#7c2d12']],
+          5:  [[27,40,'Iliopsoas m.','#7c2d12'],[54,28,'Gluteus medius','#7c2d12'],[50,56,'Obturator int. m.','#7c2d12'],[60,52,'Sciatic n.','#92400e'],[37,58,'Ischium','#1e3a8a'],[24,50,'Femoral neck','#1e3a8a']],
+          6:  [[26,40,'Iliopsoas m.','#7c2d12'],[53,27,'Gluteus medius','#7c2d12'],[48,56,'Obturator int. m.','#7c2d12'],[60,51,'Sciatic n.','#92400e'],[25,50,'Femoral neck','#1e3a8a'],[35,44,'Acetabulum (post.)','#1e3a8a']],
+          // Slices 7-9: femoral head and acetabulum visible — labrum, articular cartilage
+          7:  [[25,40,'Iliopsoas m.','#7c2d12'],[52,27,'Gluteus medius','#7c2d12'],[48,56,'Obturator int. m.','#7c2d12'],[59,50,'Sciatic n.','#92400e'],[25,46,'Femoral head','#1e3a8a'],[35,40,'Acetabulum','#1e3a8a'],[36,34,'Sup. labrum','#14532d'],[34,52,'Inf. labrum','#14532d']],
+          8:  [[25,38,'Iliopsoas m.','#7c2d12'],[52,26,'Gluteus medius','#7c2d12'],[47,55,'Obturator int. m.','#7c2d12'],[25,45,'Femoral head','#1e3a8a'],[35,38,'Acetabulum','#1e3a8a'],[36,32,'Sup. labrum','#14532d'],[34,50,'Inf. labrum','#14532d'],[59,48,'Sciatic n.','#92400e']],
+          9:  [[24,37,'Iliopsoas m.','#7c2d12'],[52,25,'Gluteus medius','#7c2d12'],[25,44,'Femoral head','#1e3a8a'],[35,36,'Acetabulum','#1e3a8a'],[36,30,'Sup. labrum','#14532d'],[34,48,'Inf. labrum','#14532d'],[58,48,'Sciatic n.','#92400e'],[36,42,'Articular cartilage','#14532d']],
+          // Slices 10-12: mid-joint — femoral head centered, labrum prominent, gluteus med/min above
+          10: [[24,36,'Iliopsoas m.','#7c2d12'],[51,24,'Gluteus medius','#7c2d12'],[71,24,'Gluteus minimus','#7c2d12'],[25,43,'Femoral head','#1e3a8a'],[35,34,'Acetabulum','#1e3a8a'],[36,28,'Sup. labrum','#14532d'],[34,46,'Inf. labrum / transverse lig.','#14532d'],[57,47,'Sciatic n.','#92400e']],
+          11: [[24,35,'Iliopsoas m.','#7c2d12'],[50,24,'Gluteus medius','#7c2d12'],[70,24,'Gluteus minimus','#7c2d12'],[25,43,'Femoral head','#1e3a8a'],[35,34,'Acetabulum','#1e3a8a'],[36,27,'Sup. labrum','#14532d'],[33,46,'Transverse lig.','#14532d'],[32,39,'Articular cartilage','#14532d'],[57,47,'Sciatic n.','#92400e']],
+          12: [[23,35,'Iliopsoas m.','#7c2d12'],[50,23,'Gluteus medius','#7c2d12'],[70,23,'Gluteus minimus','#7c2d12'],[25,43,'Femoral head','#1e3a8a'],[34,34,'Acetabulum','#1e3a8a'],[35,27,'Sup. labrum','#14532d'],[32,46,'Transverse lig.','#14532d'],[32,38,'Articular cartilage','#14532d']],
+          // Slices 13-15: anterior joint — iliopsoas tendon, anterior labrum, femoral vessels
+          13: [[22,35,'Iliopsoas t.','#14532d'],[49,23,'Gluteus medius','#7c2d12'],[69,23,'Gluteus minimus','#7c2d12'],[25,42,'Femoral head','#1e3a8a'],[34,33,'Acetabulum','#1e3a8a'],[35,26,'Ant. labrum','#14532d'],[47,38,'Femoral vessels','#991b1b']],
+          14: [[22,34,'Iliopsoas t.','#14532d'],[49,22,'Gluteus medius','#7c2d12'],[68,22,'Gluteus minimus','#7c2d12'],[25,42,'Femoral head','#1e3a8a'],[34,33,'Acetabulum','#1e3a8a'],[35,25,'Ant. labrum','#14532d'],[46,38,'Femoral vessels','#991b1b'],[55,38,'Femoral n.','#92400e']],
+          15: [[22,33,'Iliopsoas t.','#14532d'],[48,22,'Gluteus medius','#7c2d12'],[68,22,'Gluteus minimus','#7c2d12'],[25,41,'Femoral head','#1e3a8a'],[33,32,'Acetabulum','#1e3a8a'],[46,37,'Femoral vessels','#991b1b'],[55,37,'Femoral n.','#92400e']],
+          // Slices 16-18: anterior hip — iliopsoas, femoral triangle, sartorius/rectus femoris
+          16: [[22,32,'Iliopsoas m.','#7c2d12'],[47,22,'Gluteus medius','#7c2d12'],[26,40,'Femoral neck','#1e3a8a'],[45,36,'Femoral vessels','#991b1b'],[54,36,'Femoral n.','#92400e'],[33,28,'Sartorius','#7c2d12']],
+          17: [[22,32,'Iliopsoas m.','#7c2d12'],[46,22,'Gluteus medius','#7c2d12'],[26,40,'Femoral neck','#1e3a8a'],[44,35,'Femoral vessels','#991b1b'],[53,35,'Femoral n.','#92400e'],[33,27,'Sartorius','#7c2d12'],[60,35,'Rectus femoris','#7c2d12']],
+          18: [[22,32,'Iliopsoas m.','#7c2d12'],[45,22,'Gluteus medius','#7c2d12'],[26,40,'Proximal femur','#1e3a8a'],[44,35,'Femoral vessels','#991b1b'],[53,35,'Femoral n.','#92400e'],[33,27,'Sartorius','#7c2d12'],[60,35,'Rectus femoris','#7c2d12']],
+          // Slices 19-22: most anterior — adductor origin, pubic ramus, iliopsoas
+          19: [[22,32,'Iliopsoas m.','#7c2d12'],[44,22,'Tensor fasciae latae','#7c2d12'],[44,35,'Femoral vessels','#991b1b'],[52,35,'Femoral n.','#92400e'],[32,27,'Sartorius','#7c2d12'],[60,32,'Rectus femoris','#7c2d12'],[38,52,'Adductor origin','#14532d']],
+          20: [[22,32,'Iliopsoas m.','#7c2d12'],[43,22,'Tensor fasciae latae','#7c2d12'],[44,35,'Femoral vessels','#991b1b'],[32,27,'Sartorius','#7c2d12'],[59,31,'Rectus femoris','#7c2d12'],[37,52,'Adductor longus','#7c2d12'],[42,58,'Pubic ramus','#1e3a8a']],
+          21: [[22,32,'Iliopsoas m.','#7c2d12'],[43,22,'Tensor fasciae latae','#7c2d12'],[43,35,'Femoral vessels','#991b1b'],[31,27,'Sartorius','#7c2d12'],[58,31,'Rectus femoris','#7c2d12'],[37,52,'Adductor longus','#7c2d12'],[42,58,'Pubic ramus','#1e3a8a']],
+          22: [[22,33,'Iliopsoas m.','#7c2d12'],[42,22,'Tensor fasciae latae','#7c2d12'],[43,36,'Femoral vessels','#991b1b'],[31,28,'Sartorius','#7c2d12'],[57,32,'Rectus femoris','#7c2d12'],[37,53,'Adductor longus','#7c2d12'],[42,60,'Pubic symphysis','#1e3a8a']],
+        },
       },
       sag_pdfs: {
         label: 'Sag PDFS',
         path: '/atlas/hip/hip_sag_pdfs_',
-        slices: Array.from({length:25},(_,i)=>i+1),
+        slices: Array.from({length:28},(_,i)=>i+1),
         ext: '.webp',
         pad: 0,
+        permanentLabels: {
+          // Slices 1-4: lateral — IT band, gluteus medius/minimus, greater trochanteric bursa
+          1:  [[55,40,'Gluteus medius','#7c2d12'],[55,60,'Iliotibial band','#14532d'],[35,50,'Vastus lateralis','#7c2d12']],
+          2:  [[55,38,'Gluteus medius','#7c2d12'],[52,58,'Iliotibial band','#14532d'],[35,50,'Vastus lateralis','#7c2d12'],[60,52,'Gluteus maximus','#7c2d12']],
+          3:  [[53,36,'Gluteus medius','#7c2d12'],[50,57,'IT band','#14532d'],[34,50,'Vastus lateralis','#7c2d12'],[58,52,'Gluteus maximus','#7c2d12'],[44,46,'Greater trochanter','#1e3a8a']],
+          4:  [[52,35,'Gluteus medius t.','#14532d'],[49,56,'IT band','#14532d'],[33,50,'Vastus lateralis','#7c2d12'],[57,52,'Gluteus maximus','#7c2d12'],[44,44,'Greater trochanter','#1e3a8a'],[45,60,'Trochanteric bursa','#14532d']],
+          // Slices 5-7: peritrochanteric — gluteus min insertion, trochanteric bursa level
+          5:  [[51,34,'Gluteus minimus t.','#14532d'],[48,55,'IT band','#14532d'],[32,50,'Vastus lateralis','#7c2d12'],[57,51,'Gluteus maximus','#7c2d12'],[44,42,'Greater trochanter','#1e3a8a'],[44,58,'Trochanteric bursa','#14532d']],
+          6:  [[50,33,'Gluteus minimus t.','#14532d'],[47,54,'IT band','#14532d'],[32,50,'Vastus lateralis','#7c2d12'],[56,50,'Gluteus maximus','#7c2d12'],[43,42,'Greater trochanter','#1e3a8a'],[43,57,'Trochanteric bursa','#14532d']],
+          7:  [[50,32,'Gluteus minimus t.','#14532d'],[47,53,'IT band','#14532d'],[31,50,'Vastus lateralis','#7c2d12'],[55,50,'Gluteus maximus','#7c2d12'],[43,42,'Greater trochanter','#1e3a8a']],
+          // Slices 8-10: lateral femoral head — lateral acetabulum, labrum tip
+          8:  [[49,30,'Gluteus minimus','#7c2d12'],[55,50,'Gluteus maximus','#7c2d12'],[42,40,'Femoral head','#1e3a8a'],[38,34,'Lat. acetabular rim','#1e3a8a'],[40,34,'Sup. labrum','#14532d'],[31,50,'Vastus lateralis','#7c2d12']],
+          9:  [[48,29,'Gluteus minimus','#7c2d12'],[54,49,'Gluteus maximus','#7c2d12'],[42,40,'Femoral head','#1e3a8a'],[38,32,'Acetabular rim','#1e3a8a'],[39,32,'Sup. labrum','#14532d'],[31,49,'Vastus lateralis','#7c2d12']],
+          10: [[47,28,'Gluteus minimus','#7c2d12'],[54,48,'Gluteus maximus','#7c2d12'],[42,40,'Femoral head','#1e3a8a'],[37,31,'Acetabulum','#1e3a8a'],[38,31,'Sup. labrum','#14532d'],[30,48,'Vastus lateralis','#7c2d12'],[52,38,'Piriformis','#7c2d12']],
+          // Slices 11-13: mid femoral head — labrum ant/post, articular cartilage, joint space
+          11: [[46,27,'Gluteus minimus','#7c2d12'],[53,47,'Gluteus maximus','#7c2d12'],[42,40,'Femoral head','#1e3a8a'],[37,30,'Acetabulum','#1e3a8a'],[36,30,'Sup. labrum','#14532d'],[30,48,'Rectus femoris','#7c2d12'],[52,37,'Short ext. rotators','#7c2d12'],[42,48,'Articular cartilage','#14532d']],
+          12: [[45,26,'Gluteus minimus','#7c2d12'],[52,46,'Gluteus maximus','#7c2d12'],[42,40,'Femoral head','#1e3a8a'],[36,29,'Acetabulum','#1e3a8a'],[35,29,'Sup. labrum','#14532d'],[30,47,'Rectus femoris','#7c2d12'],[51,37,'Short ext. rotators','#7c2d12'],[42,48,'Articular cartilage','#14532d']],
+          13: [[44,26,'Gluteus minimus','#7c2d12'],[52,46,'Gluteus maximus','#7c2d12'],[42,40,'Femoral head','#1e3a8a'],[35,29,'Acetabulum','#1e3a8a'],[35,29,'Sup. labrum','#14532d'],[29,47,'Rectus femoris','#7c2d12'],[51,36,'Short ext. rotators','#7c2d12'],[43,55,'Obturator ext. m.','#7c2d12']],
+          // Slices 14-16: femoral neck — anterior and posterior labrum, capsule
+          14: [[43,25,'Iliopsoas m.','#7c2d12'],[52,45,'Gluteus maximus','#7c2d12'],[42,38,'Femoral head','#1e3a8a'],[37,36,'Femoral neck','#1e3a8a'],[34,28,'Ant. labrum','#14532d'],[50,35,'Post. labrum','#14532d'],[29,46,'Rectus femoris','#7c2d12'],[44,55,'Obturator ext. m.','#7c2d12']],
+          15: [[42,24,'Iliopsoas m.','#7c2d12'],[51,44,'Gluteus maximus','#7c2d12'],[42,37,'Femoral head','#1e3a8a'],[37,36,'Femoral neck','#1e3a8a'],[34,27,'Ant. labrum','#14532d'],[49,34,'Post. labrum','#14532d'],[29,45,'Rectus femoris','#7c2d12'],[44,55,'Obturator ext. m.','#7c2d12']],
+          16: [[42,24,'Iliopsoas t.','#14532d'],[51,44,'Gluteus maximus','#7c2d12'],[42,36,'Femoral head','#1e3a8a'],[37,36,'Femoral neck','#1e3a8a'],[33,26,'Ant. labrum','#14532d'],[49,34,'Post. labrum','#14532d'],[29,44,'Rectus femoris','#7c2d12'],[43,55,'Obturator ext. m.','#7c2d12'],[50,50,'Sciatic n.','#92400e']],
+          // Slices 17-19: medial femoral head — fovea capitis, ligamentum teres, obturator vessels
+          17: [[41,24,'Iliopsoas t.','#14532d'],[50,44,'Gluteus maximus','#7c2d12'],[42,35,'Femoral head','#1e3a8a'],[37,37,'Femoral neck','#1e3a8a'],[33,25,'Ant. labrum','#14532d'],[48,34,'Post. labrum','#14532d'],[29,43,'Rectus femoris','#7c2d12'],[50,50,'Sciatic n.','#92400e'],[42,44,'Ligamentum teres','#14532d']],
+          18: [[40,23,'Iliopsoas t.','#14532d'],[49,44,'Gluteus maximus','#7c2d12'],[42,34,'Femoral head','#1e3a8a'],[36,37,'Femoral neck','#1e3a8a'],[33,24,'Ant. labrum','#14532d'],[48,33,'Post. labrum','#14532d'],[28,43,'Rectus femoris','#7c2d12'],[49,50,'Sciatic n.','#92400e'],[42,44,'Ligamentum teres','#14532d']],
+          19: [[40,23,'Iliopsoas m.','#7c2d12'],[49,43,'Gluteus maximus','#7c2d12'],[41,34,'Femoral head','#1e3a8a'],[36,37,'Femoral neck','#1e3a8a'],[48,33,'Post. capsule','#14532d'],[28,43,'Rectus femoris','#7c2d12'],[49,49,'Sciatic n.','#92400e'],[43,43,'Ligamentum teres','#14532d']],
+          // Slices 20-22: medial joint — obturator externus, acetabular fossa, pubofemoral lig.
+          20: [[39,23,'Iliopsoas m.','#7c2d12'],[48,43,'Gluteus maximus','#7c2d12'],[41,34,'Femoral head','#1e3a8a'],[36,38,'Acetabular fossa','#1e3a8a'],[28,42,'Rectus femoris','#7c2d12'],[48,49,'Sciatic n.','#92400e'],[43,52,'Obturator ext. m.','#7c2d12'],[33,28,'Pubofemoral lig.','#14532d']],
+          21: [[38,23,'Iliopsoas m.','#7c2d12'],[48,43,'Gluteus maximus','#7c2d12'],[41,35,'Femoral head','#1e3a8a'],[35,38,'Acetabular fossa','#1e3a8a'],[28,41,'Rectus femoris','#7c2d12'],[48,49,'Sciatic n.','#92400e'],[43,52,'Obturator ext. m.','#7c2d12'],[33,28,'Pubofemoral lig.','#14532d']],
+          22: [[38,22,'Iliopsoas m.','#7c2d12'],[47,43,'Gluteus maximus','#7c2d12'],[40,35,'Femoral head','#1e3a8a'],[34,38,'Acetabular fossa','#1e3a8a'],[27,41,'Rectus femoris','#7c2d12'],[47,49,'Sciatic n.','#92400e'],[43,52,'Obturator ext. m.','#7c2d12']],
+          // Slices 23-25: medial — adductor compartment, obturator nerve/vessels
+          23: [[38,22,'Iliopsoas m.','#7c2d12'],[47,42,'Gluteus maximus','#7c2d12'],[40,35,'Femoral neck','#1e3a8a'],[34,38,'Acetabulum (medial)','#1e3a8a'],[27,40,'Rectus femoris','#7c2d12'],[44,52,'Obturator ext. m.','#7c2d12'],[46,48,'Sciatic n.','#92400e'],[30,52,'Adductor m.','#7c2d12']],
+          24: [[37,22,'Iliopsoas m.','#7c2d12'],[46,42,'Gluteus maximus','#7c2d12'],[39,35,'Femoral neck','#1e3a8a'],[33,38,'Medial acetabulum','#1e3a8a'],[27,40,'Rectus femoris','#7c2d12'],[44,52,'Obturator ext. m.','#7c2d12'],[30,52,'Adductor m.','#7c2d12']],
+          25: [[37,22,'Iliopsoas m.','#7c2d12'],[45,42,'Gluteus maximus','#7c2d12'],[38,36,'Femoral neck','#1e3a8a'],[26,40,'Rectus femoris','#7c2d12'],[44,52,'Obturator ext. m.','#7c2d12'],[30,52,'Adductor longus','#7c2d12']],
+          // Slices 26-28: most medial — pubic ramus, adductor origin, obturator nerve
+          26: [[36,22,'Iliopsoas m.','#7c2d12'],[44,42,'Gluteus maximus','#7c2d12'],[29,52,'Adductor longus','#7c2d12'],[43,52,'Adductor brevis','#7c2d12'],[38,60,'Obturator ext. m.','#7c2d12'],[38,35,'Pubic ramus','#1e3a8a']],
+          27: [[36,22,'Iliopsoas m.','#7c2d12'],[44,42,'Gluteus maximus','#7c2d12'],[29,52,'Adductor longus','#7c2d12'],[43,52,'Adductor brevis','#7c2d12'],[38,60,'Gracilis','#7c2d12'],[38,35,'Pubic ramus','#1e3a8a']],
+          28: [[35,22,'Iliopsoas m.','#7c2d12'],[43,42,'Gluteus maximus','#7c2d12'],[29,52,'Adductor longus','#7c2d12'],[43,52,'Adductor brevis','#7c2d12'],[38,60,'Gracilis','#7c2d12'],[38,35,'Pubic ramus','#1e3a8a']],
+        },
       },
     },
     view: 'MRI — hip',
