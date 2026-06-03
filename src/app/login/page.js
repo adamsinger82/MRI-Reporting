@@ -5456,7 +5456,7 @@ function IncidentalPanel({ showLung, showGU, noduleType, setNoduleType, noduleSi
     <div style={{ background:'#1a0a0a',border:'1.5px solid #dc2626',borderRadius:8,padding:'10px 12px',display:'flex',flexDirection:'column',gap:10 }}>
       {showLung && (
         <div>
-          <div style={{ fontSize:10,fontWeight:800,color:'#ef4444',letterSpacing:'0.1em',marginBottom:6 }}>⚠️ DID YOU CHECK THE LUNG?</div>
+          <div style={{ fontSize:10,fontWeight:800,color:'#ef4444',letterSpacing:'0.1em',marginBottom:6 }}>⚠️ INCIDENTAL LESION CHECKER — LUNG</div>
           <div style={{ fontSize:10,color:'#94a3b8',marginBottom:4 }}>Nodule type:</div>
           <div style={{ display:'flex',gap:4,flexWrap:'wrap',marginBottom:6 }}>
             {['solid','ggo','partsolid'].map(t => tog(t, noduleType, setNoduleType))}
@@ -5473,7 +5473,7 @@ function IncidentalPanel({ showLung, showGU, noduleType, setNoduleType, noduleSi
       )}
       {showGU && (
         <div>
-          <div style={{ fontSize:10,fontWeight:800,color:'#ef4444',letterSpacing:'0.1em',marginBottom:6 }}>⚠️ DID YOU CHECK THE GU SYSTEM?</div>
+          <div style={{ fontSize:10,fontWeight:800,color:'#ef4444',letterSpacing:'0.1em',marginBottom:6 }}>⚠️ INCIDENTAL LESION CHECKER — GU / AORTA</div>
           <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
             <div>
               <div style={{ fontSize:10,color:'#94a3b8',marginBottom:3 }}>Renal finding:</div>
@@ -6980,7 +6980,7 @@ export default function DashboardPage() {
     selectedBodyPart === 'shoulder' ||
     (selectedBodyPart === 'spine' && ['cervical','thoracic'].includes(spineRegion))
   );
-  const showGUWarning = (
+  const showGUWarning = !isRheum && (
     selectedBodyPart === 'hip' ||
     selectedBodyPart === 'pelvis' ||
     (selectedBodyPart === 'spine' && spineRegion === 'lumbar')
@@ -7658,7 +7658,7 @@ export default function DashboardPage() {
               return (
                 <div style={{ display:'flex',gap:8 }}>
                   <button onClick={generateReport} disabled={leftDisabled}
-                    style={{ flex:1,padding:12,borderRadius:9,border:'none',background:leftBg,color:leftColor,fontSize:14,fontWeight:700,cursor:leftDisabled?'not-allowed':'pointer',boxShadow:leftShadow,letterSpacing:'0.02em' }}>
+                    style={{ flex:2,padding:'10px 12px',borderRadius:9,border:'none',background:leftBg,color:leftColor,fontSize:13,fontWeight:700,cursor:leftDisabled?'not-allowed':'pointer',boxShadow:leftShadow,letterSpacing:'0.02em' }}>
                     {(isGenerating||isGeneratingRheum) ? '⏳ Generating…' : `✨ Generate ${isRheum?'X-Ray':isCT?'CT':'MRI'} Report`}
                   </button>
                   <button onClick={() => {
@@ -7669,10 +7669,10 @@ export default function DashboardPage() {
                     setGeneratedReport('');
                   }} disabled={!canReset}
                     title="Clear dictation and report — start next case"
-                    style={{ padding:'12px 14px',borderRadius:9,border:'1.5px solid '+(canReset?(dm?'#475569':'#cbd5e1'):(dm?'#1e293b':'#e2e8f0')),background:canReset?(dm?'#1e293b':'#f8fafc'):(dm?'#0f172a':'#f1f5f9'),color:canReset?(dm?'#94a3b8':'#64748b'):(dm?'#334155':'#cbd5e1'),fontSize:16,cursor:canReset?'pointer':'not-allowed',transition:'all 0.15s',flexShrink:0 }}
+                    style={{ flex:1,padding:'10px 12px',borderRadius:9,border:'1.5px solid '+(canReset?(dm?'#475569':'#cbd5e1'):(dm?'#1e293b':'#e2e8f0')),background:canReset?(dm?'#1e293b':'#f8fafc'):(dm?'#0f172a':'#f1f5f9'),color:canReset?(dm?'#94a3b8':'#64748b'):(dm?'#334155':'#cbd5e1'),fontSize:12,fontWeight:600,cursor:canReset?'pointer':'not-allowed',transition:'all 0.15s',flexShrink:0 }}
                     onMouseEnter={e => { if (canReset) e.currentTarget.style.background = dm?'#dc2626':'#fee2e2'; e.currentTarget.style.color = dm?'#fca5a5':'#dc2626'; e.currentTarget.style.borderColor = dm?'#ef4444':'#fca5a5'; }}
                     onMouseLeave={e => { e.currentTarget.style.background = canReset?(dm?'#1e293b':'#f8fafc'):(dm?'#0f172a':'#f1f5f9'); e.currentTarget.style.color = canReset?(dm?'#94a3b8':'#64748b'):(dm?'#334155':'#cbd5e1'); e.currentTarget.style.borderColor = canReset?(dm?'#475569':'#cbd5e1'):(dm?'#1e293b':'#e2e8f0'); }}>
-                    🗑
+                    Reset Report
                   </button>
                 </div>
               );
