@@ -5413,17 +5413,15 @@ const ARTHROPLASTY_DATA = {
             citation: 'Sirveaux F et al. Grammont inverted total shoulder arthroplasty in the treatment of glenohumeral osteoarthritis with massive rupture of the cuff. J Bone Joint Surg Br 2004;86(3):388-395.',
           },
           {
-            id: 'vancouver_shoulder',
-            label: 'Vancouver Classification — Periprosthetic Fracture (Shoulder)',
-            description: 'Vancouver classification adapted for periprosthetic humeral fractures. Determines management strategy based on fracture location relative to stem tip and stem stability.',
+            id: 'wright_cofield',
+            label: 'Wright & Cofield Classification — Periprosthetic Humeral Fracture',
+            description: 'Wright & Cofield classification specifically designed for periprosthetic humeral fractures in shoulder arthroplasty (TSA, rTSA, hemiarthroplasty). Based on fracture location relative to the humeral stem tip. CT essential for characterizing bone stock and stem stability.',
             grades: [
-              { grade: 'Type A', desc: 'Fracture at stem tip or above — usually stable stem; fixation' },
-              { grade: 'Type B1', desc: 'Fracture around or just below stem, STABLE implant — plate ± cerclage' },
-              { grade: 'Type B2', desc: 'Fracture around stem, UNSTABLE implant — revision arthroplasty' },
-              { grade: 'Type B3', desc: 'Fracture around stem + poor bone stock — revision + bone graft' },
-              { grade: 'Type C', desc: 'Fracture well distal to stem — independent fixation' },
+              { grade: 'Type A', desc: 'Fracture at the stem TIP or at any level PROXIMAL to the tip — cortex breached at or above tip; stem usually stable; ORIF with plate and cerclage wires' },
+              { grade: 'Type B', desc: 'Fracture spanning the stem TIP — fracture extends both proximal and distal to stem tip; assess stem stability: stable → ORIF; unstable → revision long-stem prosthesis' },
+              { grade: 'Type C', desc: 'Fracture entirely DISTAL to the stem tip — treat as independent diaphyseal fracture; standard ORIF; no revision needed unless stem loosened by fracture' },
             ],
-            citation: 'Duncan CP & Masri BA. Fractures of the femur after hip replacement. J Bone Joint Surg Br 1995 (adapted for shoulder).',
+            citation: 'Wright TW & Cofield RH. Humeral fractures after shoulder arthroplasty. J Bone Joint Surg Am 1995;77(9):1340-1346.',
           },
         ],
       },
@@ -5445,17 +5443,15 @@ const ARTHROPLASTY_DATA = {
         ],
         gradings: [
           {
-            id: 'vancouver_atsa',
-            label: 'Vancouver Classification — Periprosthetic Fracture',
-            description: 'See rTSA section. Same Vancouver framework applies to aTSA humeral periprosthetic fractures.',
+            id: 'wright_cofield_atsa',
+            label: 'Wright & Cofield Classification — Periprosthetic Humeral Fracture',
+            description: 'Wright & Cofield classification for periprosthetic humeral fractures after shoulder arthroplasty. Location relative to stem tip determines surgical strategy. CT clarifies fracture morphology and stem fixation status.',
             grades: [
-              { grade: 'Type A', desc: 'Fracture at stem tip or above — usually stable stem' },
-              { grade: 'Type B1', desc: 'Fracture around stem, STABLE implant — fixation' },
-              { grade: 'Type B2', desc: 'Fracture around stem, UNSTABLE implant — revision' },
-              { grade: 'Type B3', desc: 'Fracture + poor bone — revision + graft' },
-              { grade: 'Type C', desc: 'Fracture well distal to stem — independent fixation' },
+              { grade: 'Type A', desc: 'Fracture at or PROXIMAL to stem tip — stem usually stable; ORIF with plate and cerclage' },
+              { grade: 'Type B', desc: 'Fracture spanning the stem TIP — stability determines approach: stable → ORIF; unstable → long-stem revision' },
+              { grade: 'Type C', desc: 'Fracture DISTAL to stem tip — independent fracture management; ORIF without stem revision (unless loosened)' },
             ],
-            citation: 'Duncan CP & Masri BA. J Bone Joint Surg Br 1995 (adapted for shoulder).',
+            citation: 'Wright TW & Cofield RH. Humeral fractures after shoulder arthroplasty. J Bone Joint Surg Am 1995;77(9):1340-1346.',
           },
         ],
       },
@@ -5476,17 +5472,15 @@ const ARTHROPLASTY_DATA = {
         ],
         gradings: [
           {
-            id: 'vancouver_hemi',
-            label: 'Vancouver Classification — Periprosthetic Fracture',
-            description: 'Vancouver framework applied to hemiarthroplasty periprosthetic humeral fractures.',
+            id: 'wright_cofield_hemi',
+            label: 'Wright & Cofield Classification — Periprosthetic Humeral Fracture',
+            description: 'Wright & Cofield classification for periprosthetic humeral fractures after hemiarthroplasty. Same framework as for TSA variants.',
             grades: [
-              { grade: 'Type A', desc: 'Fracture at/above stem tip — stable stem' },
-              { grade: 'Type B1', desc: 'Around stem, STABLE implant' },
-              { grade: 'Type B2', desc: 'Around stem, UNSTABLE implant' },
-              { grade: 'Type B3', desc: 'Around stem, poor bone' },
-              { grade: 'Type C', desc: 'Well distal to stem' },
+              { grade: 'Type A', desc: 'Fracture at or PROXIMAL to stem tip — ORIF with plate and cerclage wires; stem typically stable' },
+              { grade: 'Type B', desc: 'Fracture spanning the stem TIP — assess stability: stable → ORIF; unstable → long-stem revision prosthesis' },
+              { grade: 'Type C', desc: 'Fracture DISTAL to stem tip — standard diaphyseal ORIF; no prosthetic revision required' },
             ],
-            citation: 'Duncan CP & Masri BA. J Bone Joint Surg Br 1995 (adapted for shoulder).',
+            citation: 'Wright TW & Cofield RH. Humeral fractures after shoulder arthroplasty. J Bone Joint Surg Am 1995;77(9):1340-1346.',
           },
         ],
       },
@@ -5663,9 +5657,9 @@ function ArthroplastyPanel({ joint, arthroplastyType, arthroplastyChecklist, set
   const checkedCount = items.filter(i => arthroplastyChecklist[i.id]).length;
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
       {/* Header bar */}
-      <div style={{ background:dm?'rgba(8,145,178,0.15)':'#ecfeff',border:'1px solid '+(dm?'#164e63':'#a5f3fc'),borderRadius:8,padding:'8px 12px',display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+      <div style={{ background:dm?'rgba(8,145,178,0.15)':'#ecfeff',border:'1px solid '+(dm?'#164e63':'#a5f3fc'),borderRadius:8,padding:'8px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
         <span style={{ fontSize:11,fontWeight:700,color:dm?'#22d3ee':'#0e7490',letterSpacing:'0.06em',textTransform:'uppercase' }}>
           🔩 {compData.label}
         </span>
@@ -5676,75 +5670,79 @@ function ArthroplastyPanel({ joint, arthroplastyType, arthroplastyChecklist, set
         )}
       </div>
 
-      {/* Two-column layout: checklist left, grading right */}
-      <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,minHeight:340 }}>
-
-        {/* LEFT: Complication Checklist */}
-        <div style={{ background:dm?'#0f172a':'#f8fafc',border:'1px solid '+(dm?'#334155':'#e2e8f0'),borderRadius:8,padding:10,display:'flex',flexDirection:'column',gap:6,overflowY:'auto',maxHeight:400 }}>
-          <div style={{ fontSize:10,fontWeight:700,color:dm?'#64748b':'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4,flexShrink:0 }}>Complication Checklist</div>
+      {/* TOP: Complication Checklist — full width, 2-col grid */}
+      <div style={{ background:dm?'#0f172a':'#f8fafc',border:'1px solid '+(dm?'#334155':'#e2e8f0'),borderRadius:8,padding:10,flexShrink:0 }}>
+        <div style={{ fontSize:10,fontWeight:700,color:dm?'#64748b':'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8 }}>Complication Checklist</div>
+        <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 10px' }}>
           {items.map(item => (
-            <label key={item.id} style={{ display:'flex',alignItems:'flex-start',gap:7,cursor:'pointer',padding:'5px 6px',borderRadius:5,background:arthroplastyChecklist[item.id]?(item.critical?(dm?'rgba(220,38,38,0.15)':'#fef2f2'):(dm?'rgba(8,145,178,0.12)':'#ecfeff')):'transparent',border:'1px solid '+(arthroplastyChecklist[item.id]?(item.critical?(dm?'#dc2626':'#fca5a5'):(dm?'#0891b2':'#a5f3fc')):'transparent'),transition:'all 0.15s' }}>
+            <label key={item.id} style={{ display:'flex',alignItems:'flex-start',gap:6,cursor:'pointer',padding:'4px 6px',borderRadius:5,background:arthroplastyChecklist[item.id]?(item.critical?(dm?'rgba(220,38,38,0.15)':'#fef2f2'):(dm?'rgba(8,145,178,0.12)':'#ecfeff')):'transparent',border:'1px solid '+(arthroplastyChecklist[item.id]?(item.critical?(dm?'#dc2626':'#fca5a5'):(dm?'#0891b2':'#a5f3fc')):'transparent'),transition:'all 0.15s' }}>
               <input
                 type="checkbox"
                 checked={!!arthroplastyChecklist[item.id]}
                 onChange={() => toggleCheck(item.id)}
-                style={{ width:13,height:13,marginTop:1,accentColor:item.critical?'#dc2626':'#0891b2',flexShrink:0,cursor:'pointer' }}
+                style={{ width:13,height:13,marginTop:2,accentColor:item.critical?'#dc2626':'#0891b2',flexShrink:0,cursor:'pointer' }}
               />
-              <span style={{ fontSize:11,color:arthroplastyChecklist[item.id]?(item.critical?(dm?'#fca5a5':'#dc2626'):(dm?'#22d3ee':'#0e7490')):(dm?'#94a3b8':'#475569'),lineHeight:1.4,fontWeight:arthroplastyChecklist[item.id]?600:400 }}>
+              <span style={{ fontSize:11,color:arthroplastyChecklist[item.id]?(item.critical?(dm?'#fca5a5':'#dc2626'):(dm?'#22d3ee':'#0e7490')):(dm?'#94a3b8':'#475569'),lineHeight:1.35,fontWeight:arthroplastyChecklist[item.id]?600:400 }}>
                 {item.critical && <span style={{ fontSize:9,marginRight:3,verticalAlign:'middle' }}>⚠️</span>}
                 {item.label}
               </span>
             </label>
           ))}
         </div>
+      </div>
 
-        {/* RIGHT: Grading systems / examples */}
-        <div style={{ background:dm?'#0f172a':'#f8fafc',border:'1px solid '+(dm?'#334155':'#e2e8f0'),borderRadius:8,padding:10,display:'flex',flexDirection:'column',gap:8,overflowY:'auto',maxHeight:400 }}>
-          <div style={{ fontSize:10,fontWeight:700,color:dm?'#64748b':'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2,flexShrink:0 }}>Grading Systems</div>
+      {/* BOTTOM: Grading systems — full width */}
+      <div style={{ background:dm?'#0f172a':'#f8fafc',border:'1px solid '+(dm?'#334155':'#e2e8f0'),borderRadius:8,padding:10,display:'flex',flexDirection:'column',gap:8 }}>
+        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:6 }}>
+          <div style={{ fontSize:10,fontWeight:700,color:dm?'#64748b':'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em' }}>Grading Systems</div>
           {/* Grading selector tabs */}
-          <div style={{ display:'flex',flexWrap:'wrap',gap:4,flexShrink:0 }}>
+          <div style={{ display:'flex',flexWrap:'wrap',gap:4 }}>
             {gradings.map(g => (
               <button key={g.id} onClick={() => setArthroplastyGrading(arthroplastyGrading===g.id?'':g.id)}
-                style={{ padding:'3px 8px',borderRadius:5,border:'1px solid '+(arthroplastyGrading===g.id?(dm?'#0891b2':'#0e7490'):(dm?'#334155':'#d1d5db')),background:arthroplastyGrading===g.id?(dm?'rgba(8,145,178,0.2)':'#ecfeff'):'transparent',color:arthroplastyGrading===g.id?(dm?'#22d3ee':'#0e7490'):(dm?'#94a3b8':'#6b7280'),fontSize:9,fontWeight:arthroplastyGrading===g.id?700:400,cursor:'pointer',textAlign:'left' }}>
+                style={{ padding:'3px 10px',borderRadius:5,border:'1px solid '+(arthroplastyGrading===g.id?(dm?'#0891b2':'#0e7490'):(dm?'#334155':'#d1d5db')),background:arthroplastyGrading===g.id?(dm?'rgba(8,145,178,0.2)':'#ecfeff'):'transparent',color:arthroplastyGrading===g.id?(dm?'#22d3ee':'#0e7490'):(dm?'#94a3b8':'#6b7280'),fontSize:10,fontWeight:arthroplastyGrading===g.id?700:400,cursor:'pointer' }}>
                 {g.label.split('—')[0].trim()}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Grading display */}
-          {selectedGrading ? (
-            <div style={{ flex:1,overflowY:'auto' }}>
-              <div style={{ fontSize:11,fontWeight:700,color:dm?'#22d3ee':'#0891b2',marginBottom:4 }}>{selectedGrading.label}</div>
-              <div style={{ fontSize:10,color:dm?'#94a3b8':'#64748b',marginBottom:8,lineHeight:1.5,fontStyle:'italic' }}>{selectedGrading.description}</div>
+        {/* Grading content */}
+        {selectedGrading ? (
+          <div>
+            <div style={{ fontSize:11,fontWeight:700,color:dm?'#22d3ee':'#0891b2',marginBottom:3 }}>{selectedGrading.label}</div>
+            <div style={{ fontSize:10,color:dm?'#94a3b8':'#64748b',marginBottom:8,lineHeight:1.5,fontStyle:'italic' }}>{selectedGrading.description}</div>
+            <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:6 }}>
               {selectedGrading.grades.map((g,i) => (
-                <div key={i} style={{ marginBottom:6,background:dm?'rgba(255,255,255,0.03)':'white',border:'1px solid '+(dm?'#1e293b':'#f1f5f9'),borderRadius:5,padding:'6px 8px' }}>
+                <div key={i} style={{ background:dm?'rgba(255,255,255,0.03)':'white',border:'1px solid '+(dm?'#1e293b':'#f1f5f9'),borderRadius:5,padding:'6px 8px' }}>
                   <div style={{ fontSize:11,fontWeight:700,color:dm?'#38bdf8':'#0369a1' }}>{g.grade}</div>
                   <div style={{ fontSize:11,color:dm?'#cbd5e1':'#334155',lineHeight:1.5,marginTop:2 }}>{g.desc}</div>
                 </div>
               ))}
-              <div style={{ marginTop:8,padding:'5px 7px',background:dm?'rgba(255,255,255,0.03)':'#f1f5f9',borderRadius:4,fontSize:9,color:dm?'#475569':'#94a3b8',fontStyle:'italic',lineHeight:1.4 }}>
-                📚 {selectedGrading.citation}
-              </div>
             </div>
-          ) : (
-            <div style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',color:dm?'#334155':'#cbd5e1',fontSize:11,textAlign:'center',gap:6,padding:10 }}>
-              <div style={{ fontSize:24 }}>🦾</div>
-              <div>Select a grading system above to view classification details and criteria.</div>
+            <div style={{ marginTop:8,padding:'5px 7px',background:dm?'rgba(255,255,255,0.03)':'#f1f5f9',borderRadius:4,fontSize:9,color:dm?'#475569':'#94a3b8',fontStyle:'italic',lineHeight:1.4 }}>
+              📚 {selectedGrading.citation}
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div style={{ display:'flex',alignItems:'center',gap:8,color:dm?'#334155':'#cbd5e1',fontSize:11,padding:'8px 4px' }}>
+            <span style={{ fontSize:18 }}>🦾</span>
+            <span>Select a grading system above to view classification criteria.</span>
+          </div>
+        )}
       </div>
 
-      {/* Checked findings summary */}
+      {/* Flagged findings summary */}
       {checkedCount > 0 && (
-        <div style={{ background:dm?'rgba(220,38,38,0.08)':'#fef2f2',border:'1px solid '+(dm?'#dc2626':'#fca5a5'),borderRadius:7,padding:'8px 12px' }}>
+        <div style={{ background:dm?'rgba(220,38,38,0.08)':'#fef2f2',border:'1px solid '+(dm?'#dc2626':'#fca5a5'),borderRadius:7,padding:'8px 12px',flexShrink:0 }}>
           <div style={{ fontSize:10,fontWeight:700,color:dm?'#fca5a5':'#dc2626',marginBottom:5,letterSpacing:'0.06em',textTransform:'uppercase' }}>⚠️ Flagged Findings</div>
-          {items.filter(i => arthroplastyChecklist[i.id]).map(i => (
-            <div key={i.id} style={{ fontSize:11,color:dm?'#fca5a5':'#dc2626',marginBottom:3,display:'flex',alignItems:'flex-start',gap:5 }}>
-              <span style={{ color:i.critical?'#ef4444':'#0891b2',flexShrink:0 }}>{i.critical?'●':'○'}</span>
-              <span>{i.label}</span>
-            </div>
-          ))}
+          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:'3px 10px' }}>
+            {items.filter(i => arthroplastyChecklist[i.id]).map(i => (
+              <div key={i.id} style={{ fontSize:11,color:dm?'#fca5a5':'#dc2626',display:'flex',alignItems:'flex-start',gap:5 }}>
+                <span style={{ color:i.critical?'#ef4444':'#0891b2',flexShrink:0 }}>{i.critical?'●':'○'}</span>
+                <span>{i.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
