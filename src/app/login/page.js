@@ -4629,7 +4629,7 @@ function RecommendArticleForm({ currentUser, onClose }) {
 
 // ─── RESEARCH MODAL ────────────────────────────────────────────────────────
 // ─── MSK HUB DROPDOWN ────────────────────────────────────────────────────────
-function MSKHubDropdown({ onOpenResearch, onOpenJobs }) {
+function MSKHubDropdown({ onOpenResearch, onOpenJobs, onOpenCme, onOpenRecruiter }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -4645,7 +4645,7 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs }) {
         <span>🗂️</span> MSK Hub
       </button>
       {open && (
-        <div style={{ position:'absolute',top:'calc(100% + 6px)',left:0,background:'#1a2332',border:'1px solid rgba(99,179,237,0.2)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.9)',zIndex:99999,minWidth:200,overflow:'hidden' }}>
+        <div style={{ position:'absolute',top:'calc(100% + 6px)',left:0,background:'#1a2332',border:'1px solid rgba(99,179,237,0.2)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.9)',zIndex:99999,minWidth:210,overflow:'hidden' }}>
           <button
             onClick={() => { setOpen(false); onOpenResearch(); }}
             style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
@@ -4654,11 +4654,25 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs }) {
             📰 Latest MSK Research
           </button>
           <button
+            onClick={() => { setOpen(false); onOpenCme(); }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+            🎓 CME Library
+          </button>
+          <button
             onClick={() => { setOpen(false); onOpenJobs(); }}
-            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background='transparent'}>
             💼 Jobs Board
+          </button>
+          <button
+            onClick={() => { setOpen(false); onOpenRecruiter(); }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#a78bfa',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(139,92,246,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+            💼 Post a Job <span style={{ color:'#4a5568',fontSize:11 }}>(Recruiters)</span>
           </button>
         </div>
       )}
@@ -4752,6 +4766,631 @@ const JOB_TYPES = ['Full-Time','Part-Time','Fellowship','Locums','Research','Ind
 const ADMIN_NOTIFY_EMAIL = 'admin@lucidmsk.com';
 const emptyJobForm = { title:'', institution:'', location:'', job_type:'Full-Time', salary_range:'', apply_link:'', description:'' };
 
+// ─── CME TAB INNER ──────────────────────────────────────────────────────────
+const CME_SPECIALTIES = ['All', 'Knee', 'Shoulder', 'Hip', 'Ankle', 'Wrist/Hand', 'Elbow', 'Spine', 'Pelvis', 'Soft Tissue Tumors', 'Trauma', 'General MSK'];
+const CME_FORMATS     = ['All', 'Video Lecture', 'Case-Based Module', 'Quiz/Self-Assessment', 'Podcast', 'Article Review', 'Slide Deck'];
+const CME_CREDITS     = ['All', '0.25 AMA PRA Cat 1', '0.5 AMA PRA Cat 1', '1.0 AMA PRA Cat 1', '1.5 AMA PRA Cat 1', '2.0 AMA PRA Cat 1'];
+
+function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
+  const [modules, setModules]         = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [search, setSearch]           = useState('');
+  const [filterSpec, setFilterSpec]   = useState('All');
+  const [filterFmt, setFilterFmt]     = useState('All');
+  const [completedIds, setCompletedIds] = useState(new Set());
+  const [activeModule, setActiveModule] = useState(null);
+  const [showUpload, setShowUpload]   = useState(false);
+  const [uploadForm, setUploadForm]   = useState({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0 AMA PRA Cat 1', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'' });
+  const [uploadErr, setUploadErr]     = useState('');
+  const [uploadOk, setUploadOk]       = useState('');
+  const [saving, setSaving]           = useState(false);
+
+  const sbH = sbHeaders ? sbHeaders() : (() => {
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    return { 'Content-Type':'application/json', 'apikey': key, 'Authorization': `Bearer ${(currentUser?.access_token || key)}` };
+  })();
+  const sbU = sbUrl || ((p) => `${SUPABASE_URL}/rest/v1/${p}`);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const res  = await fetch(sbU('cme_modules?select=*&status=eq.published&order=created_at.desc'), { headers: sbH });
+        const data = await res.json();
+        setModules(Array.isArray(data) ? data : []);
+        if (currentUser) {
+          const r2  = await fetch(sbU(`cme_completions?select=module_id&user_id=eq.${currentUser.id}`), { headers: sbH });
+          const d2  = await r2.json();
+          if (Array.isArray(d2)) setCompletedIds(new Set(d2.map(x => x.module_id)));
+        }
+      } catch(e) { console.error('CME fetch error', e); }
+      setLoading(false);
+    })();
+  }, []);
+
+  const markComplete = async (moduleId) => {
+    if (!currentUser || completedIds.has(moduleId)) return;
+    try {
+      await fetch(sbU('cme_completions'), {
+        method: 'POST',
+        headers: { ...sbH, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ user_id: currentUser.id, module_id: moduleId, completed_at: new Date().toISOString() })
+      });
+      setCompletedIds(prev => new Set([...prev, moduleId]));
+    } catch(e) { console.error('markComplete error', e); }
+  };
+
+  const submitModule = async () => {
+    setUploadErr(''); setUploadOk('');
+    if (!uploadForm.title.trim())       return setUploadErr('Title is required.');
+    if (!uploadForm.description.trim()) return setUploadErr('Description is required.');
+    if (!uploadForm.url.trim())         return setUploadErr('Module URL is required.');
+    setSaving(true);
+    try {
+      const res = await fetch(sbU('cme_modules'), {
+        method: 'POST',
+        headers: { ...sbH, 'Prefer': 'return=representation' },
+        body: JSON.stringify({ ...uploadForm, status: 'published', duration_min: parseInt(uploadForm.duration_min)||null, created_by: currentUser?.id })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const [newMod] = await res.json();
+      setModules(prev => [newMod, ...prev]);
+      setUploadOk('Module published successfully!');
+      setUploadForm({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0 AMA PRA Cat 1', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'' });
+    } catch(e) { console.error('submitModule error', e); setUploadErr('Failed to publish. Please try again.'); }
+    setSaving(false);
+  };
+
+  const filtered = modules.filter(m => {
+    const q = search.toLowerCase();
+    const matchSearch = !q || m.title?.toLowerCase().includes(q) || m.description?.toLowerCase().includes(q) || m.author?.toLowerCase().includes(q) || m.specialty?.toLowerCase().includes(q);
+    const matchSpec   = filterSpec === 'All' || m.specialty === filterSpec;
+    const matchFmt    = filterFmt  === 'All' || m.format    === filterFmt;
+    return matchSearch && matchSpec && matchFmt;
+  });
+
+  const totalCredits = [...completedIds].reduce((sum, id) => {
+    const m = modules.find(x => x.id === id);
+    return sum + (parseFloat(m?.credits) || 0);
+  }, 0);
+
+  const inp  = { background:'#0f172a', border:'1px solid rgba(99,179,237,0.2)', borderRadius:8, color:'#e2e8f0', fontSize:13, padding:'9px 12px', outline:'none', width:'100%', boxSizing:'border-box', fontFamily:'inherit' };
+  const lbl  = { color:'#90cdf4', fontSize:12, fontWeight:700, letterSpacing:'0.04em', display:'block', marginBottom:4 };
+
+  if (activeModule) return (
+    <div>
+      <button onClick={() => setActiveModule(null)} style={{ background:'none', border:'none', color:'#90cdf4', cursor:'pointer', fontSize:13, fontWeight:700, marginBottom:16, padding:0 }}>← Back to CME Library</button>
+      <div style={{ background:'#0f172a', borderRadius:14, border:'1px solid rgba(99,179,237,0.15)', overflow:'hidden' }}>
+        {activeModule.thumbnail_url && <div style={{ width:'100%', height:180, background:`url(${activeModule.thumbnail_url}) center/cover`, borderBottom:'1px solid rgba(99,179,237,0.1)' }} />}
+        <div style={{ padding:'24px 28px' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, flexWrap:'wrap', marginBottom:10 }}>
+            <div style={{ color:'#e2e8f0', fontSize:18, fontWeight:800, lineHeight:1.3 }}>{activeModule.title}</div>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+              <span style={{ background:'rgba(99,179,237,0.1)', color:'#90cdf4', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:700, border:'1px solid rgba(99,179,237,0.2)' }}>{activeModule.format}</span>
+              <span style={{ background:'rgba(104,211,145,0.1)', color:'#68d391', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:700, border:'1px solid rgba(104,211,145,0.2)' }}>{activeModule.credits} credit{parseFloat(activeModule.credits)!==1?'s':''}</span>
+              {completedIds.has(activeModule.id) && <span style={{ background:'rgba(104,211,145,0.15)', color:'#68d391', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:700, border:'1px solid rgba(104,211,145,0.3)' }}>✅ Completed</span>}
+            </div>
+          </div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:16, color:'#64748b', fontSize:12, marginBottom:16 }}>
+            {activeModule.author      && <span>👤 {activeModule.author}</span>}
+            {activeModule.specialty   && <span>🦴 {activeModule.specialty}</span>}
+            {activeModule.duration_min && <span>⏱ {activeModule.duration_min} min</span>}
+          </div>
+          <p style={{ color:'#a0aec0', fontSize:14, lineHeight:1.7, marginBottom:20 }}>{activeModule.description}</p>
+          {activeModule.objectives && (
+            <div style={{ background:'rgba(99,179,237,0.05)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:10, padding:'16px 20px', marginBottom:20 }}>
+              <div style={{ color:'#90cdf4', fontSize:12, fontWeight:700, marginBottom:10, letterSpacing:'0.05em' }}>LEARNING OBJECTIVES</div>
+              {activeModule.objectives.split('\n').filter(Boolean).map((obj, i) => (
+                <div key={i} style={{ color:'#a0aec0', fontSize:13, lineHeight:1.6, display:'flex', gap:10, marginBottom:6 }}>
+                  <span style={{ color:'#3b82f6', flexShrink:0 }}>{i+1}.</span>
+                  <span>{obj}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+            <button
+              onClick={() => { window.open(activeModule.url, '_blank'); if (currentUser && !completedIds.has(activeModule.id)) { setTimeout(() => markComplete(activeModule.id), 3000); } }}
+              style={{ padding:'12px 28px', background:'linear-gradient(135deg,rgba(99,179,237,0.25),rgba(99,179,237,0.1))', border:'1px solid rgba(99,179,237,0.4)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+              🎓 Launch Module →
+            </button>
+            {currentUser && !completedIds.has(activeModule.id) && (
+              <button onClick={() => markComplete(activeModule.id)}
+                style={{ padding:'12px 22px', background:'rgba(104,211,145,0.1)', border:'1px solid rgba(104,211,145,0.25)', borderRadius:10, color:'#68d391', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                ✅ Mark as Complete
+              </button>
+            )}
+          </div>
+          {!currentUser && <p style={{ color:'#4a5568', fontSize:12, marginTop:12 }}>Sign in to track your CME completion and accumulate credits.</p>}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      {/* Header row */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, paddingBottom:12, borderBottom:'1px solid rgba(99,179,237,0.1)', flexWrap:'wrap', gap:10 }}>
+        <div>
+          <div style={{ color:'#90cdf4', fontSize:15, fontWeight:700 }}>CME Library</div>
+          <div style={{ color:'#4a5568', fontSize:12, marginTop:2 }}>AMA PRA Category 1 credits — MSK Radiology</div>
+        </div>
+        <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+          {currentUser && (
+            <div style={{ background:'rgba(104,211,145,0.08)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:8, padding:'6px 14px', color:'#68d391', fontSize:12, fontWeight:700 }}>
+              🎓 {totalCredits.toFixed(2)} credits earned · {completedIds.size} module{completedIds.size!==1?'s':''} completed
+            </div>
+          )}
+          {isAdmin && (
+            <button onClick={() => setShowUpload(v => !v)}
+              style={{ padding:'7px 16px', background: showUpload ? 'rgba(245,189,64,0.12)' : 'rgba(99,179,237,0.08)', border:'1px solid '+(showUpload?'rgba(245,189,64,0.3)':'rgba(99,179,237,0.2)'), borderRadius:8, color: showUpload ? '#f6bd40':'#90cdf4', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+              {showUpload ? '✕ Cancel Upload' : '⬆️ Upload Module'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Admin upload form */}
+      {isAdmin && showUpload && (
+        <div style={{ background:'rgba(245,189,64,0.04)', border:'1px solid rgba(245,189,64,0.15)', borderRadius:12, padding:'20px 22px', marginBottom:20 }}>
+          <div style={{ color:'#f6bd40', fontSize:13, fontWeight:700, marginBottom:16 }}>📤 Upload New CME Module</div>
+          {uploadErr && <div style={{ color:'#fc8181', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{uploadErr}</div>}
+          {uploadOk  && <div style={{ color:'#68d391', background:'rgba(104,211,145,0.08)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{uploadOk}</div>}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+            <div><label style={lbl}>Module Title *</label><input style={inp} value={uploadForm.title} onChange={e => setUploadForm(f=>({...f,title:e.target.value}))} placeholder="e.g. ACL Tears: Anatomy to MRI Pattern Recognition" /></div>
+            <div><label style={lbl}>Author / Faculty</label><input style={inp} value={uploadForm.author} onChange={e => setUploadForm(f=>({...f,author:e.target.value}))} placeholder="Dr. Jane Smith, MD" /></div>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:12, marginBottom:12 }}>
+            <div><label style={lbl}>Specialty</label>
+              <select style={inp} value={uploadForm.specialty} onChange={e => setUploadForm(f=>({...f,specialty:e.target.value}))}>
+                {CME_SPECIALTIES.filter(s=>s!=='All').map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Format</label>
+              <select style={inp} value={uploadForm.format} onChange={e => setUploadForm(f=>({...f,format:e.target.value}))}>
+                {CME_FORMATS.filter(f=>f!=='All').map(f => <option key={f}>{f}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Credits</label>
+              <select style={inp} value={uploadForm.credits} onChange={e => setUploadForm(f=>({...f,credits:e.target.value}))}>
+                {CME_CREDITS.filter(c=>c!=='All').map(c => <option key={c} value={c.split(' ')[0]}>{c}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Duration (min)</label><input style={inp} type="number" value={uploadForm.duration_min} onChange={e => setUploadForm(f=>({...f,duration_min:e.target.value}))} placeholder="45" /></div>
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <label style={lbl}>Module URL * <span style={{ color:'#4a5568', fontWeight:400 }}>(hosted video, PDF, or SCORM link)</span></label>
+            <input style={inp} value={uploadForm.url} onChange={e => setUploadForm(f=>({...f,url:e.target.value}))} placeholder="https://..." />
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <label style={lbl}>Thumbnail URL <span style={{ color:'#4a5568', fontWeight:400 }}>(optional — 16:9 image)</span></label>
+            <input style={inp} value={uploadForm.thumbnail_url} onChange={e => setUploadForm(f=>({...f,thumbnail_url:e.target.value}))} placeholder="https://..." />
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <label style={lbl}>Description *</label>
+            <textarea style={{ ...inp, minHeight:80, resize:'vertical' }} value={uploadForm.description} onChange={e => setUploadForm(f=>({...f,description:e.target.value}))} placeholder="Brief overview of the module content and clinical relevance..." />
+          </div>
+          <div style={{ marginBottom:16 }}>
+            <label style={lbl}>Learning Objectives <span style={{ color:'#4a5568', fontWeight:400 }}>(one per line)</span></label>
+            <textarea style={{ ...inp, minHeight:80, resize:'vertical' }} value={uploadForm.objectives} onChange={e => setUploadForm(f=>({...f,objectives:e.target.value}))} placeholder={"Identify the key MRI findings of ACL tears\nDescribe partial vs complete tears\nApply grading criteria in clinical practice"} />
+          </div>
+          <button onClick={submitModule} disabled={saving}
+            style={{ padding:'10px 24px', background:'linear-gradient(135deg,rgba(245,189,64,0.2),rgba(245,189,64,0.08))', border:'1px solid rgba(245,189,64,0.35)', borderRadius:9, color:'#f6bd40', fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
+            {saving ? '⏳ Publishing...' : '🚀 Publish Module'}
+          </button>
+        </div>
+      )}
+
+      {/* Search + filters */}
+      <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+        <input style={{ ...inp, flex:'1 1 200px', background:'#0f172a' }} value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍  Search modules, topics, faculty..." />
+        <select style={{ ...inp, flex:'0 0 auto', width:'auto', background:'#0f172a' }} value={filterSpec} onChange={e => setFilterSpec(e.target.value)}>
+          {CME_SPECIALTIES.map(s => <option key={s}>{s}</option>)}
+        </select>
+        <select style={{ ...inp, flex:'0 0 auto', width:'auto', background:'#0f172a' }} value={filterFmt} onChange={e => setFilterFmt(e.target.value)}>
+          {CME_FORMATS.map(f => <option key={f}>{f}</option>)}
+        </select>
+      </div>
+
+      {/* Module grid */}
+      {loading && <p style={{ color:'#718096', fontSize:13 }}>Loading CME modules...</p>}
+      {!loading && filtered.length === 0 && (
+        <div style={{ textAlign:'center', color:'#4a5568', padding:'56px 24px' }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>🎓</div>
+          <div style={{ fontSize:14 }}>{modules.length === 0 ? 'No CME modules published yet.' : 'No modules match your search.'}</div>
+          {isAdmin && modules.length === 0 && <div style={{ fontSize:12, marginTop:8, color:'#374151' }}>Use "Upload Module" above to add the first module.</div>}
+        </div>
+      )}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:14 }}>
+        {filtered.map(m => {
+          const done = completedIds.has(m.id);
+          return (
+            <div key={m.id} onClick={() => setActiveModule(m)} style={{ background:'#0f172a', border:'1px solid '+(done?'rgba(104,211,145,0.25)':'rgba(99,179,237,0.12)'), borderRadius:12, overflow:'hidden', cursor:'pointer', transition:'border-color 0.15s,transform 0.15s', position:'relative' }}
+              onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
+              onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}>
+              {m.thumbnail_url
+                ? <div style={{ width:'100%', height:110, background:`url(${m.thumbnail_url}) center/cover`, borderBottom:'1px solid rgba(99,179,237,0.08)' }} />
+                : <div style={{ width:'100%', height:70, background:'linear-gradient(135deg,#0c2340,#1a3a5c)', display:'flex', alignItems:'center', justifyContent:'center', borderBottom:'1px solid rgba(99,179,237,0.08)', fontSize:28 }}>🎓</div>
+              }
+              {done && <div style={{ position:'absolute', top:8, right:8, background:'rgba(104,211,145,0.9)', borderRadius:20, padding:'2px 8px', fontSize:10, fontWeight:800, color:'#065f46' }}>✅ DONE</div>}
+              <div style={{ padding:'14px 16px' }}>
+                <div style={{ color:'#e2e8f0', fontSize:13, fontWeight:700, lineHeight:1.4, marginBottom:8 }}>{m.title}</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:5, marginBottom:8 }}>
+                  <span style={{ background:'rgba(99,179,237,0.08)', color:'#64748b', borderRadius:5, padding:'2px 7px', fontSize:10, fontWeight:700 }}>{m.specialty}</span>
+                  <span style={{ background:'rgba(139,92,246,0.08)', color:'#a78bfa', borderRadius:5, padding:'2px 7px', fontSize:10, fontWeight:700 }}>{m.format}</span>
+                  <span style={{ background:'rgba(104,211,145,0.08)', color:'#68d391', borderRadius:5, padding:'2px 7px', fontSize:10, fontWeight:700 }}>{m.credits} cr</span>
+                </div>
+                <p style={{ color:'#64748b', fontSize:11, lineHeight:1.5, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{m.description}</p>
+                {m.duration_min && <div style={{ color:'#374151', fontSize:10, marginTop:8 }}>⏱ {m.duration_min} min{m.author ? ` · ${m.author}` : ''}</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── RECRUITER PORTAL ───────────────────────────────────────────────────────
+const RECRUITER_PLANS = [
+  { id:'single',   label:'Single Post',   price:149,  posts:1,  days:30, highlight:false, badge:'' },
+  { id:'triple',   label:'3-Pack',        price:349,  posts:3,  days:30, highlight:true,  badge:'Most Popular' },
+  { id:'bundle',   label:'6-Pack Bundle', price:599,  posts:6,  days:45, highlight:false, badge:'Best Value' },
+];
+
+function RecruiterPortal({ onClose }) {
+  const [view, setView]           = useState('landing');   // landing | login | signup | dashboard | checkout
+  const [email, setEmail]         = useState('');
+  const [password, setPassword]   = useState('');
+  const [company, setCompany]     = useState('');
+  const [contactName, setContact] = useState('');
+  const [authErr, setAuthErr]     = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [recruiter, setRecruiter] = useState(null);         // logged-in recruiter session
+  const [postings, setPostings]   = useState([]);
+  const [credits, setCredits]     = useState(0);
+  const [selectedPlan, setSelectedPlan] = useState('triple');
+  const [checkoutStep, setCheckoutStep] = useState(1);      // 1 = review, 2 = payment details, 3 = confirm
+  const [postForm, setPostForm]   = useState({ title:'', specialty:'', location:'', job_type:'Full-Time', salary_range:'', description:'', apply_link:'' });
+  const [postErr, setPostErr]     = useState('');
+  const [postOk, setPostOk]       = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const sbH = () => {
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const token = recruiter?.access_token || key;
+    return { 'Content-Type':'application/json', 'apikey': key, 'Authorization': `Bearer ${token}` };
+  };
+  const sbU = (p) => `${SUPABASE_URL}/rest/v1/${p}`;
+  const authU = (p) => `${SUPABASE_URL}/auth/v1/${p}`;
+
+  const login = async () => {
+    setAuthErr(''); setAuthLoading(true);
+    try {
+      const res  = await fetch(authU('token?grant_type=password'), {
+        method: 'POST', headers: { 'Content-Type':'application/json', 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.error || !data.access_token) { setAuthErr(data.error_description || data.error || 'Login failed.'); setAuthLoading(false); return; }
+      // Check recruiter role
+      const profile = await fetch(sbU(`recruiter_profiles?user_id=eq.${data.user.id}&select=*`), { headers: { 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${data.access_token}` } });
+      const prof = await profile.json();
+      if (!Array.isArray(prof) || prof.length === 0) { setAuthErr('No recruiter account found for this email.'); setAuthLoading(false); return; }
+      setRecruiter({ ...data, profile: prof[0] });
+      await loadDashboard(data, prof[0]);
+      setView('dashboard');
+    } catch(e) { setAuthErr('Login error. Please try again.'); }
+    setAuthLoading(false);
+  };
+
+  const signup = async () => {
+    setAuthErr(''); setAuthLoading(true);
+    if (!company.trim())     { setAuthErr('Company name is required.'); setAuthLoading(false); return; }
+    if (!contactName.trim()) { setAuthErr('Contact name is required.'); setAuthLoading(false); return; }
+    if (!email.trim())       { setAuthErr('Email is required.'); setAuthLoading(false); return; }
+    if (password.length < 8) { setAuthErr('Password must be at least 8 characters.'); setAuthLoading(false); return; }
+    try {
+      const res  = await fetch(authU('signup'), {
+        method: 'POST', headers: { 'Content-Type':'application/json', 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.error) { setAuthErr(data.error_description || data.error); setAuthLoading(false); return; }
+      // Create recruiter profile
+      if (data.user?.id) {
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const token = data.access_token || key;
+        await fetch(sbU('recruiter_profiles'), {
+          method: 'POST', headers: { 'Content-Type':'application/json', 'apikey': key, 'Authorization': `Bearer ${token}`, 'Prefer':'return=minimal' },
+          body: JSON.stringify({ user_id: data.user.id, company_name: company, contact_name: contactName, email, post_credits: 0 })
+        });
+      }
+      setAuthErr('');
+      setView('login');
+      setPassword('');
+      setAuthErr('Account created! Please check your email to confirm, then log in.');
+    } catch(e) { setAuthErr('Signup error. Please try again.'); }
+    setAuthLoading(false);
+  };
+
+  const loadDashboard = async (session, profile) => {
+    try {
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const token = session.access_token || key;
+      const headers = { 'apikey': key, 'Authorization': `Bearer ${token}` };
+      const r1 = await fetch(sbU(`job_posts?select=*&user_id=eq.${session.user.id}&order=created_at.desc`), { headers });
+      const d1 = await r1.json();
+      setPostings(Array.isArray(d1) ? d1 : []);
+      const r2 = await fetch(sbU(`recruiter_profiles?user_id=eq.${session.user.id}&select=post_credits`), { headers });
+      const d2 = await r2.json();
+      setCredits(Array.isArray(d2) && d2.length > 0 ? d2[0].post_credits : 0);
+    } catch(e) { console.error('loadDashboard error', e); }
+  };
+
+  const submitPost = async () => {
+    setPostErr(''); setPostOk('');
+    if (credits < 1) return setPostErr('No post credits remaining. Please purchase a package.');
+    if (!postForm.title.trim())       return setPostErr('Job title is required.');
+    if (!postForm.description.trim()) return setPostErr('Description is required.');
+    if (!postForm.apply_link.trim())  return setPostErr('Application link or email is required.');
+    setSubmitting(true);
+    try {
+      const expires = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+      const res = await fetch(sbU('job_posts'), {
+        method: 'POST',
+        headers: { ...sbH(), 'Prefer': 'return=representation' },
+        body: JSON.stringify({ ...postForm, user_id: recruiter.user.id, status:'pending', expires_at: expires, source:'recruiter_portal' })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      // Deduct credit
+      await fetch(sbU(`recruiter_profiles?user_id=eq.${recruiter.user.id}`), {
+        method: 'PATCH', headers: { ...sbH(), 'Prefer':'return=minimal' },
+        body: JSON.stringify({ post_credits: credits - 1 })
+      });
+      setCredits(c => c - 1);
+      setPostOk('Post submitted for review! It will go live once approved (usually within 24 hours).');
+      setPostForm({ title:'', specialty:'', location:'', job_type:'Full-Time', salary_range:'', description:'', apply_link:'' });
+      await loadDashboard(recruiter, recruiter.profile);
+    } catch(e) { setPostErr('Submission failed. Please try again.'); }
+    setSubmitting(false);
+  };
+
+  const plan = RECRUITER_PLANS.find(p => p.id === selectedPlan) || RECRUITER_PLANS[1];
+
+  const inp  = { background:'rgba(255,255,255,0.05)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:9, color:'#e2e8f0', fontSize:14, padding:'11px 14px', outline:'none', width:'100%', boxSizing:'border-box', fontFamily:'inherit' };
+  const lbl  = { color:'#90cdf4', fontSize:12, fontWeight:700, letterSpacing:'0.04em', display:'block', marginBottom:5 };
+  const btn  = (accent='#90cdf4', bg='rgba(99,179,237,0.12)') => ({ padding:'12px 28px', background:bg, border:`1px solid ${accent}44`, borderRadius:10, color:accent, fontSize:14, fontWeight:700, cursor:'pointer', transition:'all 0.2s', width:'100%' });
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(6px)', zIndex:2000, display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'20px', overflowY:'auto' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background:'linear-gradient(160deg,#060d18,#0c1a2e)', borderRadius:20, width:'min(100%,700px)', border:'1px solid rgba(99,179,237,0.15)', boxShadow:'0 40px 100px rgba(0,0,0,0.8)', overflow:'hidden' }}>
+
+        {/* Header */}
+        <div style={{ background:'linear-gradient(135deg,#0a1628,#0f2a4a)', padding:'18px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:'1px solid rgba(99,179,237,0.12)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <span style={{ fontSize:22 }}>💼</span>
+            <div>
+              <div style={{ color:'white', fontWeight:800, fontSize:15, letterSpacing:'0.08em' }}>LUCIDMSK RECRUITER PORTAL</div>
+              <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11, marginTop:2 }}>Reach MSK radiologists nationwide</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', color:'#94a3b8', borderRadius:8, padding:'5px 13px', cursor:'pointer', fontSize:12, fontWeight:600 }}>✕ Close</button>
+        </div>
+
+        <div style={{ padding:'28px 28px 36px' }}>
+
+          {/* ── LANDING VIEW ── */}
+          {view === 'landing' && (
+            <div>
+              <div style={{ textAlign:'center', marginBottom:32 }}>
+                <div style={{ color:'#e2e8f0', fontSize:22, fontWeight:800, lineHeight:1.3, marginBottom:10 }}>Post MSK Radiology Jobs<br/><span style={{ color:'#90cdf4' }}>to a Targeted Specialist Audience</span></div>
+                <div style={{ color:'#64748b', fontSize:14, lineHeight:1.6, maxWidth:460, margin:'0 auto' }}>LucidMSK is the clinical and educational platform for MSK radiologists. Your listing goes directly to practicing subspecialists.</div>
+              </div>
+
+              {/* Value props */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, marginBottom:28 }}>
+                {[
+                  { icon:'🎯', title:'Subspecialty Targeted', desc:'100% MSK radiology audience — no general job board noise' },
+                  { icon:'⚡', title:'Live in 24 Hours', desc:'Posts go live after a quick content review' },
+                  { icon:'📊', title:'30–45 Day Visibility', desc:'Extended exposure with easy renewal options' },
+                ].map(v => (
+                  <div key={v.title} style={{ background:'rgba(99,179,237,0.04)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:12, padding:'16px 14px', textAlign:'center' }}>
+                    <div style={{ fontSize:24, marginBottom:8 }}>{v.icon}</div>
+                    <div style={{ color:'#e2e8f0', fontSize:12, fontWeight:700, marginBottom:5 }}>{v.title}</div>
+                    <div style={{ color:'#4a5568', fontSize:11, lineHeight:1.5 }}>{v.desc}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pricing cards */}
+              <div style={{ marginBottom:28 }}>
+                <div style={{ color:'#90cdf4', fontSize:12, fontWeight:700, letterSpacing:'0.06em', marginBottom:12 }}>POSTING PACKAGES</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+                  {RECRUITER_PLANS.map(p => (
+                    <div key={p.id} style={{ background: p.highlight ? 'linear-gradient(135deg,rgba(99,179,237,0.12),rgba(99,179,237,0.05))' : 'rgba(255,255,255,0.02)', border:`1px solid ${p.highlight ? 'rgba(99,179,237,0.4)' : 'rgba(99,179,237,0.1)'}`, borderRadius:12, padding:'18px 14px', textAlign:'center', position:'relative' }}>
+                      {p.badge && <div style={{ position:'absolute', top:-10, left:'50%', transform:'translateX(-50%)', background: p.highlight ? '#3b82f6' : '#059669', color:'white', borderRadius:20, padding:'3px 12px', fontSize:10, fontWeight:800, whiteSpace:'nowrap' }}>{p.badge}</div>}
+                      <div style={{ color:'#e2e8f0', fontSize:13, fontWeight:700, marginBottom:6 }}>{p.label}</div>
+                      <div style={{ color:p.highlight ? '#90cdf4' : '#e2e8f0', fontSize:26, fontWeight:800, marginBottom:4 }}>${p.price}</div>
+                      <div style={{ color:'#4a5568', fontSize:11, marginBottom:4 }}>{p.posts} listing{p.posts>1?'s':''} · {p.days} days each</div>
+                      <div style={{ color:'#374151', fontSize:10 }}>${Math.round(p.price/p.posts)}/listing</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                <button onClick={() => { setView('signup'); setAuthErr(''); }} style={btn('#90cdf4','rgba(99,179,237,0.12)')}>Create Recruiter Account →</button>
+                <button onClick={() => { setView('login');  setAuthErr(''); }} style={btn('#a78bfa','rgba(139,92,246,0.1)')}>Log In to Existing Account</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── LOGIN VIEW ── */}
+          {view === 'login' && (
+            <div style={{ maxWidth:420, margin:'0 auto' }}>
+              <div style={{ color:'#e2e8f0', fontSize:18, fontWeight:800, marginBottom:6 }}>Recruiter Login</div>
+              <div style={{ color:'#4a5568', fontSize:13, marginBottom:24 }}>Access your posting dashboard.</div>
+              {authErr && <div style={{ color: authErr.startsWith('Account') ? '#68d391' : '#fc8181', background: authErr.startsWith('Account') ? 'rgba(104,211,145,0.08)' : 'rgba(245,101,101,0.08)', border:`1px solid ${authErr.startsWith('Account') ? 'rgba(104,211,145,0.25)' : 'rgba(245,101,101,0.2)'}`, borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:16 }}>{authErr}</div>}
+              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                <div><label style={lbl}>Email</label><input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@yourcompany.com" /></div>
+                <div><label style={lbl}>Password</label><input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key==='Enter' && login()} /></div>
+                <button onClick={login} disabled={authLoading} style={btn()}>{authLoading ? '⏳ Logging in...' : 'Log In →'}</button>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#4a5568' }}>
+                  <button onClick={() => { setView('signup'); setAuthErr(''); }} style={{ background:'none', border:'none', color:'#90cdf4', cursor:'pointer', fontSize:12 }}>Create an account</button>
+                  <button onClick={() => setView('landing')} style={{ background:'none', border:'none', color:'#4a5568', cursor:'pointer', fontSize:12 }}>← Back</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── SIGNUP VIEW ── */}
+          {view === 'signup' && (
+            <div style={{ maxWidth:460, margin:'0 auto' }}>
+              <div style={{ color:'#e2e8f0', fontSize:18, fontWeight:800, marginBottom:6 }}>Create a Recruiter Account</div>
+              <div style={{ color:'#4a5568', fontSize:13, marginBottom:24 }}>Free to register. Pay only when you post.</div>
+              {authErr && <div style={{ color:'#fc8181', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:16 }}>{authErr}</div>}
+              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                  <div><label style={lbl}>Company / Institution *</label><input style={inp} value={company} onChange={e => setCompany(e.target.value)} placeholder="Acme Health System" /></div>
+                  <div><label style={lbl}>Your Name *</label><input style={inp} value={contactName} onChange={e => setContact(e.target.value)} placeholder="Jane Smith" /></div>
+                </div>
+                <div><label style={lbl}>Work Email *</label><input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@acmehealth.com" /></div>
+                <div><label style={lbl}>Password * <span style={{ color:'#374151', fontWeight:400 }}>(min 8 characters)</span></label><input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" /></div>
+                <button onClick={signup} disabled={authLoading} style={btn()}>{authLoading ? '⏳ Creating account...' : 'Create Account →'}</button>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:12 }}>
+                  <button onClick={() => { setView('login'); setAuthErr(''); }} style={{ background:'none', border:'none', color:'#90cdf4', cursor:'pointer', fontSize:12 }}>Already have an account</button>
+                  <button onClick={() => setView('landing')} style={{ background:'none', border:'none', color:'#4a5568', cursor:'pointer', fontSize:12 }}>← Back</button>
+                </div>
+                <p style={{ color:'#374151', fontSize:11, lineHeight:1.5, margin:0 }}>By creating an account you agree to our <span style={{ color:'#4a5568' }}>Terms of Service</span>. Recruiter accounts are separate from LucidMSK clinical accounts and can only access the job posting portal.</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── DASHBOARD VIEW ── */}
+          {view === 'dashboard' && recruiter && (
+            <div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:10 }}>
+                <div>
+                  <div style={{ color:'#e2e8f0', fontSize:16, fontWeight:800 }}>Welcome, {recruiter.profile?.contact_name?.split(' ')[0] || 'Recruiter'}</div>
+                  <div style={{ color:'#4a5568', fontSize:12, marginTop:2 }}>{recruiter.profile?.company_name}</div>
+                </div>
+                <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                  <div style={{ background: credits > 0 ? 'rgba(104,211,145,0.1)' : 'rgba(245,101,101,0.08)', border:`1px solid ${credits > 0 ? 'rgba(104,211,145,0.25)' : 'rgba(245,101,101,0.2)'}`, borderRadius:8, padding:'6px 14px', color: credits > 0 ? '#68d391' : '#fc8181', fontSize:12, fontWeight:700 }}>
+                    🎫 {credits} post credit{credits !== 1 ? 's' : ''} remaining
+                  </div>
+                  <button onClick={() => setView('checkout')} style={{ padding:'7px 16px', background:'rgba(99,179,237,0.1)', border:'1px solid rgba(99,179,237,0.25)', borderRadius:8, color:'#90cdf4', fontSize:12, fontWeight:700, cursor:'pointer' }}>+ Buy Credits</button>
+                  <button onClick={() => { setRecruiter(null); setView('landing'); }} style={{ padding:'7px 14px', background:'none', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, color:'#4a5568', fontSize:12, cursor:'pointer' }}>Log Out</button>
+                </div>
+              </div>
+
+              {/* New post form */}
+              <div style={{ background:'rgba(99,179,237,0.04)', border:'1px solid rgba(99,179,237,0.12)', borderRadius:12, padding:'18px 20px', marginBottom:20 }}>
+                <div style={{ color:'#90cdf4', fontSize:13, fontWeight:700, marginBottom:14 }}>➕ New Job Posting {credits === 0 && <span style={{ color:'#fc8181', fontWeight:400, fontSize:11 }}>— purchase credits below to post</span>}</div>
+                {postErr && <div style={{ color:'#fc8181', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:12 }}>{postErr}</div>}
+                {postOk  && <div style={{ color:'#68d391', background:'rgba(104,211,145,0.08)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:12 }}>{postOk}</div>}
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+                  <div><label style={lbl}>Job Title *</label><input style={inp} value={postForm.title} onChange={e => setPostForm(f=>({...f,title:e.target.value}))} placeholder="MSK Radiologist — Academic" /></div>
+                  <div><label style={lbl}>Institution *</label><input style={inp} value={postForm.specialty} onChange={e => setPostForm(f=>({...f,specialty:e.target.value}))} placeholder="Hospital / Health System" /></div>
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:10 }}>
+                  <div><label style={lbl}>Location *</label><input style={inp} value={postForm.location} onChange={e => setPostForm(f=>({...f,location:e.target.value}))} placeholder="City, State" /></div>
+                  <div><label style={lbl}>Type</label>
+                    <select style={inp} value={postForm.job_type} onChange={e => setPostForm(f=>({...f,job_type:e.target.value}))}>
+                      {['Full-Time','Part-Time','Locum Tenens','Fellowship','Research','Industry'].map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div><label style={lbl}>Salary Range</label><input style={inp} value={postForm.salary_range} onChange={e => setPostForm(f=>({...f,salary_range:e.target.value}))} placeholder="$400k–$500k / Competitive" /></div>
+                </div>
+                <div style={{ marginBottom:10 }}><label style={lbl}>Description *</label><textarea style={{ ...inp, minHeight:80, resize:'vertical' }} value={postForm.description} onChange={e => setPostForm(f=>({...f,description:e.target.value}))} placeholder="Role overview, qualifications, benefits, call schedule..." /></div>
+                <div style={{ marginBottom:14 }}><label style={lbl}>Apply Link or Email *</label><input style={inp} value={postForm.apply_link} onChange={e => setPostForm(f=>({...f,apply_link:e.target.value}))} placeholder="https://careers.org/job or hr@org.com" /></div>
+                <button onClick={submitPost} disabled={submitting || credits < 1}
+                  style={{ padding:'11px 26px', background: credits > 0 ? 'linear-gradient(135deg,rgba(99,179,237,0.2),rgba(99,179,237,0.08))' : 'rgba(255,255,255,0.03)', border:`1px solid ${credits > 0 ? 'rgba(99,179,237,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius:10, color: credits > 0 ? '#90cdf4':'#374151', fontSize:13, fontWeight:700, cursor: credits > 0 ? 'pointer':'not-allowed' }}>
+                  {submitting ? '⏳ Submitting...' : `📤 Submit Post (uses 1 credit)`}
+                </button>
+              </div>
+
+              {/* Existing posts */}
+              <div style={{ color:'#64748b', fontSize:12, fontWeight:700, letterSpacing:'0.05em', marginBottom:10 }}>YOUR POSTINGS ({postings.length})</div>
+              {postings.length === 0 && <div style={{ color:'#374151', fontSize:13, textAlign:'center', padding:'28px', background:'rgba(255,255,255,0.02)', borderRadius:10 }}>No postings yet. Submit your first post above.</div>}
+              {postings.map(p => (
+                <div key={p.id} style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(99,179,237,0.08)', borderRadius:10, padding:'14px 16px', marginBottom:8, display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10, flexWrap:'wrap' }}>
+                  <div>
+                    <div style={{ color:'#e2e8f0', fontSize:13, fontWeight:700 }}>{p.title}</div>
+                    <div style={{ color:'#4a5568', fontSize:11, marginTop:3 }}>📍 {p.location} · Expires {p.expires_at ? new Date(p.expires_at).toLocaleDateString() : '—'}</div>
+                  </div>
+                  <span style={{ background: p.status==='approved' ? 'rgba(104,211,145,0.1)' : p.status==='pending' ? 'rgba(245,189,64,0.1)' : 'rgba(245,101,101,0.08)', color: p.status==='approved' ? '#68d391' : p.status==='pending' ? '#f6bd40' : '#fc8181', border:`1px solid ${p.status==='approved' ? 'rgba(104,211,145,0.25)' : p.status==='pending' ? 'rgba(245,189,64,0.3)' : 'rgba(245,101,101,0.2)'}`, borderRadius:6, padding:'3px 10px', fontSize:10, fontWeight:700, flexShrink:0 }}>{p.status?.toUpperCase()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── CHECKOUT VIEW ── */}
+          {view === 'checkout' && (
+            <div style={{ maxWidth:480, margin:'0 auto' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                <div style={{ color:'#e2e8f0', fontSize:17, fontWeight:800 }}>Purchase Posting Credits</div>
+                <button onClick={() => setView(recruiter ? 'dashboard' : 'landing')} style={{ background:'none', border:'none', color:'#4a5568', cursor:'pointer', fontSize:12 }}>← Back</button>
+              </div>
+
+              {/* Plan selector */}
+              <div style={{ marginBottom:20 }}>
+                {RECRUITER_PLANS.map(p => (
+                  <div key={p.id} onClick={() => setSelectedPlan(p.id)}
+                    style={{ background: selectedPlan===p.id ? 'rgba(99,179,237,0.1)' : 'rgba(255,255,255,0.02)', border:`2px solid ${selectedPlan===p.id ? 'rgba(99,179,237,0.5)' : 'rgba(99,179,237,0.1)'}`, borderRadius:12, padding:'14px 18px', marginBottom:8, cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', transition:'all 0.15s' }}>
+                    <div>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <div style={{ color:'#e2e8f0', fontSize:14, fontWeight:700 }}>{p.label}</div>
+                        {p.badge && <span style={{ background:'#3b82f6', color:'white', borderRadius:20, padding:'2px 8px', fontSize:9, fontWeight:800 }}>{p.badge}</span>}
+                      </div>
+                      <div style={{ color:'#4a5568', fontSize:11, marginTop:3 }}>{p.posts} listing{p.posts>1?'s':''} · active for {p.days} days each · ${Math.round(p.price/p.posts)}/listing</div>
+                    </div>
+                    <div style={{ color: selectedPlan===p.id ? '#90cdf4':'#e2e8f0', fontSize:20, fontWeight:800 }}>${p.price}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Order summary */}
+              <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:12, padding:'16px 18px', marginBottom:20 }}>
+                <div style={{ color:'#64748b', fontSize:11, fontWeight:700, letterSpacing:'0.05em', marginBottom:12 }}>ORDER SUMMARY</div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'#a0aec0', marginBottom:6 }}>
+                  <span>{plan.label} — {plan.posts} post credit{plan.posts>1?'s':''}</span>
+                  <span>${plan.price}</span>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'#a0aec0', marginBottom:12 }}>
+                  <span>Each listing active for {plan.days} days</span>
+                  <span style={{ color:'#4a5568' }}>${Math.round(plan.price/plan.posts)}/each</span>
+                </div>
+                <div style={{ borderTop:'1px solid rgba(99,179,237,0.1)', paddingTop:12, display:'flex', justifyContent:'space-between', color:'#e2e8f0', fontSize:15, fontWeight:800 }}>
+                  <span>Total</span>
+                  <span style={{ color:'#90cdf4' }}>${plan.price}</span>
+                </div>
+              </div>
+
+              {/* Payment note */}
+              <div style={{ background:'rgba(245,189,64,0.05)', border:'1px solid rgba(245,189,64,0.15)', borderRadius:10, padding:'14px 16px', marginBottom:20, color:'#a0aec0', fontSize:12, lineHeight:1.6 }}>
+                <span style={{ color:'#f6bd40', fontWeight:700 }}>💳 Secure Payment</span> — You'll be redirected to our payment processor (Stripe) to complete your purchase. Credits are added to your account instantly upon confirmation.
+              </div>
+
+              <button
+                onClick={() => {
+                  // In production: call /api/recruiter-checkout to create a Stripe session and redirect
+                  // window.location.href = stripeCheckoutUrl;
+                  alert(`Checkout coming soon!\n\nPlan: ${plan.label}\nTotal: $${plan.price}\n\nStripe integration to be wired in — contact admin@lucidmsk.com to arrange direct billing.`);
+                }}
+                style={{ ...btn('#90cdf4','linear-gradient(135deg,rgba(99,179,237,0.2),rgba(99,179,237,0.08))'), fontSize:15, padding:'14px' }}>
+                Proceed to Payment →
+              </button>
+              <p style={{ color:'#374151', fontSize:11, textAlign:'center', marginTop:10 }}>Secured by Stripe · No subscription · Credits never expire</p>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
   const [tab, setTab]                 = useState(initialTab || 'research');
   const [jobs, setJobs]               = useState([]);
@@ -4797,6 +5436,7 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
 
   useEffect(() => {
     if (tab === 'jobs') fetchJobs();
+    if (tab === 'cme') { /* CME modules load on mount inside CmeTabInner */ }
     if (tab === 'admin') { console.log('Admin tab opened, isAdmin:', isAdmin); fetchPending(); }
   }, [tab]);
 
@@ -4876,6 +5516,7 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
         <div onClick={e => e.stopPropagation()} style={{ display:'flex',gap:3,padding:'10px 16px 0',background:'#0f172a',flexShrink:0,position:'relative',zIndex:10 }}>
           {[
             { id:'research', label:'📰 Latest Research' },
+            { id:'cme',      label:'🎓 CME' },
             { id:'jobs',     label:'💼 Jobs Board' },
             ...(currentUser ? [{ id:'post', label:'➕ Post a Job' }] : []),
             ...(isAdmin     ? [{ id:'admin', label:`🛡️ Admin${pending.length > 0 ? ` (${pending.length})` : ''}` }] : []),
@@ -4970,6 +5611,9 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
               )}
             </div>
           )}
+
+          {/* ── CME tab ── */}
+          {tab === 'cme' && <CmeTabInner currentUser={currentUser} isAdmin={isAdmin} sbHeaders={sbHeaders} sbUrl={sbUrl} />}
 
           {/* ── Admin tab ── */}
           {tab === 'admin' && isAdmin && (
@@ -7582,7 +8226,8 @@ export default function DashboardPage() {
   const [showDdx, setShowDdx] = useState(false);
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
-  const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs'
+  const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs' | 'cme'
+  const [showRecruiterPortal, setShowRecruiterPortal] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const dm = darkMode;
   const recognitionRef = useRef(null);
@@ -7910,6 +8555,7 @@ export default function DashboardPage() {
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
       {showHub && <MSKHubModal initialTab={hubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
+      {showRecruiterPortal && <RecruiterPortal onClose={() => setShowRecruiterPortal(false)} />}
       {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
       )}
@@ -8028,7 +8674,9 @@ export default function DashboardPage() {
           {/* MSK Hub dropdown */}
           <MSKHubDropdown
             onOpenResearch={() => { setHubTab('research'); setShowHub(true); }}
+            onOpenCme={() => { setHubTab('cme'); setShowHub(true); }}
             onOpenJobs={() => { setHubTab('jobs'); setShowHub(true); }}
+            onOpenRecruiter={() => setShowRecruiterPortal(true)}
           />
 
           {/* DDx button */}
