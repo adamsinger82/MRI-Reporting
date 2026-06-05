@@ -6762,7 +6762,7 @@ function LoginPage({ onLogin }) {
         } else if (data.access_token) {
           saveSession(data); onLogin({ ...data.user, access_token: data.access_token });
         } else {
-          setError('Account verification pending. You will be notified when your account is approved.');
+          setError('Invalid email or password.');
         }
       }
     } catch { setError('Network error. Please check your connection.'); }
@@ -7027,14 +7027,34 @@ export default function DashboardPage() {
     if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
       setApprovalStatus(true);
     } else {
-      try {
-        const rows = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${user.id}&select=approved,rejected`, {
-          headers: { apikey: getAnonKey(), Authorization: `Bearer ${user.access_token}` },
-        }).then(r => r.json());
-        if (!rows || rows.length === 0) { setApprovalStatus(false); } // no row yet = pending
-        else if (rows[0].rejected) { setApprovalStatus('rejected'); }
-        else { setApprovalStatus(rows[0].approved === true); }
-      } catch { setApprovalStatus(false); }
+      // Retry up to 4 times with 500ms delay — JWT sometimes needs a moment
+      // to propagate through Supabase RLS before the profiles query returns data
+      const checkApproval = async (retries = 4, delay = 500) => {
+        try {
+          const rows = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${user.id}&select=approved,rejected`, {
+            headers: { apikey: getAnonKey(), Authorization: `Bearer ${user.access_token}` },
+          }).then(r => r.json());
+          if (!rows || rows.length === 0) {
+            // Empty result — JWT may not have propagated yet, retry
+            if (retries > 0) {
+              await new Promise(res => setTimeout(res, delay));
+              return checkApproval(retries - 1, delay);
+            }
+            setApprovalStatus(false); // genuinely no profile row
+          } else if (rows[0].rejected) {
+            setApprovalStatus('rejected');
+          } else {
+            setApprovalStatus(rows[0].approved === true);
+          }
+        } catch {
+          if (retries > 0) {
+            await new Promise(res => setTimeout(res, delay));
+            return checkApproval(retries - 1, delay);
+          }
+          setApprovalStatus(false);
+        }
+      };
+      await checkApproval();
     }
   };
   const handleSignOut = () => {
