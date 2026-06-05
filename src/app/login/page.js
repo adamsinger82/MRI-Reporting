@@ -3330,7 +3330,7 @@ const ATLAS_JOINTS = {
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
-        path: '/atlas/ax-shoulder-pdfs/ax shoulder ',
+        path: '/atlas/ax-shoulder-pdfs/ax%20shoulder%20',
         slices: localSlices(26),
         ext: '.jpg',
         pad: 4,
@@ -3338,7 +3338,7 @@ const ATLAS_JOINTS = {
       },
       sag_t1: {
         label: 'Sag T1',
-        path: '/atlas/sag-shoulder-t1/sag t1  shoulder ',
+        path: '/atlas/sag-shoulder-t1/sag%20t1%20%20shoulder%20',
         slices: localSlices(22),
         ext: '.jpg',
         pad: 4,
@@ -3346,7 +3346,7 @@ const ATLAS_JOINTS = {
       },
       cor_pdfs: {
         label: 'Cor PDFS',
-        path: '/atlas/cor-shoulder-pdfs/cor  shoulder ',
+        path: '/atlas/cor-shoulder-pdfs/cor%20%20shoulder%20',
         slices: localSlices(22),
         ext: '.jpg',
         pad: 4,
@@ -3372,7 +3372,7 @@ const ATLAS_JOINTS = {
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
-        path: '/atlas/ax-elbow-pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        path: '/atlas/ax-elbow-pdfs/MRI%20KNEE%20W%20O%20CONTRAST%20RIGHT%20',
         slices: Array.from({length:30},(_,i)=>i+79),
         ext: '.jpg',
         pad: 4,
@@ -3380,7 +3380,7 @@ const ATLAS_JOINTS = {
       },
       ax_t1: {
         label: 'Ax T1',
-        path: '/atlas/ax-elbow-t1/MRI KNEE W O CONTRAST RIGHT ',
+        path: '/atlas/ax-elbow-t1/MRI%20KNEE%20W%20O%20CONTRAST%20RIGHT%20',
         slices: Array.from({length:30},(_,i)=>i+128),
         ext: '.jpg',
         pad: 4,
@@ -3388,7 +3388,7 @@ const ATLAS_JOINTS = {
       },
       cor_pdfs: {
         label: 'Cor PDFS',
-        path: '/atlas/cor-elbow-pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        path: '/atlas/cor-elbow-pdfs/MRI%20KNEE%20W%20O%20CONTRAST%20RIGHT%20',
         slices: Array.from({length:15},(_,i)=>i+112),
         ext: '.jpg',
         pad: 4,
@@ -3413,14 +3413,14 @@ const ATLAS_JOINTS = {
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
-        path: '/atlas/ax-wrist-pdfs/ax wrist ',
+        path: '/atlas/ax-wrist-pdfs/ax%20wrist%20',
         slices: localSlices(30),
         ext: '.jpg',
         pad: 4,
       },
       cor_pdfs: {
         label: 'Cor PDFS',
-        path: '/atlas/cor-wrist-pdfs/cor  wrist ',
+        path: '/atlas/cor-wrist-pdfs/cor%20%20wrist%20',
         slices: localSlices(17, 2),
         ext: '.jpg',
         pad: 4,
@@ -3508,21 +3508,21 @@ const ATLAS_JOINTS = {
     sequences: {
       ax_pdfs: {
         label: 'Ax PDFS',
-        path: '/atlas/ax-knee-pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        path: '/atlas/ax-knee-pdfs/MRI%20KNEE%20W%20O%20CONTRAST%20RIGHT%20',
         slices: Array.from({length:27},(_,i)=>i+1),
         ext: '.jpg',
         pad: 4,
       },
       cor_pdfs: {
         label: 'Cor PDFS',
-        path: '/atlas/cor-knee-pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        path: '/atlas/cor-knee-pdfs/MRI%20KNEE%20W%20O%20CONTRAST%20RIGHT%20',
         slices: Array.from({length:21},(_,i)=>i+57),
         ext: '.jpg',
         pad: 4,
       },
       sag_pdfs: {
         label: 'Sag PDFS',
-        path: '/atlas/sag-knee-pdfs/MRI KNEE W O CONTRAST RIGHT ',
+        path: '/atlas/sag-knee-pdfs/MRI%20KNEE%20W%20O%20CONTRAST%20RIGHT%20',
         slices: Array.from({length:29},(_,i)=>i+28),
         ext: '.jpg',
         pad: 4,
