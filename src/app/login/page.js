@@ -8173,10 +8173,10 @@ export default function DashboardPage() {
                   <input type="checkbox" checked={arthroplastyEnabled} onChange={e=>{ setArthroplastyEnabled(e.target.checked); if(!e.target.checked){ setArthroplastyType(''); setArthroplastyChecklist({}); setArthroplastyGrading(''); }}} style={{ width:14,height:14,accentColor:'#0891b2',cursor:'pointer' }}/>
                   <span style={{ fontSize:11,fontWeight:700,color:arthroplastyEnabled?(dm?'#22d3ee':'#0e7490'):(dm?'#64748b':'#64748b'),letterSpacing:'0.02em' }}>🔩 Arthroplasty</span>
                 </label>
-                {arthroplastyEnabled && (
+                {arthroplastyEnabled && ARTHROPLASTY_DATA[selectedBodyPart]?.types.length > 1 && (
                   <div style={{ padding:'8px 10px',background:dm?'rgba(8,145,178,0.1)':'#f0fdfe',border:'1px solid '+(dm?'#164e63':'#a5f3fc'),borderRadius:7,display:'flex',flexDirection:'column',gap:5 }}>
                     <div style={{ fontSize:10,fontWeight:700,color:dm?'#64748b':'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2 }}>Implant Type</div>
-                    {ARTHROPLASTY_DATA[selectedBodyPart]?.types.map(t => (
+                    {ARTHROPLASTY_DATA[selectedBodyPart].types.map(t => (
                       <label key={t.id} style={{ display:'flex',alignItems:'center',gap:7,cursor:'pointer',fontSize:12,color:arthroplastyType===t.id?(dm?'#22d3ee':'#0891b2'):(dm?'#94a3b8':'#475569'),fontWeight:arthroplastyType===t.id?700:400 }}>
                         <input type="checkbox" checked={arthroplastyType===t.id} onChange={()=>{ setArthroplastyType(arthroplastyType===t.id?'':t.id); setArthroplastyChecklist({}); setArthroplastyGrading(''); }} style={{ width:13,height:13,accentColor:'#0891b2',cursor:'pointer' }}/>
                         {t.label}
@@ -8325,7 +8325,7 @@ export default function DashboardPage() {
                   isGenerating={isGeneratingRheum}
                   dm={dm}
                 />
-              : arthroplastyEnabled && isCT && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) && arthroplastyType
+              : arthroplastyEnabled && isCT && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) && (arthroplastyType || ARTHROPLASTY_DATA[selectedBodyPart]?.types.length === 1)
                 ? <ArthroplastyPanel
                     joint={selectedBodyPart}
                     arthroplastyType={arthroplastyType}
