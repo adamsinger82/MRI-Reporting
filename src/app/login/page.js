@@ -3512,6 +3512,35 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:27},(_,i)=>i+1),
         ext: '.jpg',
         pad: 4,
+        permanentLabels: {
+          1: [[49,47,"femur","#1e3a8a"],[43.3,71.5,"sciatic nerve","#92400e"],[62.5,86.3,"semitendinosus","#7c2d12"],[72.8,78.7,"gracilis","#7c2d12"],[78.9,70.6,"sartorius","#7c2d12"],[31.2,69.3,"biceps femoris, short head","#7c2d12"],[37.3,80.7,"biceps femoris, long head","#7c2d12"],[50.8,26.5,"quadriceps","#7c2d12"],[32.1,43.3,"vastus lateralis","#7c2d12"],[73.5,61.2,"adductor magnus","#7c2d12"],[55.3,62.7,"popliteal artery","#991b1b"]],
+          2: [[35.3,80.3,"biceps femoris, long head","#7c2d12"],[50.4,24.9,"quadriceps","#7c2d12"],[69.9,40.2,"vastus medialis","#7c2d12"],[51.5,65.4,"popliteal vein(s)","#4c1d95"]],
+          3: [[42.5,71.7,"sciatic nerve","#92400e"],[77.4,70.8,"sartorius","#7c2d12"],[31,66.8,"biceps femoris, short head","#7c2d12"],[30.8,45.6,"vastus lateralis","#7c2d12"],[72.6,61.2,"adductor magnus","#7c2d12"]],
+          4: [[72,78.7,"gracilis","#7c2d12"],[51.3,21.5,"quadriceps","#7c2d12"],[52.8,64.3,"popliteal artery","#991b1b"],[51.7,26,"suprapatellar / quadriceps fat pad","#1e3a8a"]],
+          5: [[24.5,69.2,"biceps femoris","#7c2d12"],[70.2,40.9,"vastus medialis","#7c2d12"],[51,32.5,"prefemoral fat pad","#14532d"],[49.6,68.4,"popliteal vein(s)","#4c1d95"]],
+          6: [[43.1,73.1,"tibial nerve","#92400e"],[37.9,74.9,"common peroneal nerve","#92400e"],[42,75.1,"medial sural cutaneous nerve","#92400e"],[39.1,76.4,"lateral sural cutaneous nerve","#92400e"],[57.8,78,"semimembranosus","#7c2d12"],[68.3,75.1,"semimembranosus","#7c2d12"],[64.7,84.6,"semitendinosus","#7c2d12"],[77.6,71.7,"sartorius","#7c2d12"],[24.5,67.7,"biceps femoris","#7c2d12"]],
+          7: [[37,75.8,"common peroneal nerve","#92400e"],[71.3,78.2,"gracilis","#7c2d12"],[73.5,41.1,"vastus medialis","#7c2d12"],[50.6,65.2,"popliteal artery","#991b1b"]],
+          8: [[35.3,76,"common peroneal nerve","#92400e"],[42,76.9,"medial sural cutaneous nerve","#92400e"],[36.8,78.3,"lateral sural cutaneous nerve","#92400e"],[54.2,22.6,"patella","#1e3a8a"],[60.5,26.3,"medial patellar facet","#1e3a8a"],[52.8,28.9,"central ridge of patella","#1e3a8a"],[44.5,26,"lateral patellar facet","#1e3a8a"],[67.9,75.1,"semimembranosus","#7c2d12"],[57.3,77.6,"semimembranosus","#7c2d12"],[47.6,71,"popliteal vein(s)","#4c1d95"]],
+          9: [[43.8,76,"tibial nerve","#92400e"],[33.5,77.1,"common peroneal nerve","#92400e"],[42.4,78.3,"medial sural cutaneous nerve","#92400e"],[66.3,83.2,"semitendinosus","#7c2d12"],[76.9,72,"sartorius","#7c2d12"],[48.3,65.9,"popliteal artery","#991b1b"],[47.2,70.6,"popliteal vein(s)","#4c1d95"]],
+          10: [[32.3,76.9,"common peroneal nerve","#92400e"],[53,21.8,"patella","#1e3a8a"],[71.3,33.9,"medial patellofemoral ligament","#14532d"],[30.7,32.3,"lateral patellofemoral ligament","#14532d"],[70.4,76.5,"gracilis","#7c2d12"],[22.9,66.3,"biceps femoris","#7c2d12"],[65.9,29.2,"medial plica","#14532d"],[43.1,25.8,"joint fluid","#1e3a8a"]],
+          11: [[44.5,74.6,"tibial nerve","#92400e"],[43.6,82.7,"medial sural cutaneous nerve","#92400e"],[32.6,79.2,"lateral sural cutaneous nerve","#92400e"],[51.3,22,"patella","#1e3a8a"],[68.1,76,"semimembranosus","#7c2d12"],[40,77.1,"lateral gastrocnemius","#7c2d12"],[48.1,67.4,"popliteal artery","#991b1b"]],
+          12: [[29.4,77.1,"common peroneal nerve","#92400e"],[44.3,83.6,"medial sural cutaneous nerve","#92400e"],[50.6,34.1,"trochlear groove","#1e3a8a"],[67.5,81.4,"semitendinosus","#7c2d12"],[76.9,71.7,"sartorius","#7c2d12"],[81.4,49.7,"MCL","#14532d"],[48.5,57.5,"ACL","#14532d"],[24.5,54.9,"LCL","#14532d"],[51.3,27.2,"Hoffa's fat pad","#14532d"],[39.1,23.6,"Location for edema in fat pad impingement","#14532d"],[35.5,67.7,"posterior lateral femoral condyle cartilage","#1e3a8a"],[70.4,68.8,"posterior medial femoral condyle cartilage","#1e3a8a"]],
+          13: [[28.9,76.9,"common peroneal nerve","#92400e"],[57.8,31.9,"medial trochlear facet","#1e3a8a"],[42.5,29.9,"lateral trochlear facet","#1e3a8a"],[51.3,35.3,"trochlear groove","#1e3a8a"],[62.7,71.3,"medial gastrocnemius","#7c2d12"],[55.8,71.3,"medial gastrocnemius","#7c2d12"],[24.4,56,"LCL","#14532d"],[28.3,36.8,"IT band","#14532d"],[39.3,72.6,"plantaris","#7c2d12"],[38.8,78.2,"lateral gastrocnemius","#7c2d12"],[46.9,71.1,"popliteal vein(s)","#4c1d95"]],
+          14: [[45.4,74.6,"tibial nerve","#92400e"],[44.9,86.1,"medial sural cutaneous nerve","#92400e"],[31.4,81,"lateral sural cutaneous nerve","#92400e"],[49.7,19,"patellar tendon","#1e3a8a"],[69,29.4,"medial patellofemoral retinaculum","#14532d"],[32.6,27.4,"lateral patellofemoral retinaculum","#14532d"],[66.8,74,"semimembranosus","#7c2d12"],[71.5,73.5,"gracilis","#7c2d12"],[49.4,53.7,"ACL","#14532d"],[57.6,53.5,"PCL","#14532d"],[22.9,56.7,"LCL","#14532d"],[21.1,65.4,"biceps femoris","#7c2d12"],[25.6,56.2,"popliteus","#7c2d12"],[51.2,27.2,"Hoffa's fat pad","#14532d"],[27.8,68.1,"fabella","#7c2d12"]],
+          15: [[26.5,76.2,"common peroneal nerve","#92400e"],[64.1,72.2,"Baker cyst neck location","#7c2d12"],[54.9,71.1,"medial gastrocnemius","#7c2d12"],[68.3,77.6,"semitendinosus","#7c2d12"],[81,51,"MCL","#14532d"],[50.1,50.6,"ACL","#14532d"],[55.5,56.2,"PCL","#14532d"],[22.6,57.6,"LCL","#14532d"],[37.5,72.6,"plantaris","#7c2d12"],[24,59.4,"popliteus","#7c2d12"],[45.4,67.7,"popliteal artery","#991b1b"],[24,64.8,"fabellofibular ligament","#1e3a8a"]],
+          16: [[46.3,86.8,"medial sural cutaneous nerve","#92400e"],[48.5,21.3,"patellar tendon","#1e3a8a"],[66.8,28.5,"medial patellofemoral retinaculum","#14532d"],[33.9,26.9,"lateral patellofemoral retinaculum","#14532d"],[63.9,73.7,"medial gastrocnemius","#7c2d12"],[66.3,71.1,"semimembranosus","#7c2d12"],[76.9,69,"sartorius","#7c2d12"],[51.9,47.9,"ACL","#14532d"],[52.2,58.5,"PCL","#14532d"],[29.9,44.7,"lateral meniscus, anterior horn","#14532d"],[24.5,54.4,"lateral meniscus, body","#14532d"],[33.5,61.8,"lateral meniscus, posterior horn","#14532d"],[20.8,58.7,"LCL","#14532d"],[28,33.7,"IT band","#14532d"],[36.6,80.1,"lateral gastrocnemius","#7c2d12"],[23.1,64.3,"fabellofibular ligament","#1e3a8a"],[44.7,46.3,"anterior root ligament, lateral meniscus","#14532d"],[46.3,56.7,"posterior root ligament, lateral meniscus","#14532d"],[56.9,44.2,"anterior root ligament, medial meniscus","#14532d"]],
+          17: [[64.1,72.8,"medial gastrocnemius","#7c2d12"],[71.7,70.6,"gracilis","#7c2d12"],[51.5,58.9,"PCL","#14532d"],[65.7,61.1,"medial meniscus, posterior horn","#14532d"],[73.3,49,"medial meniscus, body","#14532d"],[64.7,38,"medial meniscus, anterior horn","#14532d"],[20.9,58.5,"LCL","#14532d"],[20,64.1,"biceps femoris","#7c2d12"],[42.9,72.8,"plantaris","#7c2d12"],[26.9,63.8,"popliteus","#7c2d12"],[22.4,64.3,"fabellofibular ligament","#1e3a8a"],[35.7,51,"lateral tibial plateau","#1e3a8a"],[67.5,47.2,"medial tibial plateau","#1e3a8a"],[58.2,58,"posterior root ligament, medial meniscus","#14532d"]],
+          18: [[22,72.4,"common peroneal nerve","#92400e"],[46.9,87.5,"medial sural cutaneous nerve","#92400e"],[28.9,80.5,"lateral sural cutaneous nerve","#92400e"],[47.4,22.9,"patellar tendon","#1e3a8a"],[69.7,75.3,"semitendinosus","#7c2d12"],[78,51.2,"MCL","#14532d"],[50.6,60.7,"PCL","#14532d"],[19.9,59.1,"LCL","#14532d"],[19.3,63.6,"biceps femoris","#7c2d12"],[46,69.5,"popliteal vein(s)","#4c1d95"]],
+          19: [[46.7,71.1,"tibial nerve","#92400e"],[46.5,23.3,"patellar tendon","#1e3a8a"],[66.6,69,"semimembranosus","#7c2d12"],[71.9,68.1,"gracilis","#7c2d12"],[18.8,63,"conjoined tendon","#14532d"],[28.9,37.5,"Gerdy's tubercle","#1e3a8a"],[27.8,34.4,"IT band","#14532d"],[45.1,72.9,"plantaris","#7c2d12"],[37.9,81.4,"lateral gastrocnemius","#7c2d12"],[32.3,65.7,"popliteus","#7c2d12"],[42.7,67.7,"popliteal artery","#991b1b"]],
+          20: [[19,70.1,"common peroneal nerve","#92400e"],[66.8,67,"semimembranosus","#7c2d12"],[73.8,62.9,"sartorius","#7c2d12"],[75.6,51,"MCL","#14532d"]],
+          21: [[49.2,88.1,"medial sural cutaneous nerve","#92400e"],[28.9,80.9,"lateral sural cutaneous nerve","#92400e"],[45.6,24.4,"patellar tendon","#1e3a8a"],[40.2,27.1,"deep infrapatellar bursa","#1e3a8a"],[69.7,71.5,"semitendinosus","#7c2d12"],[46.7,73.1,"plantaris","#7c2d12"],[25.3,56.6,"proximal tibiofibular joint","#1e3a8a"]],
+          22: [[46.9,68.1,"tibial nerve","#92400e"],[16.3,67.7,"common peroneal nerve","#92400e"],[70.4,64.3,"gracilis","#7c2d12"],[37.1,69.3,"soleus","#7c2d12"],[40.7,62.3,"popliteus","#7c2d12"]],
+          23: [[43.8,24,"patellar tendon","#1e3a8a"],[42.9,65.7,"popliteal vein(s)","#4c1d95"],[36.6,64.7,"popliteal vein(s)","#4c1d95"]],
+          24: [[16.6,65.6,"common peroneal nerve","#92400e"],[44.5,26.9,"tibial tubercle","#1e3a8a"],[69,64.1,"semitendinosus","#7c2d12"],[50.4,72.9,"plantaris","#7c2d12"],[40.7,71,"soleus","#7c2d12"],[44.2,60,"popliteus","#7c2d12"],[38.4,65.2,"popliteal artery","#991b1b"],[25.3,61.1,"fibula","#1e3a8a"],[46.5,43.4,"tibia","#1e3a8a"]],
+          25: [[46.3,65.6,"tibial nerve","#92400e"],[44.2,26.2,"tibial tubercle","#1e3a8a"],[67.5,56.2,"gracilis","#7c2d12"]],
+          26: [[17.9,63.8,"common peroneal nerve","#92400e"],[66.5,56.7,"semitendinosus","#7c2d12"],[53.3,72.2,"plantaris","#7c2d12"]],
+          27: [[44.5,64.5,"tibial nerve","#92400e"],[40.6,70.4,"soleus","#7c2d12"],[48.8,58.4,"popliteus","#7c2d12"],[40,84.1,"lateral gastrocnemius","#7c2d12"],[64.1,79.6,"medial gastrocnemius","#7c2d12"],[48.5,69.7,"soleus","#7c2d12"],[54.4,73.1,"plantaris","#7c2d12"],[31,40,"tibialis anterior","#1e3a8a"],[26.3,47.6,"extensor digitorum longus","#7c2d12"],[17.7,57.1,"peroneus longus","#7c2d12"],[48.8,63.9,"anterior aponeurosis","#14532d"],[47.9,77.8,"posterior aponeurosis","#14532d"],[52.1,81.6,"central intramuscular tendon","#14532d"]]
+        },
       },
       cor_pdfs: {
         label: 'Cor PDFS',
@@ -3519,6 +3548,29 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:21},(_,i)=>i+57),
         ext: '.jpg',
         pad: 4,
+        permanentLabels: {
+          57: [[63.9,36.1,"semitendinosus","#7c2d12"]],
+          58: [[73.8,5.6,"gracilis","#7c2d12"],[66.8,54.2,"semitendinosus","#7c2d12"]],
+          59: [[37.1,58.9,"lateral gastrocnemius","#7c2d12"],[59.6,19.5,"semimembranosus","#7c2d12"],[75.8,32.8,"sartorius","#7c2d12"],[73.3,27.8,"gracilis","#7c2d12"],[68.6,66.1,"semitendinosus","#7c2d12"]],
+          60: [[35.9,41.8,"common peroneal nerve","#92400e"],[43.4,36.8,"tibial nerve","#92400e"],[38.2,53.1,"lateral gastrocnemius","#7c2d12"],[56.2,53,"medial gastrocnemius","#7c2d12"],[60.7,22.7,"semimembranosus","#7c2d12"],[78.3,26.2,"sartorius","#7c2d12"],[71.9,56.7,"gracilis","#7c2d12"],[69.5,74.2,"semitendinosus","#7c2d12"]],
+          61: [[45.1,14.8,"sciatic nerve","#92400e"],[46.9,61.4,"tibial nerve","#92400e"],[25.3,66.6,"common peroneal nerve","#92400e"],[54.9,55.1,"medial gastrocnemius","#7c2d12"],[57.5,70.8,"medial gastrocnemius","#7c2d12"],[72.2,69.3,"gracilis","#7c2d12"],[70.6,80,"semitendinosus","#7c2d12"]],
+          62: [[27.4,37.3,"biceps femoris","#7c2d12"],[20.8,79.1,"common peroneal nerve","#92400e"],[71.9,76.9,"gracilis","#7c2d12"],[70.4,85,"semitendinosus","#7c2d12"],[50.1,28.1,"popliteal artery","#991b1b"],[33.9,93.6,"soleus","#7c2d12"]],
+          63: [[22.7,49.4,"biceps femoris","#7c2d12"],[17.5,86.1,"common peroneal nerve","#92400e"],[71.5,82.5,"gracilis","#7c2d12"],[53.5,28.3,"popliteal veins","#4c1d95"]],
+          64: [[33,76.7,"popliteus","#7c2d12"],[20.6,65.7,"biceps femoris","#7c2d12"],[30.1,79.6,"popliteofibular ligament","#1e3a8a"],[17.3,94,"common peroneal nerve","#92400e"],[23.5,84.3,"fibula, epiphysis","#1e3a8a"],[26.2,90.6,"physis, proximal fibula","#1e3a8a"],[72,85,"gracilis","#7c2d12"]],
+          65: [[49.7,56.2,"ACL","#14532d"],[50.8,72.8,"PCL tibial footprint","#1e3a8a"],[69,71.9,"medial meniscus, posterior horn","#14532d"],[57.1,70.4,"posterior root ligament, medial meniscus","#14532d"],[32.3,67.5,"lateral meniscus, posterior horn","#14532d"],[46.7,67.9,"posterior root ligament, lateral meniscus","#14532d"],[25.8,65.2,"popliteus","#7c2d12"],[18.6,77.6,"conjoined tendon","#14532d"],[27.8,96.3,"fibular metaphysis","#1e3a8a"]],
+          66: [[50.8,59.4,"ACL","#14532d"],[54,64.1,"PCL","#14532d"],[80.7,62.9,"MCL, superficial fibers","#14532d"],[25.1,56.2,"LCL","#14532d"],[25.4,59.8,"popliteus","#7c2d12"],[26.7,83.4,"proximal tibiofibular joint","#1e3a8a"],[35,69.3,"lateral tibial plateau","#1e3a8a"],[69.3,73.7,"medial tibial plateau","#1e3a8a"],[33.2,67.4,"lateral tibiofemoral compartment cartilage","#1e3a8a"]],
+          67: [[70.6,62.7,"medial femoral condyle","#1e3a8a"],[35,58.5,"lateral femoral condyle","#1e3a8a"],[50.1,60.9,"ACL","#14532d"],[47.8,65,"lateral tibial spine","#1e3a8a"],[57.5,60.3,"PCL","#14532d"],[81.2,61.8,"posterior lateral femoral condyle cartilage","#1e3a8a"],[78.3,67.2,"MCL deep fibers (meniscofemoral ligament)","#14532d"],[77.1,73.7,"MCL deep fibers (meniscotibial ligament)","#1e3a8a"],[74,71.3,"medial meniscus, body","#14532d"],[26.7,66.1,"lateral meniscus, body","#14532d"],[25.6,64.8,"lateral meniscus, body","#14532d"],[26.2,84.6,"proximal tibiofibular joint","#1e3a8a"],[48.3,74,"tibial epiphysis","#1e3a8a"],[49,79.4,"physis, proximal tibia","#1e3a8a"],[23.1,62.5,"anterolateral ligament","#14532d"]],
+          68: [[49.4,6.9,"femoral diaphysis","#1e3a8a"],[50.6,32.5,"femoral metaphysis","#1e3a8a"],[51.9,45.1,"femoral distal physis","#1e3a8a"],[51.2,64.5,"ACL","#14532d"],[57.1,65.7,"medial tibial spine","#1e3a8a"],[70.4,70.2,"free edge / white-white zone","#7c2d12"],[74.7,69.9,"red-white zone","#7c2d12"],[77.4,69.7,"red-red zone","#7c2d12"],[24.9,46.7,"IT band","#14532d"],[32.1,14.8,"vastus lateralis","#7c2d12"],[68.3,70.1,"medial tibiofemoral compartment cartilage","#1e3a8a"]],
+          69: [[61.4,55.1,"femoral epiphysis","#1e3a8a"],[51.7,63.8,"ACL","#14532d"],[53.1,67.5,"ACL tibial footprint","#1e3a8a"],[29.2,65.2,"lateral meniscus, anterior horn","#14532d"],[26.2,43.1,"IT band","#14532d"]],
+          70: [[73.1,68.4,"medial meniscus, anterior horn","#14532d"],[45.1,68.8,"anterior root ligament, lateral meniscus","#14532d"],[26.9,44.3,"IT band","#14532d"],[26,55.1,"IT band","#14532d"],[60.3,73.1,"tibial epiphysis","#1e3a8a"],[51.2,85.5,"tibial metaphysis","#1e3a8a"]],
+          71: [[27.8,70.4,"Gerdy's tubercle","#1e3a8a"],[27.2,59.4,"IT band","#14532d"]],
+          72: [[62,66.8,"anterior root ligament, medial meniscus","#14532d"],[68.1,12.7,"vastus medialis","#7c2d12"]],
+          73: [[49.9,6.5,"quadriceps","#7c2d12"],[50.6,61.8,"Hoffa's fat pad","#14532d"]],
+          74: [[52.8,11.9,"quadriceps","#7c2d12"],[53.1,23.5,"quadriceps/suprapatellar fat pad","#1e3a8a"],[64.7,43.1,"joint fluid","#1e3a8a"]],
+          75: [[53,17,"quadriceps","#7c2d12"],[46.1,87.9,"tibial tubercle","#1e3a8a"]],
+          76: [[53.1,24,"quadriceps","#7c2d12"],[51.7,38.6,"patella","#1e3a8a"],[49.6,70.6,"patellar tendon","#1e3a8a"]],
+          77: [[53,42.5,"patella","#1e3a8a"],[49.4,60.7,"patellar tendon","#1e3a8a"]]
+        },
       },
       sag_pdfs: {
         label: 'Sag PDFS',
@@ -3526,6 +3578,34 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:29},(_,i)=>i+28),
         ext: '.jpg',
         pad: 4,
+        permanentLabels: {
+          30: [[53.3,56.7,"MCL","#14532d"]],
+          31: [[71.7,22,"sartorius","#7c2d12"]],
+          32: [[74.2,17.9,"sartorius","#7c2d12"],[61.8,82.3,"sartorius","#7c2d12"],[48.5,10,"vastus medialis","#7c2d12"],[51,63,"medial meniscus, body","#14532d"]],
+          33: [[69.5,50.8,"medial femoral condyle posterior articular surface","#1e3a8a"],[71.5,77.8,"semitendinosus","#7c2d12"],[72.9,12.1,"sartorius","#7c2d12"],[64.8,62.7,"medial meniscocapsular junction","#14532d"]],
+          34: [[47.9,62.3,"medial tibiofemoral compartment articular cartilage","#1e3a8a"],[75.5,66.6,"semitendinosus","#7c2d12"],[78.2,17.2,"gracilis","#7c2d12"],[71.3,67.2,"gracilis","#7c2d12"]],
+          35: [[78.9,57.6,"semitendinosus","#7c2d12"],[38,60.7,"medial meniscus, anterior horn","#14532d"]],
+          36: [[50.8,56.6,"medial femoral condyle","#1e3a8a"],[76.9,28.3,"semimembranosus","#7c2d12"],[81.8,46.5,"semitendinosus","#7c2d12"],[62.1,63.2,"medial meniscus, posterior horn","#14532d"]],
+          37: [[78,15.9,"semimembranosus","#7c2d12"],[83.4,32.8,"semitendinosus","#7c2d12"],[39.3,5.5,"vastus medialis","#7c2d12"]],
+          38: [[30.1,48.7,"medial trochlear facet","#1e3a8a"],[78,56.2,"medial gastrocnemius","#7c2d12"],[77.3,7.6,"semimembranosus","#7c2d12"],[57.3,53.1,"PCL femoral attachment","#14532d"]],
+          39: [[28.3,34.3,"medial patellar facet","#1e3a8a"],[81.6,56.9,"medial gastrocnemius","#7c2d12"],[59.8,62.7,"posterior root ligament, medial meniscus","#14532d"],[36.4,62.1,"anterior root ligament, medial meniscus","#14532d"],[54.9,53.9,"PCL","#14532d"]],
+          40: [[77.6,9.8,"semimembranosus","#7c2d12"],[59.6,63.9,"posterior root ligament, medial meniscus","#14532d"],[57.6,57.3,"PCL","#14532d"],[38.8,59.6,"anterior intermeniscal ligament","#14532d"]],
+          41: [[60,63,"PCL","#14532d"]],
+          42: [[35,48.8,"trochlear groove","#1e3a8a"],[30.8,34.4,"central ridge of patella","#1e3a8a"],[77.1,6.9,"semimembranosus","#7c2d12"],[61.6,67.2,"PCL tibial footprint","#1e3a8a"],[44.3,62.9,"ACL tibial footprint","#1e3a8a"],[50.4,57.5,"ACL","#14532d"],[55.1,52.2,"ACL","#14532d"],[39.1,60.3,"anterior intermeniscal ligament","#14532d"]],
+          43: [[47.8,6.7,"femoral diaphysis","#1e3a8a"],[72.8,63.6,"tibial nerve","#92400e"],[56.4,61.1,"posterior root ligament, lateral meniscus","#14532d"],[53.9,54.6,"ACL","#14532d"],[57.8,47.8,"ACL femoral attachment","#14532d"],[31.6,55.7,"infrapatellar plica","#1e3a8a"]],
+          44: [[46.9,25.8,"femoral metaphysis","#1e3a8a"],[22.7,62.9,"patellar tendon","#1e3a8a"],[24.4,17.3,"quadriceps tendon","#14532d"],[15.7,40.4,"patellar expansion","#1e3a8a"],[61.6,89.9,"popliteus","#7c2d12"],[74.2,48.7,"tibial nerve","#92400e"],[70.8,43.1,"popliteal artery","#991b1b"],[69,44.5,"popliteal veins","#4c1d95"],[45.4,61.1,"anterior root ligament, lateral meniscus","#14532d"],[39.3,60.2,"anterior intermeniscal ligament","#14532d"]],
+          45: [[28,89,"tibial tubercle","#1e3a8a"],[32.6,15.9,"prefemoral fat pad","#14532d"],[26,21.7,"suprapatellar/quadriceps fat pad","#1e3a8a"],[30.8,57.6,"Hoffa's fat pad","#14532d"],[76.5,6.9,"semimembranosus","#7c2d12"],[28.3,76,"deep infrapatellar bursa","#1e3a8a"]],
+          46: [[27.1,34.3,"lateral patellar facet","#1e3a8a"],[31,49.4,"lateral trochlear facet","#1e3a8a"],[64.5,77.6,"popliteus","#7c2d12"],[73.8,29.8,"tibial nerve","#92400e"],[40.6,60.5,"anterior intermeniscal ligament","#14532d"]],
+          47: [[64.1,63.8,"posterior inferior popliteomeniscal fascicle","#14532d"],[45.4,82.1,"tibial metaphysis","#1e3a8a"],[65,76.5,"popliteus","#7c2d12"],[71.9,8.9,"sciatic nerve","#92400e"]],
+          48: [[52.2,55.5,"lateral femoral condyle","#1e3a8a"],[36.2,45.2,"femoral epiphysis","#1e3a8a"],[47.8,41.6,"distal femoral physis","#1e3a8a"],[46.7,74.2,"proximal tibial physis","#1e3a8a"],[65.2,72.6,"popliteus","#7c2d12"],[75.3,26.9,"common peroneal nerve","#92400e"]],
+          49: [[81,60.3,"lateral gastrocnemius","#7c2d12"]],
+          50: [[60.2,62.5,"lateral meniscus, posterior horn","#14532d"],[45.8,60.9,"lateral meniscus, anterior horn","#14532d"],[64.1,60.3,"posterior superior popliteomeniscal fascicle","#14532d"],[47.9,69.7,"tibial epiphysis","#1e3a8a"],[54,64.7,"lateral tibial plateau","#1e3a8a"],[68.3,48.7,"lateral femoral condyle posterior articular surface","#1e3a8a"],[65.9,67.4,"popliteus","#7c2d12"],[40.9,5.1,"vastus lateralis","#7c2d12"]],
+          51: [[63.2,63.4,"anterior inferior popliteomeniscal fascicle","#14532d"],[53.5,62,"lateral tibiofemoral compartment cartilage","#1e3a8a"],[64.1,92,"fibular metaphysis","#1e3a8a"],[63.2,85.4,"proximal fibular physis","#1e3a8a"],[60.5,77.8,"proximal tibiofibular joint","#1e3a8a"],[72.9,48.1,"lateral gastrocnemius","#7c2d12"],[76,44.9,"common peroneal nerve","#92400e"]],
+          52: [[54,61.6,"lateral meniscus, body","#14532d"],[64.1,65.2,"popliteus","#7c2d12"],[49.9,7.4,"vastus lateralis","#7c2d12"],[77.3,53.9,"common peroneal nerve","#92400e"]],
+          53: [[64.1,80.1,"fibular epiphysis","#1e3a8a"],[60.7,58.4,"popliteus","#7c2d12"],[56.7,52.6,"popliteus","#7c2d12"],[49.9,6.5,"vastus lateralis","#7c2d12"],[74.6,62.7,"common peroneal nerve","#92400e"]],
+          54: [[56.6,50.6,"LCL","#14532d"],[66.1,27.1,"biceps femoris","#7c2d12"]],
+          55: [[68.3,32.3,"biceps femoris","#7c2d12"],[71.3,75.6,"common peroneal nerve","#92400e"]]
+        },
       },
     },
     view: 'MRI — knee',
@@ -3570,8 +3650,8 @@ const ATLAS_JOINTS = {
     },
   },
   pelvis: {
-    label: 'Pelvis / SI',
-    region: 'Pelvis & Spine',
+    label: 'Pelvis',
+    region: 'Pelvis',
     folder: 'pelvis',
     slices: Array.from({length:100},(_,i)=>i+1),
     defaultSlice: 35,
@@ -3579,7 +3659,6 @@ const ATLAS_JOINTS = {
     localPath: '/atlas/pelvis/pelvis_', localExt: '.webp',
     sequences: {
       t1: { label:'T1', path:'/atlas/pelvis/pelvis_', slices:Array.from({length:100},(_,i)=>i+1), ext:'.webp', permanentLabels: PELVIS_LABELS },
-      dess: { label:'DESS', path:'/atlas/pelvis_dess/dess_', slices:Array.from({length:206},(_,i)=>i+25), ext:'.webp' },
     },
     view: 'Axial MRI — pelvis without contrast',
     labels: {
@@ -3624,7 +3703,7 @@ Object.entries(ATLAS_JOINTS).forEach(([k, v]) => {
 // Label editor uses imgRef.getBoundingClientRect() to record clicks relative
 // to the ACTUAL image pixels — not the container — fixing coordinate drift.
 function AtlasModal({ onClose }) {
-  const [selectedRegion, setSelectedRegion] = useState('Pelvis & Spine');
+  const [selectedRegion, setSelectedRegion] = useState('Pelvis');
   const [selectedJoint, setSelectedJoint] = useState('pelvis');
   const [sliceIdx, setSliceIdx] = useState(0);
   const [imgError, setImgError] = useState(false);
