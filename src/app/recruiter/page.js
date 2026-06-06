@@ -80,7 +80,7 @@ export default function RecruiterPage() {
       const res  = await fetch(authU('signup'), {
         method: 'POST',
         headers: { 'Content-Type':'application/json', 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, data: {}, gotrue_meta_security: {}, options: { emailRedirectTo: 'https://lucidmsk.com/recruiter' } })
       });
       const data = await res.json();
       if (data.error) { setAuthErr(data.error_description || data.error); setAuthLoading(false); return; }
