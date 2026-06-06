@@ -2,26 +2,23 @@
 export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 
-// ─── SUPABASE CONFIG ──────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
 
-// ─── RECRUITER PLANS ──────────────────────────────────────────────────────────
 const RECRUITER_PLANS = [
   { id:'single',   label:'Single Post',   price:149,  posts:1,  days:30, highlight:false, badge:'' },
   { id:'triple',   label:'3-Pack',        price:349,  posts:3,  days:30, highlight:true,  badge:'Most Popular' },
   { id:'bundle',   label:'6-Pack Bundle', price:599,  posts:6,  days:45, highlight:false, badge:'Best Value' },
 ];
 
-// ─── RECRUITER PORTAL PAGE ────────────────────────────────────────────────────
 export default function RecruiterPage() {
-  const [view, setView]           = useState('landing');   // landing | login | signup | dashboard | checkout
+  const [view, setView]           = useState('landing');
   const [email, setEmail]         = useState('');
   const [password, setPassword]   = useState('');
   const [company, setCompany]     = useState('');
   const [contactName, setContact] = useState('');
   const [authErr, setAuthErr]     = useState('');
   const [authLoading, setAuthLoading] = useState(false);
-  const [recruiter, setRecruiter] = useState(null);        // logged-in recruiter session
+  const [recruiter, setRecruiter] = useState(null);
   const [postings, setPostings]   = useState([]);
   const [credits, setCredits]     = useState(0);
   const [selectedPlan, setSelectedPlan] = useState('triple');
@@ -30,7 +27,6 @@ export default function RecruiterPage() {
   const [postOk, setPostOk]       = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // ── Supabase helpers ─────────────────────────────────────────────────────────
   const sbH = () => {
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const token = recruiter?.access_token || key;
@@ -39,7 +35,6 @@ export default function RecruiterPage() {
   const sbU  = (p) => `${SUPABASE_URL}/rest/v1/${p}`;
   const authU = (p) => `${SUPABASE_URL}/auth/v1/${p}`;
 
-  // ── Auth ─────────────────────────────────────────────────────────────────────
   const login = async () => {
     setAuthErr(''); setAuthLoading(true);
     try {
@@ -53,7 +48,6 @@ export default function RecruiterPage() {
         setAuthErr(data.error_description || data.error || 'Login failed.');
         setAuthLoading(false); return;
       }
-      // Confirm recruiter profile exists
       const profile = await fetch(
         sbU(`recruiter_profiles?user_id=eq.${data.user.id}&select=*`),
         { headers: { 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${data.access_token}` } }
@@ -77,14 +71,16 @@ export default function RecruiterPage() {
     if (!email.trim())       { setAuthErr('Email is required.');         setAuthLoading(false); return; }
     if (password.length < 8) { setAuthErr('Password must be at least 8 characters.'); setAuthLoading(false); return; }
     try {
-      const res  = await fetch(authU('signup'), {
+      // Step 1: Create auth user
+      const res = await fetch(authU('signup'), {
         method: 'POST',
         headers: { 'Content-Type':'application/json', 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY },
-        body: JSON.stringify({ email, password, data: {}, gotrue_meta_security: {}, options: { emailRedirectTo: 'https://lucidmsk.com/recruiter' } })
+        body: JSON.stringify({ email, password, data: {}, gotrue_meta_security: {} })
       });
       const data = await res.json();
       if (data.error) { setAuthErr(data.error_description || data.error); setAuthLoading(false); return; }
-      // Create recruiter profile
+
+      // Step 2: Create recruiter profile
       if (data.user?.id) {
         const key   = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         const token = data.access_token || key;
@@ -93,15 +89,33 @@ export default function RecruiterPage() {
           headers: { 'Content-Type':'application/json', 'apikey': key, 'Authorization': `Bearer ${token}`, 'Prefer':'return=minimal' },
           body: JSON.stringify({ user_id: data.user.id, company_name: company, contact_name: contactName, email, post_credits: 0 })
         });
+
+        // Step 3: Auto-login immediately - no email confirmation needed
+        const loginRes = await fetch(authU('token?grant_type=password'), {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY },
+          body: JSON.stringify({ email, password })
+        });
+        const loginData = await loginRes.json();
+
+        if (loginData.access_token) {
+          const profile = { user_id: data.user.id, company_name: company, contact_name: contactName, email, post_credits: 0 };
+          setRecruiter({ ...loginData, profile });
+          await loadDashboard(loginData, profile);
+          setView('dashboard');
+          setAuthLoading(false);
+          return;
+        }
       }
+
+      // Fallback if auto-login fails
       setView('login');
       setPassword('');
-      setAuthErr('Account created! Please check your email to confirm, then log in.');
+      setAuthErr('Account created! You can now log in.');
     } catch(e) { setAuthErr('Signup error. Please try again.'); }
     setAuthLoading(false);
   };
 
-  // ── Dashboard data ────────────────────────────────────────────────────────────
   const loadDashboard = async (session, profile) => {
     try {
       const key     = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -116,7 +130,6 @@ export default function RecruiterPage() {
     } catch(e) { console.error('loadDashboard error', e); }
   };
 
-  // ── Submit job post ───────────────────────────────────────────────────────────
   const submitPost = async () => {
     setPostErr(''); setPostOk('');
     if (credits < 1)                   return setPostErr('No post credits remaining. Please purchase a package.');
@@ -132,7 +145,6 @@ export default function RecruiterPage() {
         body: JSON.stringify({ ...postForm, user_id: recruiter.user.id, status:'pending', expires_at: expires, source:'recruiter_portal' })
       });
       if (!res.ok) throw new Error(await res.text());
-      // Deduct credit
       await fetch(sbU(`recruiter_profiles?user_id=eq.${recruiter.user.id}`), {
         method: 'PATCH', headers: { ...sbH(), 'Prefer':'return=minimal' },
         body: JSON.stringify({ post_credits: credits - 1 })
@@ -145,17 +157,15 @@ export default function RecruiterPage() {
     setSubmitting(false);
   };
 
-  // ── Shared style helpers ──────────────────────────────────────────────────────
   const plan = RECRUITER_PLANS.find(p => p.id === selectedPlan) || RECRUITER_PLANS[1];
   const inp  = { background:'rgba(255,255,255,0.05)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:9, color:'#e2e8f0', fontSize:14, padding:'11px 14px', outline:'none', width:'100%', boxSizing:'border-box', fontFamily:'inherit' };
   const lbl  = { color:'#90cdf4', fontSize:12, fontWeight:700, letterSpacing:'0.04em', display:'block', marginBottom:5 };
   const btn  = (accent='#90cdf4', bg='rgba(99,179,237,0.12)') => ({ padding:'12px 28px', background:bg, border:`1px solid ${accent}44`, borderRadius:10, color:accent, fontSize:14, fontWeight:700, cursor:'pointer', transition:'all 0.2s', width:'100%' });
 
-  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight:'100vh', background:'linear-gradient(160deg,#060d18,#0c1a2e)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-start', padding:'32px 16px', fontFamily:'system-ui, -apple-system, sans-serif' }}>
 
-      {/* ── HEADER ── */}
+      {/* HEADER */}
       <div style={{ width:'100%', maxWidth:700, marginBottom:28 }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -165,11 +175,13 @@ export default function RecruiterPage() {
               <div style={{ color:'rgba(255,255,255,0.35)', fontSize:12, marginTop:2 }}>Reach MSK radiologists nationwide</div>
             </div>
           </div>
-          <a href="/" style={{ color:'#4a5568', fontSize:12, textDecoration:'none', padding:'6px 14px', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>← Back to LucidMSK</a>
+          {!recruiter && (
+            <a href="/" style={{ color:'#4a5568', fontSize:12, textDecoration:'none', padding:'6px 14px', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>← Back to LucidMSK</a>
+          )}
         </div>
       </div>
 
-      {/* ── MAIN CARD ── */}
+      {/* MAIN CARD */}
       <div style={{ background:'linear-gradient(160deg,#0a1628,#0f2a4a)', borderRadius:20, width:'100%', maxWidth:700, border:'1px solid rgba(99,179,237,0.15)', boxShadow:'0 40px 100px rgba(0,0,0,0.8)', overflow:'hidden' }}>
 
         {/* Top bar */}
@@ -185,7 +197,7 @@ export default function RecruiterPage() {
 
         <div style={{ padding:'32px 28px 40px' }}>
 
-          {/* ══ LANDING ══════════════════════════════════════════════════════════ */}
+          {/* LANDING */}
           {view === 'landing' && (
             <div>
               <div style={{ textAlign:'center', marginBottom:32 }}>
@@ -197,8 +209,6 @@ export default function RecruiterPage() {
                   LucidMSK is the clinical and educational platform for MSK radiologists. Your listing goes directly to practicing subspecialists.
                 </div>
               </div>
-
-              {/* Value props */}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:28 }}>
                 {[
                   { icon:'🎯', title:'Subspecialty Targeted', desc:'100% MSK radiology audience — no general job board noise' },
@@ -212,8 +222,6 @@ export default function RecruiterPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Pricing cards */}
               <div style={{ marginBottom:28 }}>
                 <div style={{ color:'#90cdf4', fontSize:12, fontWeight:700, letterSpacing:'0.06em', marginBottom:12 }}>POSTING PACKAGES</div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
@@ -228,7 +236,6 @@ export default function RecruiterPage() {
                   ))}
                 </div>
               </div>
-
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                 <button onClick={() => { setView('signup'); setAuthErr(''); }} style={btn('#90cdf4','rgba(99,179,237,0.12)')}>Create Recruiter Account →</button>
                 <button onClick={() => { setView('login');  setAuthErr(''); }} style={btn('#a78bfa','rgba(139,92,246,0.1)')}>Log In to Existing Account</button>
@@ -236,7 +243,7 @@ export default function RecruiterPage() {
             </div>
           )}
 
-          {/* ══ LOGIN ════════════════════════════════════════════════════════════ */}
+          {/* LOGIN */}
           {view === 'login' && (
             <div style={{ maxWidth:420, margin:'0 auto' }}>
               <div style={{ color:'#e2e8f0', fontSize:18, fontWeight:800, marginBottom:6 }}>Recruiter Login</div>
@@ -250,7 +257,7 @@ export default function RecruiterPage() {
                 <div><label style={lbl}>Email</label><input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@yourcompany.com" /></div>
                 <div><label style={lbl}>Password</label><input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key==='Enter' && login()} /></div>
                 <button onClick={login} disabled={authLoading} style={btn()}>{authLoading ? '⏳ Logging in...' : 'Log In →'}</button>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#4a5568' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:12 }}>
                   <button onClick={() => { setView('signup'); setAuthErr(''); }} style={{ background:'none', border:'none', color:'#90cdf4', cursor:'pointer', fontSize:12 }}>Create an account</button>
                   <button onClick={() => setView('landing')} style={{ background:'none', border:'none', color:'#4a5568', cursor:'pointer', fontSize:12 }}>← Back</button>
                 </div>
@@ -258,7 +265,7 @@ export default function RecruiterPage() {
             </div>
           )}
 
-          {/* ══ SIGNUP ═══════════════════════════════════════════════════════════ */}
+          {/* SIGNUP */}
           {view === 'signup' && (
             <div style={{ maxWidth:460, margin:'0 auto' }}>
               <div style={{ color:'#e2e8f0', fontSize:18, fontWeight:800, marginBottom:6 }}>Create a Recruiter Account</div>
@@ -286,10 +293,9 @@ export default function RecruiterPage() {
             </div>
           )}
 
-          {/* ══ DASHBOARD ════════════════════════════════════════════════════════ */}
+          {/* DASHBOARD */}
           {view === 'dashboard' && recruiter && (
             <div>
-              {/* Header row */}
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24, flexWrap:'wrap', gap:10 }}>
                 <div>
                   <div style={{ color:'#e2e8f0', fontSize:16, fontWeight:800 }}>Welcome, {recruiter.profile?.contact_name?.split(' ')[0] || 'Recruiter'}</div>
@@ -333,9 +339,7 @@ export default function RecruiterPage() {
                   <label style={lbl}>Apply Link or Email *</label>
                   <input style={inp} value={postForm.apply_link} onChange={e => setPostForm(f=>({...f,apply_link:e.target.value}))} placeholder="https://careers.org/job or hr@org.com" />
                 </div>
-                <button
-                  onClick={submitPost}
-                  disabled={submitting || credits < 1}
+                <button onClick={submitPost} disabled={submitting || credits < 1}
                   style={{ padding:'11px 26px', background: credits > 0 ? 'linear-gradient(135deg,rgba(99,179,237,0.2),rgba(99,179,237,0.08))' : 'rgba(255,255,255,0.03)', border:`1px solid ${credits > 0 ? 'rgba(99,179,237,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius:10, color: credits > 0 ? '#90cdf4':'#374151', fontSize:13, fontWeight:700, cursor: credits > 0 ? 'pointer':'not-allowed' }}>
                   {submitting ? '⏳ Submitting...' : '📤 Submit Post (uses 1 credit)'}
                 </button>
@@ -362,15 +366,13 @@ export default function RecruiterPage() {
             </div>
           )}
 
-          {/* ══ CHECKOUT ═════════════════════════════════════════════════════════ */}
+          {/* CHECKOUT */}
           {view === 'checkout' && (
             <div style={{ maxWidth:480, margin:'0 auto' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
                 <div style={{ color:'#e2e8f0', fontSize:17, fontWeight:800 }}>Purchase Posting Credits</div>
                 <button onClick={() => setView(recruiter ? 'dashboard' : 'landing')} style={{ background:'none', border:'none', color:'#4a5568', cursor:'pointer', fontSize:12 }}>← Back</button>
               </div>
-
-              {/* Plan selector */}
               <div style={{ marginBottom:20 }}>
                 {RECRUITER_PLANS.map(p => (
                   <div key={p.id} onClick={() => setSelectedPlan(p.id)}
@@ -386,8 +388,6 @@ export default function RecruiterPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Order summary */}
               <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:12, padding:'16px 18px', marginBottom:20 }}>
                 <div style={{ color:'#64748b', fontSize:11, fontWeight:700, letterSpacing:'0.05em', marginBottom:12 }}>ORDER SUMMARY</div>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'#a0aec0', marginBottom:6 }}>
@@ -403,18 +403,11 @@ export default function RecruiterPage() {
                   <span style={{ color:'#90cdf4' }}>${plan.price}</span>
                 </div>
               </div>
-
-              {/* Payment note */}
               <div style={{ background:'rgba(245,189,64,0.05)', border:'1px solid rgba(245,189,64,0.15)', borderRadius:10, padding:'14px 16px', marginBottom:20, color:'#a0aec0', fontSize:12, lineHeight:1.6 }}>
                 <span style={{ color:'#f6bd40', fontWeight:700 }}>💳 Secure Payment</span> — You'll be redirected to our payment processor (Stripe) to complete your purchase. Credits are added to your account instantly upon confirmation.
               </div>
-
               <button
-                onClick={() => {
-                  // TODO: call /api/recruiter-checkout to create a Stripe session and redirect
-                  // window.location.href = stripeCheckoutUrl;
-                  alert(`Checkout coming soon!\n\nPlan: ${plan.label}\nTotal: $${plan.price}\n\nStripe integration to be wired in — contact admin@lucidmsk.com to arrange direct billing.`);
-                }}
+                onClick={() => alert(`Checkout coming soon!\n\nPlan: ${plan.label}\nTotal: $${plan.price}\n\nContact admin@lucidmsk.com to arrange direct billing.`)}
                 style={{ ...btn('#90cdf4','linear-gradient(135deg,rgba(99,179,237,0.2),rgba(99,179,237,0.08))'), fontSize:15, padding:'14px' }}>
                 Proceed to Payment →
               </button>
@@ -425,7 +418,6 @@ export default function RecruiterPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <div style={{ marginTop:28, color:'#1e293b', fontSize:11, textAlign:'center' }}>
         © {new Date().getFullYear()} LucidMSK · <a href="/privacy" style={{ color:'#1e293b', textDecoration:'none' }}>Privacy</a> · <a href="/terms" style={{ color:'#1e293b', textDecoration:'none' }}>Terms</a>
       </div>
