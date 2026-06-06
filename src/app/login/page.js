@@ -4841,7 +4841,18 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
     setSaving(false);
   };
 
-  const filtered = modules.filter(m => {
+  const deleteModule = async (moduleId) => {
+    if (!window.confirm('Delete this CME module? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/cme_modules?id=eq.${moduleId}`, {
+        method: 'DELETE',
+        headers: { ...sbH, 'Prefer': 'return=minimal' }
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setModules(prev => prev.filter(m => m.id !== moduleId));
+      setActiveModule(null);
+    } catch(e) { console.error('deleteModule error', e); alert('Delete failed. Check RLS policy — see instructions.'); }
+  };
     const q = search.toLowerCase();
     const matchSearch = !q || m.title?.toLowerCase().includes(q) || m.description?.toLowerCase().includes(q) || m.author?.toLowerCase().includes(q) || m.specialty?.toLowerCase().includes(q);
     const matchSpec   = filterSpec === 'All' || m.specialty === filterSpec;
@@ -4888,7 +4899,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
               ))}
             </div>
           )}
-          <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); const url = activeModule.url.startsWith('http') ? activeModule.url : 'https://' + activeModule.url; const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }}
               style={{ padding:'12px 28px', background:'linear-gradient(135deg,rgba(99,179,237,0.25),rgba(99,179,237,0.1))', border:'1px solid rgba(99,179,237,0.4)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer' }}>
@@ -4898,6 +4909,12 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
               <button onClick={(e) => { e.stopPropagation(); markComplete(activeModule.id); }}
                 style={{ padding:'12px 22px', background:'rgba(104,211,145,0.1)', border:'1px solid rgba(104,211,145,0.25)', borderRadius:10, color:'#68d391', fontSize:13, fontWeight:700, cursor:'pointer' }}>
                 ✅ Mark as Complete
+              </button>
+            )}
+            {isAdmin && (
+              <button onClick={(e) => { e.stopPropagation(); deleteModule(activeModule.id); }}
+                style={{ padding:'12px 18px', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:10, color:'#fc8181', fontSize:13, fontWeight:700, cursor:'pointer', marginLeft:'auto' }}>
+                🗑️ Delete Module
               </button>
             )}
           </div>
@@ -5022,6 +5039,13 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
                 </div>
                 <p style={{ color:'#64748b', fontSize:11, lineHeight:1.5, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{m.description}</p>
                 {m.duration_min && <div style={{ color:'#374151', fontSize:10, marginTop:8 }}>⏱ {m.duration_min} min{m.author ? ` · ${m.author}` : ''}</div>}
+                {isAdmin && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteModule(m.id); }}
+                    style={{ marginTop:10, padding:'5px 12px', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:6, color:'#fc8181', fontSize:11, fontWeight:700, cursor:'pointer', width:'100%' }}>
+                    🗑️ Delete
+                  </button>
+                )}
               </div>
             </div>
           );
