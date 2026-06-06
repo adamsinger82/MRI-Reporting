@@ -4780,7 +4780,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   const [completedIds, setCompletedIds] = useState(new Set());
   const [activeModule, setActiveModule] = useState(null);
   const [showUpload, setShowUpload]   = useState(false);
-  const [uploadForm, setUploadForm]   = useState({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0 AMA PRA Cat 1', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'' });
+  const [uploadForm, setUploadForm]   = useState({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'' });
   const [uploadErr, setUploadErr]     = useState('');
   const [uploadOk, setUploadOk]       = useState('');
   const [saving, setSaving]           = useState(false);
@@ -4836,7 +4836,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
       const [newMod] = await res.json();
       setModules(prev => [newMod, ...prev]);
       setUploadOk('Module published successfully!');
-      setUploadForm({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0 AMA PRA Cat 1', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'' });
+      setUploadForm({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'' });
     } catch(e) { console.error('submitModule error', e); setUploadErr('Failed to publish. Please try again.'); }
     setSaving(false);
   };
@@ -4889,14 +4889,11 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
             </div>
           )}
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-            <a
-              href={activeModule.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              style={{ padding:'12px 28px', background:'linear-gradient(135deg,rgba(99,179,237,0.25),rgba(99,179,237,0.1))', border:'1px solid rgba(99,179,237,0.4)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer', textDecoration:'none', display:'inline-block' }}>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); const url = activeModule.url.startsWith('http') ? activeModule.url : 'https://' + activeModule.url; const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }}
+              style={{ padding:'12px 28px', background:'linear-gradient(135deg,rgba(99,179,237,0.25),rgba(99,179,237,0.1))', border:'1px solid rgba(99,179,237,0.4)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer' }}>
               🎓 Launch Module →
-            </a>
+            </button>
             {currentUser && !completedIds.has(activeModule.id) && (
               <button onClick={(e) => { e.stopPropagation(); markComplete(activeModule.id); }}
                 style={{ padding:'12px 22px', background:'rgba(104,211,145,0.1)', border:'1px solid rgba(104,211,145,0.25)', borderRadius:10, color:'#68d391', fontSize:13, fontWeight:700, cursor:'pointer' }}>
