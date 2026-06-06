@@ -4662,21 +4662,12 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs, onOpenCme }) {
           </button>
           <button
             onClick={() => { setOpen(false); onOpenJobs(); }}
-            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background='transparent'}>
             💼 Jobs Board
           </button>
-          <a
-            href="/recruiter"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#a78bfa',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s',textDecoration:'none' }}
-            onMouseEnter={e => e.currentTarget.style.background='rgba(139,92,246,0.08)'}
-            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-            💼 Post a Job <span style={{ color:'#4a5568',fontSize:11 }}>(Recruiters)</span>
-          </a>
+
         </div>
       )}
     </div>
