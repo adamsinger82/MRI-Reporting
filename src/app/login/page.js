@@ -4853,6 +4853,8 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
       setActiveModule(null);
     } catch(e) { console.error('deleteModule error', e); alert('Delete failed. Check RLS policy — see instructions.'); }
   };
+
+  const filtered = modules.filter(m => {
     const q = search.toLowerCase();
     const matchSearch = !q || m.title?.toLowerCase().includes(q) || m.description?.toLowerCase().includes(q) || m.author?.toLowerCase().includes(q) || m.specialty?.toLowerCase().includes(q);
     const matchSpec   = filterSpec === 'All' || m.specialty === filterSpec;
