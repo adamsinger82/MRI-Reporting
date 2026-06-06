@@ -4784,6 +4784,8 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   const [uploadErr, setUploadErr]     = useState('');
   const [uploadOk, setUploadOk]       = useState('');
   const [saving, setSaving]           = useState(false);
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const thumbInputRef = useRef(null);
 
   const sbH = sbHeaders ? sbHeaders() : (() => {
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -4854,7 +4856,38 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
     } catch(e) { console.error('deleteModule error', e); alert('Delete failed. Check RLS policy — see instructions.'); }
   };
 
-  const filtered = modules.filter(m => {
+  const uploadThumbnail = async (file) => {
+    if (!file) return;
+    const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
+    if (!allowed.includes(file.type)) { setUploadErr('Thumbnail must be a JPG, PNG, WebP, or GIF image.'); return; }
+    if (file.size > 5 * 1024 * 1024) { setUploadErr('Thumbnail must be under 5MB.'); return; }
+    setThumbnailUploading(true);
+    setUploadErr('');
+    try {
+      const ext      = file.name.split('.').pop();
+      const filename = `cme-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const res = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/cme-thumbnails/${filename}`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${currentUser?.access_token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            'Content-Type': file.type,
+            'x-upsert': 'false',
+          },
+          body: file,
+        }
+      );
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message || JSON.stringify(e)); }
+      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/cme-thumbnails/${filename}`;
+      setUploadForm(f => ({ ...f, thumbnail_url: publicUrl }));
+    } catch(e) {
+      console.error('uploadThumbnail error', e);
+      setUploadErr(`Thumbnail upload failed: ${e.message}`);
+    }
+    setThumbnailUploading(false);
+  };
     const q = search.toLowerCase();
     const matchSearch = !q || m.title?.toLowerCase().includes(q) || m.description?.toLowerCase().includes(q) || m.author?.toLowerCase().includes(q) || m.specialty?.toLowerCase().includes(q);
     const matchSpec   = filterSpec === 'All' || m.specialty === filterSpec;
@@ -4982,8 +5015,23 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
             <input style={inp} value={uploadForm.url} onChange={e => setUploadForm(f=>({...f,url:e.target.value}))} placeholder="https://..." />
           </div>
           <div style={{ marginBottom:12 }}>
-            <label style={lbl}>Thumbnail URL <span style={{ color:'#4a5568', fontWeight:400 }}>(optional — 16:9 image)</span></label>
-            <input style={inp} value={uploadForm.thumbnail_url} onChange={e => setUploadForm(f=>({...f,thumbnail_url:e.target.value}))} placeholder="https://..." />
+            <label style={lbl}>Thumbnail Image <span style={{ color:'#4a5568', fontWeight:400 }}>(optional — JPG, PNG, or WebP · max 5MB)</span></label>
+            <input ref={thumbInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display:'none' }} onChange={e => uploadThumbnail(e.target.files[0])} />
+            <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+              <button type="button" onClick={() => thumbInputRef.current?.click()} disabled={thumbnailUploading}
+                style={{ padding:'9px 16px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:8, color: thumbnailUploading ? '#4a5568' : '#90cdf4', fontSize:12, fontWeight:700, cursor: thumbnailUploading ? 'not-allowed' : 'pointer', flexShrink:0 }}>
+                {thumbnailUploading ? '⏳ Uploading...' : '📁 Choose Image'}
+              </button>
+              {uploadForm.thumbnail_url
+                ? <div style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
+                    <img src={uploadForm.thumbnail_url} alt="thumbnail preview" style={{ height:40, width:70, objectFit:'cover', borderRadius:5, border:'1px solid rgba(99,179,237,0.2)' }} />
+                    <span style={{ color:'#68d391', fontSize:11, fontWeight:700 }}>✅ Uploaded</span>
+                    <button type="button" onClick={() => { setUploadForm(f=>({...f,thumbnail_url:''})); if(thumbInputRef.current) thumbInputRef.current.value=''; }}
+                      style={{ background:'none', border:'none', color:'#fc8181', fontSize:11, cursor:'pointer', padding:0 }}>✕ Remove</button>
+                  </div>
+                : <span style={{ color:'#374151', fontSize:11 }}>No image selected — module will show default 🎓 icon</span>
+              }
+            </div>
           </div>
           <div style={{ marginBottom:12 }}>
             <label style={lbl}>Description *</label>
