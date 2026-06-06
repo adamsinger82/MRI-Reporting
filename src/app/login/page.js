@@ -4890,12 +4890,12 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
           )}
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
             <button
-              onClick={() => { window.open(activeModule.url, '_blank'); if (currentUser && !completedIds.has(activeModule.id)) { setTimeout(() => markComplete(activeModule.id), 3000); } }}
+              onClick={(e) => { e.stopPropagation(); window.open(activeModule.url, '_blank'); }}
               style={{ padding:'12px 28px', background:'linear-gradient(135deg,rgba(99,179,237,0.25),rgba(99,179,237,0.1))', border:'1px solid rgba(99,179,237,0.4)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer' }}>
               🎓 Launch Module →
             </button>
             {currentUser && !completedIds.has(activeModule.id) && (
-              <button onClick={() => markComplete(activeModule.id)}
+              <button onClick={(e) => { e.stopPropagation(); markComplete(activeModule.id); }}
                 style={{ padding:'12px 22px', background:'rgba(104,211,145,0.1)', border:'1px solid rgba(104,211,145,0.25)', borderRadius:10, color:'#68d391', fontSize:13, fontWeight:700, cursor:'pointer' }}>
                 ✅ Mark as Complete
               </button>
