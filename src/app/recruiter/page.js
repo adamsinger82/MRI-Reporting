@@ -80,38 +80,39 @@ export default function RecruiterPage() {
       const data = await res.json();
       if (data.error) { setAuthErr(data.error_description || data.error); setAuthLoading(false); return; }
 
-      // Step 2: Create recruiter profile
+      // Step 2: Create recruiter profile via server-side API route (uses service role key safely)
       if (data.user?.id) {
-        const key   = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        const token = data.access_token || key;
-        await fetch(sbU('recruiter_profiles'), {
+        const profileRes = await fetch('/api/create-recruiter', {
           method: 'POST',
-          headers: { 'Content-Type':'application/json', 'apikey': key, 'Authorization': `Bearer ${token}`, 'Prefer':'return=minimal' },
-          body: JSON.stringify({ user_id: data.user.id, company_name: company, contact_name: contactName, email, post_credits: 0 })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: data.user.id, company_name: company, contact_name: contactName, email }),
         });
+        if (!profileRes.ok) {
+          const err = await profileRes.json();
+          setAuthErr('Account created but profile setup failed. Please contact support.');
+          setAuthLoading(false);
+          return;
+        }
 
-        // Step 3: Auto-login immediately - no email confirmation needed
-        const loginRes = await fetch(authU('token?grant_type=password'), {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json', 'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY },
-          body: JSON.stringify({ email, password })
-        });
-        const loginData = await loginRes.json();
-
-        if (loginData.access_token) {
+        // Step 3: Use the access_token from signup directly — avoids email confirmation requirement
+        if (data.access_token) {
           const profile = { user_id: data.user.id, company_name: company, contact_name: contactName, email, post_credits: 0 };
-          setRecruiter({ ...loginData, profile });
-          await loadDashboard(loginData, profile);
+          setRecruiter({ ...data, profile });
+          await loadDashboard(data, profile);
           setView('dashboard');
           setAuthLoading(false);
           return;
         }
+
+        // Fallback: if no access_token (e.g. email confirmation required), tell them to check email
+        setView('login');
+        setPassword('');
+        setAuthErr('Account created! Check your email to confirm, then log in here.');
+        setAuthLoading(false);
+        return;
       }
 
-      // Fallback if auto-login fails
-      setView('login');
-      setPassword('');
-      setAuthErr('Account created! You can now log in.');
+      setAuthErr('Signup failed. Please try again.');
     } catch(e) { setAuthErr('Signup error. Please try again.'); }
     setAuthLoading(false);
   };
@@ -175,9 +176,7 @@ export default function RecruiterPage() {
               <div style={{ color:'rgba(255,255,255,0.35)', fontSize:12, marginTop:2 }}>Reach MSK radiologists nationwide</div>
             </div>
           </div>
-          {!recruiter && (
-            <a href="/" style={{ color:'#4a5568', fontSize:12, textDecoration:'none', padding:'6px 14px', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>← Back to LucidMSK</a>
-          )}
+
         </div>
       </div>
 
