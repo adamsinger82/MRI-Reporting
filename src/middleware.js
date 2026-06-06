@@ -27,8 +27,13 @@ export async function middleware(request) {
   const { data: { session } } = await supabase.auth.getSession();
   const { pathname } = request.nextUrl;
 
-  // Allow login page and API routes without auth
-  if (pathname.startsWith("/login") || pathname.startsWith("/api/")) {
+  // Allow these routes without auth
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/recruiter") ||
+    pathname.startsWith("/auth/callback")
+  ) {
     return response;
   }
 
