@@ -10,38 +10,91 @@ export default function AuthCallback() {
   useEffect(() => {
     const handle = async () => {
       try {
-        // Supabase puts the token in the URL hash after confirmation
-        const hash = window.location.hash;
-        const params = new URLSearchParams(hash.replace('#', ''));
-        const accessToken  = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type         = params.get('type'); // 'signup' or 'recovery'
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        if (!accessToken) {
-          setStatus('Invalid or expired confirmation link.');
+        // Supabase can put the token in either the hash or query params depending on flow
+        const hash        = window.location.hash;
+        const queryParams = new URLSearchParams(window.location.search);
+        const hashParams  = new URLSearchParams(hash.replace('#', ''));
+
+        const accessToken  = hashParams.get('access_token');
+        const tokenHash    = queryParams.get('token_hash');
+        const type         = hashParams.get('type') || queryParams.get('type') || 'signup';
+
+        // --- Flow A: token_hash in query string (new Supabase email template format) ---
+        if (tokenHash) {
+          setStatus('Verifying your email...');
+          const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': key },
+            body: JSON.stringify({ token_hash: tokenHash, type: 'signup' }),
+          });
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.error || !verifyData.access_token) {
+            setStatus('Confirmation link is invalid or expired. Please request a new one.');
+            return;
+          }
+
+          await finishSetup(verifyData.access_token, verifyData.user?.id, key);
           return;
         }
 
-        // Check if this user has a recruiter_profiles row
-        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        const profileRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/recruiter_profiles?select=user_id&limit=1`,
-          { headers: { 'apikey': key, 'Authorization': `Bearer ${accessToken}` } }
-        );
-        const profiles = await profileRes.json();
-
-        if (Array.isArray(profiles) && profiles.length > 0) {
-          // Recruiter — send to recruiter portal
-          setStatus('Account confirmed! Redirecting to Recruiter Portal...');
-          window.location.href = '/recruiter';
-        } else {
-          // Main app user — send to main login
-          setStatus('Account confirmed! Redirecting to LucidMSK...');
-          window.location.href = '/';
+        // --- Flow B: access_token in hash (legacy Supabase format) ---
+        if (accessToken) {
+          await finishSetup(accessToken, null, key);
+          return;
         }
+
+        setStatus('Invalid confirmation link. Please try signing up again.');
       } catch (e) {
         console.error('Auth callback error:', e);
         setStatus('Something went wrong. Please try logging in directly.');
+      }
+    };
+
+    const finishSetup = async (accessToken, userId, key) => {
+      // Check if there's a pending recruiter profile to create
+      const pendingRaw = localStorage.getItem('pending_recruiter');
+
+      if (pendingRaw) {
+        setStatus('Setting up your recruiter account...');
+        try {
+          const pending = JSON.parse(pendingRaw);
+
+          // Create the recruiter profile via server-side API route
+          const profileRes = await fetch('/api/create-recruiter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pending),
+          });
+
+          if (profileRes.ok) {
+            localStorage.removeItem('pending_recruiter');
+            setStatus('Account confirmed! Redirecting to Recruiter Portal...');
+            setTimeout(() => { window.location.href = '/recruiter'; }, 1000);
+            return;
+          } else {
+            console.error('Profile create failed:', await profileRes.text());
+          }
+        } catch (e) {
+          console.error('Recruiter profile setup error:', e);
+        }
+      }
+
+      // No pending recruiter — check if they already have a recruiter_profiles row
+      const profileRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/recruiter_profiles?select=user_id&limit=1`,
+        { headers: { 'apikey': key, 'Authorization': `Bearer ${accessToken}` } }
+      );
+      const profiles = await profileRes.json();
+
+      if (Array.isArray(profiles) && profiles.length > 0) {
+        setStatus('Account confirmed! Redirecting to Recruiter Portal...');
+        setTimeout(() => { window.location.href = '/recruiter'; }, 1000);
+      } else {
+        setStatus('Account confirmed! Redirecting to LucidMSK...');
+        setTimeout(() => { window.location.href = '/'; }, 1000);
       }
     };
 
@@ -68,7 +121,7 @@ export default function AuthCallback() {
         borderRadius: 12,
         padding: '28px 36px',
         textAlign: 'center',
-        maxWidth: 400,
+        maxWidth: 420,
       }}>
         <div style={{ fontSize: 32, marginBottom: 16 }}>✉️</div>
         <div style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 700, marginBottom: 8 }}>

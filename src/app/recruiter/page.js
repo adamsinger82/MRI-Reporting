@@ -80,19 +80,14 @@ export default function RecruiterPage() {
       const data = await res.json();
       if (data.error) { setAuthErr(data.error_description || data.error); setAuthLoading(false); return; }
 
-      // Step 2: Create recruiter profile via server-side API route (uses service role key safely)
+      // Step 2: Store recruiter details for callback to pick up after email confirmation
       if (data.user?.id) {
-        const profileRes = await fetch('/api/create-recruiter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: data.user.id, company_name: company, contact_name: contactName, email }),
-        });
-        if (!profileRes.ok) {
-          const err = await profileRes.json();
-          setAuthErr('Account created but profile setup failed. Please contact support.');
-          setAuthLoading(false);
-          return;
-        }
+        localStorage.setItem('pending_recruiter', JSON.stringify({
+          user_id: data.user.id,
+          company_name: company,
+          contact_name: contactName,
+          email,
+        }));
 
         // Step 3: Use the access_token from signup directly — avoids email confirmation requirement
         if (data.access_token) {
@@ -104,10 +99,10 @@ export default function RecruiterPage() {
           return;
         }
 
-        // Fallback: if no access_token (e.g. email confirmation required), tell them to check email
+        // With email confirmation ON, auto-login won't work yet — tell them to confirm
         setView('login');
         setPassword('');
-        setAuthErr('Account created! Check your email to confirm, then log in here.');
+        setAuthErr('Account created! Please check your email and click the confirmation link to complete setup.');
         setAuthLoading(false);
         return;
       }
