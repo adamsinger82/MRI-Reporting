@@ -3456,6 +3456,22 @@ const ATLAS_JOINTS = {
         slices: localSlices(17, 2),
         ext: '.jpg',
         pad: 4,
+        permanentLabels: {
+          3: [[65.4,87.7,"flexor carpi ulnaris","#7c2d12"]],
+          4: [[64.5,74.6,"flexor carpi ulnaris","#7c2d12"],[65.2,67.7,"flexor carpi ulnaris","#7c2d12"],[31.4,22.7,"flexor pollicis brevis","#7c2d12"],[16.4,40.7,"abductor pollicis","#7c2d12"],[30.8,42.4,"opponens pollicis","#7c2d12"]],
+          6: [[31.7,22.7,"flexor pollicis longus","#7c2d12"],[45.6,56.4,"median nerve","#92400e"],[60,62.1,"ulnar nerve","#92400e"]],
+          7: [[39.7,37,"flexor pollicis longus","#7c2d12"],[43.8,58.5,"flexor pollicis longus","#7c2d12"],[42.2,82.1,"flexor pollicis longus","#7c2d12"],[59.8,47.2,"hook of hamate","#1e3a8a"],[67.5,62.1,"pisiform","#1e3a8a"],[65.2,51.7,"pisometacarpal ligament","#14532d"],[62,53.1,"pisohamate ligament","#14532d"],[55.5,69.7,"long radiolunate ligament","#14532d"],[80.9,37.5,"abductor digiti minimi","#7c2d12"],[73.7,30.1,"flexor digiti minimi","#7c2d12"]],
+          8: [[33.7,49.9,"trapezium","#1e3a8a"],[20.6,37,"1st metacarpal","#1e3a8a"],[16.1,4,"1st proximal phalanx","#1e3a8a"],[15.4,10,"1st MCP joint","#1e3a8a"],[46.5,30.8,"2nd flexor tendons","#7c2d12"],[51,32.6,"3rd flexor tendons","#7c2d12"],[56.6,31.4,"4th flexor tendons","#7c2d12"],[60.7,31.7,"5th flexor tendons","#7c2d12"],[34.3,41.6,"anterior oblique ligament","#14532d"],[58.7,66.5,"long radiolunate ligament","#14532d"],[61.6,70.4,"ulnolunate ligament","#14532d"]],
+          9: [[67,70.6,"TFC, ulnotriquetral ligament","#14532d"],[62.5,72.2,"TFC, ulnolunate ligament","#14532d"],[65.7,75.5,"TFC, volar radioulnar ligament","#14532d"],[63.6,70.8,"lunotriquetral ligament, volar band","#14532d"],[29.2,44.7,"1st CMC joint","#1e3a8a"],[34.1,40.6,"anterior oblique ligament","#14532d"],[24.7,49.6,"posterior 1st CMC ligament capsule","#14532d"],[25.8,50.5,"posterior 1st CMC ligament capsule","#14532d"],[45.4,68.3,"palmar radiocarpal ligament","#14532d"],[57.8,58,"triquetrohamatecapitate ligament","#14532d"],[60.7,66.8,"lunotriquetral ligament, volar band","#14532d"],[46,55.5,"scaphocapitate ligament","#14532d"]],
+          10: [[48.5,71.7,"scapholunate ligament, volar band","#14532d"],[39.5,52.1,"STT joint","#1e3a8a"],[52.2,75.3,"lunate facet","#1e3a8a"],[80.9,1.5,"5th proximal phalanx","#1e3a8a"],[81,5.1,"5th MCP joint","#1e3a8a"]],
+          11: [[63.2,73.7,"TFC, central disc","#14532d"],[59.8,75.5,"TFC, radial attachment","#14532d"],[55.5,69,"lunate","#1e3a8a"],[39.5,62.9,"scaphoid","#1e3a8a"],[65,63.8,"triquetrum","#1e3a8a"],[59.8,52.4,"hamate","#1e3a8a"],[64.5,45.1,"5th CMC joint","#1e3a8a"],[40.7,70.8,"scaphoid facet","#1e3a8a"],[72.9,30.1,"5th metacarpal","#1e3a8a"],[72.6,47.4,"extensor carpi ulnaris","#7c2d12"],[69.3,70.1,"meniscal homologue","#14532d"],[70.4,67.4,"UCL","#14532d"],[53.3,74.7,"proximal carpal row","#1e3a8a"],[28.3,44.5,"posterior 1st CMC ligament capsule","#14532d"],[31.9,65,"radial collateral ligament","#14532d"]],
+          12: [[43.3,82.7,"radius","#1e3a8a"],[68.4,85,"ulna","#1e3a8a"],[58.4,81.8,"distal radioulnar joint","#1e3a8a"],[57.6,79.6,"radial sigmoid notch","#1e3a8a"],[68.6,78.2,"TFC, foveal attachment","#14532d"],[71,74.7,"TFC, styloid attachment","#14532d"],[72.2,77.6,"ulnar styloid process","#1e3a8a"],[62.3,74.6,"TFC, central disc","#14532d"],[64.1,70.2,"lunotriquetral ligament, membranous","#14532d"],[49.7,71.5,"scapholunate ligament, membranous","#14532d"],[50.6,55.3,"capitate","#1e3a8a"],[33.9,69.2,"radial styloid process","#1e3a8a"],[72.2,53.5,"extensor carpi ulnaris","#7c2d12"],[28.9,68.6,"1st extensor compartment tendons","#7c2d12"],[53.1,64.7,"mid carpal row","#1e3a8a"],[30.7,38.9,"intermetacarpal ligament","#14532d"]],
+          13: [[63.4,69.9,"lunotriquetral ligament, dorsal band","#14532d"],[39.3,50.5,"trapezoid","#1e3a8a"],[62.7,44.5,"4th CMC joint","#1e3a8a"],[70.2,68.6,"extensor carpi ulnaris","#7c2d12"],[72.2,38.2,"extensor digiti minimi","#7c2d12"]],
+          14: [[62.5,74,"TFC, dorsal radioulnar ligament","#14532d"],[51.2,69,"scapholunate ligament, dorsal band","#14532d"],[38.8,44.9,"2nd CMC joint","#1e3a8a"],[51.3,44.7,"3rd CMC joint","#1e3a8a"],[72.4,83,"extensor carpi ulnaris","#7c2d12"],[29,51,"extensor pollicis longus","#7c2d12"],[68.4,51.2,"extensor digiti minimi","#7c2d12"]],
+          15: [[64.1,75.6,"TFC, dorsal radioulnar ligament","#14532d"],[38,33,"2nd metacarpal","#1e3a8a"],[51.2,31.2,"3rd metacarpal","#1e3a8a"],[63.4,29,"4th metacarpal","#1e3a8a"],[31.9,53.3,"extensor pollicis longus","#7c2d12"],[34.6,55.7,"extensor carpi radialis longus","#7c2d12"],[52.2,58.4,"dorsal intercarpal ligament","#14532d"],[52.8,69,"dorsal radiocarpal ligament","#14532d"]],
+          16: [[42.5,71.5,"Lister's tubercle","#1e3a8a"],[56.7,64.7,"extensor digitorum communis","#7c2d12"]],
+          17: [[45.2,75.1,"extensor pollicis longus","#7c2d12"],[42.7,56.9,"extensor carpi radialis brevis","#7c2d12"]],
+        },
       },
     },
     view: 'MRI — wrist',
@@ -5260,7 +5276,6 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
             { id:'research', label:'📰 Latest Research' },
             { id:'cme',      label:'🎓 CME' },
             { id:'jobs',     label:'💼 Jobs Board' },
-            ...(currentUser ? [{ id:'post', label:'➕ Post a Job' }] : []),
             ...(isAdmin     ? [{ id:'admin', label:`🛡️ Admin${pending.length > 0 ? ` (${pending.length})` : ''}` }] : []),
           ].map(t => (
             <button key={t.id}
@@ -5286,7 +5301,6 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
                 <div style={{ textAlign:'center',color:'#4a5568',padding:'48px 24px' }}>
                   <div style={{ fontSize:40,marginBottom:12 }}>🩻</div>
                   <div style={{ fontSize:14 }}>No active job postings yet.</div>
-                  {currentUser && <div style={{ fontSize:12,marginTop:8,color:'#374151' }}>Use "Post a Job" tab to add the first listing.</div>}
                 </div>
               )}
               {jobs.map(job => (
@@ -5314,43 +5328,6 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* ── Post a Job tab ── */}
-          {tab === 'post' && currentUser && (
-            <div>
-              <div style={{ color:'#90cdf4',fontSize:15,fontWeight:700,marginBottom:6,paddingBottom:10,borderBottom:'1px solid rgba(99,179,237,0.1)' }}>Submit a Job Posting</div>
-              <p style={{ color:'#4a5568',fontSize:12,marginBottom:20 }}>MSK radiology clinical, research, and industry roles only. Posts are reviewed before going live and expire after 30 days.</p>
-              {formErr && <div style={{ color:'#fc8181',background:'rgba(245,101,101,0.08)',border:'1px solid rgba(245,101,101,0.2)',borderRadius:8,padding:'10px 14px',fontSize:13,marginBottom:16 }}>{formErr}</div>}
-              {formOk  && <div style={{ color:'#68d391',background:'rgba(104,211,145,0.08)',border:'1px solid rgba(104,211,145,0.2)',borderRadius:8,padding:'10px 14px',fontSize:13,marginBottom:16 }}>{formOk}</div>}
-              {!formOk && (
-                <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
-                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14 }}>
-                    <div><label style={lbl}>Job Title *</label><input style={inp} value={form.title} onChange={setField('title')} placeholder="e.g. MSK Radiologist — Academic Practice" /></div>
-                    <div><label style={lbl}>Institution / Organization *</label><input style={inp} value={form.institution} onChange={setField('institution')} placeholder="e.g. Mayo Clinic" /></div>
-                  </div>
-                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14 }}>
-                    <div><label style={lbl}>Location *</label><input style={inp} value={form.location} onChange={setField('location')} placeholder="City, State / Remote" /></div>
-                    <div><label style={lbl}>Job Type *</label>
-                      <select style={inp} value={form.job_type} onChange={setField('job_type')}>
-                        {JOB_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:14 }}>
-                    <div><label style={lbl}>Salary Range <span style={{ color:'#374151',fontWeight:400 }}>(optional)</span></label><input style={inp} value={form.salary_range} onChange={setField('salary_range')} placeholder="e.g. $400k–$500k / Competitive" /></div>
-                    <div><label style={lbl}>Application Link or Email *</label><input style={inp} value={form.apply_link} onChange={setField('apply_link')} placeholder="https://careers.org/job or hr@org.com" /></div>
-                  </div>
-                  <div><label style={lbl}>Job Description *</label>
-                    <textarea style={{ ...inp, minHeight:100, resize:'vertical' }} value={form.description} onChange={setField('description')} placeholder="Describe the role, responsibilities, qualifications, and any relevant details..." />
-                  </div>
-                  <button onClick={submitJob} disabled={submitting}
-                    style={{ alignSelf:'flex-start',padding:'11px 26px',background:'linear-gradient(135deg,rgba(99,179,237,0.25),rgba(99,179,237,0.1))',border:'1px solid rgba(99,179,237,0.4)',borderRadius:10,color:'#90cdf4',fontSize:14,fontWeight:700,cursor:submitting?'not-allowed':'pointer',transition:'all 0.2s' }}>
-                    {submitting ? '⏳ Submitting...' : '📤 Submit for Review'}
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
