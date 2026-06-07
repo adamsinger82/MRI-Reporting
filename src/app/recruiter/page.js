@@ -80,38 +80,35 @@ export default function RecruiterPage() {
       const data = await res.json();
       if (data.error) { setAuthErr(data.error_description || data.error); setAuthLoading(false); return; }
 
-      // Step 2: Store recruiter details for callback to pick up after email confirmation
-      if (data.user?.id) {
-        try {
-          localStorage.setItem('pending_recruiter', JSON.stringify({
-            user_id: data.user.id,
-            company_name: company,
-            contact_name: contactName,
-            email,
-          }));
-        } catch(lsErr) {
-          console.warn('localStorage unavailable:', lsErr);
-        }
+      // When email confirmations are ON, Supabase may return user with null id
+      // Store what we have and always tell them to check email
+      const userId = data.user?.id || data.id;
+      try {
+        localStorage.setItem('pending_recruiter', JSON.stringify({
+          user_id: userId || null,
+          company_name: company,
+          contact_name: contactName,
+          email,
+        }));
+      } catch(lsErr) {
+        console.warn('localStorage unavailable:', lsErr);
+      }
 
-        // Step 3: Use the access_token from signup directly — avoids email confirmation requirement
-        if (data.access_token) {
-          const profile = { user_id: data.user.id, company_name: company, contact_name: contactName, email, post_credits: 0 };
-          setRecruiter({ ...data, profile });
-          await loadDashboard(data, profile);
-          setView('dashboard');
-          setAuthLoading(false);
-          return;
-        }
-
-        // With email confirmation ON, auto-login won't work yet — tell them to confirm
-        setView('login');
-        setPassword('');
-        setAuthErr('Account created! Please check your email and click the confirmation link to complete setup.');
+      // If we got a valid access_token, auto-login immediately
+      if (data.access_token && userId) {
+        const profile = { user_id: userId, company_name: company, contact_name: contactName, email, post_credits: 0 };
+        setRecruiter({ ...data, profile });
+        await loadDashboard(data, profile);
+        setView('dashboard');
         setAuthLoading(false);
         return;
       }
 
-      setAuthErr('Signup failed. Please try again.');
+      // Email confirmation required — tell them to check inbox
+      setView('login');
+      setPassword('');
+      setAuthErr('Account created! Please check your email and click the confirmation link to complete setup.');
+      setAuthLoading(false);
     } catch(e) { console.error('Signup error:', e); setAuthErr('Signup failed: ' + (e?.message || 'Please try again.')); }
     setAuthLoading(false);
   };
