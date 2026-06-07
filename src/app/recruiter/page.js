@@ -32,8 +32,8 @@ const JOB_TYPES = [
 ];
 
 const emptyForm = {
-  title: '', institution: '', location: '', job_type: 'Full-Time Clinical',
-  salary_range: '', apply_link: '', description: '', specialty: 'MSK Radiology',
+  title: '', specialty: '', location: '', job_type: 'Full-Time Clinical',
+  salary_range: '', apply_link: '', description: '',
 };
 
 // ── Shared styles ────────────────────────────────────────────────────────────
@@ -296,7 +296,7 @@ function PostJobView({ session, credits, onSuccess, onBack }) {
   const submit = async () => {
     setErr(''); setOk('');
     if (!form.title.trim())       return setErr('Job title is required.');
-    if (!form.institution.trim()) return setErr('Institution is required.');
+    if (!form.specialty.trim())   return setErr('Institution is required.');
     if (!form.location.trim())    return setErr('Location is required.');
     if (!form.apply_link.trim())  return setErr('Application link or email is required.');
     if (!form.description.trim()) return setErr('Description is required.');
@@ -376,7 +376,7 @@ function PostJobView({ session, credits, onSuccess, onBack }) {
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <div><label style={s.lbl}>Job title *</label><input style={s.inp} value={form.title} onChange={set('title')} placeholder="MSK Radiologist — Academic Practice" /></div>
-            <div><label style={s.lbl}>Institution / Organization *</label><input style={s.inp} value={form.institution} onChange={set('institution')} placeholder="Mayo Clinic" /></div>
+            <div><label style={s.lbl}>Institution / Organization *</label><input style={s.inp} value={form.specialty} onChange={set('specialty')} placeholder="Mayo Clinic" /></div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <div><label style={s.lbl}>Location *</label><input style={s.inp} value={form.location} onChange={set('location')} placeholder="City, State / Remote" /></div>
