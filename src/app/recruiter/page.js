@@ -304,53 +304,17 @@ function PostJobView({ session, credits, onSuccess, onBack }) {
 
     setBusy(true);
     try {
-      const expires = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
-
-      // ── 1. Insert the job post ───────────────────────────────────────────
-      const postRes = await fetch(sbUrl('job_posts'), {
+      // ── Submit via server-side API (bypasses RLS using service role key) ──
+      const postRes = await fetch('/api/create-job-post', {
         method:  'POST',
-        headers: { ...sbHeaders(session.access_token), 'Prefer': 'return=representation' },
-        body:    JSON.stringify({ ...form, user_id: session.user.id, status: 'pending', expires_at: expires }),
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ ...form, user_id: session.user.id }),
       });
       if (!postRes.ok) {
         const e = await postRes.json();
-        throw new Error(JSON.stringify(e));
+        throw new Error(e.error || 'Submission failed');
       }
-
-      // ── 2. Deduct one credit ─────────────────────────────────────────────
-      const newBalance = credits - 1;
-      const creditRes = await fetch(
-        sbUrl(`recruiter_profiles?user_id=eq.${session.user.id}`),
-        {
-          method:  'PATCH',
-          headers: { ...sbHeaders(session.access_token), 'Prefer': 'return=minimal' },
-          body:    JSON.stringify({ credits_balance: newBalance }),
-        }
-      );
-      if (!creditRes.ok) {
-        console.error('Credit deduction failed — post was created but credit not deducted');
-        // Don't throw — post succeeded, credit deduction is recoverable
-      }
-
-      // ── 3. Notify admin ──────────────────────────────────────────────────
-      try {
-        await fetch('/api/notify-admin', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({
-            subject: `[LucidMSK] New Recruiter Job Post: ${form.title}`,
-            html: `<div style="font-family:sans-serif;padding:24px;background:#0f1923;color:#e2e8f0;border-radius:12px;">
-              <h2 style="color:#90cdf4;">New Recruiter Job Post — Pending Approval</h2>
-              <p><b>Title:</b> ${form.title}</p>
-              <p><b>Institution:</b> ${form.institution}</p>
-              <p><b>Location:</b> ${form.location}</p>
-              <p><b>Type:</b> ${form.job_type}</p>
-              <p><b>Submitted by:</b> ${session.user.email}</p>
-              <p style="margin-top:20px;color:#718096;">Log in to LucidMSK → MSK Hub → Admin tab to approve or remove.</p>
-            </div>`,
-          }),
-        });
-      } catch(_) { /* non-fatal */ }
+      const { newBalance } = await postRes.json();
 
       onSuccess(newBalance);
 
