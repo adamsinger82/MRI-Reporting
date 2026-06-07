@@ -82,12 +82,16 @@ export default function RecruiterPage() {
 
       // Step 2: Store recruiter details for callback to pick up after email confirmation
       if (data.user?.id) {
-        localStorage.setItem('pending_recruiter', JSON.stringify({
-          user_id: data.user.id,
-          company_name: company,
-          contact_name: contactName,
-          email,
-        }));
+        try {
+          localStorage.setItem('pending_recruiter', JSON.stringify({
+            user_id: data.user.id,
+            company_name: company,
+            contact_name: contactName,
+            email,
+          }));
+        } catch(lsErr) {
+          console.warn('localStorage unavailable:', lsErr);
+        }
 
         // Step 3: Use the access_token from signup directly — avoids email confirmation requirement
         if (data.access_token) {
@@ -108,7 +112,7 @@ export default function RecruiterPage() {
       }
 
       setAuthErr('Signup failed. Please try again.');
-    } catch(e) { setAuthErr('Signup error. Please try again.'); }
+    } catch(e) { console.error('Signup error:', e); setAuthErr('Signup failed: ' + (e?.message || 'Please try again.')); }
     setAuthLoading(false);
   };
 
