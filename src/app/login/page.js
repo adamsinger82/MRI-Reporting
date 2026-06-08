@@ -1870,40 +1870,51 @@ function formatReport(txt, colors = {}) {
 }
 
 // ─── PERMANENT PELVIS ATLAS LABELS (T1 sequence) ────────────────────────────
-// 39 labels across 29 slices — accurately placed with new label editor
+// Labels accurately placed with label editor — SI joint labels updated 2026-06
 const PELVIS_LABELS = {
   2: [
     [77.5, 57.7, "gluteus medius"],
   ],
   4: [
     [56.9, 53.9, "L5"],
+    [62.5, 49, "psoas"],
   ],
   5: [
     [78.8, 55.0, "gluteus medius"],
+    [75, 52.4, "iliacus"],
+    [62.6, 47.5, "psoas"],
   ],
   6: [
     [59.0, 53.9, "L5"],
   ],
+  7: [
+    [62.8, 47.5, "psoas"],
+  ],
   8: [
     [79.4, 54.2, "gluteus medius"],
+    [74.7, 51.3, "iliacus"],
   ],
   9: [
     [68.5, 49.3, "lateral femoral cutaneous nerve"],
     [59.7, 54.0, "L5"],
+    [84.2, 42.1, "iliac bone"],
+    [63.1, 17.4, "rectus abdominis"],
   ],
   10: [
     [74.6, 71.2, "gluteus maximus"],
-    [59.5, 63.9, "SI joint, ligamentous portion"],
+    [64.4, 64.2, "SI joint, ligamentous portion"],
   ],
   11: [
     [69.7, 49.5, "lateral femoral cutaneous nerve"],
+    [64.3, 47.2, "psoas"],
   ],
   12: [
     [81.3, 52.9, "gluteus medius"],
     [60.8, 54.6, "L5"],
     [57.3, 58.8, "S1"],
     [52.6, 56.1, "Sacrum, S1"],
-    [58.5, 64.5, "SI joint, ligamentous portion"],
+    [74.7, 48.3, "iliacus"],
+    [63.2, 64.8, "SI joint, ligamentous portion"],
   ],
   13: [
     [77.6, 69.9, "gluteus maximus"],
@@ -1912,25 +1923,27 @@ const PELVIS_LABELS = {
   ],
   14: [
     [72.7, 46.8, "lateral femoral cutaneous nerve"],
-    [61.5, 57.3, "SI joint, synovial portion"],
-    [59, 66.3, "SI joint, ligamentous portion"],
+    [64.4, 64.8, "SI joint, ligamentous portion"],
+    [67.6, 56.9, "SI joint, synovial portion"],
   ],
   15: [
     [64.4, 46.3, "psoas muscle"],
     [81.2, 54.4, "gluteus medius"],
     [61.6, 55.2, "L5"],
     [58.6, 58.2, "S1"],
+    [65.5, 63.9, "SI joint, ligamentous portion"],
+    [67.2, 56.9, "SI joint, synovial portion"],
   ],
   16: [
     [74.2, 44.6, "lateral femoral cutaneous nerve"],
     [57.4, 65.3, "S2"],
     [53.6, 69.1, "Sacrum, S3"],
+    [75.2, 47, "iliacus"],
   ],
   17: [
     [81.8, 53.5, "gluteus medius"],
     [80.2, 66.8, "gluteus maximus"],
-    [60.7, 57.7, "SI joint, synovial portion"],
-    [60.5, 63.4, "SI joint, synovial portion"],
+    [65.8, 61.2, "SI joint, synovial portion"],
   ],
   18: [
     [68.8, 47.7, "femoral nerve"],
@@ -1943,6 +1956,9 @@ const PELVIS_LABELS = {
     [81.2, 52.3, "gluteus medius"],
     [63.8, 56.0, "L5"],
     [54.1, 73.3, "Sacrum, S4"],
+    [66.1, 45.4, "psoas"],
+    [75.3, 45.7, "iliacus"],
+    [65.3, 62.4, "SI joint, synovial portion"],
   ],
   20: [
     [63.9, 53.1, "obturator nerve"],
@@ -1951,7 +1967,7 @@ const PELVIS_LABELS = {
     [58.2, 71.6, "S3"],
     [67.1, 42.2, "iliacus"],
     [64.1, 53.1, "obturator nerve"],
-    [60, 62.2, "SI joint, synovial portion"],
+    [65.3, 62.4, "SI joint, synovial portion"],
   ],
   21: [
     [76.7, 35.3, "lateral femoral cutaneous nerve"],
@@ -1965,7 +1981,7 @@ const PELVIS_LABELS = {
     [64.0, 57.1, "L5"],
     [63.7, 60.3, "S1"],
     [59.4, 71.2, "S3"],
-    [60.4, 62.1, "SI joint, synovial portion"],
+    [66.2, 61.2, "SI joint, synovial portion"],
   ],
   23: [
     [65.0, 53.6, "obturator nerve"],
@@ -1973,11 +1989,14 @@ const PELVIS_LABELS = {
     [81.7, 51.8, "gluteus medius"],
     [61.9, 65.1, "S2"],
     [63.2, 68.1, "piriformis"],
+    [67.5, 43.9, "psoas"],
+    [75, 42.7, "iliacus"],
   ],
   24: [
     [82.5, 66.8, "gluteus maximus"],
     [80.4, 30.6, "anterior superior iliac spine"],
     [60.2, 70.6, "S3"],
+    [75.9, 29.6, "ilioinguinal nerve"],
   ],
   25: [
     [71.1, 41.9, "femoral nerve"],
@@ -1995,6 +2014,7 @@ const PELVIS_LABELS = {
     [82.1, 65.9, "gluteus maximus"],
     [65.0, 68.7, "piriformis"],
     [71.2, 40.7, "femoral nerve"],
+    [67.6, 44.3, "psoas"],
   ],
   28: [
     [67.6, 61.0, "sciatic nerve"],
@@ -2002,6 +2022,7 @@ const PELVIS_LABELS = {
     [71.2, 40.2, "femoral nerve"],
     [82.5, 51.2, "gluteus medius"],
     [61.9, 68.7, "S3"],
+    [75.3, 39.3, "iliacus"],
   ],
   29: [
     [82.6, 30.2, "tensor fascia lata"],
@@ -2009,6 +2030,8 @@ const PELVIS_LABELS = {
   ],
   30: [
     [83.3, 65.9, "gluteus maximus"],
+    [74.6, 30.7, "ilioinguinal nerve"],
+    [66.1, 41.4, "external iliac artery"],
   ],
   31: [
     [66.8, 52.0, "obturator nerve"],
@@ -2021,6 +2044,7 @@ const PELVIS_LABELS = {
     [68.3, 61.7, "sciatic nerve"],
     [82.0, 53.3, "gluteus medius"],
     [65.6, 44.3, "external iliac vein"],
+    [68.5, 42.3, "psoas"],
   ],
   33: [
     [83.1, 67.4, "gluteus maximus"],
@@ -2038,8 +2062,10 @@ const PELVIS_LABELS = {
     [80.5, 43.0, "gluteus minimus"],
     [83.7, 67.6, "gluteus maximus"],
     [78.4, 31.6, "sartorius"],
-    [76.7, 40.1, "Anterior inferior iliac spine"],
+    [76.7, 40.1, "anterior inferior iliac spine"],
     [66.4, 41.9, "external iliac vein"],
+    [72.3, 31, "ilioinguinal nerve"],
+    [68.1, 38.4, "external iliac artery"],
   ],
   36: [
     [83.3, 54.4, "gluteus medius"],
@@ -2051,11 +2077,13 @@ const PELVIS_LABELS = {
   37: [
     [85.0, 66.0, "gluteus maximus"],
     [84.7, 32.5, "tensor fascia lata"],
+    [70, 41.6, "psoas"],
   ],
   38: [
     [78.1, 43.4, "rectus femoris, reflected head"],
     [70.4, 41.7, "iliopsoas"],
     [66.6, 40.0, "external iliac vein"],
+    [69.3, 37.1, "external iliac artery"],
   ],
   39: [
     [71.7, 63.5, "sciatic nerve"],
@@ -2069,11 +2097,14 @@ const PELVIS_LABELS = {
     [84.7, 32.1, "tensor fascia lata"],
     [65.6, 73.7, "sacrotuberous ligament"],
     [53.3, 75.8, "coccyx"],
+    [68.4, 31.6, "ilioinguinal nerve"],
   ],
   40: [
-    [56.3, 25.5, "rectus abdominus"],
+    [56.3, 25.5, "rectus abdominis"],
     [67.1, 39.0, "external iliac vein"],
     [53.2, 88, "sciatic nerve"],
+    [81.8, 56.5, "piriformis"],
+    [69.4, 35.9, "external iliac artery"],
   ],
   41: [
     [84.9, 54.2, "gluteus medius"],
@@ -2086,13 +2117,16 @@ const PELVIS_LABELS = {
     [82.1, 43.6, "gluteus minimus"],
     [77.5, 31.4, "sartorius"],
     [67.2, 71.6, "sacrotuberous ligament"],
+    [72.3, 41.4, "iliopsoas"],
+    [79.7, 55.2, "superior gemellus"],
+    [69.9, 35.9, "common femoral artery"],
   ],
   43: [
     [64.1, 47.5, "obturator nerve"],
     [85.3, 54.6, "gluteus medius"],
     [84.5, 32.7, "tensor fascia lata"],
     [67.4, 68.1, "pudendal neurovascular bundle"],
-    [56.0, 27.6, "rectus abdominus"],
+    [56.0, 27.6, "rectus abdominis"],
     [67.4, 38.4, "external iliac vein"],
   ],
   44: [
@@ -2110,6 +2144,7 @@ const PELVIS_LABELS = {
     [71.9, 42.4, "iliopsoas"],
     [41.8, 88.5, "sciatic nerve"],
     [81.5, 54.2, "obturator internus"],
+    [69.9, 35.3, "common femoral artery"],
   ],
   46: [
     [72.3, 35.1, "femoral nerve"],
@@ -2118,6 +2153,7 @@ const PELVIS_LABELS = {
     [65.8, 66.0, "pudendal neurovascular bundle"],
     [52.1, 46.0, "urinary bladder"],
     [52.9, 61.5, "rectum"],
+    [78.9, 57.8, "inferior gemellus"],
   ],
   47: [
     [64.1, 46.6, "obturator nerve"],
@@ -2125,7 +2161,7 @@ const PELVIS_LABELS = {
     [86.8, 53.9, "gluteus medius"],
     [83.6, 69.3, "gluteus maximus"],
     [70.7, 67.8, "obturator internus"],
-    [56.3, 31.2, "rectus abdominus"],
+    [56.3, 31.2, "rectus abdominis"],
     [67.4, 37.9, "common femoral vein"],
     [63.2, 55.2, "obturator internus"],
   ],
@@ -2136,13 +2172,14 @@ const PELVIS_LABELS = {
     [69.1, 69.9, "sacrotuberous ligament"],
     [65.3, 63.8, "pudendal neurovascular bundle"],
     [63.7, 56.1, "obturator internus"],
+    [70.2, 36, "common femoral artery"],
   ],
   49: [
     [78.2, 63.4, "sciatic nerve"],
     [63.8, 44.8, "obturator nerve"],
     [85.0, 46.4, "gluteus minimus"],
     [72.5, 45.9, "iliopsoas"],
-    [52.5, 33.5, "rectus abdominus"],
+    [52.5, 33.5, "rectus abdominis"],
   ],
   50: [
     [74.9, 31.0, "sartorius"],
@@ -2198,6 +2235,8 @@ const PELVIS_LABELS = {
   ],
   55: [
     [65.0, 35.8, "great saphenous vein"],
+    [69.4, 36.8, "superficial femoral artery"],
+    [70.6, 39.8, "profunda femoral artery"],
   ],
   56: [
     [72.8, 32.1, "sartorius"],
@@ -2205,6 +2244,7 @@ const PELVIS_LABELS = {
     [76.8, 59.2, "quadratus femoris"],
     [59.0, 43.4, "adductor longus"],
     [74.3, 53.3, "iliopsoas"],
+    [62.6, 49, "adductor brevis"],
   ],
   57: [
     [85.8, 69.9, "gluteus maximus"],
@@ -2217,11 +2257,14 @@ const PELVIS_LABELS = {
     [76.0, 60.1, "quadratus femoris"],
     [61.9, 44.7, "adductor longus"],
     [74.0, 53.5, "iliopsoas"],
+    [64.6, 49.3, "adductor brevis"],
   ],
   59: [
     [77.0, 35.2, "rectus femoris"],
     [75.6, 63.0, "semimembranosus"],
     [76.2, 55.6, "femoral lesser trochanter"],
+    [69.1, 36.8, "superficial femoral artery"],
+    [71.1, 41.3, "profunda femoral artery"],
   ],
   60: [
     [87.4, 68.3, "gluteus maximus"],
@@ -2238,6 +2281,7 @@ const PELVIS_LABELS = {
     [75.9, 35.4, "rectus femoris"],
     [86.5, 37.1, "tensor fascia lata"],
     [73.5, 67.6, "semitendinosus"],
+    [69.1, 37.3, "superficial femoral artery"],
   ],
   63: [
     [58.2, 52.3, "gracilis"],
@@ -2246,6 +2290,7 @@ const PELVIS_LABELS = {
     [64.0, 37.9, "great saphenous vein"],
     [68.5, 40.7, "superficial femoral vein"],
     [69.5, 43.4, "deep femoral vein"],
+    [70.9, 43.6, "profunda femoral artery"],
   ],
   64: [
     [86.6, 69.9, "gluteus maximus"],
@@ -2256,9 +2301,11 @@ const PELVIS_LABELS = {
     [80.5, 62.8, "sciatic nerve"],
     [58.2, 52.9, "gracilis"],
     [75.2, 35.8, "rectus femoris"],
+    [68.4, 38.2, "superficial femoral artery"],
   ],
   66: [
     [51.5, 88.4, "sciatic nerve"],
+    [70.6, 45.7, "profunda femoral artery"],
   ],
   67: [
     [86.9, 67.6, "gluteus maximus"],
@@ -2280,11 +2327,13 @@ const PELVIS_LABELS = {
     [78.9, 64.7, "biceps femoris, long head"],
     [60.6, 39.6, "great saphenous vein"],
     [57.7, 53.1, "gracilis muscle"],
+    [71.1, 46.6, "profunda femoral artery"],
   ],
   71: [
     [85.0, 66.4, "gluteus maximus"],
     [86.9, 34.2, "tensor fascia lata"],
     [76.7, 68.7, "semitendinosus"],
+    [66.4, 39.5, "superficial femoral artery"],
   ],
   72: [
     [74.9, 35.2, "rectus femoris"],
@@ -2304,6 +2353,8 @@ const PELVIS_LABELS = {
     [72.7, 34.4, "rectus femoris"],
     [67.7, 43.2, "superficial femoral vein"],
     [70.4, 47.6, "deep femoral vein"],
+    [65.2, 40.4, "superficial femoral artery"],
+    [71.2, 48.6, "profunda femoral artery"],
   ],
   76: [
     [75.1, 63.2, "semimembranosus"],
@@ -2329,6 +2380,7 @@ const PELVIS_LABELS = {
     [63.8, 37.7, "sartorius"],
     [74.6, 67.6, "semitendinosus"],
     [73.1, 42.8, "vastus intermedius"],
+    [71.5, 50.4, "profunda femoral artery"],
   ],
   82: [
     [57.1, 58.0, "gracilis"],
@@ -2354,6 +2406,7 @@ const PELVIS_LABELS = {
   87: [
     [65.1, 45.3, "superficial femoral vein"],
     [70.7, 52.3, "deep femoral vein"],
+    [72.3, 51.7, "profunda femoral artery"],
   ],
   88: [
     [62.1, 39.6, "sartorius"],
@@ -2361,6 +2414,7 @@ const PELVIS_LABELS = {
   89: [
     [86.3, 62.8, "gluteus maximus"],
     [73.6, 63.0, "semimembranosus"],
+    [71.7, 51.7, "profunda femoral artery"],
   ],
   90: [
     [56.9, 60.1, "gracilis"],
@@ -2393,6 +2447,7 @@ const PELVIS_LABELS = {
   ],
   99: [
     [69.8, 36.5, "rectus femoris"],
+    [62.2, 48.6, "superficial femoral artery"],
   ],
   100: [
     [60.0, 46.6, "sartorius"],
@@ -3510,8 +3565,8 @@ const ATLAS_JOINTS = {
           12: [[71.7,80.3,"sacrotuberous ligament","#14532d"],[26.9,40.7,"gluteus minimus","#7c2d12"],[52.2,39.5,"femoral head","#1e3a8a"],[44.5,58,"obturator internus","#7c2d12"],[35.2,50.1,"obturator internus","#7c2d12"],[66.6,16.3,"common femoral artery","#991b1b"],[71.7,19.1,"common femoral vein","#4c1d95"]],
           13: [[61.1,15.5,"femoral nerve","#92400e"],[18.1,42.5,"iliiotibial tract/band","#14532d"],[33.4,17,"tensor fascia lata","#7c2d12"],[23.8,37.7,"gluteus medius","#7c2d12"],[26.5,54.9,"gluteus medius","#7c2d12"],[24.7,74.7,"gluteus maximus","#7c2d12"],[73.1,38.4,"obturator nerve","#92400e"],[34.8,57.5,"posterior superior facet of greater trochanter","#1e3a8a"],[53.5,63.9,"obturator internus","#7c2d12"],[66.3,16.3,"common femoral artery","#991b1b"],[70.6,19.3,"common femoral vein","#4c1d95"],[70.4,69.3,"pudendal nerve","#92400e"]],
           14: [[47,68.4,"sciatic nerve","#92400e"],[54.6,28.1,"iliacus","#7c2d12"],[60,28.7,"psoas","#7c2d12"],[68.6,78.2,"sacrotuberous ligament","#14532d"],[49.9,8.2,"sartorius","#7c2d12"],[48.7,16.4,"rectus femoris","#7c2d12"],[37.7,8.5,"lateral femoral cutaneous nerve","#92400e"],[33.7,58,"posterior superior facet of greater trochanter","#1e3a8a"],[71,55.5,"obturator internus","#7c2d12"],[66.1,16.8,"common femoral artery","#991b1b"],[71,19.3,"common femoral vein","#4c1d95"],[70.1,69,"pudendal nerve","#92400e"]],
-          15: [[52.2,24,"iliacus","#7c2d12"],[24.2,54.4,"gluteus medius","#7c2d12"],[74.6,36.4,"obturator foramen","#1e3a8a"],[45.6,42.9,"femoral neck","#1e3a8a"],[27.6,55.8,"lateral facet of greater trochanter","#1e3a8a"],[92.2,14.3,"rectus abdominus","#7c2d12"],[65.9,16.8,"common femoral artery","#991b1b"],[70.8,20,"common femoral vein","#4c1d95"],[73.1,60.7,"pudendal nerve","#92400e"]],
-          16: [[56,68.1,"conjoined tendon","#14532d"],[65.9,75.3,"sacrotuberous ligament","#14532d"],[54.8,9.6,"sartorius","#7c2d12"],[24,44.7,"gluteus minimus","#7c2d12"],[30.5,51,"greater trochanter","#1e3a8a"],[69.5,25.8,"pectineus","#7c2d12"],[92.4,14.8,"rectus abdominus","#7c2d12"],[65.2,17.2,"common femoral artery","#991b1b"],[69.9,20.6,"common femoral vein","#4c1d95"],[23.5,56.9,"trochanteric bursa","#14532d"]],
+          15: [[52.2,24,"iliacus","#7c2d12"],[24.2,54.4,"gluteus medius","#7c2d12"],[74.6,36.4,"obturator foramen","#1e3a8a"],[45.6,42.9,"femoral neck","#1e3a8a"],[27.6,55.8,"lateral facet of greater trochanter","#1e3a8a"],[92.2,14.3,"rectus abdominis","#7c2d12"],[65.9,16.8,"common femoral artery","#991b1b"],[70.8,20,"common femoral vein","#4c1d95"],[73.1,60.7,"pudendal nerve","#92400e"]],
+          16: [[56,68.1,"conjoined tendon","#14532d"],[65.9,75.3,"sacrotuberous ligament","#14532d"],[54.8,9.6,"sartorius","#7c2d12"],[24,44.7,"gluteus minimus","#7c2d12"],[30.5,51,"greater trochanter","#1e3a8a"],[69.5,25.8,"pectineus","#7c2d12"],[92.4,14.8,"rectus abdominis","#7c2d12"],[65.2,17.2,"common femoral artery","#991b1b"],[69.9,20.6,"common femoral vein","#4c1d95"],[23.5,56.9,"trochanteric bursa","#14532d"]],
           17: [[59.1,18.8,"femoral nerve","#92400e"],[44.2,69.9,"sciatic nerve","#92400e"],[57.6,36.8,"psoas","#7c2d12"],[53.9,35.2,"iliacus","#7c2d12"],[56.2,69.3,"conjoined tendon","#14532d"],[52.4,64.5,"semimembranosus","#7c2d12"],[65.6,74.9,"sacrotuberous ligament","#14532d"],[19.3,41.1,"iliiotibial tract/band","#14532d"],[29,18.8,"tensor fascia lata","#7c2d12"],[36.1,8.7,"lateral femoral cutaneous nerve","#92400e"],[22.4,73.1,"gluteus maximus","#7c2d12"],[24.7,46.7,"anterior facet of greater trochanter","#1e3a8a"],[70.6,27.1,"pectineus","#7c2d12"],[93.8,16.4,"aponeurotic plate","#14532d"],[65,18.2,"common femoral artery","#991b1b"],[69.2,21.1,"common femoral vein","#4c1d95"]],
           18: [[55.3,70.8,"conjoined tendon","#14532d"],[52.2,63.8,"semimembranosus","#7c2d12"],[64.7,74.2,"sacrotuberous ligament","#14532d"],[50.3,17,"rectus femoris","#7c2d12"],[69,27.2,"pectineus","#7c2d12"],[94,19.9,"adductor tubercle","#1e3a8a"],[68.8,21.8,"common femoral vein","#4c1d95"],[64.8,18.2,"superficial femoral artery","#991b1b"],[63.4,21.1,"deep femoral artery","#991b1b"]],
           19: [[58,20.4,"femoral nerve","#92400e"],[54.9,40,"iliopsoas","#7c2d12"],[54.9,71.7,"conjoined tendon","#14532d"],[52.8,63.9,"semimembranosus","#7c2d12"],[58.5,65.2,"ischial tuberosity","#1e3a8a"],[65.2,72,"sacrotuberous ligament","#14532d"],[50.3,16.1,"rectus femoris","#7c2d12"],[65.7,30.7,"pectineus","#7c2d12"],[86.6,34.6,"adductor brevis","#7c2d12"],[71.3,46.5,"obturator externus","#7c2d12"],[70.1,17,"great saphenous vein","#4c1d95"],[65,18.4,"superficial femoral artery","#991b1b"],[62.1,22.6,"deep femoral artery","#991b1b"]],
