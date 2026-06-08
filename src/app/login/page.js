@@ -7533,6 +7533,39 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
 const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const ADMIN_EMAIL = 'admin@lucidmsk.com';
+const ADMIN_EMAILS = ['admin@lucidmsk.com', 'adamsinger82@gmail.com'];
+const SESSION_TOKEN_KEY = 'msk_session_token';
+
+// Generate a random session token
+const generateSessionToken = () => `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+
+// Write session token to profiles table
+const writeSessionToken = async (userId, token, accessToken) => {
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: getAnonKey(),
+        Authorization: `Bearer ${accessToken}`,
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ session_token: token, session_updated_at: new Date().toISOString() }),
+    });
+  } catch(e) { console.warn('writeSessionToken failed', e); }
+};
+
+// Verify session token matches DB — returns 'valid' | 'invalid' | 'error'
+const verifySessionToken = async (userId, token, accessToken) => {
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}&select=session_token`, {
+      headers: { apikey: getAnonKey(), Authorization: `Bearer ${accessToken}` },
+    });
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return 'error';
+    return data[0].session_token === token ? 'valid' : 'invalid';
+  } catch { return 'error'; }
+};
 
 // ── Terms of Use text (rendered as JSX) ──────────────────────────────────────
 const TOU_TEXT = (
@@ -8231,7 +8264,9 @@ export default function DashboardPage() {
   // ── Auth state ────────────────────────────────────────────────────────────
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [approvalStatus, setApprovalStatus] = useState(null); // null=checking, true=approved, false=pending, 'rejected'=rejected
+  const [approvalStatus, setApprovalStatus] = useState(null);
+  const [sessionKickedOut, setSessionKickedOut] = useState(false);
+  const sessionCheckRef = useRef(null); // null=checking, true=approved, false=pending, 'rejected'=rejected
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showTouModal, setShowTouModal] = useState(false);
   const [userPrefs, setUserPrefs] = useState({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
@@ -8266,6 +8301,23 @@ export default function DashboardPage() {
       const prefs = loadUserPrefs(s.user.id);
       if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
       const restoredUser = { ...s.user, access_token: accessToken };
+
+      // ── Session token check (skip for admins) ──────────────────────────
+      if (!ADMIN_EMAILS.includes(restoredUser.email?.toLowerCase())) {
+        const storedToken = localStorage.getItem(SESSION_TOKEN_KEY);
+        if (storedToken) {
+          const result = await verifySessionToken(restoredUser.id, storedToken, accessToken);
+          if (result === 'invalid') {
+            // Another device logged in — kick this one out
+            localStorage.removeItem('msk_session');
+            localStorage.removeItem(SESSION_TOKEN_KEY);
+            setSessionKickedOut(true);
+            setAuthLoading(false);
+            return;
+          }
+        }
+      }
+
       setAuthUser(restoredUser);
       // Re-check approval on session restore
       if (restoredUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
@@ -8298,6 +8350,13 @@ export default function DashboardPage() {
     // Load prefs BEFORE setting authUser so auto-save guard doesn't overwrite them
     const prefs = loadUserPrefs(user.id);
     if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
+    setSessionKickedOut(false);
+    // ── Generate + write session token (skip for admins) ──────────────────
+    if (!ADMIN_EMAILS.includes(user.email?.toLowerCase())) {
+      const token = generateSessionToken();
+      localStorage.setItem(SESSION_TOKEN_KEY, token);
+      await writeSessionToken(user.id, token, user.access_token);
+    }
     setAuthUser(user);
     // Check approval status immediately after login (admin always bypasses)
     if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
@@ -8334,18 +8393,20 @@ export default function DashboardPage() {
     }
   };
   const handleSignOut = () => {
+    // Clear session token from localStorage
+    try { localStorage.removeItem(SESSION_TOKEN_KEY); } catch {}
+    // Clear session check interval
+    if (sessionCheckRef.current) { clearInterval(sessionCheckRef.current); sessionCheckRef.current = null; }
     // Wipe ALL auth-related storage synchronously — no server call needed
-    // (token expires server-side on its own; calling the endpoint risks a redirect)
     try {
       localStorage.removeItem('msk_session');
-      // Also clear any Supabase-managed storage keys
       Object.keys(localStorage).forEach(k => {
         if (k.startsWith('sb-') || k.includes('supabase')) localStorage.removeItem(k);
       });
     } catch {}
-    // Reset React state directly — no redirect needed
     setAuthUser(null);
     setApprovalStatus(null);
+    setSessionKickedOut(false);
     setShowAdminPanel(false);
     setUserPrefs({ firstName:'', lastName:'', avatarMode:'initials', avatarChoice:'stethoscope' });
     setShowAvatarPopup(false);
@@ -8676,10 +8737,46 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, [showAvatarPopup]);
 
+  // ── Periodic session token check every 5 minutes ──────────────────────────
+  useEffect(() => {
+    if (!authUser || ADMIN_EMAILS.includes(authUser.email?.toLowerCase())) return;
+    const check = async () => {
+      const storedToken = localStorage.getItem(SESSION_TOKEN_KEY);
+      if (!storedToken) return;
+      const result = await verifySessionToken(authUser.id, storedToken, authUser.access_token);
+      if (result === 'invalid') {
+        if (sessionCheckRef.current) { clearInterval(sessionCheckRef.current); sessionCheckRef.current = null; }
+        try { localStorage.removeItem('msk_session'); localStorage.removeItem(SESSION_TOKEN_KEY); } catch {}
+        setAuthUser(null);
+        setApprovalStatus(null);
+        setSessionKickedOut(true);
+      }
+    };
+    sessionCheckRef.current = setInterval(check, 5 * 60 * 1000); // every 5 min
+    return () => { if (sessionCheckRef.current) clearInterval(sessionCheckRef.current); };
+  }, [authUser]);
+
   // ── AUTH GATE ── after all hooks ───────────────────────────────────────────
   if (authLoading) return (
     <div style={{ minHeight:'100vh',background:'#0a0f1e',display:'flex',alignItems:'center',justifyContent:'center' }}>
       <div style={{ color:'rgba(255,255,255,0.4)',fontSize:14 }}>⏳ Loading…</div>
+    </div>
+  );
+  // ── Session kicked out gate ────────────────────────────────────────────────
+  if (sessionKickedOut) return (
+    <div style={{ minHeight:'100vh', background:'#0a0f1e', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
+      <div style={{ background:'#0f172a', border:'1px solid rgba(245,101,101,0.3)', borderRadius:16, padding:'40px 36px', maxWidth:420, textAlign:'center', boxShadow:'0 8px 40px rgba(0,0,0,0.5)' }}>
+        <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
+        <div style={{ color:'#f87171', fontSize:18, fontWeight:800, marginBottom:10 }}>Signed Out</div>
+        <div style={{ color:'#94a3b8', fontSize:14, lineHeight:1.7, marginBottom:28 }}>
+          Your account was signed in on another device.<br/>
+          Each account can only be active on one device at a time.
+        </div>
+        <button onClick={() => setSessionKickedOut(false)}
+          style={{ padding:'12px 32px', background:'linear-gradient(135deg,rgba(99,179,237,0.2),rgba(99,179,237,0.08))', border:'1px solid rgba(99,179,237,0.35)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+          Sign In Again
+        </button>
+      </div>
     </div>
   );
   if (!authUser) return <LoginPage onLogin={handleLogin} />;
