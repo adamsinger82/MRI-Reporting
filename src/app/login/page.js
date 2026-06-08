@@ -1909,7 +1909,6 @@ const PELVIS_LABELS = {
     [77.6, 69.9, "gluteus maximus"],
     [56.8, 64.7, "S2"],
     [53.3, 62.2, "Sacrum, S2"],
-    [71.1, 41.4, "iliac bone"],
   ],
   14: [
     [72.7, 46.8, "lateral femoral cutaneous nerve"],
@@ -3560,6 +3559,32 @@ const ATLAS_JOINTS = {
         slices: Array.from({length:28},(_,i)=>i+1),
         ext: '.webp',
         pad: 0,
+        permanentLabels: {
+          3:  [[65.2,49.4,"gluteus maximus","#7c2d12"]],
+          6:  [[72.4,38,"gluteus maximus","#7c2d12"]],
+          7:  [[23.6,72.6,"tensor fascia lata","#7c2d12"],[48.8,50.5,"gluteus medius","#7c2d12"],[44.3,19.7,"gluteus medius","#7c2d12"],[69.2,24,"gluteus maximus","#7c2d12"]],
+          8:  [[21.1,68.8,"tensor fascia lata","#7c2d12"],[41.6,46.5,"gluteus minimus","#7c2d12"],[47.9,44.5,"gluteus medius","#7c2d12"],[52.1,44.2,"gluteus medius","#7c2d12"],[45.2,13.6,"gluteus medius","#7c2d12"]],
+          9:  [[70.4,33.5,"gluteus maximus","#7c2d12"],[46.1,53.5,"greater trochanter","#1e3a8a"],[39.3,45.4,"gluteus minimus","#7c2d12"],[47.2,34.1,"gluteus medius","#7c2d12"],[47.6,17.3,"gluteus medius","#7c2d12"],[47.8,42.4,"gluteus medius","#7c2d12"],[54.9,44,"gluteus medius","#7c2d12"]],
+          10: [[46.1,47,"piriformis","#7c2d12"],[18.1,54.2,"tensor fascia lata","#7c2d12"],[35.7,43.3,"gluteus minimus","#7c2d12"],[33,85.5,"vastus lateralis","#7c2d12"]],
+          11: [[51,44.7,"piriformis","#7c2d12"],[46.7,47.6,"obturator internus","#7c2d12"],[46,62.3,"intertrochanteric femur","#1e3a8a"],[31.9,28.1,"gluteus minimus","#7c2d12"],[45.1,17,"gluteus medius","#7c2d12"]],
+          12: [[54.6,42.5,"piriformis","#7c2d12"],[51.9,47,"obturator internus","#7c2d12"],[75.1,31.7,"gluteus maximus","#7c2d12"],[17.9,39.1,"tensor fascia lata","#7c2d12"],[26.2,17,"gluteus minimus","#7c2d12"]],
+          13: [[66.5,62.3,"sciatic nerve","#92400e"],[54,47,"obturator internus (and gemelli)","#7c2d12"],[56.6,44.9,"superior gemellus","#7c2d12"],[55.8,50.5,"inferior gemellus","#7c2d12"],[42.4,11.4,"gluteus medius","#7c2d12"]],
+          14: [[41.5,38.6,"labrum, posterior superior","#14532d"],[46.1,41.6,"labrum, posterior","#14532d"],[66.8,55.5,"sciatic nerve","#92400e"],[57.1,41.5,"piriformis","#7c2d12"],[58.5,44.7,"superior gemellus","#7c2d12"],[59.3,52.1,"inferior gemellus","#7c2d12"],[58,63.2,"quadratus femoris","#7c2d12"],[17,34.8,"tensor fascia lata","#7c2d12"],[50.8,57.6,"obturator externus","#7c2d12"]],
+          15: [[33,38.9,"labrum, anterior superior","#14532d"],[39.8,38,"labrum, posterior superior","#14532d"],[51,47.2,"labrum, posterior","#14532d"],[59.4,48.7,"obturator internus","#7c2d12"],[42.5,54,"femoral neck","#1e3a8a"],[78.7,34.1,"gluteus maximus","#7c2d12"],[16.3,10.1,"anterior superior iliac spine","#1e3a8a"],[59.1,68.8,"quadratus femoris","#7c2d12"]],
+          16: [[31.2,41.1,"labrum, anterior superior","#14532d"],[51,50.6,"labrum, posterior","#14532d"],[66.5,48.3,"sciatic nerve","#92400e"],[50.3,74.7,"lesser trochanter","#1e3a8a"],[13.7,37,"sartorius","#7c2d12"],[49.4,58.5,"obturator externus","#7c2d12"],[63,67,"semimembranosus","#7c2d12"],[66.8,68.1,"conjoined hamstring tendon","#14532d"],[33,87.5,"vastus intermedius","#7c2d12"]],
+          17: [[30.7,43.8,"labrum, anterior","#14532d"],[50.8,52.1,"labrum, posterior inferior","#14532d"],[66.5,51.4,"obturator internus","#7c2d12"],[20.9,38.8,"rectus femoris","#7c2d12"],[56.6,65.7,"quadratus femoris","#7c2d12"],[13.4,48.5,"sartorius","#7c2d12"],[60.5,67.7,"semimembranosus","#7c2d12"],[67.2,63,"conjoined hamstring tendon","#14532d"]],
+          18: [[30.8,45.6,"labrum, anterior","#14532d"],[47.6,55.3,"labrum, posterior inferior","#14532d"],[41.6,35.2,"hip joint","#34d399"],[37.3,32.5,"acetabulum","#1e3a8a"],[66.1,43.4,"sciatic nerve","#92400e"],[42.4,46.3,"femoral head","#1e3a8a"],[45.2,68.3,"iliopsoas","#7c2d12"],[81.9,34.6,"gluteus maximus","#7c2d12"],[22.6,29.2,"anterior inferior iliac spine","#1e3a8a"],[19.3,72,"rectus femoris","#7c2d12"],[12.7,62.3,"sartorius","#7c2d12"],[51.2,62.9,"obturator externus","#7c2d12"],[63,76,"adductor magnus","#7c2d12"]],
+          19: [[32.5,50.5,"labrum, anterior inferior","#14532d"],[45.2,55.3,"labrum, posterior inferior","#14532d"],[63.9,62.3,"ischium","#1e3a8a"],[64.3,68.3,"ischial tuberosity","#1e3a8a"],[37.3,58.7,"iliopsoas","#7c2d12"],[14.6,59.3,"sartorius","#7c2d12"],[47.8,60.3,"obturator externus","#7c2d12"],[62.7,77.4,"adductor magnus","#7c2d12"]],
+          20: [[37.9,54,"transverse acetabular ligament","#14532d"],[55.8,14.1,"iliac bone","#1e3a8a"],[66.5,39.1,"sciatic nerve","#92400e"],[68.6,30.7,"piriformis","#7c2d12"],[70.2,50.8,"obturator internus","#7c2d12"],[32.8,52.8,"iliopsoas","#7c2d12"],[30.8,33.4,"iliacus","#7c2d12"],[14.3,66.8,"sartorius","#7c2d12"],[72.6,62.7,"sacrotuberous ligament","#14532d"]],
+          21: [[42.5,42,"ligamentum teres","#14532d"],[62.9,68.6,"ischium","#1e3a8a"],[65.9,35.2,"sciatic nerve","#92400e"],[29.6,44.9,"iliopsoas","#7c2d12"],[47.8,10.9,"iliacus","#7c2d12"],[87.2,32.8,"gluteus maximus","#7c2d12"],[49.4,64.7,"obturator externus","#7c2d12"],[75.1,58,"sacrotuberous ligament","#14532d"]],
+          22: [[66.8,34.8,"sciatic nerve","#92400e"],[15.9,75.1,"sartorius","#7c2d12"],[77.3,50.8,"sacrotuberous ligament","#14532d"]],
+          23: [[60.3,10.5,"iliac bone","#1e3a8a"],[67.7,31.7,"sciatic nerve","#92400e"],[74.4,27.8,"piriformis","#7c2d12"],[59.4,51.2,"obturator internus","#7c2d12"],[32.8,33.7,"psoas","#7c2d12"],[22,56.6,"femoral neurovascular bundle","#991b1b"],[82.7,36.6,"sacrotuberous ligament","#14532d"]],
+          24: [[69.3,3.5,"SI joint","#34d399"],[38.9,9.8,"psoas","#7c2d12"],[43.6,63.4,"obturator externus","#7c2d12"],[85.9,50.6,"gluteus maximus","#7c2d12"],[22.9,48.5,"femoral neurovascular bundle","#991b1b"]],
+          25: [[36.2,49.7,"superior pubic ramus","#1e3a8a"],[53.7,69.2,"inferior pubic ramus","#1e3a8a"],[96.2,33.2,"gluteus maximus","#7c2d12"]],
+          26: [[78.7,22.4,"piriformis","#7c2d12"],[39.7,60.9,"obturator externus","#7c2d12"],[48.5,75.5,"inferior pubic ramus","#1e3a8a"],[34.6,50.3,"superior pubic ramus","#1e3a8a"]],
+          27: [[74,5.8,"sacrum","#1e3a8a"],[29.2,81.6,"adductor longus","#7c2d12"],[32.6,71.1,"pectineus","#7c2d12"]],
+          28: [[12.3,15.9,"rectus abdominis","#7c2d12"],[40,77.1,"adductor brevis","#7c2d12"],[28.9,74,"adductor longus","#7c2d12"],[30.5,60.7,"pectineus","#7c2d12"]],
+        },
       },
     },
     view: 'MRI — hip',
@@ -4051,25 +4076,25 @@ function AtlasModal({ onClose }) {
             ))}
 
             {/* Layer toggles */}
-            <p style={{ fontSize:9,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'12px 0 3px' }}>Labels</p>
-            <div style={{ display:'flex',flexWrap:'wrap',gap:3 }}>
+            <p style={{ fontSize:9,fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.08em',margin:'12px 0 4px' }}>Labels</p>
+            <div style={{ display:'flex',flexDirection:'column',gap:4 }}>
               <button onClick={() => setVisibleLayers({ nerves:true,muscles:true,tendons:true,arteries:true,veins:true,bones:true,ligaments:true,joints:true,spaces:true,cartilage:true })}
-                style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All On</button>
+                style={{ padding:'5px 10px',borderRadius:6,fontSize:11,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer',textAlign:'left' }}>All On</button>
               <button onClick={() => setVisibleLayers({ nerves:false,muscles:false,tendons:false,arteries:false,veins:false,bones:false,ligaments:false,joints:false,spaces:false,cartilage:false })}
-                style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer' }}>All Off</button>
+                style={{ padding:'5px 10px',borderRadius:6,fontSize:11,fontWeight:700,border:'1px solid #475569',background:'#1e293b',color:'#94a3b8',cursor:'pointer',textAlign:'left' }}>All Off</button>
               {[
-                {key:'nerves',label:'Nerves',color:'#facc15'},
-                {key:'muscles',label:'Muscles',color:'#f97316'},
-                {key:'arteries',label:'Arteries',color:'#ef4444'},
-                {key:'veins',label:'Veins',color:'#60a5fa'},
-                {key:'bones',label:'Bones',color:'#e2e8f0'},
-                {key:'ligaments',label:'Ligaments',color:'#d1d5db'},
-                {key:'joints',label:'Joints',color:'#34d399'},
-                {key:'spaces',label:'Spaces',color:'#c084fc'},
-                {key:'cartilage',label:'Cartilage',color:'#67e8f9'},
+                {key:'nerves',    label:'Nerves',    color:'#facc15'},
+                {key:'muscles',   label:'Muscles',   color:'#f97316'},
+                {key:'arteries',  label:'Arteries',  color:'#ef4444'},
+                {key:'veins',     label:'Veins',     color:'#60a5fa'},
+                {key:'bones',     label:'Bones',     color:'#e2e8f0'},
+                {key:'joints',    label:'Joints',    color:'#34d399'},
+                {key:'cartilage', label:'Cartilage', color:'#67e8f9'},
+                {key:'ligaments', label:'Ligaments', color:'#a3e635'},
+                {key:'spaces',    label:'Spaces',    color:'#c084fc'},
               ].map(({key,label,color}) => (
                 <button key={key} onClick={() => setVisibleLayers(prev => ({...prev,[key]:!prev[key]}))}
-                  style={{ padding:'2px 6px',borderRadius:4,fontSize:8,fontWeight:700,border:'1px solid '+color,background:visibleLayers[key]?color+'33':'transparent',color:visibleLayers[key]?color:'#475569',cursor:'pointer' }}>
+                  style={{ padding:'5px 10px',borderRadius:6,fontSize:11,fontWeight:700,border:'1px solid '+color,background:visibleLayers[key]?color+'33':'transparent',color:visibleLayers[key]?color:'#475569',cursor:'pointer',textAlign:'left' }}>
                   {label}
                 </button>
               ))}
