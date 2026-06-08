@@ -4850,8 +4850,20 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   const [filterFmt, setFilterFmt]     = useState('All');
   const [completedIds, setCompletedIds] = useState(new Set());
   const [activeModule, setActiveModule] = useState(null);
-  const [showUpload, setShowUpload]   = useState(false);
-  const [uploadForm, setUploadForm]   = useState({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'' });
+  const [moduleTab, setModuleTab]       = useState('content');
+  const [contentViewed, setContentViewed] = useState(false);
+  const [testQuestions, setTestQuestions] = useState([]);
+  const [testAnswers, setTestAnswers]   = useState({});
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testResult, setTestResult]     = useState(null);
+  const [testLoading, setTestLoading]   = useState(false);
+  const [showUpload, setShowUpload]     = useState(false);
+  const [uploadForm, setUploadForm]     = useState({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'', content_type:'video', video_url:'', file_url:'' });
+  const [uploadQuestions, setUploadQuestions] = useState([
+    { question_text:'', options:['','','',''], correct_index:0 },
+    { question_text:'', options:['','','',''], correct_index:0 },
+    { question_text:'', options:['','','',''], correct_index:0 },
+  ]);
   const [uploadErr, setUploadErr]     = useState('');
   const [uploadOk, setUploadOk]       = useState('');
   const [saving, setSaving]           = useState(false);
@@ -4897,19 +4909,41 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
     setUploadErr(''); setUploadOk('');
     if (!uploadForm.title.trim())       return setUploadErr('Title is required.');
     if (!uploadForm.description.trim()) return setUploadErr('Description is required.');
-    if (!uploadForm.url.trim())         return setUploadErr('Module URL is required.');
+    const validQuestions = uploadQuestions.filter(q => q.question_text.trim() && q.options.every(o => o.trim()));
+    if (validQuestions.length < 3)      return setUploadErr('At least 3 complete questions required (all 4 options filled).');
     setSaving(true);
     try {
+      const payload = {
+        ...uploadForm,
+        status: 'published',
+        duration_min: parseInt(uploadForm.duration_min)||null,
+        created_by: currentUser?.id,
+        question_count: validQuestions.length,
+      };
       const res = await fetch(sbU('cme_modules'), {
         method: 'POST',
         headers: { ...sbH, 'Prefer': 'return=representation' },
-        body: JSON.stringify({ ...uploadForm, status: 'published', duration_min: parseInt(uploadForm.duration_min)||null, created_by: currentUser?.id })
+        body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error(await res.text());
       const [newMod] = await res.json();
+      // Save questions
+      for (let i = 0; i < validQuestions.length; i++) {
+        const q = validQuestions[i];
+        await fetch(sbU('cme_questions'), {
+          method: 'POST',
+          headers: { ...sbH, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ module_id: newMod.id, question_text: q.question_text, options: q.options, correct_index: q.correct_index, order_index: i })
+        });
+      }
       setModules(prev => [newMod, ...prev]);
-      setUploadOk('Module published successfully!');
-      setUploadForm({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'' });
+      setUploadOk(`Module published with ${validQuestions.length} questions!`);
+      setUploadForm({ title:'', specialty:'Knee', format:'Video Lecture', credits:'1.0', description:'', duration_min:'', url:'', objectives:'', author:'', thumbnail_url:'', content_type:'video', video_url:'', file_url:'' });
+      setUploadQuestions([
+        { question_text:'', options:['','','',''], correct_index:0 },
+        { question_text:'', options:['','','',''], correct_index:0 },
+        { question_text:'', options:['','','',''], correct_index:0 },
+      ]);
     } catch(e) { console.error('submitModule error', e); setUploadErr('Failed to publish. Please try again.'); }
     setSaving(false);
   };
@@ -4925,6 +4959,65 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
       setModules(prev => prev.filter(m => m.id !== moduleId));
       setActiveModule(null);
     } catch(e) { console.error('deleteModule error', e); alert('Delete failed. Check RLS policy — see instructions.'); }
+  };
+
+  const openModule = async (m) => {
+    setActiveModule(m);
+    setModuleTab('content');
+    setContentViewed(false);
+    setTestQuestions([]);
+    setTestAnswers({});
+    setTestSubmitted(false);
+    setTestResult(null);
+    // Pre-fetch questions
+    try {
+      const res = await fetch(sbU(`cme_questions?module_id=eq.${m.id}&order=order_index.asc`), { headers: sbH });
+      const data = await res.json();
+      if (Array.isArray(data)) setTestQuestions(data);
+    } catch(e) { console.error('loadQuestions error', e); }
+  };
+
+  const submitTest = async () => {
+    if (!currentUser || !activeModule) return;
+    setTestLoading(true);
+    const total = testQuestions.length;
+    if (total === 0) { setTestLoading(false); return; }
+    let correct = 0;
+    testQuestions.forEach(q => {
+      if (testAnswers[q.id] === q.correct_index) correct++;
+    });
+    const score = correct / total;
+    const threshold = parseFloat(activeModule.pass_threshold) || 0.75;
+    const passed = score >= threshold;
+    const credits = parseFloat(activeModule.credits) || 1.0;
+    setTestResult({ score, passed, correct, total, credits });
+    setTestSubmitted(true);
+    // Record attempt
+    try {
+      await fetch(sbU('cme_attempts'), {
+        method: 'POST',
+        headers: { ...sbH, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ user_id: currentUser.id, module_id: activeModule.id, score, passed, completed_at: new Date().toISOString() })
+      });
+    } catch(e) { console.error('submitTest attempt error', e); }
+    // If passed, mark complete and log credits
+    if (passed && !completedIds.has(activeModule.id)) {
+      try {
+        await fetch(sbU('cme_completions'), {
+          method: 'POST',
+          headers: { ...sbH, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ user_id: currentUser.id, module_id: activeModule.id, completed_at: new Date().toISOString() })
+        });
+        setCompletedIds(prev => new Set([...prev, activeModule.id]));
+      } catch(e) { console.error('markComplete error', e); }
+    }
+    setTestLoading(false);
+  };
+
+  const resetTest = () => {
+    setTestAnswers({});
+    setTestSubmitted(false);
+    setTestResult(null);
   };
 
   const uploadThumbnail = async (file) => {
@@ -4976,61 +5069,237 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   const inp  = { background:'#0f172a', border:'1px solid rgba(99,179,237,0.2)', borderRadius:8, color:'#e2e8f0', fontSize:13, padding:'9px 12px', outline:'none', width:'100%', boxSizing:'border-box', fontFamily:'inherit' };
   const lbl  = { color:'#90cdf4', fontSize:12, fontWeight:700, letterSpacing:'0.04em', display:'block', marginBottom:4 };
 
-  if (activeModule) return (
-    <div>
-      <button onClick={() => setActiveModule(null)} style={{ background:'none', border:'none', color:'#90cdf4', cursor:'pointer', fontSize:13, fontWeight:700, marginBottom:16, padding:0 }}>← Back to CME Library</button>
-      <div style={{ background:'#0f172a', borderRadius:14, border:'1px solid rgba(99,179,237,0.15)', overflow:'hidden' }}>
-        {activeModule.thumbnail_url && <div style={{ width:'100%', height:180, background:`url(${activeModule.thumbnail_url}) center/cover`, borderBottom:'1px solid rgba(99,179,237,0.1)' }} />}
-        <div style={{ padding:'24px 28px' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, flexWrap:'wrap', marginBottom:10 }}>
-            <div style={{ color:'#e2e8f0', fontSize:18, fontWeight:800, lineHeight:1.3 }}>{activeModule.title}</div>
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              <span style={{ background:'rgba(99,179,237,0.1)', color:'#90cdf4', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:700, border:'1px solid rgba(99,179,237,0.2)' }}>{activeModule.format}</span>
-              <span style={{ background:'rgba(104,211,145,0.1)', color:'#68d391', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:700, border:'1px solid rgba(104,211,145,0.2)' }}>{activeModule.credits} credit{parseFloat(activeModule.credits)!==1?'s':''}</span>
-              {completedIds.has(activeModule.id) && <span style={{ background:'rgba(104,211,145,0.15)', color:'#68d391', borderRadius:6, padding:'3px 10px', fontSize:11, fontWeight:700, border:'1px solid rgba(104,211,145,0.3)' }}>✅ Completed</span>}
+  if (activeModule) {
+    const isVideo = activeModule.content_type === 'video' || activeModule.video_url;
+    const isPdf   = activeModule.content_type === 'pdf'   || activeModule.file_url;
+    const contentUrl = activeModule.video_url || activeModule.file_url || activeModule.url || '';
+    const alreadyPassed = completedIds.has(activeModule.id);
+    const passThreshold = parseFloat(activeModule.pass_threshold) || 0.75;
+    const allAnswered = testQuestions.length > 0 && testQuestions.every(q => testAnswers[q.id] !== undefined);
+
+    // YouTube embed helper
+    const getYouTubeId = (url) => {
+      const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([^?&\n]+)/);
+      return m ? m[1] : null;
+    };
+
+    return (
+      <div>
+        {/* Back button + header */}
+        <button onClick={() => setActiveModule(null)} style={{ background:'none', border:'none', color:'#90cdf4', cursor:'pointer', fontSize:13, fontWeight:700, marginBottom:14, padding:0 }}>← Back to CME Library</button>
+
+        <div style={{ background:'#0f172a', borderRadius:14, border:'1px solid rgba(99,179,237,0.15)', overflow:'hidden' }}>
+          {/* Module header */}
+          <div style={{ padding:'18px 22px', borderBottom:'1px solid rgba(99,179,237,0.1)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10, flexWrap:'wrap' }}>
+              <div style={{ color:'#e2e8f0', fontSize:16, fontWeight:800, lineHeight:1.3, flex:1 }}>{activeModule.title}</div>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', flexShrink:0 }}>
+                <span style={{ background:'rgba(99,179,237,0.1)', color:'#90cdf4', borderRadius:6, padding:'2px 9px', fontSize:11, fontWeight:700 }}>{activeModule.format}</span>
+                <span style={{ background:'rgba(104,211,145,0.1)', color:'#68d391', borderRadius:6, padding:'2px 9px', fontSize:11, fontWeight:700 }}>{activeModule.credits} credit{parseFloat(activeModule.credits)!==1?'s':''}</span>
+                {alreadyPassed && <span style={{ background:'rgba(104,211,145,0.15)', color:'#68d391', borderRadius:6, padding:'2px 9px', fontSize:11, fontWeight:700 }}>✅ Completed</span>}
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:14, color:'#4a5568', fontSize:11, marginTop:6, flexWrap:'wrap' }}>
+              {activeModule.author    && <span>👤 {activeModule.author}</span>}
+              {activeModule.specialty && <span>🦴 {activeModule.specialty}</span>}
+              {activeModule.duration_min && <span>⏱ {activeModule.duration_min} min</span>}
             </div>
           </div>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:16, color:'#64748b', fontSize:12, marginBottom:16 }}>
-            {activeModule.author      && <span>👤 {activeModule.author}</span>}
-            {activeModule.specialty   && <span>🦴 {activeModule.specialty}</span>}
-            {activeModule.duration_min && <span>⏱ {activeModule.duration_min} min</span>}
+
+          {/* Tab bar */}
+          <div style={{ display:'flex', borderBottom:'1px solid rgba(99,179,237,0.1)' }}>
+            {['content','test'].map(t => {
+              const labels = { content:'📺 Content', test:'📝 Post-Test' };
+              const locked = t === 'test' && !contentViewed && !alreadyPassed;
+              const active = moduleTab === t;
+              return (
+                <button key={t} onClick={() => { if (!locked) setModuleTab(t); }}
+                  style={{ flex:1, padding:'11px 0', background: active ? 'rgba(99,179,237,0.08)' : 'none', border:'none', borderBottom: active ? '2px solid #90cdf4' : '2px solid transparent', color: locked ? '#374151' : active ? '#90cdf4' : '#64748b', fontSize:13, fontWeight:700, cursor: locked ? 'not-allowed' : 'pointer', transition:'all 0.15s' }}>
+                  {labels[t]}{locked ? ' 🔒' : ''}
+                </button>
+              );
+            })}
           </div>
-          <p style={{ color:'#a0aec0', fontSize:14, lineHeight:1.7, marginBottom:20 }}>{activeModule.description}</p>
-          {activeModule.objectives && (
-            <div style={{ background:'rgba(99,179,237,0.05)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:10, padding:'16px 20px', marginBottom:20 }}>
-              <div style={{ color:'#90cdf4', fontSize:12, fontWeight:700, marginBottom:10, letterSpacing:'0.05em' }}>LEARNING OBJECTIVES</div>
-              {activeModule.objectives.split('\n').filter(Boolean).map((obj, i) => (
-                <div key={i} style={{ color:'#a0aec0', fontSize:13, lineHeight:1.6, display:'flex', gap:10, marginBottom:6 }}>
-                  <span style={{ color:'#3b82f6', flexShrink:0 }}>{i+1}.</span>
-                  <span>{obj}</span>
+
+          {/* CONTENT TAB */}
+          {moduleTab === 'content' && (
+            <div style={{ padding:'20px 22px' }}>
+              {/* Video embed */}
+              {isVideo && contentUrl && (() => {
+                const ytId = getYouTubeId(contentUrl);
+                return ytId ? (
+                  <div style={{ position:'relative', paddingBottom:'56.25%', height:0, borderRadius:10, overflow:'hidden', marginBottom:18, border:'1px solid rgba(99,179,237,0.15)' }}>
+                    <iframe src={`https://www.youtube.com/embed/${ytId}`} style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', border:'none' }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                  </div>
+                ) : (
+                  <a href={contentUrl} target="_blank" rel="noopener noreferrer" style={{ display:'block', padding:'14px 18px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:10, color:'#90cdf4', fontSize:13, fontWeight:700, textDecoration:'none', marginBottom:18 }}>▶️ Open Video →</a>
+                );
+              })()}
+
+              {/* PDF embed */}
+              {isPdf && !isVideo && contentUrl && (
+                <div style={{ marginBottom:18 }}>
+                  <iframe src={contentUrl} style={{ width:'100%', height:500, border:'1px solid rgba(99,179,237,0.15)', borderRadius:10 }} title="CME Module PDF" />
                 </div>
-              ))}
+              )}
+
+              {/* Description + objectives */}
+              {activeModule.description && <p style={{ color:'#a0aec0', fontSize:13, lineHeight:1.7, marginBottom:16 }}>{activeModule.description}</p>}
+              {activeModule.objectives && (
+                <div style={{ background:'rgba(99,179,237,0.05)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:10, padding:'14px 18px', marginBottom:18 }}>
+                  <div style={{ color:'#90cdf4', fontSize:11, fontWeight:700, marginBottom:8, letterSpacing:'0.05em' }}>LEARNING OBJECTIVES</div>
+                  {activeModule.objectives.split('\n').filter(Boolean).map((obj, i) => (
+                    <div key={i} style={{ color:'#a0aec0', fontSize:12, lineHeight:1.6, display:'flex', gap:8, marginBottom:4 }}>
+                      <span style={{ color:'#3b82f6', flexShrink:0 }}>{i+1}.</span><span>{obj}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Admin delete */}
+              {isAdmin && (
+                <button onClick={() => deleteModule(activeModule.id)}
+                  style={{ padding:'8px 16px', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:8, color:'#fc8181', fontSize:12, fontWeight:700, cursor:'pointer', marginBottom:14 }}>
+                  🗑️ Delete Module
+                </button>
+              )}
+
+              {/* Unlock post-test button */}
+              {!contentViewed && !alreadyPassed && testQuestions.length > 0 && (
+                <button onClick={() => { setContentViewed(true); setModuleTab('test'); }}
+                  style={{ width:'100%', padding:'13px', background:'linear-gradient(135deg,rgba(99,179,237,0.2),rgba(99,179,237,0.08))', border:'1px solid rgba(99,179,237,0.35)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+                  I've reviewed this content — Take the Post-Test →
+                </button>
+              )}
+              {testQuestions.length === 0 && !alreadyPassed && (
+                <div style={{ color:'#4a5568', fontSize:12, textAlign:'center', padding:'10px 0' }}>No post-test questions added yet.</div>
+              )}
+              {alreadyPassed && (
+                <div style={{ textAlign:'center', padding:'14px', background:'rgba(104,211,145,0.07)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:10, color:'#68d391', fontSize:13, fontWeight:700 }}>
+                  ✅ You have already passed this module and earned {activeModule.credits} credit{parseFloat(activeModule.credits)!==1?'s':''}.
+                </div>
+              )}
             </div>
           )}
-          <div style={{ display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); const url = activeModule.url.startsWith('http') ? activeModule.url : 'https://' + activeModule.url; const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }}
-              style={{ padding:'12px 28px', background:'linear-gradient(135deg,rgba(99,179,237,0.25),rgba(99,179,237,0.1))', border:'1px solid rgba(99,179,237,0.4)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer' }}>
-              🎓 Launch Module →
-            </button>
-            {currentUser && !completedIds.has(activeModule.id) && (
-              <button onClick={(e) => { e.stopPropagation(); markComplete(activeModule.id); }}
-                style={{ padding:'12px 22px', background:'rgba(104,211,145,0.1)', border:'1px solid rgba(104,211,145,0.25)', borderRadius:10, color:'#68d391', fontSize:13, fontWeight:700, cursor:'pointer' }}>
-                ✅ Mark as Complete
-              </button>
-            )}
-            {isAdmin && (
-              <button onClick={(e) => { e.stopPropagation(); deleteModule(activeModule.id); }}
-                style={{ padding:'12px 18px', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:10, color:'#fc8181', fontSize:13, fontWeight:700, cursor:'pointer', marginLeft:'auto' }}>
-                🗑️ Delete Module
-              </button>
-            )}
-          </div>
-          {!currentUser && <p style={{ color:'#4a5568', fontSize:12, marginTop:12 }}>Sign in to track your CME completion and accumulate credits.</p>}
+
+          {/* POST-TEST TAB */}
+          {moduleTab === 'test' && (
+            <div style={{ padding:'20px 22px' }}>
+              {/* Already passed */}
+              {alreadyPassed && !testSubmitted && (
+                <div style={{ textAlign:'center', padding:'28px', color:'#68d391' }}>
+                  <div style={{ fontSize:36, marginBottom:10 }}>🏆</div>
+                  <div style={{ fontSize:15, fontWeight:700 }}>Module Completed</div>
+                  <div style={{ fontSize:12, color:'#4a5568', marginTop:6 }}>You already earned {activeModule.credits} credit{parseFloat(activeModule.credits)!==1?'s':''} for this module.</div>
+                </div>
+              )}
+
+              {/* Result screen */}
+              {testSubmitted && testResult && (
+                <div>
+                  <div style={{ textAlign:'center', padding:'24px 16px', background: testResult.passed ? 'rgba(104,211,145,0.07)' : 'rgba(245,101,101,0.07)', border:`1px solid ${testResult.passed ? 'rgba(104,211,145,0.25)' : 'rgba(245,101,101,0.2)'}`, borderRadius:12, marginBottom:20 }}>
+                    <div style={{ fontSize:40, marginBottom:8 }}>{testResult.passed ? '🎉' : '😔'}</div>
+                    <div style={{ fontSize:18, fontWeight:800, color: testResult.passed ? '#68d391' : '#fc8181', marginBottom:6 }}>
+                      {testResult.passed ? 'Congratulations — You Passed!' : 'Not Quite — Please Retry'}
+                    </div>
+                    <div style={{ fontSize:14, color:'#a0aec0', marginBottom:4 }}>
+                      Score: {testResult.correct}/{testResult.total} ({Math.round(testResult.score * 100)}%) — Pass threshold: {Math.round(passThreshold * 100)}%
+                    </div>
+                    {testResult.passed && (
+                      <div style={{ fontSize:13, color:'#68d391', fontWeight:700, marginTop:6 }}>
+                        🎓 {testResult.credits} CME credit{testResult.credits !== 1 ? 's' : ''} earned
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Answer review */}
+                  <div style={{ marginBottom:20 }}>
+                    {testQuestions.map((q, i) => {
+                      const selected = testAnswers[q.id];
+                      const correct  = q.correct_index;
+                      const isRight  = selected === correct;
+                      return (
+                        <div key={q.id} style={{ marginBottom:14, padding:'14px 16px', background:'rgba(15,23,42,0.6)', border:`1px solid ${isRight ? 'rgba(104,211,145,0.2)' : 'rgba(245,101,101,0.2)'}`, borderRadius:10 }}>
+                          <div style={{ color:'#e2e8f0', fontSize:13, fontWeight:700, marginBottom:10 }}>{i+1}. {q.question_text}</div>
+                          {q.options.map((opt, oi) => {
+                            const isSelected = selected === oi;
+                            const isCorrect  = correct === oi;
+                            return (
+                              <div key={oi} style={{ padding:'7px 12px', marginBottom:4, borderRadius:7, fontSize:12,
+                                background: isCorrect ? 'rgba(104,211,145,0.12)' : isSelected && !isCorrect ? 'rgba(245,101,101,0.1)' : 'transparent',
+                                border: `1px solid ${isCorrect ? 'rgba(104,211,145,0.3)' : isSelected && !isCorrect ? 'rgba(245,101,101,0.25)' : 'transparent'}`,
+                                color: isCorrect ? '#68d391' : isSelected && !isCorrect ? '#fc8181' : '#64748b',
+                                display:'flex', alignItems:'center', gap:8 }}>
+                                <span>{isCorrect ? '✓' : isSelected && !isCorrect ? '✗' : '○'}</span>
+                                <span>{opt}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Certificate or retry */}
+                  {testResult.passed ? (
+                    <div style={{ background:'rgba(104,211,145,0.06)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:12, padding:'20px 22px', textAlign:'center' }}>
+                      <div style={{ color:'#68d391', fontSize:13, fontWeight:700, marginBottom:4 }}>🏅 Certificate of Completion</div>
+                      <div style={{ color:'#a0aec0', fontSize:12, marginBottom:14 }}>
+                        This certifies that <strong style={{ color:'#e2e8f0' }}>{currentUser?.email}</strong> has successfully completed<br/>
+                        <strong style={{ color:'#e2e8f0' }}>{activeModule.title}</strong><br/>
+                        and earned <strong style={{ color:'#68d391' }}>{testResult.credits} CME credit{testResult.credits !== 1 ? 's' : ''}</strong> on {new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })}.
+                      </div>
+                      <button onClick={() => window.print()}
+                        style={{ padding:'10px 24px', background:'rgba(104,211,145,0.12)', border:'1px solid rgba(104,211,145,0.3)', borderRadius:9, color:'#68d391', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                        🖨️ Print Certificate
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={resetTest}
+                      style={{ width:'100%', padding:'12px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.25)', borderRadius:10, color:'#90cdf4', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+                      🔄 Retake Post-Test
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Questions */}
+              {!testSubmitted && !alreadyPassed && (
+                <div>
+                  <div style={{ color:'#90cdf4', fontSize:13, fontWeight:700, marginBottom:16 }}>
+                    Post-Test — {testQuestions.length} Question{testQuestions.length!==1?'s':''} · Pass score: {Math.round(passThreshold*100)}%
+                  </div>
+                  {testQuestions.map((q, i) => (
+                    <div key={q.id} style={{ marginBottom:18, padding:'16px 18px', background:'rgba(15,23,42,0.5)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:12 }}>
+                      <div style={{ color:'#e2e8f0', fontSize:13, fontWeight:700, marginBottom:12 }}>{i+1}. {q.question_text}</div>
+                      {q.options.map((opt, oi) => {
+                        const selected = testAnswers[q.id] === oi;
+                        return (
+                          <div key={oi} onClick={() => setTestAnswers(prev => ({ ...prev, [q.id]: oi }))}
+                            style={{ padding:'9px 14px', marginBottom:6, borderRadius:8, fontSize:12, cursor:'pointer', transition:'all 0.12s',
+                              background: selected ? 'rgba(99,179,237,0.15)' : 'rgba(99,179,237,0.03)',
+                              border: `1px solid ${selected ? 'rgba(99,179,237,0.5)' : 'rgba(99,179,237,0.1)'}`,
+                              color: selected ? '#90cdf4' : '#94a3b8',
+                              display:'flex', alignItems:'center', gap:10 }}>
+                            <span style={{ width:18, height:18, borderRadius:'50%', border:`2px solid ${selected ? '#90cdf4' : '#374151'}`, background: selected ? '#90cdf4' : 'transparent', flexShrink:0, display:'inline-block' }} />
+                            {opt}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                  <button onClick={submitTest} disabled={!allAnswered || testLoading}
+                    style={{ width:'100%', padding:'13px', background: allAnswered ? 'linear-gradient(135deg,rgba(104,211,145,0.2),rgba(104,211,145,0.08))' : 'rgba(55,65,81,0.3)', border:`1px solid ${allAnswered ? 'rgba(104,211,145,0.35)' : 'rgba(55,65,81,0.4)'}`, borderRadius:10, color: allAnswered ? '#68d391' : '#374151', fontSize:14, fontWeight:700, cursor: allAnswered ? 'pointer' : 'not-allowed' }}>
+                    {testLoading ? '⏳ Submitting...' : allAnswered ? '✅ Submit Post-Test' : `Answer all ${testQuestions.length} questions to submit`}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div>
@@ -5114,6 +5383,54 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
             <label style={lbl}>Learning Objectives <span style={{ color:'#4a5568', fontWeight:400 }}>(one per line)</span></label>
             <textarea style={{ ...inp, minHeight:80, resize:'vertical' }} value={uploadForm.objectives} onChange={e => setUploadForm(f=>({...f,objectives:e.target.value}))} placeholder={"Identify the key MRI findings of ACL tears\nDescribe partial vs complete tears\nApply grading criteria in clinical practice"} />
           </div>
+
+          {/* Content type + URL */}
+          <div style={{ marginBottom:12 }}>
+            <label style={lbl}>Content Type</label>
+            <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+              {['video','pdf'].map(ct => (
+                <button key={ct} type="button" onClick={() => setUploadForm(f=>({...f,content_type:ct}))}
+                  style={{ padding:'7px 18px', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer', border:`1px solid ${uploadForm.content_type===ct ? 'rgba(99,179,237,0.5)' : 'rgba(99,179,237,0.15)'}`, background: uploadForm.content_type===ct ? 'rgba(99,179,237,0.12)' : 'transparent', color: uploadForm.content_type===ct ? '#90cdf4' : '#64748b' }}>
+                  {ct === 'video' ? '▶️ Video (YouTube)' : '📄 PDF / Slides'}
+                </button>
+              ))}
+            </div>
+            {uploadForm.content_type === 'video'
+              ? <input style={inp} value={uploadForm.video_url} onChange={e => setUploadForm(f=>({...f,video_url:e.target.value,url:e.target.value}))} placeholder="https://www.youtube.com/watch?v=..." />
+              : <input style={inp} value={uploadForm.file_url} onChange={e => setUploadForm(f=>({...f,file_url:e.target.value,url:e.target.value}))} placeholder="https://... (Supabase storage URL or public PDF link)" />
+            }
+          </div>
+
+          {/* Post-test question builder */}
+          <div style={{ marginBottom:16 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+              <label style={{ ...lbl, marginBottom:0 }}>Post-Test Questions * <span style={{ color:'#4a5568', fontWeight:400 }}>(min 3, all 4 options required)</span></label>
+              <button type="button" onClick={() => setUploadQuestions(qs => [...qs, { question_text:'', options:['','','',''], correct_index:0 }])}
+                style={{ padding:'5px 12px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:6, color:'#90cdf4', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                + Add Question
+              </button>
+            </div>
+            {uploadQuestions.map((q, qi) => (
+              <div key={qi} style={{ background:'rgba(15,23,42,0.6)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:10, padding:'14px 16px', marginBottom:10 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                  <span style={{ color:'#90cdf4', fontSize:12, fontWeight:700 }}>Q{qi+1}</span>
+                  {uploadQuestions.length > 3 && (
+                    <button type="button" onClick={() => setUploadQuestions(qs => qs.filter((_,i)=>i!==qi))}
+                      style={{ background:'none', border:'none', color:'#fc8181', fontSize:11, cursor:'pointer', padding:0 }}>✕ Remove</button>
+                  )}
+                </div>
+                <input style={{ ...inp, marginBottom:8 }} value={q.question_text} onChange={e => setUploadQuestions(qs => qs.map((x,i) => i===qi ? {...x, question_text:e.target.value} : x))} placeholder={`Question ${qi+1} text...`} />
+                {q.options.map((opt, oi) => (
+                  <div key={oi} style={{ display:'flex', gap:6, alignItems:'center', marginBottom:5 }}>
+                    <input type="radio" name={`correct_${qi}`} checked={q.correct_index===oi} onChange={() => setUploadQuestions(qs => qs.map((x,i) => i===qi ? {...x, correct_index:oi} : x))} style={{ accentColor:'#68d391', flexShrink:0 }} />
+                    <input style={{ ...inp, flex:1 }} value={opt} onChange={e => setUploadQuestions(qs => qs.map((x,i) => i===qi ? {...x, options:x.options.map((o,j)=>j===oi?e.target.value:o)} : x))} placeholder={`Option ${String.fromCharCode(65+oi)}`} />
+                  </div>
+                ))}
+                <div style={{ color:'#4a5568', fontSize:10, marginTop:4 }}>🟢 Radio button = correct answer</div>
+              </div>
+            ))}
+          </div>
+
           <button onClick={submitModule} disabled={saving}
             style={{ padding:'10px 24px', background:'linear-gradient(135deg,rgba(245,189,64,0.2),rgba(245,189,64,0.08))', border:'1px solid rgba(245,189,64,0.35)', borderRadius:9, color:'#f6bd40', fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
             {saving ? '⏳ Publishing...' : '🚀 Publish Module'}
@@ -5145,7 +5462,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
         {filtered.map(m => {
           const done = completedIds.has(m.id);
           return (
-            <div key={m.id} onClick={() => setActiveModule(m)} style={{ background:'#0f172a', border:'1px solid '+(done?'rgba(104,211,145,0.25)':'rgba(99,179,237,0.12)'), borderRadius:12, overflow:'hidden', cursor:'pointer', transition:'border-color 0.15s,transform 0.15s', position:'relative' }}
+            <div key={m.id} onClick={() => openModule(m)} style={{ background:'#0f172a', border:'1px solid '+(done?'rgba(104,211,145,0.25)':'rgba(99,179,237,0.12)'), borderRadius:12, overflow:'hidden', cursor:'pointer', transition:'border-color 0.15s,transform 0.15s', position:'relative' }}
               onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
               onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}>
               {m.thumbnail_url
