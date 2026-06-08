@@ -7812,6 +7812,75 @@ function LoginPage({ onLogin }) {
   );
 }
 
+// ── CME Banner: keyword-matches report text against CME modules ──────────────
+function findCmeMatches(reportText, modules) {
+  if (!reportText || !modules?.length) return [];
+  // Tokenize report: lowercase words 4+ chars (skip short filler words)
+  const tokens = reportText.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+  if (!tokens.length) return [];
+  const tokenSet = new Set(tokens);
+  const scored = modules.map(m => {
+    const haystack = `${m.title || ''} ${m.specialty || ''}`.toLowerCase();
+    const haystackTokens = haystack.match(/\b[a-z]{4,}\b/g) || [];
+    let score = 0;
+    haystackTokens.forEach(t => { if (tokenSet.has(t)) score++; });
+    return { ...m, score };
+  }).filter(m => m.score > 0);
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 3);
+}
+
+function CmeBanner({ matches, dm }) {
+  if (!matches?.length) return null;
+  return (
+    <div style={{
+      background: dm ? 'rgba(20,83,45,0.35)' : 'rgba(220,252,231,0.9)',
+      border: `1px solid ${dm ? '#166534' : '#86efac'}`,
+      borderRadius: 10,
+      padding: '10px 12px',
+      marginBottom: 12,
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: dm ? '#4ade80' : '#15803d', marginBottom: 7, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        🎓 Related CME Available
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {matches.map(m => (
+          <a
+            key={m.id}
+            href={m.url || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: dm ? 'rgba(34,197,94,0.15)' : 'white',
+              border: `1px solid ${dm ? '#166534' : '#bbf7d0'}`,
+              borderRadius: 7,
+              padding: '7px 10px',
+              textDecoration: 'none',
+              cursor: m.url ? 'pointer' : 'default',
+            }}
+          >
+            <span style={{ fontSize: 14 }}>📋</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: dm ? '#4ade80' : '#15803d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {m.title}
+              </div>
+              {m.specialty && (
+                <div style={{ fontSize: 10, color: dm ? '#86efac' : '#16a34a', marginTop: 1 }}>{m.specialty}</div>
+              )}
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 800, color: 'white', background: dm ? '#16a34a' : '#22c55e', borderRadius: 5, padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              CLAIM CME
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   // ── Auth state ────────────────────────────────────────────────────────────
   const [authUser, setAuthUser] = useState(null);
@@ -7868,6 +7937,15 @@ export default function DashboardPage() {
       setAuthLoading(false);
     };
     doRestore();
+  }, []);
+
+  // ── Fetch published CME modules once (used for CME banner matching) ──────
+  useEffect(() => {
+    fetch(`${SUPABASE_URL}/rest/v1/cme_modules?select=id,title,specialty,url&status=eq.published`, {
+      headers: { apikey: getAnonKey() }
+    }).then(r => r.ok ? r.json() : []).then(data => {
+      if (Array.isArray(data)) setCmeModules(data);
+    }).catch(() => {});
   }, []);
 
   const handleLogin = async (user) => {
@@ -7946,6 +8024,7 @@ export default function DashboardPage() {
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
   const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs' | 'cme'
+  const [cmeModules, setCmeModules] = useState([]);  // CME library — loaded once at app mount
 
   const [darkMode, setDarkMode] = useState(false);
   const dm = darkMode;
@@ -8792,6 +8871,7 @@ export default function DashboardPage() {
               : isRheum ? 'Rheum DDx Builder' : isCT ? 'CT Fracture Classification' : 'MRI Grading Reference'
           )}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
+            <CmeBanner matches={findCmeMatches(generatedReport, cmeModules)} dm={dm} />
             {isRheum
               ? <RheumDDxPanel
                   rheumJoint={rheumJoint}
