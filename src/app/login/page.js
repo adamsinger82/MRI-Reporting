@@ -20,13 +20,10 @@ import {
   getAnatomy, getEffectiveJointData, buildGradingContext,
   buildReportHeading, buildPrompt, formatReport, isAbsentStructure
 } from '../data/promptBuilders';
-import {
-  PELVIS_LABELS, SHOULDER_LABELS, SAG_SHOULDER_LABELS,
-  COR_SHOULDER_LABELS, ELBOW_LABELS, AX_T1_ELBOW_LABELS, COR_ELBOW_LABELS
-} from '../data/atlasLabels';
+import { PELVIS_LABELS, SHOULDER_LABELS, ELBOW_LABELS } from '../data/atlasLabels';
 import { ATLAS_JOINTS, ATLAS_REGIONS_MAP, VHP_BASE, localSlices } from '../data/atlasData';
 import { ARTHROPLASTY_DATA, ARTHROPLASTY_JOINTS, ArthroplastyPanel } from '../data/arthroplastyData';
-import { RHEUM_JOINTS, buildRheumPrompt } from '../data/rheumData';
+import { RHEUM_JOINTS, buildRheumPrompt, RheumDDxPanel } from '../data/rheumData';
 
 // ─── ANATOMY ATLAS MODAL ───────────────────────────────────────────────────
 // Rebuilt with split layout: image on left (dots only), labels sidebar on right

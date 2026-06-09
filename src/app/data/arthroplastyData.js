@@ -1,3 +1,5 @@
+'use client';
+
 // ─── ARTHROPLASTY DATA ────────────────────────────────────────────────────────
 // ARTHROPLASTY_DATA and ArthroplastyPanel extracted from page.js
 

@@ -1,3 +1,6 @@
+'use client';
+import { useState } from 'react';
+
 // ─── RHEUM DATA ───────────────────────────────────────────────────────────────
 // RHEUM_JOINTS DDx data and buildRheumPrompt extracted from page.js
 
@@ -659,4 +662,4 @@ function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumCheck
 }
 
 
-export { RHEUM_JOINTS, buildRheumPrompt };
+export { RHEUM_JOINTS, buildRheumPrompt, RheumDDxPanel };
