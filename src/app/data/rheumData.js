@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { buildReportHeading } from './promptBuilders';
 
 // ─── RHEUM DATA ───────────────────────────────────────────────────────────────
 // RHEUM_JOINTS DDx data and buildRheumPrompt extracted from page.js
