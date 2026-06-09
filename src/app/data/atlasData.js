@@ -1,6 +1,14 @@
 // ─── ANATOMY ATLAS DATA ───────────────────────────────────────────────────────
 // Joint definitions, image paths, slice arrays and permanentLabels
-import { PELVIS_LABELS, SHOULDER_LABELS, ELBOW_LABELS } from './atlasLabels';
+import {
+  PELVIS_LABELS,
+  SHOULDER_LABELS,
+  SAG_SHOULDER_LABELS,
+  COR_SHOULDER_LABELS,
+  ELBOW_LABELS,
+  AX_T1_ELBOW_LABELS,
+  COR_ELBOW_LABELS,
+} from './atlasLabels';
 
 // ─── ANATOMY ATLAS DATA (Visible Human Project + Real MRI) ───────────────────
 const VHP_BASE = 'https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Male-Images/PNG_format';
