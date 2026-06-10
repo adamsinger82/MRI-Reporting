@@ -5440,7 +5440,7 @@ function IncidentalPanel({ showLung, showGU, noduleType, setNoduleType, noduleSi
 // JIA=Juvenile Idiopathic Arthritis, Hemo=Hemophilia, Scl=Scleroderma,
 // EOA=Erosive OA, Hem=Hemochromatosis, Sep=Septic/Infectious
 
-import { RHEUM_JOINTS, DIAG_INFO, RHEUM_EXAMPLE_IMAGES } from './rheumData';
+import { RHEUM_JOINTS, DIAG_INFO, RHEUM_EXAMPLE_IMAGES, buildRheumPrompt } from './rheumData';
 function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumChecks, onGenerate, isGenerating, dm }) {
   const jointData = RHEUM_JOINTS[rheumJoint];
   const accent = '#a855f7';
