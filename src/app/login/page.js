@@ -7371,33 +7371,43 @@ export default function DashboardPage() {
             )}
           </div>
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
-            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(col2EditMode?(dm?'#7c3aed':'#a78bfa'):(dm?'#334155':'#e8edf5')),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc'),outline:'none',transition:'border-color 0.15s' }}
-              contentEditable={col2EditMode}
-              suppressContentEditableWarning
-              onInput={col2EditMode ? (e => setGeneratedReport(e.currentTarget.innerText)) : undefined}
-            >
-              {isGenerating
-                ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
-                : generatedReport
-                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{col2EditMode ? generatedReport : formatReport(generatedReport, dm ? {
-                      neg:'#64748b',
-                      pos:'#fbbf24',
-                      lbl:'#94a3b8',
-                      body:'#cbd5e1',
-                      posW:600,
-                      border:'#334155',
-                      hdr:'#93c5fd'
-                    } : {
-                      neg:'#6b7280',
-                      pos:'#dc2626',
-                      lbl:'#1e293b',
-                      body:'#1e293b',
-                      posW:600,
-                      border:'#e2e8f0',
-                      hdr:'#1e3a5f'
-                    })}</div>
-                  : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
-              }
+            {/* Report box — formatted view always rendered; textarea overlaid when editing */}
+            <div style={{ flex:1,position:'relative',minHeight:340,maxHeight:'65vh',display:'flex',flexDirection:'column' }}>
+              {/* Formatted display — always visible underneath */}
+              <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(col2EditMode?(dm?'#7c3aed':'#a78bfa'):(dm?'#334155':'#e8edf5')),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc'),transition:'border-color 0.15s',visibility:col2EditMode?'hidden':'visible' }}>
+                {isGenerating
+                  ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
+                  : generatedReport
+                    ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, dm ? {
+                        neg:'#64748b',
+                        pos:'#fbbf24',
+                        lbl:'#94a3b8',
+                        body:'#cbd5e1',
+                        posW:600,
+                        border:'#334155',
+                        hdr:'#93c5fd'
+                      } : {
+                        neg:'#6b7280',
+                        pos:'#dc2626',
+                        lbl:'#1e293b',
+                        body:'#1e293b',
+                        posW:600,
+                        border:'#e2e8f0',
+                        hdr:'#1e3a5f'
+                      })}</div>
+                    : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
+                }
+              </div>
+              {/* Textarea overlay — only mounted when editing */}
+              {col2EditMode && (
+                <textarea
+                  autoFocus
+                  defaultValue={generatedReport}
+                  onChange={e => setGeneratedReport(e.target.value)}
+                  spellCheck={false}
+                  style={{ position:'absolute',inset:0,width:'100%',height:'100%',padding:'14px 16px',border:'1px solid '+(dm?'#7c3aed':'#a78bfa'),borderRadius:10,background:dm?'#0f172a':'white',color:dm?'#e2e8f0':'#1e293b',fontFamily:"Georgia,'Times New Roman',serif",fontSize:13,lineHeight:1.7,resize:'none',outline:'none',boxSizing:'border-box',overflowY:'auto' }}
+                />
+              )}
             </div>
             <CopyButton generatedReport={generatedReport} dm={dm} />
           </div>
