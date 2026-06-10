@@ -158,22 +158,6 @@ const JOINT_DATA = {
     label: 'Shoulder',
     measurements: [
       {
-        id: 'csa',
-        label: 'Critical Shoulder Angle (CSA)',
-        plane: 'Coronal oblique',
-        description: 'Angle between a line along the glenoid face and a line from inferior glenoid to lateral acromion. Predicts rotator cuff tears vs glenohumeral OA.',
-        normalValues: [
-          { label: 'Normal', value: '30–35°' },
-          { label: 'RCT risk', value: '> 35°' },
-          { label: 'GH OA risk', value: '< 30°' },
-        ],
-        citations: [
-          { label: "Moor BK et al. Critical shoulder angle and rotator cuff tears / glenohumeral OA. Bone Joint J 2013", url: "https://scholar.google.com/scholar?q=Moor%20Bouaicha%20Rothenfluh%20critical%20shoulder%20angle%20rotator%20cuff%20osteoarthritis%202013" },
-          { label: "Gerber C et al. Supraspinatus tendon load is dependent on the critical shoulder angle. J Orthop Res 2014", url: "https://scholar.google.com/scholar?q=Gerber%20supraspinatus%20tendon%20load%20critical%20shoulder%20angle%20biomechanical%202014" },
-        ],
-        diagram: 'shoulder-csa',
-      },
-      {
         id: 'goutallier',
         label: 'Goutallier Classification',
         plane: 'Coronal oblique / axial',

@@ -5219,7 +5219,7 @@ function ReferencePanel({ selectedBodyPart, modality = 'MRI', spineRegion = 'lum
       </div>
       <div style={{ height:1,background:dm?'#334155':'linear-gradient(to right,transparent,#e2e8f0,transparent)',margin:'14px 0',flexShrink:0 }} />
       <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
-        <p style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent,margin:0 }}>{selectedMeasurement?.id === 'modic_changes' ? '🔬 Imaging Findings' : selectedMeasurement?.id === 'disc_nomenclature' ? '📖 Terminology' : '📊 Normal Values'}</p>
+        <p style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent,margin:0 }}>{selectedMeasurement?.id === 'modic_changes' ? '🔬 Imaging Findings' : selectedMeasurement?.id === 'disc_nomenclature' ? '📖 Terminology' : selectedMeasurement?.spineRegions ? '📋 Nomenclature and Grading' : '📊 Normal Values'}</p>
         {selectedMeasurement ? (
           <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12 }}>
             <tbody>
