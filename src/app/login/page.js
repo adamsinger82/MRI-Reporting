@@ -6719,72 +6719,74 @@ export default function DashboardPage() {
     setIsGeneratingRheum(false);
   };
 
-  const keepaliveTimerRef = useRef(null);
+  // activeRef: true while user wants dictation running — set false only on explicit Stop or unmount
+  const activeRef = useRef(false);
 
-  const startKeepalive = (getRecRef) => {
-    stopKeepalive();
-    keepaliveTimerRef.current = setInterval(() => {
-      const rec = getRecRef();
-      if (!rec) { stopKeepalive(); return; }
-      // Restart recognition before browser's ~60s silence timeout fires
-      // We do this by stopping; onend will immediately restart with persisted transcript
-      try { rec.stop(); } catch {}
-    }, 8000);
-  };
-
-  const stopKeepalive = () => {
-    if (keepaliveTimerRef.current) { clearInterval(keepaliveTimerRef.current); keepaliveTimerRef.current = null; }
+  const startRecognition = () => {
+    const SR = window.webkitSpeechRecognition || window.SpeechRecognition;
+    if (!SR || !activeRef.current) return;
+    const recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalTranscriptPersistRef.current += t + ' ';
+        else interim += t;
+      }
+      const transcript = finalTranscriptPersistRef.current + interim;
+      if (isRheumRef.current) setRheumFreeText(transcript);
+      else setDictationText(transcript);
+    };
+    recognition.onerror = (event) => {
+      if (event.error === 'not-allowed') {
+        activeRef.current = false;
+        setMicError('Microphone access denied. Click the lock icon in your address bar.');
+        setIsListening(false);
+      }
+      // all other errors (network, no-speech, aborted) — onend will fire and restart
+    };
+    recognition.onend = () => {
+      if (activeRef.current) {
+        // Browser ended the session (timeout, silence, etc.) — restart immediately
+        setTimeout(startRecognition, 100);
+      } else {
+        setIsListening(false);
+      }
+    };
+    recognitionRef.current = recognition;
+    try { recognition.start(); } catch { setTimeout(startRecognition, 200); }
   };
 
   const toggleListening = () => {
-    if (isListening) { stopKeepalive(); recognitionRef.current?.stop(); setIsListening(false); return; }
+    if (isListening) {
+      activeRef.current = false;
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      setIsListening(false);
+      return;
+    }
     const SR = window.webkitSpeechRecognition || window.SpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
-    // Seed the persist ref with any text already in the box — so restarts append rather than erase
+    // Seed persist ref with existing text so restarts append rather than erase
     finalTranscriptPersistRef.current = isRheumRef.current ? (rheumFreeText || '') : (dictationText || '');
-    try {
-      const recognition = new SR();
-      recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US'; recognition.maxAlternatives = 1;
-      recognition.onstart = () => setIsListening(true);
-      recognition.onaudiostart = () => setIsListening(true);
-      recognition.onresult = (event) => {
-        let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const t = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalTranscriptPersistRef.current += t + ' ';
-          else interim += t;
-        }
-        const transcript = finalTranscriptPersistRef.current + interim;
-        if (isRheumRef.current) setRheumFreeText(transcript);
-        else setDictationText(transcript);
-      };
-      recognition.onerror = (event) => {
-        if (event.error === 'not-allowed') { stopKeepalive(); setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
-      };
-      recognition.onend = () => {
-        if (recognitionRef.current === recognition) {
-          setTimeout(() => {
-            if (recognitionRef.current !== recognition) return;
-            const SR2 = window.webkitSpeechRecognition || window.SpeechRecognition;
-            try {
-              const rec2 = new SR2();
-              rec2.continuous = true; rec2.interimResults = true; rec2.lang = 'en-US'; rec2.maxAlternatives = 1;
-              rec2.onstart = recognition.onstart; rec2.onaudiostart = recognition.onaudiostart;
-              rec2.onresult = recognition.onresult; rec2.onerror = recognition.onerror; rec2.onend = recognition.onend;
-              rec2.start(); recognitionRef.current = rec2;
-            } catch { stopKeepalive(); setIsListening(false); }
-          }, 150);
-        }
-      };
-      recognition.start();
-      recognitionRef.current = recognition;
-      startKeepalive(() => recognitionRef.current);
-    } catch (err) { stopKeepalive(); setIsListening(false); setMicError('Could not start microphone: ' + err.message); }
+    activeRef.current = true;
+    startRecognition();
   };
 
-  const stopListening = () => { stopKeepalive(); const rec = recognitionRef.current; recognitionRef.current = null; try { rec?.stop(); } catch {} setIsListening(false); };
-  useEffect(() => () => { stopKeepalive(); recognitionRef.current?.stop(); }, []);
+  const stopListening = () => {
+    activeRef.current = false;
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
+  };
+
+  useEffect(() => () => { activeRef.current = false; recognitionRef.current?.stop(); }, []);
 
   const inp = { width:'100%',padding:'9px 12px',border:'1px solid '+(dm?'#334155':'#dde3ed'),borderRadius:8,fontSize:14,boxSizing:'border-box',color:dm?'#e2e8f0':'#1e293b',outline:'none',background:dm?'#0f172a':'white' };
   const lbl = { fontSize:11,fontWeight:600,color:dm?'#94a3b8':'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
@@ -7335,7 +7337,6 @@ export default function DashboardPage() {
                   </button>
                   <button onClick={() => {
                     if (isListening) stopListening();
-                    stopKeepalive();
                     finalTranscriptPersistRef.current = '';
                     setDictationText('');
                     setRheumFreeText('');
