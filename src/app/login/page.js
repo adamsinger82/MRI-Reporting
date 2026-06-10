@@ -3825,71 +3825,79 @@ export default function DashboardPage() {
     setIsGeneratingRheum(false);
   };
 
-  const keepaliveTimerRef = useRef(null);
-
-  const startKeepalive = (getRecRef) => {
-    stopKeepalive();
-    keepaliveTimerRef.current = setInterval(() => {
-      const rec = getRecRef();
-      if (!rec) { stopKeepalive(); return; }
-      // Restart recognition before browser's ~60s silence timeout fires
-      // We do this by stopping; onend will immediately restart with persisted transcript
-      try { rec.stop(); } catch {}
-    }, 8000);
-  };
-
-  const stopKeepalive = () => {
-    if (keepaliveTimerRef.current) { clearInterval(keepaliveTimerRef.current); keepaliveTimerRef.current = null; }
-  };
+  // isListeningRef mirrors isListening state so async STT callbacks can read current intent
+  const isListeningRef = useRef(false);
 
   const toggleListening = () => {
-    if (isListening) { stopKeepalive(); recognitionRef.current?.stop(); setIsListening(false); return; }
+    if (isListeningRef.current) {
+      isListeningRef.current = false;
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      setIsListening(false);
+      return;
+    }
     const SR = window.webkitSpeechRecognition || window.SpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
     finalTranscriptPersistRef.current = ''; // reset transcript on fresh dictation start
-    try {
-      const recognition = new SR();
-      recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US'; recognition.maxAlternatives = 1;
-      recognition.onstart = () => setIsListening(true);
-      recognition.onaudiostart = () => setIsListening(true);
-      recognition.onresult = (event) => {
-        let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const t = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalTranscriptPersistRef.current += t + ' ';
-          else interim += t;
-        }
-        const transcript = finalTranscriptPersistRef.current + interim;
-        if (isRheumRef.current) setRheumFreeText(transcript);
-        else setDictationText(transcript);
-      };
-      recognition.onerror = (event) => {
-        if (event.error === 'not-allowed') { stopKeepalive(); setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
-      };
-      recognition.onend = () => {
-        if (recognitionRef.current === recognition) {
-          setTimeout(() => {
-            if (recognitionRef.current !== recognition) return;
-            const SR2 = window.webkitSpeechRecognition || window.SpeechRecognition;
-            try {
-              const rec2 = new SR2();
-              rec2.continuous = true; rec2.interimResults = true; rec2.lang = 'en-US'; rec2.maxAlternatives = 1;
-              rec2.onstart = recognition.onstart; rec2.onaudiostart = recognition.onaudiostart;
-              rec2.onresult = recognition.onresult; rec2.onerror = recognition.onerror; rec2.onend = recognition.onend;
-              rec2.start(); recognitionRef.current = rec2;
-            } catch { stopKeepalive(); setIsListening(false); }
-          }, 150);
-        }
-      };
-      recognition.start();
-      recognitionRef.current = recognition;
-      startKeepalive(() => recognitionRef.current);
-    } catch (err) { stopKeepalive(); setIsListening(false); setMicError('Could not start microphone: ' + err.message); }
+    isListeningRef.current = true;
+    setIsListening(true);
+
+    const startRecognition = () => {
+      if (!isListeningRef.current) return; // user stopped while restart was pending
+      const SR2 = window.webkitSpeechRecognition || window.SpeechRecognition;
+      try {
+        const recognition = new SR2();
+        recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US'; recognition.maxAlternatives = 1;
+        recognition.onresult = (event) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const t = event.results[i][0].transcript;
+            if (event.results[i].isFinal) finalTranscriptPersistRef.current += t + ' ';
+            else interim += t;
+          }
+          const transcript = finalTranscriptPersistRef.current + interim;
+          if (isRheumRef.current) setRheumFreeText(transcript);
+          else setDictationText(transcript);
+        };
+        recognition.onerror = (event) => {
+          // Fatal errors — stop and inform user
+          if (event.error === 'not-allowed') {
+            isListeningRef.current = false;
+            recognitionRef.current = null;
+            setMicError('Microphone access denied. Click the lock icon in your address bar.');
+            setIsListening(false);
+          }
+          // no-speech, network, audio-capture: non-fatal — onend fires next and restarts
+        };
+        recognition.onend = () => {
+          // Only restart if user hasn't pressed Stop and this is still the active instance
+          if (isListeningRef.current && recognitionRef.current === recognition) {
+            recognitionRef.current = null;
+            setTimeout(startRecognition, 150); // brief pause avoids browser throttling
+          }
+        };
+        recognition.start();
+        recognitionRef.current = recognition;
+      } catch (err) {
+        isListeningRef.current = false;
+        recognitionRef.current = null;
+        setIsListening(false);
+        setMicError('Could not start microphone: ' + err.message);
+      }
+    };
+
+    startRecognition();
   };
 
-  const stopListening = () => { stopKeepalive(); const rec = recognitionRef.current; recognitionRef.current = null; try { rec?.stop(); } catch {} setIsListening(false); };
-  useEffect(() => () => { stopKeepalive(); recognitionRef.current?.stop(); }, []);
+  const stopListening = () => {
+    isListeningRef.current = false;
+    const rec = recognitionRef.current;
+    recognitionRef.current = null;
+    try { rec?.stop(); } catch {}
+    setIsListening(false);
+  };
+  useEffect(() => () => { isListeningRef.current = false; recognitionRef.current?.stop(); }, []);
 
   const inp = { width:'100%',padding:'9px 12px',border:'1px solid '+(dm?'#334155':'#dde3ed'),borderRadius:8,fontSize:14,boxSizing:'border-box',color:dm?'#e2e8f0':'#1e293b',outline:'none',background:dm?'#0f172a':'white' };
   const lbl = { fontSize:11,fontWeight:600,color:dm?'#94a3b8':'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
@@ -4440,7 +4448,6 @@ export default function DashboardPage() {
                   </button>
                   <button onClick={() => {
                     if (isListening) stopListening();
-                    stopKeepalive();
                     finalTranscriptPersistRef.current = '';
                     setDictationText('');
                     setRheumFreeText('');
