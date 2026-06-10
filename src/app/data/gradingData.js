@@ -301,23 +301,102 @@ const MRI_GRADING_DATA = {
       },
       {
         id: 'neural_foraminal_stenosis',
-        label: 'Neural Foraminal Stenosis Grading',
+        label: 'Neural Foraminal Stenosis — Kim Classification (Cervical)',
         isGradingScale: true,
         spineRegions: ['cervical','thoracic','lumbar'],
-        plane: 'Sagittal T1 / T2',
-        description: 'Two most widely used grading systems for neural foraminal stenosis on MRI. Images to be added.',
-        diagram: null,
+        plane: 'Axial T2 / T1 (foraminal level)',
+        description: 'Kim classification of cervical neural foraminal stenosis on axial MRI. Grades 0–3 based on progressive obliteration of perineural fat and nerve root visibility. Assessed on axial T2 or T1 at the foraminal level. Grade 2–3 correlates with clinical radiculopathy.',
+        diagram: `<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:420px;display:block;margin:8px auto 0">
+  <style>
+    .t{font:9px sans-serif;fill:#e2e8f0}
+    .tl{font:bold 10px sans-serif;fill:#93c5fd}
+    .vb{fill:#2d3748;stroke:#94a3b8;stroke-width:1.2}
+    .fat{fill:#fbbf24;opacity:0.7}
+    .nrv{fill:#34d399;opacity:0.9}
+    .cord{fill:#1e3a8a;opacity:0.8}
+  </style>
+  <!-- GRADE 0 -->
+  <text x="52" y="12" class="tl" text-anchor="middle">Grade 0</text>
+  <text x="52" y="22" class="t" text-anchor="middle">Normal</text>
+  <!-- vertebral body outline -->
+  <ellipse cx="52" cy="70" rx="36" ry="28" class="vb"/>
+  <!-- spinal canal -->
+  <ellipse cx="52" cy="70" rx="14" ry="12" fill="#1a202c"/>
+  <!-- cord -->
+  <ellipse cx="52" cy="70" rx="7" ry="6" class="cord"/>
+  <!-- right foramen fat (plenty) -->
+  <ellipse cx="86" cy="70" rx="8" ry="7" class="fat"/>
+  <!-- nerve root inside fat -->
+  <ellipse cx="86" cy="70" rx="3" ry="3" class="nrv"/>
+  <!-- left foramen fat -->
+  <ellipse cx="18" cy="70" rx="8" ry="7" class="fat"/>
+  <ellipse cx="18" cy="70" rx="3" ry="3" class="nrv"/>
+  <text x="52" y="112" class="t" text-anchor="middle">Fat surrounds</text>
+  <text x="52" y="121" class="t" text-anchor="middle">nerve root</text>
+
+  <!-- GRADE 1 -->
+  <text x="155" y="12" class="tl" text-anchor="middle">Grade 1</text>
+  <text x="155" y="22" class="t" text-anchor="middle">Mild</text>
+  <ellipse cx="155" cy="70" rx="36" ry="28" class="vb"/>
+  <ellipse cx="155" cy="70" rx="14" ry="12" fill="#1a202c"/>
+  <ellipse cx="155" cy="70" rx="7" ry="6" class="cord"/>
+  <!-- partial fat obliteration -->
+  <ellipse cx="189" cy="70" rx="6" ry="5" class="fat" opacity="0.5"/>
+  <ellipse cx="189" cy="70" rx="3" ry="3" class="nrv"/>
+  <ellipse cx="121" cy="70" rx="6" ry="5" class="fat" opacity="0.5"/>
+  <ellipse cx="121" cy="70" rx="3" ry="3" class="nrv"/>
+  <text x="155" y="112" class="t" text-anchor="middle">Fat partially</text>
+  <text x="155" y="121" class="t" text-anchor="middle">obliterated</text>
+
+  <!-- GRADE 2 -->
+  <text x="258" y="12" class="tl" text-anchor="middle">Grade 2</text>
+  <text x="258" y="22" class="t" text-anchor="middle">Moderate</text>
+  <ellipse cx="258" cy="70" rx="36" ry="28" class="vb"/>
+  <ellipse cx="258" cy="70" rx="14" ry="12" fill="#1a202c"/>
+  <ellipse cx="258" cy="70" rx="7" ry="6" class="cord"/>
+  <!-- no fat, nerve still visible -->
+  <ellipse cx="292" cy="70" rx="4" ry="4" fill="#374151"/>
+  <ellipse cx="292" cy="70" rx="3" ry="3" class="nrv"/>
+  <ellipse cx="224" cy="70" rx="4" ry="4" fill="#374151"/>
+  <ellipse cx="224" cy="70" rx="3" ry="3" class="nrv"/>
+  <text x="258" y="112" class="t" text-anchor="middle">Fat gone</text>
+  <text x="258" y="121" class="t" text-anchor="middle">nerve visible</text>
+
+  <!-- GRADE 3 -->
+  <text x="368" y="12" class="tl" text-anchor="middle">Grade 3</text>
+  <text x="368" y="22" class="t" text-anchor="middle">Severe</text>
+  <ellipse cx="368" cy="70" rx="36" ry="28" class="vb"/>
+  <ellipse cx="368" cy="70" rx="14" ry="12" fill="#1a202c"/>
+  <ellipse cx="368" cy="70" rx="7" ry="6" class="cord"/>
+  <!-- no fat, nerve NOT visible -->
+  <ellipse cx="402" cy="70" rx="4" ry="4" fill="#374151"/>
+  <ellipse cx="334" cy="70" rx="4" ry="4" fill="#374151"/>
+  <text x="368" y="112" class="t" text-anchor="middle">Fat gone</text>
+  <text x="368" y="121" class="t" text-anchor="middle">nerve invisible</text>
+
+  <!-- Legend -->
+  <ellipse cx="16" cy="175" rx="7" ry="6" class="fat" opacity="0.7"/>
+  <text x="27" y="179" class="t">Perineural fat</text>
+  <ellipse cx="120" cy="175" rx="5" ry="5" class="nrv"/>
+  <text x="130" y="179" class="t">Nerve root</text>
+  <ellipse cx="220" cy="175" rx="7" ry="6" class="cord" opacity="0.8"/>
+  <text x="231" y="179" class="t">Spinal cord</text>
+  <ellipse cx="310" cy="175" rx="10" ry="8" class="vb"/>
+  <text x="324" y="179" class="t">Vertebra</text>
+  <text x="10" y="198" class="t" fill="#94a3b8">Axial view at foraminal level — Grade 2–3 correlates with radiculopathy</text>
+  <text x="10" y="210" class="t" fill="#94a3b8">Also applies to lumbar/thoracic foramina using same criteria</text>
+</svg>`,
         citations: [
-          { label: 'Kang Y et al. — MRI grading system for cervical foraminal stenosis. Korean J Radiol 2011;12(5):585-589.', url: 'https://scholar.google.com/scholar?q=Kang+MRI+grading+system+cervical+foraminal+stenosis+Korean+Journal+Radiology+2011' },
+          { label: 'Kim S et al. — MRI grading system for cervical neural foraminal stenosis. Spine 2013;38(7):E397-E404.', url: 'https://scholar.google.com/scholar?q=Kim+MRI+grading+cervical+neural+foraminal+stenosis+Spine+2013' },
           { label: 'Lee JW et al. — Cervical foraminal stenosis grading. Spine 2009.', url: 'https://scholar.google.com/scholar?q=Lee+cervical+foraminal+stenosis+grading+MRI+radiculopathy+Spine+2009' },
         ],
         normalValues: [
-          { label: 'Kang Grade 0', value: 'Normal — fat clearly surrounding nerve root in foramen.' },
-          { label: 'Kang Grade 1 (Mild)', value: 'Perineural fat partially obliterated; nerve root still clearly visible.' },
-          { label: 'Kang Grade 2 (Moderate)', value: 'Perineural fat completely obliterated; nerve root still identifiable.' },
-          { label: 'Kang Grade 3 (Severe)', value: 'Nerve root no longer identifiable — complete obliteration.' },
-          { label: 'Lee grading', value: 'Grades 0-3 on similar criteria. Grade 3 = complete loss of nerve root visibility on T1 sagittal.' },
-          { label: 'Clinical note', value: 'Grade 2-3 correlates with radiculopathy. Report level and side. Specify far lateral component if present.' },
+          { label: 'Kim Grade 0', value: 'Normal — perineural fat clearly surrounds nerve root in foramen.' },
+          { label: 'Kim Grade 1 (Mild)', value: 'Perineural fat partially obliterated; nerve root still clearly visible.' },
+          { label: 'Kim Grade 2 (Moderate)', value: 'Perineural fat completely obliterated; nerve root still identifiable.' },
+          { label: 'Kim Grade 3 (Severe)', value: 'Nerve root no longer identifiable — complete obliteration.' },
+          { label: 'Clinical correlation', value: 'Grade 2–3 correlates with radiculopathy. Report level and side. Specify far lateral component if present.' },
+          { label: 'Key sequence', value: 'Axial T2 or T1 at foraminal level. Sagittal oblique T1/T2 helpful for confirmation.' },
         ],
       },
       {
@@ -347,8 +426,57 @@ const MRI_GRADING_DATA = {
         isGradingScale: true,
         spineRegions: ['cervical','lumbar'],
         plane: 'Sagittal T2',
-        description: 'Pfirrmann classification of disc degeneration on sagittal T2 MRI. Grades I-V based on signal, structure, nucleus/annulus distinction, and disc height.',
-        diagram: null,
+        description: 'Pfirrmann classification of disc degeneration on sagittal T2 MRI. Grades I-V based on signal intensity, nucleus/annulus distinction, and disc height. Grade I = bright white nucleus; Grade V = collapsed black disc.',
+        diagram: `<svg viewBox="0 0 430 185" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:430px;display:block;margin:8px auto 0">
+  <style>.t{font:9px sans-serif;fill:#e2e8f0}.tl{font:bold 10px sans-serif;fill:#93c5fd}.ep{fill:#4a5568;stroke:#94a3b8;stroke-width:1}.an{fill:#374151;stroke:#6b7280;stroke-width:0.5}</style>
+  <text x="33" y="10" class="tl" text-anchor="middle">I</text>
+  <rect x="10" y="14" width="46" height="9" rx="2" class="ep"/>
+  <rect x="10" y="23" width="46" height="7" rx="0" class="an"/>
+  <ellipse cx="33" cy="26" rx="17" ry="3.5" fill="#f8fafc" opacity="0.95"/>
+  <rect x="10" y="30" width="46" height="9" rx="2" class="ep"/>
+  <text x="33" y="48" class="t" text-anchor="middle">Bright white</text>
+  <text x="33" y="57" class="t" text-anchor="middle">Clear N/A</text>
+  <text x="33" y="66" class="t" text-anchor="middle">Normal ht</text>
+  <text x="116" y="10" class="tl" text-anchor="middle">II</text>
+  <rect x="93" y="14" width="46" height="9" rx="2" class="ep"/>
+  <rect x="93" y="23" width="46" height="7" rx="0" class="an"/>
+  <ellipse cx="116" cy="26" rx="17" ry="3.5" fill="#e2e8f0" opacity="0.85"/>
+  <line x1="99" y1="26" x2="133" y2="26" stroke="#94a3b8" stroke-width="0.8" opacity="0.6"/>
+  <rect x="93" y="30" width="46" height="9" rx="2" class="ep"/>
+  <text x="116" y="48" class="t" text-anchor="middle">Gray-white</text>
+  <text x="116" y="57" class="t" text-anchor="middle">± H-bands</text>
+  <text x="116" y="66" class="t" text-anchor="middle">Normal ht</text>
+  <text x="199" y="10" class="tl" text-anchor="middle">III</text>
+  <rect x="176" y="14" width="46" height="9" rx="2" class="ep"/>
+  <rect x="176" y="23" width="46" height="6" rx="0" class="an"/>
+  <ellipse cx="199" cy="26" rx="17" ry="3" fill="#6b7280" opacity="0.9"/>
+  <rect x="176" y="29" width="46" height="9" rx="2" class="ep"/>
+  <text x="199" y="48" class="t" text-anchor="middle">Gray signal</text>
+  <text x="199" y="57" class="t" text-anchor="middle">Unclear N/A</text>
+  <text x="199" y="66" class="t" text-anchor="middle">Nl-slight ↓ht</text>
+  <text x="282" y="10" class="tl" text-anchor="middle">IV</text>
+  <rect x="259" y="14" width="46" height="9" rx="2" class="ep"/>
+  <rect x="259" y="23" width="46" height="5" rx="0" class="an"/>
+  <ellipse cx="282" cy="25" rx="17" ry="2.5" fill="#374151" opacity="1"/>
+  <rect x="259" y="28" width="46" height="9" rx="2" class="ep"/>
+  <text x="282" y="48" class="t" text-anchor="middle">Dark gray</text>
+  <text x="282" y="57" class="t" text-anchor="middle">No N/A</text>
+  <text x="282" y="66" class="t" text-anchor="middle">Mod ↓height</text>
+  <text x="365" y="10" class="tl" text-anchor="middle">V</text>
+  <rect x="342" y="14" width="46" height="9" rx="2" class="ep"/>
+  <rect x="342" y="23" width="46" height="3" rx="0" class="an"/>
+  <rect x="342" y="26" width="46" height="9" rx="2" class="ep"/>
+  <text x="365" y="48" class="t" text-anchor="middle">Black</text>
+  <text x="365" y="57" class="t" text-anchor="middle">No N/A</text>
+  <text x="365" y="66" class="t" text-anchor="middle">Collapsed</text>
+  <rect x="10" y="150" width="10" height="7" rx="1" fill="#4a5568" stroke="#94a3b8" stroke-width="0.8"/>
+  <text x="24" y="157" class="t">Endplate</text>
+  <rect x="90" y="150" width="10" height="7" rx="1" fill="#374151" stroke="#6b7280" stroke-width="0.5"/>
+  <text x="104" y="157" class="t">Disc annulus</text>
+  <rect x="200" y="150" width="10" height="7" rx="1" fill="#f8fafc" opacity="0.9"/>
+  <text x="214" y="157" class="t">Nucleus (bright→dark)</text>
+  <text x="10" y="172" class="t" fill="#94a3b8">N/A = nucleus/annulus distinction  ↓ht = disc height reduction</text>
+</svg>`,
         citations: [
           { label: 'Pfirrmann CW et al. — MR classification of lumbar intervertebral disc degeneration. Spine 2001;26(17):1873-1878.', url: 'https://scholar.google.com/scholar?q=Pfirrmann+magnetic+resonance+classification+lumbar+intervertebral+disc+degeneration+Spine+2001' },
         ],
@@ -462,84 +590,38 @@ const CT_GRADING_DATA = {
     .bone{fill:#2d3748;stroke:#94a3b8;stroke-width:1.2}
     .split{stroke:#f87171;stroke-width:2;fill:none}
     .dep{fill:#fbbf24;opacity:0.7}
-    .lbl{font:bold 9px sans-serif;fill:#fbbf24}
   </style>
-  <!-- ── Row 1: Types I II III ── -->
-  <!-- TYPE I -->
-  <text x="35" y="12" class="tl">I</text>
-  <text x="10" y="23" class="t">Lateral Split</text>
-  <!-- femoral condyles -->
-  <ellipse cx="28" cy="40" rx="14" ry="8" class="bone"/>
-  <ellipse cx="52" cy="40" rx="14" ry="8" class="bone"/>
-  <!-- tibial plateau -->
-  <rect x="14" y="52" width="56" height="10" rx="2" class="bone"/>
-  <rect x="14" y="62" width="56" height="28" rx="2" class="bone"/>
-  <!-- split line lateral side -->
+  <text x="35" y="12" class="tl">I</text><text x="10" y="23" class="t">Lateral Split</text>
+  <ellipse cx="28" cy="40" rx="14" ry="8" class="bone"/><ellipse cx="52" cy="40" rx="14" ry="8" class="bone"/>
+  <rect x="14" y="52" width="56" height="10" rx="2" class="bone"/><rect x="14" y="62" width="56" height="28" rx="2" class="bone"/>
   <line x1="58" y1="52" x2="62" y2="90" class="split"/>
-
-  <!-- TYPE II -->
-  <text x="175" y="12" class="tl">II</text>
-  <text x="140" y="23" class="t">Split + Depression</text>
-  <ellipse cx="168" cy="40" rx="14" ry="8" class="bone"/>
-  <ellipse cx="192" cy="40" rx="14" ry="8" class="bone"/>
-  <rect x="154" y="52" width="56" height="10" rx="2" class="bone"/>
-  <rect x="154" y="62" width="56" height="28" rx="2" class="bone"/>
-  <!-- depressed fragment -->
+  <text x="175" y="12" class="tl">II</text><text x="140" y="23" class="t">Split + Depression</text>
+  <ellipse cx="168" cy="40" rx="14" ry="8" class="bone"/><ellipse cx="192" cy="40" rx="14" ry="8" class="bone"/>
+  <rect x="154" y="52" width="56" height="10" rx="2" class="bone"/><rect x="154" y="62" width="56" height="28" rx="2" class="bone"/>
   <rect x="183" y="56" width="18" height="7" rx="1" class="dep"/>
-  <!-- split line -->
   <line x1="196" y1="52" x2="200" y2="90" class="split"/>
-  <!-- depression tick -->
   <line x1="183" y1="54" x2="201" y2="54" class="split" stroke-dasharray="2,2"/>
-
-  <!-- TYPE III -->
-  <text x="315" y="12" class="tl">III</text>
-  <text x="280" y="23" class="t">Pure Depression</text>
-  <ellipse cx="308" cy="40" rx="14" ry="8" class="bone"/>
-  <ellipse cx="332" cy="40" rx="14" ry="8" class="bone"/>
-  <rect x="294" y="52" width="56" height="10" rx="2" class="bone"/>
-  <rect x="294" y="62" width="56" height="28" rx="2" class="bone"/>
-  <!-- depression only, central lateral -->
+  <text x="315" y="12" class="tl">III</text><text x="280" y="23" class="t">Pure Depression</text>
+  <ellipse cx="308" cy="40" rx="14" ry="8" class="bone"/><ellipse cx="332" cy="40" rx="14" ry="8" class="bone"/>
+  <rect x="294" y="52" width="56" height="10" rx="2" class="bone"/><rect x="294" y="62" width="56" height="28" rx="2" class="bone"/>
   <rect x="316" y="56" width="22" height="7" rx="1" class="dep"/>
   <line x1="316" y1="54" x2="338" y2="54" class="split" stroke-dasharray="2,2"/>
-
-  <!-- ── Row 2: Types IV V VI ── -->
-  <!-- TYPE IV -->
-  <text x="35" y="145" class="tl">IV</text>
-  <text x="8" y="156" class="t">Medial Plateau</text>
-  <ellipse cx="28" cy="173" rx="14" ry="8" class="bone"/>
-  <ellipse cx="52" cy="173" rx="14" ry="8" class="bone"/>
-  <rect x="14" y="185" width="56" height="10" rx="2" class="bone"/>
-  <rect x="14" y="195" width="56" height="28" rx="2" class="bone"/>
-  <!-- medial split -->
+  <text x="35" y="145" class="tl">IV</text><text x="8" y="156" class="t">Medial Plateau</text>
+  <ellipse cx="28" cy="173" rx="14" ry="8" class="bone"/><ellipse cx="52" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="14" y="185" width="56" height="10" rx="2" class="bone"/><rect x="14" y="195" width="56" height="28" rx="2" class="bone"/>
   <line x1="20" y1="185" x2="16" y2="223" class="split"/>
-
-  <!-- TYPE V -->
-  <text x="175" y="145" class="tl">V</text>
-  <text x="140" y="156" class="t">Bicondylar</text>
-  <ellipse cx="168" cy="173" rx="14" ry="8" class="bone"/>
-  <ellipse cx="192" cy="173" rx="14" ry="8" class="bone"/>
-  <rect x="154" y="185" width="56" height="10" rx="2" class="bone"/>
-  <rect x="154" y="195" width="56" height="28" rx="2" class="bone"/>
-  <!-- both sides split, metaphysis intact -->
+  <text x="175" y="145" class="tl">V</text><text x="140" y="156" class="t">Bicondylar</text>
+  <ellipse cx="168" cy="173" rx="14" ry="8" class="bone"/><ellipse cx="192" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="154" y="185" width="56" height="10" rx="2" class="bone"/><rect x="154" y="195" width="56" height="28" rx="2" class="bone"/>
   <line x1="158" y1="185" x2="154" y2="223" class="split"/>
   <line x1="202" y1="185" x2="206" y2="223" class="split"/>
-
-  <!-- TYPE VI -->
-  <text x="315" y="145" class="tl">VI</text>
-  <text x="272" y="156" class="t">Bicondylar + Dissociation</text>
-  <ellipse cx="308" cy="173" rx="14" ry="8" class="bone"/>
-  <ellipse cx="332" cy="173" rx="14" ry="8" class="bone"/>
-  <rect x="294" y="185" width="56" height="10" rx="2" class="bone"/>
-  <rect x="294" y="195" width="56" height="18" rx="2" class="bone"/>
-  <!-- transverse metaphyseal dissociation -->
+  <text x="315" y="145" class="tl">VI</text><text x="272" y="156" class="t">Bicondylar + Dissociation</text>
+  <ellipse cx="308" cy="173" rx="14" ry="8" class="bone"/><ellipse cx="332" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="294" y="185" width="56" height="10" rx="2" class="bone"/><rect x="294" y="195" width="56" height="18" rx="2" class="bone"/>
   <line x1="290" y1="213" x2="354" y2="213" class="split"/>
-  <!-- bicondylar splits -->
   <line x1="298" y1="185" x2="294" y2="213" class="split"/>
   <line x1="342" y1="185" x2="346" y2="213" class="split"/>
-  <!-- distal fragment slightly offset -->
   <rect x="296" y="216" width="56" height="15" rx="2" class="bone" transform="translate(4,0)"/>
-
-  <!-- Legend -->
   <rect x="10" y="268" width="10" height="8" rx="1" fill="#fbbf24" opacity="0.8"/>
   <text x="24" y="276" class="t">Depression</text>
   <line x1="110" y1="272" x2="130" y2="272" stroke="#f87171" stroke-width="2"/>
