@@ -5961,10 +5961,12 @@ async function supaGetUser(accessToken) {
 
 function saveSession(session) {
   try {
+    const TWO_HOURS = 2 * 60 * 60 * 1000;
+    const tokenExpiry = (session.expires_in || 3600) * 1000;
     localStorage.setItem('msk_session', JSON.stringify({
       access_token: session.access_token,
       refresh_token: session.refresh_token,
-      expires_at: Date.now() + (session.expires_in || 3600) * 1000,
+      expires_at: Date.now() + Math.max(tokenExpiry, TWO_HOURS),
       user: session.user,
     }));
   } catch {}
@@ -5975,7 +5977,10 @@ function loadSession() {
     const raw = localStorage.getItem('msk_session');
     if (!raw) return null;
     const s = JSON.parse(raw);
-    if (s.expires_at && s.expires_at < Date.now()) { localStorage.removeItem('msk_session'); return null; }
+    // Only hard-expire if past the stored time AND no refresh_token available
+    if (s.expires_at && s.expires_at < Date.now() && !s.refresh_token) {
+      localStorage.removeItem('msk_session'); return null;
+    }
     return s;
   } catch { return null; }
 }
@@ -6418,7 +6423,30 @@ export default function DashboardPage() {
     doRestore();
   }, []);
 
-  // ── Fetch published CME modules once (used for CME banner matching) ──────
+  // ── Background token refresh — runs every 30 min while logged in ──────────
+  useEffect(() => {
+    if (!authUser) return;
+    const THIRTY_MIN = 30 * 60 * 1000;
+    const interval = setInterval(async () => {
+      const s = loadSession();
+      if (!s?.refresh_token) return;
+      try {
+        const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
+          body: JSON.stringify({ refresh_token: s.refresh_token }),
+        });
+        if (r.ok) {
+          const fresh = await r.json();
+          if (fresh.access_token) {
+            saveSession(fresh);
+            setAuthUser(u => ({ ...u, access_token: fresh.access_token }));
+          }
+        }
+      } catch {} // Silent failure — user stays logged in until token truly expires
+    }, THIRTY_MIN);
+    return () => clearInterval(interval);
+  }, [authUser?.id]);
   useEffect(() => {
     fetch(`${SUPABASE_URL}/rest/v1/cme_modules?select=id,title,specialty,url&status=eq.published`, {
       headers: { apikey: getAnonKey() }
