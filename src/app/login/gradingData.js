@@ -306,8 +306,8 @@ const MRI_GRADING_DATA = {
         description: 'Two most widely used grading systems for neural foraminal stenosis on MRI. Images to be added.',
         diagram: null,
         regionImages: {
-          cervical: '/images/msk/cervicalkim.png',
-          lumbar:   '/images/msk/leelumbar.png',
+          cervical: '/images/msk/cervicalKIM.jpg',
+          lumbar:   '/images/msk/lumbarLEE.png',
         },
         citations: [
           { label: 'Kang Y et al. — MRI grading system for cervical foraminal stenosis. Korean J Radiol 2011;12(5):585-589.', url: 'https://scholar.google.com/scholar?q=Kang+MRI+grading+system+cervical+foraminal+stenosis+Korean+Journal+Radiology+2011' },
@@ -351,7 +351,7 @@ const MRI_GRADING_DATA = {
         plane: 'Sagittal T2',
         description: 'Pfirrmann classification of disc degeneration on sagittal T2 MRI. Grades I-V based on signal, structure, nucleus/annulus distinction, and disc height.',
         diagram: null,
-        image: '/images/msk/pfirrman.jpg',
+        image: '/images/msk/pfirmann.jpg',
         citations: [
           { label: 'Pfirrmann CW et al. — MR classification of lumbar intervertebral disc degeneration. Spine 2001;26(17):1873-1878.', url: 'https://scholar.google.com/scholar?q=Pfirrmann+magnetic+resonance+classification+lumbar+intervertebral+disc+degeneration+Spine+2001' },
         ],
@@ -459,7 +459,7 @@ const CT_GRADING_DATA = {
         plane: 'Coronal + Axial',
         description: 'Schatzker classification of tibial plateau fractures. Types I–III involve the lateral plateau only. Type IV involves the medial plateau (higher energy, worse prognosis). Types V–VI are bicondylar/complex. Higher Schatzker type = greater articular comminution and axial instability.',
         diagram: null,
-        image: '/images/msk/schatzker.png',
+        image: '/images/msk/schatzker.jpg',
         citations: [
           { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://scholar.google.com/scholar?q=Schatzker%20tibial%20plateau%20fracture%20classification%20Clin%20Orthop%201979' },
           { label: 'Zeltser DW & Leopold SS. — Schatzker classification. Clin Orthop 2013;471(3):771-773.', url: 'https://scholar.google.com/scholar?q=Zeltser%20Leopold%20Schatzker%20classification%20Clin%20Orthop%202013' },
@@ -543,7 +543,7 @@ const CT_GRADING_DATA = {
         plane: 'Coronal + Axial',
         description: 'Schatzker classification of tibial plateau fractures (proximal intra-articular). CT is the gold standard for classification and surgical planning. Assess for articular depression, split components, and posterior plateau involvement (often missed on X-ray).',
         diagram: null,
-        image: '/images/msk/schatzker.png',
+        image: '/images/msk/schatzker.jpg',
         citations: [
           { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://scholar.google.com/scholar?q=Schatzker%20tibial%20plateau%20fracture%20classification%20Clin%20Orthop%201979' },
         ],
@@ -1136,7 +1136,7 @@ const CT_GRADING_DATA = {
         plane: 'Coronal CT',
         description: 'Denis classification of sacral fractures by zone of injury relative to the sacral foramina. Zone III injuries carry the highest risk of neurological deficit and spinal instability.',
         diagram: null,
-        image: '/images/msk/denis.png',
+        image: '/images/msk/denis.jpg',
         citations: [
           { label: 'Denis F et al. — Sacral fractures: an important problem. Clin Orthop 1988;227:67-81.', url: 'https://scholar.google.com/scholar?q=Denis+sacral+fractures+important+problem+Clin+Orthop+1988' },
         ],
