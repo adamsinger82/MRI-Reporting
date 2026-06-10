@@ -6503,6 +6503,7 @@ export default function DashboardPage() {
   const [modality, setModality] = useState('MRI');
   const [dictationText, setDictationText] = useState('');
   const [generatedReport, setGeneratedReport] = useState('');
+  const [col2EditMode, setCol2EditMode] = useState(false); // toggles Col 2 into editable mode
   const [isGenerating, setIsGenerating] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [micError, setMicError] = useState('');
@@ -6740,7 +6741,8 @@ export default function DashboardPage() {
     const SR = window.webkitSpeechRecognition || window.SpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
-    finalTranscriptPersistRef.current = ''; // reset transcript on fresh dictation start
+    // Seed the persist ref with any text already in the box — so restarts append rather than erase
+    finalTranscriptPersistRef.current = isRheumRef.current ? (rheumFreeText || '') : (dictationText || '');
     try {
       const recognition = new SR();
       recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US'; recognition.maxAlternatives = 1;
@@ -7338,6 +7340,7 @@ export default function DashboardPage() {
                     setDictationText('');
                     setRheumFreeText('');
                     setGeneratedReport('');
+                    setCol2EditMode(false);
                   }} disabled={!canReset}
                     title="Clear dictation and report — start next case"
                     style={{ flex:1,padding:'10px 12px',borderRadius:9,border:'1.5px solid '+(canReset?(dm?'#475569':'#cbd5e1'):(dm?'#1e293b':'#e2e8f0')),background:canReset?(dm?'#1e293b':'#f8fafc'):(dm?'#0f172a':'#f1f5f9'),color:canReset?(dm?'#94a3b8':'#64748b'):(dm?'#334155':'#cbd5e1'),fontSize:12,fontWeight:600,cursor:canReset?'pointer':'not-allowed',transition:'all 0.15s',flexShrink:0 }}
@@ -7353,23 +7356,39 @@ export default function DashboardPage() {
 
         {/* Col 2 — Report */}
         <div className={`msk-col${mobileTab===1?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
-          {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report')}
+          <div style={{ background:'linear-gradient(135deg,#5b21b6,#7c3aed)',padding:'15px 18px',display:'flex',alignItems:'center',gap:10 }}>
+            <span style={{ fontSize:18,filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>📄</span>
+            <span style={{ color:'white',fontWeight:800,fontSize:13,textTransform:'uppercase',letterSpacing:'0.14em',textShadow:'0 1px 3px rgba(0,0,0,0.2)',flex:1 }}>Generated Report</span>
+            {generatedReport && (
+              <button
+                onClick={() => setCol2EditMode(m => !m)}
+                title={col2EditMode ? 'Lock (read-only)' : 'Edit report text'}
+                style={{ background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.3)',borderRadius:6,color:'white',fontSize:13,padding:'3px 8px',cursor:'pointer',lineHeight:1,fontWeight:600,transition:'background 0.15s' }}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.28)'}
+                onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.15)'}
+              >{col2EditMode ? '🔒 Lock' : '✏️ Edit'}</button>
+            )}
+          </div>
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
-            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(dm?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
+            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(col2EditMode?(dm?'#7c3aed':'#a78bfa'):(dm?'#334155':'#e8edf5')),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc'),outline:'none',transition:'border-color 0.15s' }}
+              contentEditable={col2EditMode}
+              suppressContentEditableWarning
+              onInput={col2EditMode ? (e => setGeneratedReport(e.currentTarget.innerText)) : undefined}
+            >
               {isGenerating
                 ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
                 : generatedReport
-                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, dm ? {
-                      neg:'#64748b',   // dark mode normals: medium slate — visible but subdued
-                      pos:'#fbbf24',   // dark mode positives: amber/yellow — warm, clear, not harsh
-                      lbl:'#94a3b8',   // subheading labels
-                      body:'#cbd5e1',  // impression body text
+                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{col2EditMode ? generatedReport : formatReport(generatedReport, dm ? {
+                      neg:'#64748b',
+                      pos:'#fbbf24',
+                      lbl:'#94a3b8',
+                      body:'#cbd5e1',
                       posW:600,
                       border:'#334155',
                       hdr:'#93c5fd'
                     } : {
-                      neg:'#6b7280',   // light mode normals: grey
-                      pos:'#dc2626',   // light mode positives: red
+                      neg:'#6b7280',
+                      pos:'#dc2626',
                       lbl:'#1e293b',
                       body:'#1e293b',
                       posW:600,
