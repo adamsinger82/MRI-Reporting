@@ -455,7 +455,97 @@ const CT_GRADING_DATA = {
         isGradingScale: true,
         plane: 'Coronal + Axial',
         description: 'Schatzker classification of tibial plateau fractures. Types I–III involve the lateral plateau only. Type IV involves the medial plateau (higher energy, worse prognosis). Types V–VI are bicondylar/complex. Higher Schatzker type = greater articular comminution and axial instability.',
-        diagram: null,
+        diagram: `<svg viewBox="0 0 420 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:420px;display:block;margin:8px auto 0">
+  <style>
+    .t{font:10px sans-serif;fill:#e2e8f0}
+    .tl{font:bold 11px sans-serif;fill:#93c5fd}
+    .bone{fill:#2d3748;stroke:#94a3b8;stroke-width:1.2}
+    .split{stroke:#f87171;stroke-width:2;fill:none}
+    .dep{fill:#fbbf24;opacity:0.7}
+    .lbl{font:bold 9px sans-serif;fill:#fbbf24}
+  </style>
+  <!-- ── Row 1: Types I II III ── -->
+  <!-- TYPE I -->
+  <text x="35" y="12" class="tl">I</text>
+  <text x="10" y="23" class="t">Lateral Split</text>
+  <!-- femoral condyles -->
+  <ellipse cx="28" cy="40" rx="14" ry="8" class="bone"/>
+  <ellipse cx="52" cy="40" rx="14" ry="8" class="bone"/>
+  <!-- tibial plateau -->
+  <rect x="14" y="52" width="56" height="10" rx="2" class="bone"/>
+  <rect x="14" y="62" width="56" height="28" rx="2" class="bone"/>
+  <!-- split line lateral side -->
+  <line x1="58" y1="52" x2="62" y2="90" class="split"/>
+
+  <!-- TYPE II -->
+  <text x="175" y="12" class="tl">II</text>
+  <text x="140" y="23" class="t">Split + Depression</text>
+  <ellipse cx="168" cy="40" rx="14" ry="8" class="bone"/>
+  <ellipse cx="192" cy="40" rx="14" ry="8" class="bone"/>
+  <rect x="154" y="52" width="56" height="10" rx="2" class="bone"/>
+  <rect x="154" y="62" width="56" height="28" rx="2" class="bone"/>
+  <!-- depressed fragment -->
+  <rect x="183" y="56" width="18" height="7" rx="1" class="dep"/>
+  <!-- split line -->
+  <line x1="196" y1="52" x2="200" y2="90" class="split"/>
+  <!-- depression tick -->
+  <line x1="183" y1="54" x2="201" y2="54" class="split" stroke-dasharray="2,2"/>
+
+  <!-- TYPE III -->
+  <text x="315" y="12" class="tl">III</text>
+  <text x="280" y="23" class="t">Pure Depression</text>
+  <ellipse cx="308" cy="40" rx="14" ry="8" class="bone"/>
+  <ellipse cx="332" cy="40" rx="14" ry="8" class="bone"/>
+  <rect x="294" y="52" width="56" height="10" rx="2" class="bone"/>
+  <rect x="294" y="62" width="56" height="28" rx="2" class="bone"/>
+  <!-- depression only, central lateral -->
+  <rect x="316" y="56" width="22" height="7" rx="1" class="dep"/>
+  <line x1="316" y1="54" x2="338" y2="54" class="split" stroke-dasharray="2,2"/>
+
+  <!-- ── Row 2: Types IV V VI ── -->
+  <!-- TYPE IV -->
+  <text x="35" y="145" class="tl">IV</text>
+  <text x="8" y="156" class="t">Medial Plateau</text>
+  <ellipse cx="28" cy="173" rx="14" ry="8" class="bone"/>
+  <ellipse cx="52" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="14" y="185" width="56" height="10" rx="2" class="bone"/>
+  <rect x="14" y="195" width="56" height="28" rx="2" class="bone"/>
+  <!-- medial split -->
+  <line x1="20" y1="185" x2="16" y2="223" class="split"/>
+
+  <!-- TYPE V -->
+  <text x="175" y="145" class="tl">V</text>
+  <text x="140" y="156" class="t">Bicondylar</text>
+  <ellipse cx="168" cy="173" rx="14" ry="8" class="bone"/>
+  <ellipse cx="192" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="154" y="185" width="56" height="10" rx="2" class="bone"/>
+  <rect x="154" y="195" width="56" height="28" rx="2" class="bone"/>
+  <!-- both sides split, metaphysis intact -->
+  <line x1="158" y1="185" x2="154" y2="223" class="split"/>
+  <line x1="202" y1="185" x2="206" y2="223" class="split"/>
+
+  <!-- TYPE VI -->
+  <text x="315" y="145" class="tl">VI</text>
+  <text x="272" y="156" class="t">Bicondylar + Dissociation</text>
+  <ellipse cx="308" cy="173" rx="14" ry="8" class="bone"/>
+  <ellipse cx="332" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="294" y="185" width="56" height="10" rx="2" class="bone"/>
+  <rect x="294" y="195" width="56" height="18" rx="2" class="bone"/>
+  <!-- transverse metaphyseal dissociation -->
+  <line x1="290" y1="213" x2="354" y2="213" class="split"/>
+  <!-- bicondylar splits -->
+  <line x1="298" y1="185" x2="294" y2="213" class="split"/>
+  <line x1="342" y1="185" x2="346" y2="213" class="split"/>
+  <!-- distal fragment slightly offset -->
+  <rect x="296" y="216" width="56" height="15" rx="2" class="bone" transform="translate(4,0)"/>
+
+  <!-- Legend -->
+  <rect x="10" y="268" width="10" height="8" rx="1" fill="#fbbf24" opacity="0.8"/>
+  <text x="24" y="276" class="t">Depression</text>
+  <line x1="110" y1="272" x2="130" y2="272" stroke="#f87171" stroke-width="2"/>
+  <text x="135" y="276" class="t">Fracture line</text>
+  <text x="230" y="276" class="t" fill="#94a3b8">L=lateral  M=medial</text>
+</svg>`,
         citations: [
           { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://scholar.google.com/scholar?q=Schatzker%20tibial%20plateau%20fracture%20classification%20Clin%20Orthop%201979' },
           { label: 'Zeltser DW & Leopold SS. — Schatzker classification. Clin Orthop 2013;471(3):771-773.', url: 'https://scholar.google.com/scholar?q=Zeltser%20Leopold%20Schatzker%20classification%20Clin%20Orthop%202013' },
@@ -538,7 +628,51 @@ const CT_GRADING_DATA = {
         isGradingScale: true,
         plane: 'Coronal + Axial',
         description: 'Schatzker classification of tibial plateau fractures (proximal intra-articular). CT is the gold standard for classification and surgical planning. Assess for articular depression, split components, and posterior plateau involvement (often missed on X-ray).',
-        diagram: null,
+        diagram: `<svg viewBox="0 0 420 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:420px;display:block;margin:8px auto 0">
+  <style>
+    .t{font:10px sans-serif;fill:#e2e8f0}
+    .tl{font:bold 11px sans-serif;fill:#93c5fd}
+    .bone{fill:#2d3748;stroke:#94a3b8;stroke-width:1.2}
+    .split{stroke:#f87171;stroke-width:2;fill:none}
+    .dep{fill:#fbbf24;opacity:0.7}
+  </style>
+  <text x="35" y="12" class="tl">I</text><text x="10" y="23" class="t">Lateral Split</text>
+  <ellipse cx="28" cy="40" rx="14" ry="8" class="bone"/><ellipse cx="52" cy="40" rx="14" ry="8" class="bone"/>
+  <rect x="14" y="52" width="56" height="10" rx="2" class="bone"/><rect x="14" y="62" width="56" height="28" rx="2" class="bone"/>
+  <line x1="58" y1="52" x2="62" y2="90" class="split"/>
+  <text x="175" y="12" class="tl">II</text><text x="140" y="23" class="t">Split + Depression</text>
+  <ellipse cx="168" cy="40" rx="14" ry="8" class="bone"/><ellipse cx="192" cy="40" rx="14" ry="8" class="bone"/>
+  <rect x="154" y="52" width="56" height="10" rx="2" class="bone"/><rect x="154" y="62" width="56" height="28" rx="2" class="bone"/>
+  <rect x="183" y="56" width="18" height="7" rx="1" class="dep"/>
+  <line x1="196" y1="52" x2="200" y2="90" class="split"/>
+  <line x1="183" y1="54" x2="201" y2="54" class="split" stroke-dasharray="2,2"/>
+  <text x="315" y="12" class="tl">III</text><text x="280" y="23" class="t">Pure Depression</text>
+  <ellipse cx="308" cy="40" rx="14" ry="8" class="bone"/><ellipse cx="332" cy="40" rx="14" ry="8" class="bone"/>
+  <rect x="294" y="52" width="56" height="10" rx="2" class="bone"/><rect x="294" y="62" width="56" height="28" rx="2" class="bone"/>
+  <rect x="316" y="56" width="22" height="7" rx="1" class="dep"/>
+  <line x1="316" y1="54" x2="338" y2="54" class="split" stroke-dasharray="2,2"/>
+  <text x="35" y="145" class="tl">IV</text><text x="8" y="156" class="t">Medial Plateau</text>
+  <ellipse cx="28" cy="173" rx="14" ry="8" class="bone"/><ellipse cx="52" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="14" y="185" width="56" height="10" rx="2" class="bone"/><rect x="14" y="195" width="56" height="28" rx="2" class="bone"/>
+  <line x1="20" y1="185" x2="16" y2="223" class="split"/>
+  <text x="175" y="145" class="tl">V</text><text x="140" y="156" class="t">Bicondylar</text>
+  <ellipse cx="168" cy="173" rx="14" ry="8" class="bone"/><ellipse cx="192" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="154" y="185" width="56" height="10" rx="2" class="bone"/><rect x="154" y="195" width="56" height="28" rx="2" class="bone"/>
+  <line x1="158" y1="185" x2="154" y2="223" class="split"/>
+  <line x1="202" y1="185" x2="206" y2="223" class="split"/>
+  <text x="315" y="145" class="tl">VI</text><text x="272" y="156" class="t">Bicondylar + Dissociation</text>
+  <ellipse cx="308" cy="173" rx="14" ry="8" class="bone"/><ellipse cx="332" cy="173" rx="14" ry="8" class="bone"/>
+  <rect x="294" y="185" width="56" height="10" rx="2" class="bone"/><rect x="294" y="195" width="56" height="18" rx="2" class="bone"/>
+  <line x1="290" y1="213" x2="354" y2="213" class="split"/>
+  <line x1="298" y1="185" x2="294" y2="213" class="split"/>
+  <line x1="342" y1="185" x2="346" y2="213" class="split"/>
+  <rect x="296" y="216" width="56" height="15" rx="2" class="bone" transform="translate(4,0)"/>
+  <rect x="10" y="268" width="10" height="8" rx="1" fill="#fbbf24" opacity="0.8"/>
+  <text x="24" y="276" class="t">Depression</text>
+  <line x1="110" y1="272" x2="130" y2="272" stroke="#f87171" stroke-width="2"/>
+  <text x="135" y="276" class="t">Fracture line</text>
+  <text x="230" y="276" class="t" fill="#94a3b8">L=lateral  M=medial</text>
+</svg>`,
         citations: [
           { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://scholar.google.com/scholar?q=Schatzker%20tibial%20plateau%20fracture%20classification%20Clin%20Orthop%201979' },
         ],
