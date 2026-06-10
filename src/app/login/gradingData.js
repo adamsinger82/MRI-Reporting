@@ -305,6 +305,10 @@ const MRI_GRADING_DATA = {
         plane: 'Sagittal T1 / T2',
         description: 'Two most widely used grading systems for neural foraminal stenosis on MRI. Images to be added.',
         diagram: null,
+        regionImages: {
+          cervical: '/images/msk/cervicalkim.png',
+          lumbar:   '/images/msk/leelumbar.png',
+        },
         citations: [
           { label: 'Kang Y et al. — MRI grading system for cervical foraminal stenosis. Korean J Radiol 2011;12(5):585-589.', url: 'https://scholar.google.com/scholar?q=Kang+MRI+grading+system+cervical+foraminal+stenosis+Korean+Journal+Radiology+2011' },
           { label: 'Lee JW et al. — Cervical foraminal stenosis grading. Spine 2009.', url: 'https://scholar.google.com/scholar?q=Lee+cervical+foraminal+stenosis+grading+MRI+radiculopathy+Spine+2009' },
@@ -347,6 +351,7 @@ const MRI_GRADING_DATA = {
         plane: 'Sagittal T2',
         description: 'Pfirrmann classification of disc degeneration on sagittal T2 MRI. Grades I-V based on signal, structure, nucleus/annulus distinction, and disc height.',
         diagram: null,
+        image: '/images/msk/pfirrman.jpg',
         citations: [
           { label: 'Pfirrmann CW et al. — MR classification of lumbar intervertebral disc degeneration. Spine 2001;26(17):1873-1878.', url: 'https://scholar.google.com/scholar?q=Pfirrmann+magnetic+resonance+classification+lumbar+intervertebral+disc+degeneration+Spine+2001' },
         ],
@@ -454,6 +459,7 @@ const CT_GRADING_DATA = {
         plane: 'Coronal + Axial',
         description: 'Schatzker classification of tibial plateau fractures. Types I–III involve the lateral plateau only. Type IV involves the medial plateau (higher energy, worse prognosis). Types V–VI are bicondylar/complex. Higher Schatzker type = greater articular comminution and axial instability.',
         diagram: null,
+        image: '/images/msk/schatzker.png',
         citations: [
           { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://scholar.google.com/scholar?q=Schatzker%20tibial%20plateau%20fracture%20classification%20Clin%20Orthop%201979' },
           { label: 'Zeltser DW & Leopold SS. — Schatzker classification. Clin Orthop 2013;471(3):771-773.', url: 'https://scholar.google.com/scholar?q=Zeltser%20Leopold%20Schatzker%20classification%20Clin%20Orthop%202013' },
@@ -537,6 +543,7 @@ const CT_GRADING_DATA = {
         plane: 'Coronal + Axial',
         description: 'Schatzker classification of tibial plateau fractures (proximal intra-articular). CT is the gold standard for classification and surgical planning. Assess for articular depression, split components, and posterior plateau involvement (often missed on X-ray).',
         diagram: null,
+        image: '/images/msk/schatzker.png',
         citations: [
           { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://scholar.google.com/scholar?q=Schatzker%20tibial%20plateau%20fracture%20classification%20Clin%20Orthop%201979' },
         ],
@@ -1120,6 +1127,26 @@ const CT_GRADING_DATA = {
           { label: 'Tile A', value: 'Stable — posterior arch intact' },
           { label: 'Tile B', value: 'Rotationally unstable, vertically stable — posterior arch partially intact' },
           { label: 'Tile C', value: 'Rotationally + vertically unstable — posterior arch completely disrupted' },
+        ],
+      },
+      {
+        id: 'denis_sacral_fracture',
+        label: 'Denis Classification — Sacral Fracture',
+        isGradingScale: true,
+        plane: 'Coronal CT',
+        description: 'Denis classification of sacral fractures by zone of injury relative to the sacral foramina. Zone III injuries carry the highest risk of neurological deficit and spinal instability.',
+        diagram: null,
+        image: '/images/msk/denis.png',
+        citations: [
+          { label: 'Denis F et al. — Sacral fractures: an important problem. Clin Orthop 1988;227:67-81.', url: 'https://scholar.google.com/scholar?q=Denis+sacral+fractures+important+problem+Clin+Orthop+1988' },
+        ],
+        normalValues: [
+          { label: 'Zone I (Alar)', value: 'Lateral to sacral foramina — most common (50%); neurologic deficit in ~6%; L5 root at risk' },
+          { label: 'Zone II (Foraminal)', value: 'Through sacral foramina — neurologic deficit in ~28%; lumbosacral plexus and S1–S4 roots at risk' },
+          { label: 'Zone III (Central)', value: 'Medial to foramina, involving spinal canal — neurologic deficit in ~57%; bowel/bladder dysfunction; highest instability risk' },
+          { label: 'H-type / U-type fracture', value: 'Bilateral vertical + transverse component — bilateral Zone II/III; highly unstable; cauda equina syndrome risk' },
+          { label: 'Spinopelvic dissociation', value: 'Complete separation of lumbosacral spine from pelvis — surgical emergency; seen with high-energy H/U fractures' },
+          { label: 'Imaging tip', value: 'Axial CT: look for foraminal asymmetry and canal involvement. Coronal reformat best shows zone classification.' },
         ],
       },
     ],
