@@ -5440,7 +5440,160 @@ function IncidentalPanel({ showLung, showGU, noduleType, setNoduleType, noduleSi
 // JIA=Juvenile Idiopathic Arthritis, Hemo=Hemophilia, Scl=Scleroderma,
 // EOA=Erosive OA, Hem=Hemochromatosis, Sep=Septic/Infectious
 
-import { RHEUM_JOINTS, DIAG_INFO, RHEUM_EXAMPLE_IMAGES, buildRheumPrompt } from './rheumData';
+import { RHEUM_JOINTS, DIAG_INFO, RHEUM_EXAMPLE_IMAGES } from './rheumData';
+
+function buildRheumPrompt(joint, laterality, views) {
+  const jLabel = RHEUM_JOINTS[joint]?.label || joint;
+  const latLabel = laterality === 'bilateral' ? 'Bilateral' : (laterality === 'left' ? 'Left' : 'Right');
+  const viewsLabel = views ? `, ${views} view${views==='1'?'':'s'}` : '';
+  return `You are a subspecialty MSK radiologist generating a structured radiograph report for a rheumatology case.
+
+CRITICAL FORMATTING RULES:
+- NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
+- Section headers (TECHNIQUE, FINDINGS, IMPRESSION) on their own line in ALL CAPS with colon.
+- Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
+- ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes phrases like "I interpreted X as Y", "I assumed you meant Z", or any notation about speech recognition corrections. Silently apply best clinical interpretation. Output must contain ONLY formal radiology report content.
+
+TECHNIQUE:
+${latLabel} radiograph of the ${jLabel.toLowerCase()}${viewsLabel}.
+
+FINDINGS RULES:
+1. Not mentioned: write "No acute abnormality." for all structures including Soft Tissues and Bones.
+2. Positive findings: exact dictated words only.
+3. For joints: address joint space (narrowing pattern, distribution), subchondral bone (sclerosis, cysts), osteophytes, erosions (marginal, central, overhanging), bone density, periosteal reaction, soft-tissue swelling, calcifications, subluxations or deformities.
+4. BONES: address cortex integrity and any fracture or lesion.
+
+IMPRESSION RULES — FOLLOW EXACTLY:
+- The impression must be concise. Do NOT repeat or summarize individual findings from the FINDINGS section.
+- Use SINGULAR: "The imaging pattern IS most consistent with the diagnosis of [X]." — never "patterns are."
+- Secondary differential: after the first sentence, add "Next consideration includes [Y]." Keep it brief — one short clause maximum.
+- Two coexisting entities: "The imaging pattern is most consistent with [X] superimposed with [Y]." Then optionally one brief next consideration sentence.
+- Normal: "No radiographic evidence of significant arthropathy of the ${jLabel.toLowerCase()}."
+- KNEE-SPECIFIC CPPD vs OA RULE: If chondrocalcinosis is present WITH isolated patellofemoral narrowing and/or prominent subchondral cysts, favor CPPD as the primary diagnosis. If chondrocalcinosis is present WITH tricompartmental or medial-predominant narrowing and osteophytes, favor OA as primary with CPPD as next consideration.
+- Do NOT reference ABCDE or ABCDEs anywhere in the report.
+- Do NOT restate or paraphrase findings from the FINDINGS section in the impression.
+- Use complete sentences only — no numbered lists.
+- Maximum 2–3 sentences total in the impression.
+
+FORMAT — one blank line between each section:
+${buildReportHeading('XR', jLabel.toLowerCase(), laterality==='bilateral'?'bilateral':(laterality==='left'?'left':'right'), '', '')}
+
+HISTORY:
+
+COMPARISON: None.
+
+TECHNIQUE:
+${latLabel} radiograph of the ${jLabel.toLowerCase()}${viewsLabel}.
+
+FINDINGS:
+Structure: finding
+
+IMPRESSION:
+The imaging pattern is most consistent with the diagnosis of [X].`;
+}
+
+// ── Rheum DDx Panel ─────────────────────────────────────────────────────────
+// ── Rheum Example Images (base64 embedded) ──────────────────────────────────
+const RHEUM_EXAMPLE_IMAGES = {
+  // ── SI Joints ──────────────────────────────────────────────────────────────
+  si_erosions_iliac: {
+    src: '/images/msk/rheum_si_erosions_iliac.jpg',
+    caption: 'Symmetric sacroiliitis: CT shows sclerosis and erosions on the iliac aspect of both SI joints bilaterally.',
+  },
+  si_unilateral: {
+    src: '/images/msk/rheum_si_unilateral.jpg',
+    caption: 'Unilateral sacroiliitis: AP pelvis showing asymmetric sacroiliac joint involvement.',
+  },
+  // ── Hip ────────────────────────────────────────────────────────────────────
+  hip_axial: {
+    src: '/images/msk/rheum_hip_axial.jpg',
+    caption: 'Axial migration and protrusio deformity: AP pelvis showing concentric joint space narrowing and medial femoral head migration, characteristic of inflammatory arthritis.',
+  },
+  hip_protrusio: {
+    src: '/images/msk/rheum_hip_protrusio.jpg',
+    caption: 'Protrusio deformity: Bilateral hip radiograph demonstrating medial migration of femoral heads beyond the ilioischial line, consistent with rheumatoid arthritis.',
+  },
+  // ── Hand ───────────────────────────────────────────────────────────────────
+  h_mcp: {
+    src: '/images/msk/rheum_h_mcp.jpg',
+    caption: 'Rheumatoid arthritis: Marginal erosions at the MCPs and carpal joints with periarticular osteopenia and symmetric joint space narrowing.',
+  },
+  h_carpal: {
+    src: '/images/msk/rheum_h_carpal.jpg',
+    caption: 'Rheumatoid arthritis: Pan-carpal involvement with erosions and periarticular osteopenia, characteristic of RA.',
+  },
+  h_acroosteolysis: {
+    src: '/images/msk/rheum_h_acroosteolysis.jpg',
+    caption: 'Acro-osteolysis: Resorption of the distal phalanges, characteristic of scleroderma and other collagen vascular diseases.',
+  },
+  hand_hpoa: {
+    src: '/images/msk/rheum_hand_hpoa.jpg',
+    caption: 'HPOA (Hypertrophic Pulmonary Osteoarthropathy): Periosteal new bone formation along the diaphyses, associated with pulmonary disease.',
+  },
+  // ── Wrist ──────────────────────────────────────────────────────────────────
+  w_scapholunar: {
+    src: '/images/msk/rheum_w_scapholunar.jpg',
+    caption: 'Wide scapholunate interval (Terry Thomas sign): PA wrist radiograph showing abnormal widening of the scapholunate space (>3 mm), indicating scapholunate ligament disruption. This is an early finding preceding SLAC wrist collapse, and can be seen in CPPD, RA, and gout.',
+  },
+  // ── Foot ───────────────────────────────────────────────────────────────────
+  ft_mtp_ra: {
+    src: '/images/msk/rheum_ft_mtp_ra.jpg',
+    caption: 'Rheumatoid arthritis: MTP joint erosions in the forefoot with periarticular osteopenia and joint space narrowing.',
+  },
+  ft_mtp_ra_forefoot: {
+    src: '/images/msk/rheum_ft_mtp_ra_forefoot.jpg',
+    caption: 'Rheumatoid arthritis — forefoot involvement: MTP erosions bilaterally with classic RA distribution.',
+  },
+  ft_5mtp_erosion: {
+    src: '/images/msk/rheum_ft_5mtp_erosion.jpg',
+    caption: '5th MTP erosion: Marginal erosion at the 5th metatarsophalangeal joint, raising suspicion for rheumatoid arthritis.',
+  },
+  // ── Knee ───────────────────────────────────────────────────────────────────
+  kn_uniform_narrow: {
+    src: '/images/msk/rheum_kn_uniform_narrow.jpg',
+    caption: 'Inflammatory arthropathy of the knee: Uniform joint space narrowing without significant osteophytes, consistent with rheumatoid arthritis.',
+  },
+  // ── Cervical Spine ─────────────────────────────────────────────────────────
+  cs_atlantoaxial: {
+    src: '/images/msk/rheum_cs_atlantoaxial.jpg',
+    caption: 'Atlantoaxial subluxation in RA: Lateral cervical spine radiograph showing widening of the atlanto-dental interval, consistent with C1-C2 instability from rheumatoid pannus.',
+  },
+  cs_adi_widened: {
+    src: '/images/msk/rheum_cs_adi_widened.jpg',
+    caption: 'Widened atlanto-dental interval (ADI): Lateral c-spine showing ADI > 2.5 mm, consistent with transverse ligament laxity from RA.',
+  },
+  // ── Elbow ──────────────────────────────────────────────────────────────────
+  el_osteo_bodies: {
+    src: '/images/msk/rheum_el_osteo_bodies.jpg',
+    caption: 'Synovial osteochondromatosis: Lateral elbow radiograph showing multiple intra-articular calcified bodies of similar size, characteristic of synovial osteochondromatosis.',
+  },
+};
+// Synovial osteochondromatosis — knee/shoulder/hip reuse the elbow image
+RHEUM_EXAMPLE_IMAGES.kn_syn_oc = RHEUM_EXAMPLE_IMAGES.el_osteo_bodies;
+// Wrist — ulnar-sided pathology
+RHEUM_EXAMPLE_IMAGES.w_sig_notch = {
+  src: '/images/msk/rheum_w_sig_notch.jpg',
+  caption: 'Ulnar impingement / sigmoid notch impingement: Radiograph showing positive ulnar variance with impingement of the distal ulna at the sigmoid notch of the radius, causing pain and limited forearm rotation.',
+};
+RHEUM_EXAMPLE_IMAGES.h_boutonniere = {
+  src: '/images/msk/rheum_h_boutonniere.jpg',
+  caption: 'Boutonnière deformity: Lateral radiograph of the finger showing PIP flexion with DIP hyperextension, caused by rupture of the central slip of the extensor tendon — a classic deformity of rheumatoid arthritis.',
+};
+RHEUM_EXAMPLE_IMAGES.w_ul_abutment = {
+  src: '/images/msk/rheum_w_ul_abutment.jpg',
+  caption: 'Ulnolunate abutment syndrome: Radiograph demonstrating positive ulnar variance with subchondral sclerosis and cystic change at the proximal ulnar aspect of the lunate and/or triquetrum, consistent with impaction syndrome from chronic ulnocarpal loading.',
+};
+// Knee gout findings share the same example image
+const _kneeGoutImg = {
+  src: '/images/msk/knee_gout.jpg',
+  caption: 'Gout of the knee: Lateral radiograph demonstrating calcified periarticular soft-tissue nodules near the patella (tophi) and non-articular polar patellar erosions — classic features of tophaceous gout at the knee.',
+};
+RHEUM_EXAMPLE_IMAGES.kn_calc_nodules = _kneeGoutImg;
+RHEUM_EXAMPLE_IMAGES.kn_polar_patellar = _kneeGoutImg;
+RHEUM_EXAMPLE_IMAGES.sh_syn_oc = RHEUM_EXAMPLE_IMAGES.el_osteo_bodies;
+RHEUM_EXAMPLE_IMAGES.hip_syn_oc = RHEUM_EXAMPLE_IMAGES.el_osteo_bodies;
+
+
 function RheumDDxPanel({ rheumJoint, rheumLaterality, rheumChecks, setRheumChecks, onGenerate, isGenerating, dm }) {
   const jointData = RHEUM_JOINTS[rheumJoint];
   const accent = '#a855f7';
