@@ -5199,7 +5199,7 @@ function ReferencePanel({ selectedBodyPart, modality = 'MRI', spineRegion = 'lum
                     ))}
                   </div>
                 </div>
-              ) : selectedMeasurement.diagram === 'sanders_calcaneus' ? <img src="/images/msk/sanders_calcaneus.jpg" alt="Sanders calcaneus classification" style={{width:'100%',maxWidth:520,display:'block',margin:'0 auto',borderRadius:4}} /> : selectedMeasurement.image ? <img src={selectedMeasurement.image} alt={selectedMeasurement.label} style={{width:'100%',display:'block',borderRadius:4}} /> : selectedMeasurement.regionImages ? (selectedMeasurement.regionImages[spineRegion] ? <img src={selectedMeasurement.regionImages[spineRegion]} alt={`${selectedMeasurement.label} — ${spineRegion}`} style={{width:'100%',display:'block',borderRadius:4}} /> : <div style={{ padding:24,textAlign:'center',color:'#94a3b8',fontSize:12 }}>No image for {spineRegion} region</div>) : (DIAGRAM_SVGS[selectedMeasurement.diagram] || <div style={{ padding:24,textAlign:'center',color:'#94a3b8',fontSize:12 }}>Diagram coming soon</div>)}
+              ) : selectedMeasurement.diagram === 'sanders_calcaneus' ? <img src="/images/msk/sanders_calcaneus.jpg" alt="Sanders calcaneus classification" style={{width:'100%',maxWidth:520,display:'block',margin:'0 auto',borderRadius:4}} /> : (DIAGRAM_SVGS[selectedMeasurement.diagram] || <div style={{ padding:24,textAlign:'center',color:'#94a3b8',fontSize:12 }}>Diagram coming soon</div>)}
             </div>
             {selectedMeasurement.citations && (
               <div style={{ display:'flex',flexDirection:'column',gap:4 }}>
@@ -5219,16 +5219,24 @@ function ReferencePanel({ selectedBodyPart, modality = 'MRI', spineRegion = 'lum
       </div>
       <div style={{ height:1,background:dm?'#334155':'linear-gradient(to right,transparent,#e2e8f0,transparent)',margin:'14px 0',flexShrink:0 }} />
       <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
-        <p style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent,margin:0 }}>{selectedMeasurement?.id === 'modic_changes' ? '🔬 Imaging Findings' : selectedMeasurement?.id === 'disc_nomenclature' ? '📖 Terminology' : selectedMeasurement?.spineRegions ? '📋 Nomenclature and Grading' : '📊 Normal Values'}</p>
+        <p style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:accent,margin:0 }}>{selectedMeasurement?.id === 'modic_changes' ? '🔬 Imaging Findings' : selectedMeasurement?.id === 'disc_nomenclature' ? '📖 Terminology' : '📊 Normal Values'}</p>
         {selectedMeasurement ? (
           <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12 }}>
             <tbody>
-              {selectedMeasurement.normalValues.map((nv,i) => (
-                <tr key={i} style={{ borderBottom:'1px solid '+(dm?'#334155':'#f1f5f9') }}>
-                  <td style={{ padding:'5px 4px',color:dm?'#94a3b8':'#64748b',width:'45%',verticalAlign:'top' }}>{nv.label}</td>
-                  <td style={{ padding:'5px 4px',color:dm?'#e2e8f0':'#1e293b',fontWeight:600,fontFamily:"'Courier New',monospace" }}>{nv.value}</td>
-                </tr>
-              ))}
+              {selectedMeasurement.normalValues.map((nv,i) => {
+                const isHeader = nv.label.startsWith('──');
+                if (isHeader) return (
+                  <tr key={i}>
+                    <td colSpan={2} style={{ padding:'8px 4px 3px',paddingTop:i===0?2:10,color:'#38bdf8',fontSize:12,fontWeight:800,letterSpacing:'0.04em',borderBottom:'1px solid '+(dm?'#1e3a5f':'#bae6fd') }}>{nv.label.replace(/^──\s*/,'').replace(/\s*──$/,'').trim()}</td>
+                  </tr>
+                );
+                return (
+                  <tr key={i} style={{ borderBottom:'1px solid '+(dm?'#334155':'#f1f5f9') }}>
+                    <td style={{ padding:'5px 4px',color:dm?'#94a3b8':'#64748b',width:'45%',verticalAlign:'top' }}>{nv.label}</td>
+                    <td style={{ padding:'5px 4px',color:dm?'#e2e8f0':'#1e293b',fontWeight:600,fontFamily:"'Courier New',monospace" }}>{nv.value}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         ) : (
@@ -5237,7 +5245,10 @@ function ReferencePanel({ selectedBodyPart, modality = 'MRI', spineRegion = 'lum
               <div key={m.id} onClick={() => setSelectedMeasurementId(m.id)}
                 style={{ padding:'7px 10px',background:dm?'#0f172a':'#f8fafc',borderRadius:7,border:'1px solid '+(dm?'#334155':'#f1f5f9'),cursor:'pointer' }}>
                 <div style={{ fontSize:12,fontWeight:600,color:'#0891b2' }}>{m.label}</div>
-                <div style={{ fontSize:11,color:dm?'#94a3b8':'#64748b' }}>{m.normalValues[0]?.label}: {m.normalValues[0]?.value}</div>
+                {m.isGradingScale
+                  ? <div style={{ fontSize:11,color:dm?'#60a5fa':'#0369a1',fontWeight:500 }}>View grading scale →</div>
+                  : <div style={{ fontSize:11,color:dm?'#94a3b8':'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{m.normalValues[0]?.label}: {m.normalValues[0]?.value}</div>
+                }
               </div>
             ))}
           </div>
@@ -5961,12 +5972,10 @@ async function supaGetUser(accessToken) {
 
 function saveSession(session) {
   try {
-    const TWO_HOURS = 2 * 60 * 60 * 1000;
-    const tokenExpiry = (session.expires_in || 3600) * 1000;
     localStorage.setItem('msk_session', JSON.stringify({
       access_token: session.access_token,
       refresh_token: session.refresh_token,
-      expires_at: Date.now() + Math.max(tokenExpiry, TWO_HOURS),
+      expires_at: Date.now() + (session.expires_in || 3600) * 1000,
       user: session.user,
     }));
   } catch {}
@@ -5977,10 +5986,7 @@ function loadSession() {
     const raw = localStorage.getItem('msk_session');
     if (!raw) return null;
     const s = JSON.parse(raw);
-    // Only hard-expire if past the stored time AND no refresh_token available
-    if (s.expires_at && s.expires_at < Date.now() && !s.refresh_token) {
-      localStorage.removeItem('msk_session'); return null;
-    }
+    if (s.expires_at && s.expires_at < Date.now()) { localStorage.removeItem('msk_session'); return null; }
     return s;
   } catch { return null; }
 }
@@ -6423,30 +6429,7 @@ export default function DashboardPage() {
     doRestore();
   }, []);
 
-  // ── Background token refresh — runs every 30 min while logged in ──────────
-  useEffect(() => {
-    if (!authUser) return;
-    const THIRTY_MIN = 30 * 60 * 1000;
-    const interval = setInterval(async () => {
-      const s = loadSession();
-      if (!s?.refresh_token) return;
-      try {
-        const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
-          body: JSON.stringify({ refresh_token: s.refresh_token }),
-        });
-        if (r.ok) {
-          const fresh = await r.json();
-          if (fresh.access_token) {
-            saveSession(fresh);
-            setAuthUser(u => ({ ...u, access_token: fresh.access_token }));
-          }
-        }
-      } catch {} // Silent failure — user stays logged in until token truly expires
-    }, THIRTY_MIN);
-    return () => clearInterval(interval);
-  }, [authUser?.id]);
+  // ── Fetch published CME modules once (used for CME banner matching) ──────
   useEffect(() => {
     fetch(`${SUPABASE_URL}/rest/v1/cme_modules?select=id,title,specialty,url&status=eq.published`, {
       headers: { apikey: getAnonKey() }
@@ -6531,7 +6514,6 @@ export default function DashboardPage() {
   const [modality, setModality] = useState('MRI');
   const [dictationText, setDictationText] = useState('');
   const [generatedReport, setGeneratedReport] = useState('');
-  const [col2EditMode, setCol2EditMode] = useState(false); // toggles Col 2 into editable mode
   const [isGenerating, setIsGenerating] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [micError, setMicError] = useState('');
@@ -6747,74 +6729,71 @@ export default function DashboardPage() {
     setIsGeneratingRheum(false);
   };
 
-  // activeRef: true while user wants dictation running — set false only on explicit Stop or unmount
-  const activeRef = useRef(false);
+  const keepaliveTimerRef = useRef(null);
 
-  const startRecognition = () => {
-    const SR = window.webkitSpeechRecognition || window.SpeechRecognition;
-    if (!SR || !activeRef.current) return;
-    const recognition = new SR();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
-    recognition.onstart = () => setIsListening(true);
-    recognition.onresult = (event) => {
-      let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const t = event.results[i][0].transcript;
-        if (event.results[i].isFinal) finalTranscriptPersistRef.current += t + ' ';
-        else interim += t;
-      }
-      const transcript = finalTranscriptPersistRef.current + interim;
-      if (isRheumRef.current) setRheumFreeText(transcript);
-      else setDictationText(transcript);
-    };
-    recognition.onerror = (event) => {
-      if (event.error === 'not-allowed') {
-        activeRef.current = false;
-        setMicError('Microphone access denied. Click the lock icon in your address bar.');
-        setIsListening(false);
-      }
-      // all other errors (network, no-speech, aborted) — onend will fire and restart
-    };
-    recognition.onend = () => {
-      if (activeRef.current) {
-        // Browser ended the session (timeout, silence, etc.) — restart immediately
-        setTimeout(startRecognition, 100);
-      } else {
-        setIsListening(false);
-      }
-    };
-    recognitionRef.current = recognition;
-    try { recognition.start(); } catch { setTimeout(startRecognition, 200); }
+  const startKeepalive = (getRecRef) => {
+    stopKeepalive();
+    keepaliveTimerRef.current = setInterval(() => {
+      const rec = getRecRef();
+      if (!rec) { stopKeepalive(); return; }
+      // Restart recognition before browser's ~60s silence timeout fires
+      // We do this by stopping; onend will immediately restart with persisted transcript
+      try { rec.stop(); } catch {}
+    }, 8000);
+  };
+
+  const stopKeepalive = () => {
+    if (keepaliveTimerRef.current) { clearInterval(keepaliveTimerRef.current); keepaliveTimerRef.current = null; }
   };
 
   const toggleListening = () => {
-    if (isListening) {
-      activeRef.current = false;
-      recognitionRef.current?.stop();
-      recognitionRef.current = null;
-      setIsListening(false);
-      return;
-    }
+    if (isListening) { stopKeepalive(); recognitionRef.current?.stop(); setIsListening(false); return; }
     const SR = window.webkitSpeechRecognition || window.SpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
-    // Seed persist ref with existing text so restarts append rather than erase
-    finalTranscriptPersistRef.current = isRheumRef.current ? (rheumFreeText || '') : (dictationText || '');
-    activeRef.current = true;
-    startRecognition();
+    finalTranscriptPersistRef.current = ''; // reset transcript on fresh dictation start
+    try {
+      const recognition = new SR();
+      recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US'; recognition.maxAlternatives = 1;
+      recognition.onstart = () => setIsListening(true);
+      recognition.onaudiostart = () => setIsListening(true);
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const t = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalTranscriptPersistRef.current += t + ' ';
+          else interim += t;
+        }
+        const transcript = finalTranscriptPersistRef.current + interim;
+        if (isRheumRef.current) setRheumFreeText(transcript);
+        else setDictationText(transcript);
+      };
+      recognition.onerror = (event) => {
+        if (event.error === 'not-allowed') { stopKeepalive(); setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
+      };
+      recognition.onend = () => {
+        if (recognitionRef.current === recognition) {
+          setTimeout(() => {
+            if (recognitionRef.current !== recognition) return;
+            const SR2 = window.webkitSpeechRecognition || window.SpeechRecognition;
+            try {
+              const rec2 = new SR2();
+              rec2.continuous = true; rec2.interimResults = true; rec2.lang = 'en-US'; rec2.maxAlternatives = 1;
+              rec2.onstart = recognition.onstart; rec2.onaudiostart = recognition.onaudiostart;
+              rec2.onresult = recognition.onresult; rec2.onerror = recognition.onerror; rec2.onend = recognition.onend;
+              rec2.start(); recognitionRef.current = rec2;
+            } catch { stopKeepalive(); setIsListening(false); }
+          }, 150);
+        }
+      };
+      recognition.start();
+      recognitionRef.current = recognition;
+      startKeepalive(() => recognitionRef.current);
+    } catch (err) { stopKeepalive(); setIsListening(false); setMicError('Could not start microphone: ' + err.message); }
   };
 
-  const stopListening = () => {
-    activeRef.current = false;
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-    setIsListening(false);
-  };
-
-  useEffect(() => () => { activeRef.current = false; recognitionRef.current?.stop(); }, []);
+  const stopListening = () => { stopKeepalive(); const rec = recognitionRef.current; recognitionRef.current = null; try { rec?.stop(); } catch {} setIsListening(false); };
+  useEffect(() => () => { stopKeepalive(); recognitionRef.current?.stop(); }, []);
 
   const inp = { width:'100%',padding:'9px 12px',border:'1px solid '+(dm?'#334155':'#dde3ed'),borderRadius:8,fontSize:14,boxSizing:'border-box',color:dm?'#e2e8f0':'#1e293b',outline:'none',background:dm?'#0f172a':'white' };
   const lbl = { fontSize:11,fontWeight:600,color:dm?'#94a3b8':'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
@@ -7365,11 +7344,11 @@ export default function DashboardPage() {
                   </button>
                   <button onClick={() => {
                     if (isListening) stopListening();
+                    stopKeepalive();
                     finalTranscriptPersistRef.current = '';
                     setDictationText('');
                     setRheumFreeText('');
                     setGeneratedReport('');
-                    setCol2EditMode(false);
                   }} disabled={!canReset}
                     title="Clear dictation and report — start next case"
                     style={{ flex:1,padding:'10px 12px',borderRadius:9,border:'1.5px solid '+(canReset?(dm?'#475569':'#cbd5e1'):(dm?'#1e293b':'#e2e8f0')),background:canReset?(dm?'#1e293b':'#f8fafc'):(dm?'#0f172a':'#f1f5f9'),color:canReset?(dm?'#94a3b8':'#64748b'):(dm?'#334155':'#cbd5e1'),fontSize:12,fontWeight:600,cursor:canReset?'pointer':'not-allowed',transition:'all 0.15s',flexShrink:0 }}
@@ -7385,57 +7364,31 @@ export default function DashboardPage() {
 
         {/* Col 2 — Report */}
         <div className={`msk-col${mobileTab===1?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
-          <div style={{ background:'linear-gradient(135deg,#5b21b6,#7c3aed)',padding:'15px 18px',display:'flex',alignItems:'center',gap:10 }}>
-            <span style={{ fontSize:18,filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>📄</span>
-            <span style={{ color:'white',fontWeight:800,fontSize:13,textTransform:'uppercase',letterSpacing:'0.14em',textShadow:'0 1px 3px rgba(0,0,0,0.2)',flex:1 }}>Generated Report</span>
-            {generatedReport && (
-              <button
-                onClick={() => setCol2EditMode(m => !m)}
-                title={col2EditMode ? 'Lock (read-only)' : 'Edit report text'}
-                style={{ background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.3)',borderRadius:6,color:'white',fontSize:13,padding:'3px 8px',cursor:'pointer',lineHeight:1,fontWeight:600,transition:'background 0.15s' }}
-                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.28)'}
-                onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.15)'}
-              >{col2EditMode ? '🔒 Lock' : '✏️ Edit'}</button>
-            )}
-          </div>
+          {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
-            {/* Report box — formatted view always rendered; textarea overlaid when editing */}
-            <div style={{ flex:1,position:'relative',minHeight:340,maxHeight:'65vh',display:'flex',flexDirection:'column' }}>
-              {/* Formatted display — always visible underneath */}
-              <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(col2EditMode?(dm?'#7c3aed':'#a78bfa'):(dm?'#334155':'#e8edf5')),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc'),transition:'border-color 0.15s',visibility:col2EditMode?'hidden':'visible' }}>
-                {isGenerating
-                  ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
-                  : generatedReport
-                    ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, dm ? {
-                        neg:'#64748b',
-                        pos:'#fbbf24',
-                        lbl:'#94a3b8',
-                        body:'#cbd5e1',
-                        posW:600,
-                        border:'#334155',
-                        hdr:'#93c5fd'
-                      } : {
-                        neg:'#6b7280',
-                        pos:'#dc2626',
-                        lbl:'#1e293b',
-                        body:'#1e293b',
-                        posW:600,
-                        border:'#e2e8f0',
-                        hdr:'#1e3a5f'
-                      })}</div>
-                    : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
-                }
-              </div>
-              {/* Textarea overlay — only mounted when editing */}
-              {col2EditMode && (
-                <textarea
-                  autoFocus
-                  defaultValue={generatedReport}
-                  onChange={e => setGeneratedReport(e.target.value)}
-                  spellCheck={false}
-                  style={{ position:'absolute',inset:0,width:'100%',height:'100%',padding:'14px 16px',border:'1px solid '+(dm?'#7c3aed':'#a78bfa'),borderRadius:10,background:dm?'#0f172a':'white',color:dm?'#e2e8f0':'#1e293b',fontFamily:"Georgia,'Times New Roman',serif",fontSize:13,lineHeight:1.7,resize:'none',outline:'none',boxSizing:'border-box',overflowY:'auto' }}
-                />
-              )}
+            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(dm?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
+              {isGenerating
+                ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
+                : generatedReport
+                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, dm ? {
+                      neg:'#64748b',   // dark mode normals: medium slate — visible but subdued
+                      pos:'#fbbf24',   // dark mode positives: amber/yellow — warm, clear, not harsh
+                      lbl:'#94a3b8',   // subheading labels
+                      body:'#cbd5e1',  // impression body text
+                      posW:600,
+                      border:'#334155',
+                      hdr:'#93c5fd'
+                    } : {
+                      neg:'#6b7280',   // light mode normals: grey
+                      pos:'#dc2626',   // light mode positives: red
+                      lbl:'#1e293b',
+                      body:'#1e293b',
+                      posW:600,
+                      border:'#e2e8f0',
+                      hdr:'#1e3a5f'
+                    })}</div>
+                  : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
+              }
             </div>
             <CopyButton generatedReport={generatedReport} dm={dm} />
           </div>
