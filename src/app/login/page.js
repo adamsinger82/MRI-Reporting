@@ -5944,7 +5944,7 @@ recruiter:   'tou_recruiter_accepted_at',
 industry:    'tou_industry_accepted_at',
 };
 const touField = touFieldMap[userType] || 'tou_radiologist_accepted_at';
-await fetch(${SUPA_URL}/rest/v1/profiles, {
+await fetch(`${SUPA_URL}/rest/v1/profiles`, {
 method: 'POST',
 headers: {
 apikey: getAnonKey(),
