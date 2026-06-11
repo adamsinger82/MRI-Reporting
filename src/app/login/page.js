@@ -6732,20 +6732,25 @@ export default function DashboardPage() {
   };
 
   const keepaliveTimerRef = useRef(null);
+  const gracePeriodRef = useRef(false); // true = last result just finalized, delay keepalive restart
+  const graceTimerRef = useRef(null);
 
   const startKeepalive = (getRecRef) => {
     stopKeepalive();
     keepaliveTimerRef.current = setInterval(() => {
+      // If we just got a final result, skip this cycle — let Chrome process trailing audio
+      if (gracePeriodRef.current) return;
       const rec = getRecRef();
       if (!rec) { stopKeepalive(); return; }
       // Restart recognition before browser's ~5s silence timeout fires
-      // We do this by stopping; onend will immediately restart with persisted transcript
       try { rec.stop(); } catch {}
     }, 4000);
   };
 
   const stopKeepalive = () => {
     if (keepaliveTimerRef.current) { clearInterval(keepaliveTimerRef.current); keepaliveTimerRef.current = null; }
+    if (graceTimerRef.current) { clearTimeout(graceTimerRef.current); graceTimerRef.current = null; }
+    gracePeriodRef.current = false;
   };
 
   const toggleListening = () => {
@@ -6761,10 +6766,18 @@ export default function DashboardPage() {
       recognition.onaudiostart = () => setIsListening(true);
       recognition.onresult = (event) => {
         let interim = '';
+        let gotFinal = false;
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const t = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalTranscriptPersistRef.current += t + ' ';
+          if (event.results[i].isFinal) { finalTranscriptPersistRef.current += t + ' '; gotFinal = true; }
           else interim += t;
+        }
+        // Grace period: after a final result, pause keepalive restarts for 2.5s
+        // so Chrome can finish processing any trailing audio (e.g. end-of-dictation pause)
+        if (gotFinal) {
+          gracePeriodRef.current = true;
+          if (graceTimerRef.current) clearTimeout(graceTimerRef.current);
+          graceTimerRef.current = setTimeout(() => { gracePeriodRef.current = false; graceTimerRef.current = null; }, 2500);
         }
         const transcript = finalTranscriptPersistRef.current + interim;
         if (isRheumRef.current) setRheumFreeText(transcript);
