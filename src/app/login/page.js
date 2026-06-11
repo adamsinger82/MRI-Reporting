@@ -5948,7 +5948,7 @@ await fetch(`${SUPA_URL}/rest/v1/profiles`, {
 method: 'POST',
 headers: {
 apikey: getAnonKey(),
-Authorization: Bearer ${data.access_token || getAnonKey()},
+Authorization: `Bearer ${data.access_token || getAnonKey()}`,
 'Content-Type': 'application/json',
 Prefer: 'return=minimal,resolution=ignore-duplicates',
 },
