@@ -307,7 +307,7 @@ const MRI_GRADING_DATA = {
         spineRegions: ['cervical'],
         plane: 'Sagittal T1',
         description: 'Grading of cervical neural foraminal stenosis on sagittal T1 MRI based on perineural fat obliteration and nerve root visibility.',
-        diagram: null,
+        diagram: 'spine-foraminal',
         citations: [
           { label: 'Kim KY et al. — MRI grading of cervical neural foraminal stenosis. Spine 2013.', url: 'https://scholar.google.com/scholar?q=Kim+MRI+grading+cervical+neural+foraminal+stenosis+2013' },
           { label: 'Park HJ et al. — Grading of cervical foraminal stenosis on oblique sagittal MRI. AJR 2014;202(2):394-401.', url: 'https://scholar.google.com/scholar?q=Park+cervical+foraminal+stenosis+oblique+sagittal+MRI+AJR+2014' },
@@ -330,7 +330,7 @@ const MRI_GRADING_DATA = {
         spineRegions: ['thoracic','lumbar'],
         plane: 'Sagittal T1',
         description: 'Grading of lumbar neural foraminal stenosis on sagittal T1 MRI based on perineural fat and nerve root deformation.',
-        diagram: null,
+        diagram: 'spine-foraminal',
         citations: [
           { label: 'Lee JW et al. — Grading of lumbar foraminal stenosis on MRI: interobserver agreement and correlation with radiculopathy. Spine 2009.', url: 'https://scholar.google.com/scholar?q=Lee+grading+lumbar+foraminal+stenosis+MRI+interobserver+radiculopathy+Spine+2009' },
         ],
@@ -370,7 +370,7 @@ const MRI_GRADING_DATA = {
         spineRegions: ['cervical','lumbar'],
         plane: 'Sagittal T2',
         description: 'Pfirrmann classification of disc degeneration on sagittal T2 MRI. Grades I-V based on signal, structure, nucleus/annulus distinction, and disc height.',
-        diagram: null,
+        diagram: 'spine-pfirrmann',
         citations: [
           { label: 'Pfirrmann CW et al. — MR classification of lumbar intervertebral disc degeneration. Spine 2001;26(17):1873-1878.', url: 'https://scholar.google.com/scholar?q=Pfirrmann+magnetic+resonance+classification+lumbar+intervertebral+disc+degeneration+Spine+2001' },
         ],
@@ -478,6 +478,7 @@ const CT_GRADING_DATA = {
         plane: 'Coronal + Axial',
         description: 'Schatzker classification of tibial plateau fractures. Types I–III involve the lateral plateau only. Type IV involves the medial plateau (higher energy, worse prognosis). Types V–VI are bicondylar/complex. Higher Schatzker type = greater articular comminution and axial instability.',
         diagram: null,
+        singleImage: '/images/msk/schatzker.jpg',
         citations: [
           { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://scholar.google.com/scholar?q=Schatzker%20tibial%20plateau%20fracture%20classification%20Clin%20Orthop%201979' },
           { label: 'Zeltser DW & Leopold SS. — Schatzker classification. Clin Orthop 2013;471(3):771-773.', url: 'https://scholar.google.com/scholar?q=Zeltser%20Leopold%20Schatzker%20classification%20Clin%20Orthop%202013' },
@@ -561,6 +562,7 @@ const CT_GRADING_DATA = {
         plane: 'Coronal + Axial',
         description: 'Schatzker classification of tibial plateau fractures (proximal intra-articular). CT is the gold standard for classification and surgical planning. Assess for articular depression, split components, and posterior plateau involvement (often missed on X-ray).',
         diagram: null,
+        singleImage: '/images/msk/schatzker.jpg',
         citations: [
           { label: 'Schatzker J et al. — Tibial plateau fractures. Clin Orthop 1979;138:94-104.', url: 'https://scholar.google.com/scholar?q=Schatzker%20tibial%20plateau%20fracture%20classification%20Clin%20Orthop%201979' },
         ],
@@ -1144,6 +1146,24 @@ const CT_GRADING_DATA = {
           { label: 'Tile A', value: 'Stable — posterior arch intact' },
           { label: 'Tile B', value: 'Rotationally unstable, vertically stable — posterior arch partially intact' },
           { label: 'Tile C', value: 'Rotationally + vertically unstable — posterior arch completely disrupted' },
+        ],
+      },
+      {
+        id: 'denis_sacral',
+        label: 'Denis Sacral Fracture Classification',
+        isGradingScale: true,
+        plane: 'Axial + Coronal CT',
+        description: 'Denis classification of sacral fractures by zone of involvement. Zone III injuries have the highest risk of neurologic deficit (cauda equina/lumbosacral plexus). Roy-Camille subtypes apply to transverse Zone III fractures.',
+        diagram: 'pelvis-denis',
+        citations: [
+          { label: 'Denis F et al. — Sacral fractures: an important problem. Clin Orthop 1988;227:67-81.', url: 'https://scholar.google.com/scholar?q=Denis+sacral+fractures+classification+Clin+Orthop+1988' },
+        ],
+        normalValues: [
+          { label: 'Zone I (Alar)', value: 'Lateral to neural foramina. Neurologic deficit in ~6%. L5 root at risk. Most common zone.' },
+          { label: 'Zone II (Foraminal)', value: 'Through neural foramina. Neurologic deficit in ~28%. Unilateral root injury typical.' },
+          { label: 'Zone III (Central canal)', value: 'Medial to foramina, involving spinal canal. Neurologic deficit in ~57%. Cauda equina / bilateral root injury. Highest risk.' },
+          { label: 'Transverse sacral fracture', value: 'Horizontal fracture across all zones — "U-type" or "H-type" when bilateral vertical + transverse component. High instability. Roy-Camille subtyping.' },
+          { label: 'Key CT items', value: 'Zone involvement; foraminal disruption; displacement; bilateral vs unilateral; associated pelvic ring injury (Denis III often = pelvic dissociation).' },
         ],
       },
     ],

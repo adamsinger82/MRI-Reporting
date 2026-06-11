@@ -5199,7 +5199,7 @@ function ReferencePanel({ selectedBodyPart, modality = 'MRI', spineRegion = 'lum
                     ))}
                   </div>
                 </div>
-              ) : selectedMeasurement.diagram === 'sanders_calcaneus' ? <img src="/images/msk/sanders_calcaneus.jpg" alt="Sanders calcaneus classification" style={{width:'100%',maxWidth:520,display:'block',margin:'0 auto',borderRadius:4}} /> : (DIAGRAM_SVGS[selectedMeasurement.diagram] || <div style={{ padding:24,textAlign:'center',color:'#94a3b8',fontSize:12 }}>Diagram coming soon</div>)}
+              ) : selectedMeasurement.diagram === 'sanders_calcaneus' ? <img src="/images/msk/sanders_calcaneus.jpg" alt="Sanders calcaneus classification" style={{width:'100%',maxWidth:520,display:'block',margin:'0 auto',borderRadius:4}} /> : selectedMeasurement.singleImage ? <img src={selectedMeasurement.singleImage} alt={selectedMeasurement.label} style={{width:'100%',maxWidth:520,display:'block',margin:'0 auto',borderRadius:4}} /> : (DIAGRAM_SVGS[selectedMeasurement.diagram] || <div style={{ padding:24,textAlign:'center',color:'#94a3b8',fontSize:12 }}>Diagram coming soon</div>)}
             </div>
             {selectedMeasurement.citations && (
               <div style={{ display:'flex',flexDirection:'column',gap:4 }}>
