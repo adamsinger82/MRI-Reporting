@@ -5926,7 +5926,7 @@ function AdminPanel({ currentUser, onClose }) {
 
 
 async function supaSignUp(email, password, userType = 'radiologist') {
-const r = await fetch(${SUPA_URL}/auth/v1/signup, {
+const r = await fetch(`${SUPA_URL}/auth/v1/signup`, {
 method: 'POST',
 headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
 body: JSON.stringify({ email, password, data: {}, gotrue_meta_security: {}, options: { emailRedirectTo: 'https://lucidmsk.com/auth/callback' } }),
