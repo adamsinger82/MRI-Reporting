@@ -13,6 +13,7 @@ import { JOINT_DATA, DIAGRAM_SVGS } from './referenceData';
 import CopyButton from './CopyButton';
 
 import { MRI_GRADING_DATA, CT_GRADING_DATA } from './gradingData';
+import TemplatesPanel from './TemplatesPanel';
 
 // ─── MODALITY-AWARE DATA SELECTOR ────────────────────────────────────────────
 // Returns the correct grading data object for a given body part and modality.
@@ -6520,6 +6521,7 @@ export default function DashboardPage() {
   const [spineRegion, setSpineRegion] = useState('lumbar');
   const [showAtlas, setShowAtlas] = useState(false);
   const [showDdx, setShowDdx] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
   const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs' | 'cme'
@@ -6888,6 +6890,7 @@ export default function DashboardPage() {
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
       {showHub && <MSKHubModal initialTab={hubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
+      {showTemplates && <TemplatesPanel authUser={authUser} generatedReport={generatedReport} selectedBodyPart={selectedBodyPart} modality={modality} onLoad={r => setGeneratedReport(r)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
 
       {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
@@ -7329,6 +7332,10 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+            <button onClick={() => setShowTemplates(true)}
+              style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:'8px 12px',borderRadius:9,border:`1.5px solid ${dm?'#334155':'#dde3ed'}`,background:dm?'#0f172a':'#f8fafc',color:dm?'#94a3b8':'#475569',fontSize:13,fontWeight:600,cursor:'pointer',transition:'all 0.15s' }}>
+              📂 Templates
+            </button>
             {(() => {
               const leftHasText = isRheum ? !!rheumFreeText.trim() : !!dictationText.trim();
               const leftDisabled = isGenerating || isGeneratingRheum || !leftHasText;
