@@ -307,7 +307,7 @@ const MRI_GRADING_DATA = {
         spineRegions: ['cervical'],
         plane: 'Sagittal T1',
         description: 'Grading of cervical neural foraminal stenosis on sagittal T1 MRI based on perineural fat obliteration and nerve root visibility.',
-        diagram: 'spine-foraminal',
+        singleImage: '/images/msk/cervicalKIM.jpg',
         citations: [
           { label: 'Kim KY et al. — MRI grading of cervical neural foraminal stenosis. Spine 2013.', url: 'https://scholar.google.com/scholar?q=Kim+MRI+grading+cervical+neural+foraminal+stenosis+2013' },
           { label: 'Park HJ et al. — Grading of cervical foraminal stenosis on oblique sagittal MRI. AJR 2014;202(2):394-401.', url: 'https://scholar.google.com/scholar?q=Park+cervical+foraminal+stenosis+oblique+sagittal+MRI+AJR+2014' },
@@ -330,7 +330,7 @@ const MRI_GRADING_DATA = {
         spineRegions: ['thoracic','lumbar'],
         plane: 'Sagittal T1',
         description: 'Grading of lumbar neural foraminal stenosis on sagittal T1 MRI based on perineural fat and nerve root deformation.',
-        diagram: 'spine-foraminal',
+        singleImage: '/images/msk/lumbarLEE.png',
         citations: [
           { label: 'Lee JW et al. — Grading of lumbar foraminal stenosis on MRI: interobserver agreement and correlation with radiculopathy. Spine 2009.', url: 'https://scholar.google.com/scholar?q=Lee+grading+lumbar+foraminal+stenosis+MRI+interobserver+radiculopathy+Spine+2009' },
         ],
@@ -370,7 +370,7 @@ const MRI_GRADING_DATA = {
         spineRegions: ['cervical','lumbar'],
         plane: 'Sagittal T2',
         description: 'Pfirrmann classification of disc degeneration on sagittal T2 MRI. Grades I-V based on signal, structure, nucleus/annulus distinction, and disc height.',
-        diagram: 'spine-pfirrmann',
+        singleImage: '/images/msk/pfirmann.jpg',
         citations: [
           { label: 'Pfirrmann CW et al. — MR classification of lumbar intervertebral disc degeneration. Spine 2001;26(17):1873-1878.', url: 'https://scholar.google.com/scholar?q=Pfirrmann+magnetic+resonance+classification+lumbar+intervertebral+disc+degeneration+Spine+2001' },
         ],
@@ -1154,7 +1154,7 @@ const CT_GRADING_DATA = {
         isGradingScale: true,
         plane: 'Axial + Coronal CT',
         description: 'Denis classification of sacral fractures by zone of involvement. Zone III injuries have the highest risk of neurologic deficit (cauda equina/lumbosacral plexus). Roy-Camille subtypes apply to transverse Zone III fractures.',
-        diagram: 'pelvis-denis',
+        singleImage: '/images/msk/denis.jpg',
         citations: [
           { label: 'Denis F et al. — Sacral fractures: an important problem. Clin Orthop 1988;227:67-81.', url: 'https://scholar.google.com/scholar?q=Denis+sacral+fractures+classification+Clin+Orthop+1988' },
         ],
