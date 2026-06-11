@@ -13,8 +13,6 @@ import { JOINT_DATA, DIAGRAM_SVGS } from './referenceData';
 import CopyButton from './CopyButton';
 
 import { MRI_GRADING_DATA, CT_GRADING_DATA } from './gradingData';
-import LoginPage from './LoginPage';
-import { ClinicianPage, IndustryDashboard } from './portalStubs';
 
 // ─── MODALITY-AWARE DATA SELECTOR ────────────────────────────────────────────
 // Returns the correct grading data object for a given body part and modality.
@@ -5924,48 +5922,28 @@ function AdminPanel({ currentUser, onClose }) {
   );
 }
 
-
-async function supaSignUp(email, password, userType = 'radiologist') {
-const r = await fetch(`${SUPA_URL}/auth/v1/signup`, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
-body: JSON.stringify({ email, password, data: {}, gotrue_meta_security: {}, options: { emailRedirectTo: 'https://lucidmsk.com/auth/callback' } }),
-});
-const data = await r.json();
-// Create profiles row immediately after signup; admin email auto-approved
-if (data?.user?.id) {
-const isAdmin = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
-const now = new Date().toISOString();
-// Map userType to the correct ToU timestamp column
-const touFieldMap = {
-radiologist: 'tou_radiologist_accepted_at',
-clinician:   'tou_clinician_accepted_at',
-recruiter:   'tou_recruiter_accepted_at',
-industry:    'tou_industry_accepted_at',
-};
-const touField = touFieldMap[userType] || 'tou_radiologist_accepted_at';
-await fetch(`${SUPA_URL}/rest/v1/profiles`, {
-method: 'POST',
-headers: {
-apikey: getAnonKey(),
-Authorization: `Bearer ${data.access_token || getAnonKey()}`,
-'Content-Type': 'application/json',
-Prefer: 'return=minimal,resolution=ignore-duplicates',
-},
-body: JSON.stringify({
-id: data.user.id,
-email: email.trim().toLowerCase(),
-approved: isAdmin,
-rejected: false,
-user_type: userType,
-terms_accepted_at: now,      // legacy field — keep for backward compat
-[touField]: now,             // per-type timestamped field
-}),
-});
-}
-return data;
-}
-
+async function supaSignUp(email, password) {
+  const r = await fetch(`${SUPA_URL}/auth/v1/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: getAnonKey() },
+    body: JSON.stringify({ email, password, data: {}, gotrue_meta_security: {}, options: { emailRedirectTo: 'https://lucidmsk.com/auth/callback' } }),
+  });
+  const data = await r.json();
+  // Create profiles row immediately after signup; admin email auto-approved
+  if (data?.user?.id) {
+    const isAdmin = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    await fetch(`${SUPA_URL}/rest/v1/profiles`, {
+      method: 'POST',
+      headers: {
+        apikey: getAnonKey(),
+        Authorization: `Bearer ${data.access_token || getAnonKey()}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal,resolution=ignore-duplicates',
+      },
+      body: JSON.stringify({ id: data.user.id, email: email.trim().toLowerCase(), approved: isAdmin, rejected: false, terms_accepted_at: new Date().toISOString() }),
+    });
+  }
+  return data;
 }
 
 async function supaSignIn(email, password) {
@@ -6460,15 +6438,11 @@ export default function DashboardPage() {
     }).catch(() => {});
   }, []);
 
-const handleLogin = async (user) => {
-// Load prefs BEFORE setting authUser so auto-save guard doesn't overwrite them
-const prefs = loadUserPrefs(user.id);
-if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
-// Persist userType from login so routing survives session restore
-if (user.userType) {
-try { localStorage.setItem('msk_user_type', user.userType); } catch {}
-}
-setSessionKickedOut(false);
+  const handleLogin = async (user) => {
+    // Load prefs BEFORE setting authUser so auto-save guard doesn't overwrite them
+    const prefs = loadUserPrefs(user.id);
+    if (prefs) setUserPrefs(p => ({ ...p, ...prefs }));
+    setSessionKickedOut(false);
     // ── Generate + write session token (skip for admins) ──────────────────
     if (!ADMIN_EMAILS.includes(user.email?.toLowerCase())) {
       const token = generateSessionToken();
@@ -6897,34 +6871,7 @@ setSessionKickedOut(false);
       </div>
     </div>
   );
-  if (!authUser) return (
-<LoginPage
-   onLogin={handleLogin}
-   supaSignUp={supaSignUp}
-   supaSignIn={supaSignIn}
-   saveSession={saveSession}
-   saveUserPrefs={saveUserPrefs}
-   ADMIN_EMAIL={ADMIN_EMAIL}
- />
-);
-// ── Route by user type ────────────────────────────────────────────────────
-// Read userType from the user object (set on login) or fall back to localStorage
-const resolvedUserType = authUser.userType
-|| (() => { try { return localStorage.getItem('msk_user_type') || 'radiologist'; } catch { return 'radiologist'; } })();
-if (resolvedUserType === 'clinician') {
-return <ClinicianPage currentUser={authUser} onSignOut={handleSignOut} />;
-}
-if (resolvedUserType === 'industry') {
-// Industry users need approval too — check before showing dashboard
-if (approvalStatus === null) return (
-<div style={{ minHeight:'100vh', background:'#0a0f1e', display:'flex', alignItems:'center', justifyContent:'center' }}>
-<div style={{ color:'rgba(255,255,255,0.4)', fontSize:14 }}>⏳ Checking access…</div>
-</div>
-);
-return <IndustryDashboard currentUser={authUser} onSignOut={handleSignOut} approvalStatus={approvalStatus} />;
-}
-// recruiter: falls through to existing recruiter routing inside the main app
-// radiologist (default): falls through to the full app below
+  if (!authUser) return <LoginPage onLogin={handleLogin} />;
   // Approval gate — show while checking or if not yet approved
   if (approvalStatus === null) return (
     <div style={{ minHeight:'100vh',background:'#0a0f1e',display:'flex',alignItems:'center',justifyContent:'center' }}>
