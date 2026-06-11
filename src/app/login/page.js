@@ -6732,17 +6732,16 @@ export default function DashboardPage() {
   };
 
   const keepaliveTimerRef = useRef(null);
-  const gracePeriodRef = useRef(false); // true = last result just finalized, delay keepalive restart
+  const gracePeriodRef = useRef(false); // true after a final result — suppresses keepalive restart briefly
   const graceTimerRef = useRef(null);
 
   const startKeepalive = (getRecRef) => {
     stopKeepalive();
     keepaliveTimerRef.current = setInterval(() => {
-      // If we just got a final result, skip this cycle — let Chrome process trailing audio
-      if (gracePeriodRef.current) return;
+      if (gracePeriodRef.current) return; // final result just came in — let Chrome finish processing
       const rec = getRecRef();
       if (!rec) { stopKeepalive(); return; }
-      // Restart recognition before browser's ~5s silence timeout fires
+      // Force restart before browser's ~5s silence timeout
       try { rec.stop(); } catch {}
     }, 4000);
   };
@@ -6755,16 +6754,21 @@ export default function DashboardPage() {
 
   const toggleListening = () => {
     if (isListening) { stopKeepalive(); recognitionRef.current?.stop(); setIsListening(false); return; }
-    const SR = window.webkitSpeechRecognition || window.SpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
-    finalTranscriptPersistRef.current = ''; // reset transcript on fresh dictation start
-    try {
-      const recognition = new SR();
-      recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US'; recognition.maxAlternatives = 1;
-      recognition.onstart = () => setIsListening(true);
-      recognition.onaudiostart = () => setIsListening(true);
-      recognition.onresult = (event) => {
+    finalTranscriptPersistRef.current = '';
+
+    // Factory: builds a fresh recognition instance with all handlers correctly scoped.
+    // Called once on start and again on every auto-restart (fixes Edge stale-closure bug).
+    const makeRecognition = () => {
+      const rec = new SR();
+      rec.continuous = true; rec.interimResults = true; rec.lang = 'en-US'; rec.maxAlternatives = 1;
+
+      rec.onstart = () => setIsListening(true);
+      rec.onaudiostart = () => setIsListening(true);
+
+      rec.onresult = (event) => {
         let interim = '';
         let gotFinal = false;
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -6772,8 +6776,8 @@ export default function DashboardPage() {
           if (event.results[i].isFinal) { finalTranscriptPersistRef.current += t + ' '; gotFinal = true; }
           else interim += t;
         }
-        // Grace period: after a final result, pause keepalive restarts for 2.5s
-        // so Chrome can finish processing any trailing audio (e.g. end-of-dictation pause)
+        // Grace period: after any final result, pause keepalive for 2.5s so
+        // Chrome/Edge don't get interrupted mid-sentence at end of dictation
         if (gotFinal) {
           gracePeriodRef.current = true;
           if (graceTimerRef.current) clearTimeout(graceTimerRef.current);
@@ -6783,25 +6787,30 @@ export default function DashboardPage() {
         if (isRheumRef.current) setRheumFreeText(transcript);
         else setDictationText(transcript);
       };
-      recognition.onerror = (event) => {
+
+      rec.onerror = (event) => {
         if (event.error === 'not-allowed') { stopKeepalive(); setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
-        // no-speech / audio-capture: browser timed out on silence — onend will auto-restart, just ignore
+        // no-speech / audio-capture: silence timeout — onend fires next and restarts automatically
       };
-      recognition.onend = () => {
-        if (recognitionRef.current === recognition) {
-          setTimeout(() => {
-            if (recognitionRef.current !== recognition) return;
-            const SR2 = window.webkitSpeechRecognition || window.SpeechRecognition;
-            try {
-              const rec2 = new SR2();
-              rec2.continuous = true; rec2.interimResults = true; rec2.lang = 'en-US'; rec2.maxAlternatives = 1;
-              rec2.onstart = recognition.onstart; rec2.onaudiostart = recognition.onaudiostart;
-              rec2.onresult = recognition.onresult; rec2.onerror = recognition.onerror; rec2.onend = recognition.onend;
-              rec2.start(); recognitionRef.current = rec2;
-            } catch { stopKeepalive(); setIsListening(false); }
-          }, 150);
-        }
+
+      rec.onend = () => {
+        // Only restart if we are still the active recognition instance
+        if (recognitionRef.current !== rec) return;
+        setTimeout(() => {
+          if (recognitionRef.current !== rec) return;
+          try {
+            const next = makeRecognition(); // fresh instance — correct scope for Edge
+            next.start();
+            recognitionRef.current = next;
+          } catch { stopKeepalive(); setIsListening(false); }
+        }, 150);
       };
+
+      return rec;
+    };
+
+    try {
+      const recognition = makeRecognition();
       recognition.start();
       recognitionRef.current = recognition;
       startKeepalive(() => recognitionRef.current);
