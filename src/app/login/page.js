@@ -6738,10 +6738,10 @@ export default function DashboardPage() {
     keepaliveTimerRef.current = setInterval(() => {
       const rec = getRecRef();
       if (!rec) { stopKeepalive(); return; }
-      // Restart recognition before browser's ~60s silence timeout fires
+      // Restart recognition before browser's ~5s silence timeout fires
       // We do this by stopping; onend will immediately restart with persisted transcript
       try { rec.stop(); } catch {}
-    }, 8000);
+    }, 4000);
   };
 
   const stopKeepalive = () => {
@@ -6772,6 +6772,7 @@ export default function DashboardPage() {
       };
       recognition.onerror = (event) => {
         if (event.error === 'not-allowed') { stopKeepalive(); setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
+        // no-speech / audio-capture: browser timed out on silence — onend will auto-restart, just ignore
       };
       recognition.onend = () => {
         if (recognitionRef.current === recognition) {
