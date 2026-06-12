@@ -10,7 +10,7 @@
 //   onClose()        — callback: hides the panel
 //   dm               — dark mode boolean
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { TEMPLATES_TABLE, MAX_TEMPLATES_PER_USER } from './templateData';
 
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
@@ -36,10 +36,20 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Save form state
+  // Save form state — content starts empty; user dictates, types, or imports the current report
   const [saveName, setSaveName] = useState('');
-  const [saveContent, setSaveContent] = useState(generatedReport || '');
+  const [saveContent, setSaveContent] = useState('');
   const [saveShared, setSaveShared] = useState(false);
+
+  // ── Standalone dictation for the Create Template tab ───────────────────────
+  // Self-contained per LucidMSK architecture note — does not touch page.js's dictation state.
+  const [isDictating, setIsDictating] = useState(false);
+  const [micError, setMicError] = useState('');
+  const recognitionRef = useRef(null);
+  const keepaliveRef = useRef(null);
+  const graceRef = useRef(false);
+  const graceTimerRef = useRef(null);
+  const finalTranscriptRef = useRef('');
 
   const userId = authUser?.id;
   const accessToken = authUser?.access_token;
@@ -74,15 +84,112 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
 
   useEffect(() => { fetchTemplates(); }, [fetchTemplates]);
 
-  // Pre-fill save content when generatedReport changes or tab switches to save
+  // Stop dictation if user navigates away from the Create tab
   useEffect(() => {
-    if (tab === 'save') setSaveContent(generatedReport || '');
-  }, [tab, generatedReport]);
+    if (tab !== 'save' && isDictating) {
+      stopDictKeepalive();
+      try { recognitionRef.current?.stop(); } catch {}
+      recognitionRef.current = null;
+      setIsDictating(false);
+    }
+  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    stopDictKeepalive();
+    try { recognitionRef.current?.stop(); } catch {}
+  }, []);
+
+  const startDictKeepalive = () => {
+    stopDictKeepalive();
+    keepaliveRef.current = setInterval(() => {
+      if (graceRef.current) return; // final result just landed — let it finish
+      const rec = recognitionRef.current;
+      if (!rec) { stopDictKeepalive(); return; }
+      try { rec.stop(); } catch {}
+    }, 4000);
+  };
+
+  const stopDictKeepalive = () => {
+    if (keepaliveRef.current) { clearInterval(keepaliveRef.current); keepaliveRef.current = null; }
+    if (graceTimerRef.current) { clearTimeout(graceTimerRef.current); graceTimerRef.current = null; }
+    graceRef.current = false;
+  };
+
+  // Standalone dictation directly into the template content textarea.
+  // Appends to whatever is already in saveContent (typed text or an imported report).
+  const toggleDictation = () => {
+    if (isDictating) {
+      stopDictKeepalive();
+      try { recognitionRef.current?.stop(); } catch {}
+      recognitionRef.current = null;
+      setIsDictating(false);
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
+    if (!SR) { setMicError('Speech recognition not supported. Please use Chrome or Edge.'); return; }
+    setMicError('');
+    // Seed with existing content so dictation appends rather than overwrites
+    const existing = saveContent.trim();
+    finalTranscriptRef.current = existing ? existing + ' ' : '';
+
+    const makeRecognition = () => {
+      const rec = new SR();
+      rec.continuous = true; rec.interimResults = true; rec.lang = 'en-US'; rec.maxAlternatives = 1;
+      rec.onstart = () => setIsDictating(true);
+      rec.onaudiostart = () => setIsDictating(true);
+      rec.onresult = (event) => {
+        let interim = '';
+        let gotFinal = false;
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const t = event.results[i][0].transcript;
+          if (event.results[i].isFinal) { finalTranscriptRef.current += t + ' '; gotFinal = true; }
+          else interim += t;
+        }
+        if (gotFinal) {
+          graceRef.current = true;
+          if (graceTimerRef.current) clearTimeout(graceTimerRef.current);
+          graceTimerRef.current = setTimeout(() => { graceRef.current = false; graceTimerRef.current = null; }, 2500);
+        }
+        setSaveContent(finalTranscriptRef.current + interim);
+      };
+      rec.onerror = (event) => {
+        if (event.error === 'not-allowed') { stopDictKeepalive(); setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsDictating(false); }
+        // no-speech: silence timeout — onend fires next and restarts automatically
+      };
+      rec.onend = () => {
+        if (recognitionRef.current !== rec) return;
+        setTimeout(() => {
+          if (recognitionRef.current !== rec) return;
+          try {
+            const next = makeRecognition();
+            next.start();
+            recognitionRef.current = next;
+          } catch { stopDictKeepalive(); setIsDictating(false); }
+        }, 150);
+      };
+      return rec;
+    };
+
+    try {
+      const recognition = makeRecognition();
+      recognition.start();
+      recognitionRef.current = recognition;
+      startDictKeepalive();
+    } catch (err) { setIsDictating(false); setMicError('Could not start microphone: ' + err.message); }
+  };
+
+  // Pull the currently generated report (Col 2) into the template content — additive, not destructive
+  const handleImportReport = () => {
+    const report = (generatedReport || '').trim();
+    if (!report) return;
+    setSaveContent(prev => prev.trim() ? prev.trim() + '\n\n' + report : report);
+  };
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!saveName.trim()) { setError('Please enter a template name.'); return; }
-    if (!saveContent.trim()) { setError('No content to save — generate a report first.'); return; }
+    if (!saveContent.trim()) { setError('Template content is empty — dictate, type, or import a report.'); return; }
     if (templates.length >= MAX_TEMPLATES_PER_USER) {
       setError(`Template limit reached (${MAX_TEMPLATES_PER_USER}). Delete one to add more.`); return;
     }
@@ -223,7 +330,7 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
         <div style={{ padding:'10px 16px 0', borderBottom:`1px solid ${c.border}`, flexShrink:0 }}>
           <div style={{ display:'flex', gap:4, background:c.bgCard, borderRadius:10, padding:3 }}>
             <TabBtn id="load" label="📂 Load Template" />
-            <TabBtn id="save" label="💾 Save New Template" />
+            <TabBtn id="save" label="✨ Create Template" />
           </div>
         </div>
 
@@ -278,7 +385,7 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
                   {filteredOwn.length === 0 && communityTemplates.length === 0 && otherOwn.length === 0 && (
                     <div style={{ textAlign:'center', padding:'30px 0', color:c.sub, fontSize:13, lineHeight:1.8 }}>
                       <div style={{ fontSize:32, marginBottom:8 }}>📭</div>
-                      No templates yet.<br />Generate a report, then save it as a template.
+                      No templates yet.<br />Tap <strong style={{ color:c.txt }}>✨ Create Template</strong> to dictate, type, or import one.
                     </div>
                   )}
                 </>
@@ -286,25 +393,54 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
             </>
           )}
 
-          {/* ── SAVE TAB ── */}
+          {/* ── CREATE TEMPLATE TAB ── */}
           {tab === 'save' && (
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              <div style={{ fontSize:12, color:c.sub, lineHeight:1.6 }}>
+                Build a new template here — separate from your current report. Dictate it, type it, or import your last generated report below.
+              </div>
+
               <div style={{ fontSize:12, color:c.sub, background:c.bgCard, borderRadius:8, padding:'8px 12px', border:`1px solid ${c.border}` }}>
-                Saving as: <strong style={{ color:c.txt }}>{selectedBodyPart}</strong> · <strong style={{ color:c.txt }}>{modality}</strong>
+                Will be saved for: <strong style={{ color:c.txt }}>{selectedBodyPart}</strong> · <strong style={{ color:c.txt }}>{modality}</strong>
+              </div>
+
+              {micError && <div style={{ fontSize:12, color:c.red, background:dm?'rgba(248,113,113,0.1)':'#fef2f2', border:`1px solid ${dm?'#991b1b':'#fca5a5'}`, borderRadius:8, padding:'8px 12px' }}>{micError}</div>}
+
+              <div style={{ display:'flex', gap:8 }}>
+                <button onClick={toggleDictation}
+                  style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'10px 0', borderRadius:9, border:`1.5px solid ${isDictating ? '#fca5a5' : c.border}`, background:isDictating ? (dm?'rgba(239,68,68,0.12)':'#fef2f2') : c.bgCard, color:isDictating ? '#dc2626' : c.txt, fontSize:13, fontWeight:600, cursor:'pointer', transition:'all 0.15s' }}>
+                  <span style={{ width:8, height:8, borderRadius:'50%', background:isDictating ? '#ef4444' : '#94a3b8', boxShadow:isDictating ? '0 0 8px #ef4444' : 'none', flexShrink:0, transition:'all 0.3s' }} />
+                  {isDictating ? '⏹ Stop Dictation' : '🎤 Dictate Template'}
+                </button>
+                <button onClick={handleImportReport} disabled={!generatedReport?.trim() || isDictating}
+                  title={generatedReport?.trim() ? 'Add your current generated report into this template' : 'No report generated yet'}
+                  style={{ flex:1, padding:'10px 0', borderRadius:9, border:`1.5px solid ${c.border}`, background:c.bgCard, color:(!generatedReport?.trim()||isDictating) ? c.sub : c.txt, fontSize:13, fontWeight:600, cursor:(!generatedReport?.trim()||isDictating) ? 'not-allowed' : 'pointer', opacity:(!generatedReport?.trim()||isDictating) ? 0.55 : 1, transition:'all 0.15s' }}>
+                  📋 Import Report
+                </button>
               </div>
 
               <div>
-                <label style={{ fontSize:12, fontWeight:600, color:c.sub, display:'block', marginBottom:4 }}>Template Name *</label>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+                  <label style={{ fontSize:12, fontWeight:600, color:c.sub }}>Template Name *</label>
+                </div>
                 <input value={saveName} onChange={e => setSaveName(e.target.value)}
                   placeholder={`e.g. Normal ${selectedBodyPart} ${modality}`}
                   style={c.inp} maxLength={80} />
               </div>
 
               <div>
-                <label style={{ fontSize:12, fontWeight:600, color:c.sub, display:'block', marginBottom:4 }}>Content (editable before saving)</label>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+                  <label style={{ fontSize:12, fontWeight:600, color:c.sub }}>Template Content</label>
+                  {saveContent.trim() && (
+                    <button onClick={() => { setSaveContent(''); finalTranscriptRef.current = ''; }}
+                      style={{ fontSize:11, color:c.sub, background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>
+                      Clear
+                    </button>
+                  )}
+                </div>
                 <textarea value={saveContent} onChange={e => setSaveContent(e.target.value)}
-                  style={{ ...c.inp, minHeight:180, resize:'vertical', lineHeight:1.6, fontFamily:'Georgia,"Times New Roman",serif', fontSize:12 }}
-                  placeholder="Generate a report in Col 2 first — it will appear here automatically." />
+                  style={{ ...c.inp, minHeight:180, resize:'vertical', lineHeight:1.6, fontFamily:'Georgia,"Times New Roman",serif', fontSize:12, border: isDictating ? '1.5px solid #ef4444' : c.inp.border, boxShadow: isDictating ? '0 0 0 3px rgba(239,68,68,0.1)' : 'none' }}
+                  placeholder="Tap 🎤 Dictate Template above, type directly, or import your current report…" />
               </div>
 
               <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', padding:'8px 12px', borderRadius:8, border:`1px solid ${saveShared?(dm?'#4f46e5':'#c4b5fd'):(c.border)}`, background:saveShared?(dm?'#1e1b4b':'#f5f3ff'):'transparent', transition:'all 0.12s' }}>
