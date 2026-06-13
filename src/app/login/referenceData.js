@@ -175,7 +175,8 @@ const JOINT_DATA = {
       },
       {
         id: 'goutallier',
-        label: 'Goutallier Classification',
+        label: 'Goutallier Classification (Fatty Infiltration)',
+        isGradingScale: true,
         plane: 'Coronal oblique / axial',
         description: 'Fatty infiltration of rotator cuff musculature graded 0–4. Higher grade predicts worse surgical outcomes. Assessed on T1 sequences.',
         normalValues: [
@@ -195,6 +196,7 @@ const JOINT_DATA = {
       {
         id: 'patte',
         label: 'Patte Classification (Cuff Retraction)',
+        isGradingScale: true,
         plane: 'Coronal oblique',
         description: 'Classifies degree of supraspinatus tendon retraction after full-thickness tear. Correlates with repairability.',
         normalValues: [
@@ -212,7 +214,8 @@ const JOINT_DATA = {
       },
       {
         id: 'stump-length',
-        label: 'Tendon Stump Length',
+        label: 'Tendon Stump Length (Repair Quality)',
+        isGradingScale: true,
         plane: 'Coronal oblique',
         description: 'Length of remaining tendon from footprint to tear edge. Longer stump = better tissue quality for repair.',
         normalValues: [
@@ -225,6 +228,7 @@ const JOINT_DATA = {
       {
         id: 'walch',
         label: 'Walch Classification (Glenoid Wear)',
+        isGradingScale: true,
         plane: 'Axial',
         description: 'Classifies posterior glenoid wear pattern in glenohumeral OA. Guides implant selection for shoulder arthroplasty.',
         normalValues: [
@@ -247,6 +251,7 @@ const JOINT_DATA = {
       {
         id: 'seebauer',
         label: 'Seebauer Classification (Cuff Arthropathy)',
+        isGradingScale: true,
         plane: 'Coronal oblique',
         description: 'Classifies glenohumeral joint in massive rotator cuff tear arthropathy based on humeral head centering and acetabularization of acromion.',
         normalValues: [
@@ -264,7 +269,8 @@ const JOINT_DATA = {
       },
       {
         id: 'glenoid-track',
-        label: 'Glenoid Track / On-Track vs Off-Track',
+        label: 'Glenoid Track (On-Track vs Off-Track)',
+        isGradingScale: true,
         plane: 'Axial + coronal',
         description: 'Determines if a Hill-Sachs lesion engages the anterior glenoid during shoulder motion. Guides decision for Latarjet vs Bankart repair.',
         normalValues: [
@@ -281,7 +287,8 @@ const JOINT_DATA = {
       },
       {
         id: 'habermeyer',
-        label: 'Habermeyer Classification',
+        label: 'Habermeyer Classification (Subscapularis Tears)',
+        isGradingScale: true,
         plane: 'Sagittal oblique',
         description: 'Classifies subscapularis tears by extent of tendon involvement. Guides surgical planning.',
         normalValues: [
@@ -929,6 +936,7 @@ const JOINT_DATA = {
       {
         id: 'young-burgess',
         label: 'Young-Burgess Classification (Pelvic Ring Fractures)',
+        isGradingScale: true,
         plane: 'CT axial + coronal',
         description: 'Classifies pelvic ring fractures by mechanism of injury. Predicts hemodynamic instability and ligamentous injury pattern.',
         normalValues: [
@@ -940,17 +948,6 @@ const JOINT_DATA = {
           { label: 'APC III', value: 'Complete SI disruption, posterior ligaments torn (open book)' },
           { label: 'VS', value: 'Vertical shear: complete hemipelvic displacement (Malgaigne)' },
           { label: 'CM', value: 'Combined mechanism' },
-        ],
-                        citations: [
-          { label: "Docherty P et al. Sacroiliac joint MRI measurement and normal values", url: "https://scholar.google.com/scholar?q=sacroiliac%20joint%20MRI%20width%20normal%20values%20measurement" },
-          { label: "Glassman SD et al. The impact of positive sagittal balance in adult spinal deformity. Spine 2005", url: "https://scholar.google.com/scholar?q=Glassman%20positive%20sagittal%20balance%20adult%20spinal%20deformity%20outcomes%202005" },
-          { label: "Cobb JR. Outline for the study of scoliosis. AAOS Instr Course Lect 1948", url: "https://scholar.google.com/scholar?q=Cobb%20outline%20study%20scoliosis%20measurement%20angle%201948" },
-          { label: "Docherty P et al. Prevalence of abnormal sacroiliac joints in X-rays of patients with ankylosing spondylitis. Ann Rheum Dis 1992", url: "https://scholar.google.com/scholar?q=sacroiliac%20joint%20MRI%20grading%20width%20normal%20values%20ASAS%20criteria" },
-          { label: "Becker I et al. Pubic symphysis diastasis: normal values on MRI. J Orthop Res 2010", url: "https://scholar.google.com/scholar?q=Becker%20pubic%20symphysis%20diastasis%20normal%20values%20MRI%20measurement%202010" },
-          { label: "Sims JA, Moorman SJ. The role of the iliolumbar ligament in sacroiliac joint mechanics. Spine 1996", url: "https://scholar.google.com/scholar?q=Sims%20Moorman%20iliolumbar%20ligament%20sacroiliac%20joint%20mechanics%20role%201996" },
-          { label: "Tannast M et al. Acetabular morphology: implications for joint-preserving surgery. Clin Orthop Relat Res 2012", url: "https://scholar.google.com/scholar?q=Tannast%20acetabular%20morphology%20joint%20preserving%20surgery%20protrusio%20coxa%20profunda%202012" },
-          { label: "Noble PC et al. The anatomical basis of femoral component design. Clin Orthop 1988", url: "https://scholar.google.com/scholar?q=Noble%20anatomical%20basis%20femoral%20component%20design%20neck%20shaft%20angle%20normal%201988" },
-          { label: "Tile M. Pelvic ring fractures: should they be fixed? J Bone Joint Surg Br 1988", url: "https://scholar.google.com/scholar?q=Tile%20pelvic%20ring%20fractures%20should%20they%20be%20fixed%201988" },
         ],
         citations: [
           { label: "Burgess AR et al. Pelvic ring disruptions: effective classification and treatment protocols. J Trauma 1990", url: "https://scholar.google.com/scholar?q=Burgess%20pelvic%20ring%20disruptions%20effective%20classification%20treatment%20protocols%20J%20Trauma%201990" },

@@ -344,7 +344,7 @@ const MRI_GRADING_DATA = {
       {
         id: 'disc_nomenclature',
         label: 'Disc Nomenclature',
-        isGradingScale: false,
+        isGradingScale: true,
         spineRegions: ['cervical','thoracic','lumbar'],
         plane: 'Axial T2 / Sagittal',
         description: 'Standardized disc nomenclature per ASNR/AANS/ISASS 2014. Zone locations: yellow = extraforaminal/far lateral, blue = foraminal, green = paracentral/subarticular, red = central.',
