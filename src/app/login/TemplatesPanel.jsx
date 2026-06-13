@@ -261,7 +261,6 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { setMicError('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
-    setIsLocked(false);
     // Seed with existing content so dictation appends rather than overwrites
     const existing = saveContent.trim();
     finalTranscriptRef.current = existing ? existing + ' ' : '';
@@ -317,7 +316,19 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
     const report = (generatedReport || '').trim();
     if (!report) return;
     setSaveContent(prev => prev.trim() ? prev.trim() + '\n\n' + report : report);
-    setIsLocked(false);
+  };
+
+  // Toggle between Type Edit (plain textarea) and Dictate Edit (formatted preview
+  // + dictation/import/cleanup controls). Stops any active dictation when leaving
+  // Dictate Edit mode.
+  const toggleEditMode = () => {
+    if (isLocked && isDictating) {
+      stopDictKeepalive();
+      try { recognitionRef.current?.stop(); } catch {}
+      recognitionRef.current = null;
+      setIsDictating(false);
+    }
+    setIsLocked(l => !l);
   };
 
   // Send raw dictated text through AI cleanup: fixes "period"/"comma"/"new paragraph"
@@ -549,7 +560,7 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
           {tab === 'save' && (
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               <div style={{ fontSize:12, color:c.sub, lineHeight:1.6 }}>
-                Build a new template here — separate from your current report. Dictate it, type it, or import your last generated report, then tap <strong style={{ color:c.txt }}>✨ Clean Up & Format</strong> to fix punctuation and dictation errors.
+                Build a new template here — separate from your current report. Type it directly, or switch to <strong style={{ color:c.txt }}>🎤 Dictate Edit</strong> to dictate, import your last report, and clean up dictation errors.
               </div>
 
               <div style={{ fontSize:12, color:c.sub, background:c.bgCard, borderRadius:8, padding:'8px 12px', border:`1px solid ${c.border}` }}>
@@ -558,7 +569,7 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
 
               {micError && <div style={{ fontSize:12, color:c.red, background:dm?'rgba(248,113,113,0.1)':'#fef2f2', border:`1px solid ${dm?'#991b1b':'#fca5a5'}`, borderRadius:8, padding:'8px 12px' }}>{micError}</div>}
 
-              {!isLocked && (
+              {isLocked && (
                 <div style={{ display:'flex', gap:8 }}>
                   <button onClick={toggleDictation}
                     style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'10px 0', borderRadius:9, border:`1.5px solid ${isDictating ? '#fca5a5' : c.border}`, background:isDictating ? (dm?'rgba(239,68,68,0.12)':'#fef2f2') : c.bgCard, color:isDictating ? '#dc2626' : c.txt, fontSize:13, fontWeight:600, cursor:'pointer', transition:'all 0.15s' }}>
@@ -585,21 +596,13 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
               <div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
                   <label style={{ fontSize:12, fontWeight:600, color:c.sub }}>
-                    Template Content {isLocked && <span style={{ fontWeight:400, color:c.sub }}>· 🔒 Locked Preview</span>}
+                    Template Content {isLocked && <span style={{ fontWeight:400, color:c.sub }}>· Dictate Mode</span>}
                   </label>
                   <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-                    {saveContent.trim() && !isLocked && (
-                      <button onClick={() => setIsLocked(true)}
-                        style={{ fontSize:11, color:c.accent, background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>
-                        🔒 Preview
-                      </button>
-                    )}
-                    {isLocked && (
-                      <button onClick={() => setIsLocked(false)}
-                        style={{ fontSize:11, color:c.accent, background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>
-                        ✏️ Edit
-                      </button>
-                    )}
+                    <button onClick={toggleEditMode}
+                      style={{ fontSize:11, color:c.accent, background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>
+                      {isLocked ? '✏️ Type Edit' : '🎤 Dictate Edit'}
+                    </button>
                     {saveContent.trim() && (
                       <button onClick={() => { setSaveContent(''); finalTranscriptRef.current = ''; setIsLocked(false); }}
                         style={{ fontSize:11, color:c.sub, background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>
@@ -611,20 +614,23 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
 
                 {isLocked ? (
                   <div style={{ background:c.bgCard, border:`1px solid ${c.border}`, borderRadius:8, padding:'14px 16px', minHeight:180, maxHeight:320, overflowY:'auto', fontFamily:"Georgia,'Times New Roman',serif" }}>
-                    {formatReport(saveContent, dm ? {
-                      neg:'#64748b', pos:'#fbbf24', lbl:'#94a3b8', body:'#cbd5e1', posW:600, border:'#334155', hdr:'#93c5fd'
-                    } : {
-                      neg:'#6b7280', pos:'#dc2626', lbl:'#1e293b', body:'#1e293b', posW:600, border:'#e2e8f0', hdr:'#1e3a5f'
-                    })}
+                    {saveContent.trim()
+                      ? formatReport(saveContent, dm ? {
+                          neg:'#cbd5e1', pos:'#cbd5e1', lbl:'#94a3b8', body:'#cbd5e1', posW:400, border:'#334155', hdr:'#93c5fd'
+                        } : {
+                          neg:'#1e293b', pos:'#1e293b', lbl:'#1e293b', body:'#1e293b', posW:400, border:'#e2e8f0', hdr:'#1e3a5f'
+                        })
+                      : <div style={{ color:c.sub, fontStyle:'italic', fontSize:13, fontFamily:'inherit' }}>Tap 🎤 Dictate Template above to start dictating…</div>
+                    }
                   </div>
                 ) : (
                   <textarea value={saveContent} onChange={e => setSaveContent(e.target.value)}
-                    style={{ ...c.inp, minHeight:180, resize:'vertical', lineHeight:1.6, fontFamily:'Georgia,"Times New Roman",serif', fontSize:12, border: isDictating ? '1.5px solid #ef4444' : c.inp.border, boxShadow: isDictating ? '0 0 0 3px rgba(239,68,68,0.1)' : 'none' }}
-                    placeholder="Tap 🎤 Dictate Template above, type directly, or import your current report…" />
+                    style={{ ...c.inp, minHeight:180, resize:'vertical', lineHeight:1.6, fontFamily:'Georgia,"Times New Roman",serif', fontSize:12 }}
+                    placeholder="Type your template content here, or switch to 🎤 Dictate Edit…" />
                 )}
               </div>
 
-              {!isLocked && (
+              {isLocked && (
                 <button onClick={handleCleanup} disabled={isCleaning || isDictating || !saveContent.trim()}
                   title="Fix dictated punctuation (period/comma/new paragraph) and correct misheard MSK terminology"
                   style={{ width:'100%', padding:'10px 0', borderRadius:9, border:'none', background:(isCleaning||isDictating||!saveContent.trim())?'#9ca3af':'linear-gradient(135deg,#7c3aed,#2563eb)', color:'white', fontSize:13, fontWeight:700, cursor:(isCleaning||isDictating||!saveContent.trim())?'not-allowed':'pointer', boxShadow:(isCleaning||isDictating||!saveContent.trim())?'none':'0 4px 16px rgba(124,58,237,0.3)', transition:'all 0.12s' }}>
