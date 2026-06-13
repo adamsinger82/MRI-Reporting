@@ -67,49 +67,12 @@ const MRI_GRADING_DATA = {
   humerus: {
     label: 'Humerus — MRI',
     measurements: [
-      {
-        id: 'humerus_mri_avascular',
-        label: 'Cruess Classification — Humeral Head AVN',
-        isGradingScale: true,
-        plane: 'Coronal',
-        description: 'Cruess (modified Ficat) staging of avascular necrosis of the humeral head on MRI. Based on morphologic changes from early signal abnormality to collapse and secondary glenohumeral arthritis.',
-        diagram: null,
-        citations: [
-          { label: 'Cruess RL. — Steroid-induced osteonecrosis. J R Coll Surg Edinb 1981;26(2):69-77.', url: 'https://scholar.google.com/scholar?q=Cruess%20steroid-induced%20osteonecrosis%20humeral%20head%20classification%201981' },
-        ],
-        normalValues: [
-          { label: 'Stage I', value: 'Normal radiograph/morphology; MRI: abnormal marrow signal only (low T1, high STIR)' },
-          { label: 'Stage II', value: 'Sclerosis/cysts/osteopenia on CT/X-ray; MRI: "double line sign" — inner high T2 + outer low T1/T2 rim; no collapse' },
-          { label: 'Stage III', value: 'Subchondral fracture ("crescent sign") without humeral head collapse' },
-          { label: 'Stage IV', value: 'Flattening/collapse of the humeral head; glenohumeral joint space preserved' },
-          { label: 'Stage V', value: 'Collapse + secondary glenohumeral joint space narrowing / osteoarthritis' },
-        ],
-      },
     ],
   },
   // ── MRI: Forearm ────────────────────────────────────────────────────────
   forearm: {
     label: 'Forearm — MRI',
     measurements: [
-      {
-        id: 'forearm_mri_stress',
-        label: 'Forearm Stress Reaction / Compartment Syndrome — MRI Patterns',
-        isGradingScale: false,
-        plane: 'Axial + Coronal',
-        description: 'MRI findings in forearm stress reactions (ulna most common in wheelchair athletes/throwing sports), exertional compartment syndrome (increased T2 in affected compartment post-exercise), and muscle strain patterns. Not a formal numeric grading system — apply BAMIC principles for muscle injuries.',
-        diagram: null,
-        citations: [
-          { label: 'Anderson MW. — MRI of the forearm. Semin Musculoskelet Radiol 2010;14(3):348-358.', url: 'https://scholar.google.com/scholar?q=Anderson%20MRI%20forearm%20Semin%20Musculoskelet%20Radiol%202010' },
-        ],
-        normalValues: [
-          { label: 'Ulnar stress reaction', value: 'Periosteal edema ± medullary edema on STIR; low T1 = Grade 4a equivalent; cortical line = frank fracture' },
-          { label: 'Radial stress reaction', value: 'Same pattern; less common; seen in gymnasts and overhead athletes' },
-          { label: 'Exertional compartment', value: 'Diffuse T2 elevation in affected compartment (volar > dorsal); best imaged post-exercise' },
-          { label: 'Muscle strain (BAMIC)', value: 'Apply BAMIC Grade 0–4 framework for any discrete muscle tear' },
-          { label: 'Pronator teres syndrome', value: 'Median nerve compression at pronator teres — increased T2 signal in nerve, denervation edema in FPL/FDP(index)' },
-          { label: 'Interosseous membrane tear', value: 'Essex-Lopresti: disruption of central band; increased signal + thickening on coronal sequences' },
-        ],
-      },
     ],
   },
   // ── MRI: Knee ───────────────────────────────────────────────────────────
@@ -459,6 +422,72 @@ const MRI_GRADING_DATA = {
             signalLine: 'T1 ↓  T2 ↓  (sclerotic)',
             src: '/images/msk/modic_type3.jpg', colLabels: ['T1', 'STIR', 'CT'],
           },
+        ],
+      },
+    ],
+  },
+  // ── MRI: Thumb ──────────────────────────────────────────────────────────
+  thumb: {
+    label: 'Thumb — MRI',
+    measurements: [
+      {
+        id: 'thumb-ucl-stener',
+        label: 'Thumb UCL Injury (Stener Lesion Grading)',
+        isGradingScale: true,
+        plane: 'Coronal',
+        description: 'Grading of thumb metacarpophalangeal ulnar collateral ligament (UCL) injuries ("gamekeeper\'s/skier\'s thumb"). Identifying a Stener lesion is critical — a displaced ligament stump cannot heal nonoperatively.',
+        diagram: null,
+        normalValues: [
+          { label: 'Grade I (sprain)', value: 'Ligament thickened/edematous; fibers continuous; no instability' },
+          { label: 'Grade II (partial tear)', value: 'Partial fiber discontinuity; ligament remains in anatomic position relative to the adductor aponeurosis' },
+          { label: 'Grade III (complete tear, non-Stener)', value: 'Complete discontinuity; torn end remains deep to the adductor aponeurosis — may heal with immobilization' },
+          { label: 'Stener lesion', value: 'Torn proximal UCL stump displaced superficial to (folded over) the adductor aponeurosis — "yo-yo on a string" appearance; requires surgical repair' },
+          { label: 'Associated findings', value: 'Volar plate avulsion, ulnar sesamoid fracture, or proper/accessory collateral ligament involvement at the MCP joint' },
+        ],
+        citations: [
+          { label: 'Stener B. — Displacement of the ruptured ulnar collateral ligament of the metacarpo-phalangeal joint of the thumb. J Bone Joint Surg Br 1962;44:869-879.', url: 'https://scholar.google.com/scholar?q=Stener+displacement+ruptured+ulnar+collateral+ligament+thumb+metacarpophalangeal+1962' },
+          { label: 'Hergan K et al. — Sonography and MRI of the thumb ulnar collateral ligament: a comparative study. Eur Radiol 1997.', url: 'https://scholar.google.com/scholar?q=Hergan+sonography+MRI+thumb+ulnar+collateral+ligament+Stener+lesion+1997' },
+        ],
+      },
+    ],
+  },
+  // ── MRI: Fingers ────────────────────────────────────────────────────────
+  fingers: {
+    label: 'Fingers — MRI',
+    measurements: [
+      {
+        id: 'finger-pulley-injury',
+        label: 'Flexor Pulley Injury Grading (A2/A4)',
+        isGradingScale: true,
+        plane: 'Sagittal / Axial',
+        description: 'Grading of annular pulley injuries of the flexor tendon sheath (classically a climbing injury), based on degree of flexor tendon-to-bone distance increase ("bowstringing") during finger flexion.',
+        diagram: null,
+        normalValues: [
+          { label: 'Grade I (strain)', value: 'Pulley intact; peritendinous edema/thickening only; no increase in tendon-bone distance' },
+          { label: 'Grade II (partial tear)', value: 'Partial pulley disruption; mild increase in flexor tendon-to-bone distance' },
+          { label: 'Grade III (complete single pulley tear)', value: 'Complete tear of one pulley (commonly A2); visible tendon bowstringing on flexion-position imaging' },
+          { label: 'Grade IV (multiple pulley rupture)', value: 'Combined A2 + A3 ± A4 rupture; pronounced bowstringing ± flexor tendon sheath disruption' },
+        ],
+        citations: [
+          { label: 'Klauser A et al. — Finger pulley injuries in extreme rock climbers: depiction with dynamic US. Radiology 2002.', url: 'https://scholar.google.com/scholar?q=Klauser+finger+pulley+injuries+rock+climbers+dynamic+ultrasound+2002' },
+          { label: 'Schöffl V et al. — Pulley injuries in rock climbers. Wilderness Environ Med 2007.', url: 'https://scholar.google.com/scholar?q=Schoffl+pulley+injuries+rock+climbers+grading+2007' },
+        ],
+      },
+      {
+        id: 'finger-collateral-ligament',
+        label: 'Finger Collateral Ligament Injury Grading (MCP/PIP)',
+        isGradingScale: true,
+        plane: 'Coronal',
+        description: 'Grading scheme — analogous to thumb UCL grading — applied to the collateral ligaments of the MCP and PIP joints of the fingers.',
+        diagram: null,
+        normalValues: [
+          { label: 'Grade I (sprain)', value: 'Ligament thickened with edema/signal change; fibers continuous; joint stable' },
+          { label: 'Grade II (partial tear)', value: 'Partial fiber discontinuity; joint remains stable' },
+          { label: 'Grade III (complete tear)', value: 'Full-thickness discontinuity ± joint space widening or angulation on stress views' },
+          { label: 'Associated findings', value: 'Volar plate injury (hyperextension); central slip injury at the PIP raises concern for boutonnière deformity' },
+        ],
+        citations: [
+          { label: 'Bansal A, Carlan SJ. — Imaging of finger collateral ligament injuries. AJR 2014.', url: 'https://scholar.google.com/scholar?q=imaging+finger+collateral+ligament+injuries+MCP+PIP+grading' },
         ],
       },
     ],
