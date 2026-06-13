@@ -524,18 +524,18 @@ function formatReport(txt, colors = {}) {
       return <div key={i} style={{ fontSize:13, color:'#1e3a5f', lineHeight:1.9, paddingLeft:4, borderLeft:'3px solid #bfdbfe', marginBottom:4 }}>{t}</div>;
     }
 
-    // FOOTNOTE / REFERENCES — small grey section below impression
-    if (/^FOOTNOTE:?$/i.test(t)) {
-      inFootnote = true; inImpression = false; inReferences = false;
-      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(colors.border||'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>Footnotes</span></div>;
+    // FOOTNOTE / REFERENCES — small, muted, italic section below impression
+    if (/^(FOOTNOTES?|REFERENCES?)(\s*\/\s*(FOOTNOTES?|REFERENCES?))?:?$/i.test(t)) {
+      inFootnote = true; inReferences = true; inImpression = false;
+      const headerLabel = t.replace(/:?$/, '').replace(/\s*\/\s*/, ' / ')
+        .toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+      return (
+        <div key={i} style={{ marginTop:18, borderTop:'1px solid '+(colors.border||'#e2e8f0'), paddingTop:8, marginBottom:3 }}>
+          <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.14em', color:'#94a3b8', textTransform:'uppercase' }}>{headerLabel}</span>
+        </div>
+      );
     }
-    if (inFootnote) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
-
-    if (/^REFERENCES:?$/i.test(t)) {
-      inReferences = true; inImpression = false;
-      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(colors.border||'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>References</span></div>;
-    }
-    if (inReferences) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
+    if (inFootnote || inReferences) return <div key={i} style={{ fontSize:10, color:'#94a3b8', fontStyle:'italic', lineHeight:1.6, paddingLeft:4, marginBottom:3 }}>{t}</div>;
 
     const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
     const isMetaLine = /^(HISTORY|COMPARISON):?/.test(t);
