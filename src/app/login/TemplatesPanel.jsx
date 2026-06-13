@@ -12,6 +12,136 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TEMPLATES_TABLE, MAX_TEMPLATES_PER_USER } from './templateData';
+import { cleanupTemplateDictation } from './templateUtils';
+
+// formatReport — local copy of the Col 2 report formatter (FINDINGS/IMPRESSION
+// color-coding). Duplicated here intentionally, per LucidMSK architecture note,
+// to avoid any edits to page.js. Keep in sync if Col 2's formatter changes.
+function formatReport(txt, colors = {}) {
+  if (!txt) return null;
+  const cleaned = txt
+    .replace(/\bunremarkable\b/gi, 'intact')
+    .replace(/\*\*/g, '')
+    .replace(/^---+$/gm, '')
+    .replace(/^\s*[-•]\s+/gm, '');
+
+  let inImpression = false;
+  let inReferences = false;
+  let inFootnote = false;
+  let inPatientSummary = false;
+
+  const negColor  = colors.neg  || '#6b7280';
+  const posColor  = colors.pos  || '#dc2626';
+  const lblColor  = colors.lbl  || '#1e293b';
+  const bodyColor = colors.body || '#1e293b';
+  const posWeight = colors.posW || 600;
+
+  return cleaned.split('\n').map((line, i) => {
+    const t = line.trim();
+    if (!t) return <div key={i} style={{ height: 5 }} />;
+
+    // UNDERSTANDING YOUR RESULTS — plain-language patient section, always last
+    if (/^UNDERSTANDING YOUR RESULTS:?$/i.test(t)) {
+      inPatientSummary = true; inImpression = false; inReferences = false; inFootnote = false;
+      return (
+        <div key={i} style={{ marginTop:32, borderTop:'2px solid #bfdbfe', paddingTop:14 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+            <span style={{ fontSize:15 }}>🧑‍🏫</span>
+            <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.12em', color:'#1d4ed8' }}>UNDERSTANDING YOUR RESULTS</span>
+          </div>
+          <div style={{ fontSize:10, color:'#64748b', fontStyle:'italic', marginBottom:10, paddingLeft:2 }}>A plain-language explanation of your imaging — the formal report above remains the official medical record</div>
+        </div>
+      );
+    }
+    if (inPatientSummary) {
+      if (t === 'PROVIDER_LINK' || t.includes('PROVIDER_LINK') || t.includes('<a href=')) {
+        return (
+          <div key={i} style={{ marginTop:14, paddingBottom:8 }}>
+            <a href="https://mri-reporting.vercel.app/providers" target="_blank" rel="noopener noreferrer"
+              style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:8,background:'linear-gradient(135deg,#2563eb,#4f46e5)',color:'white',fontSize:12,fontWeight:700,textDecoration:'none',boxShadow:'0 2px 8px rgba(37,99,235,0.3)' }}>
+              🔍 Find a local specialist who treats these conditions →
+            </a>
+          </div>
+        );
+      }
+      return <div key={i} style={{ fontSize:13, color:'#1e3a5f', lineHeight:1.9, paddingLeft:4, borderLeft:'3px solid #bfdbfe', marginBottom:4 }}>{t}</div>;
+    }
+
+    // FOOTNOTE / REFERENCES — small grey section below impression
+    if (/^FOOTNOTE:?$/i.test(t)) {
+      inFootnote = true; inImpression = false; inReferences = false;
+      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(colors.border||'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>Footnotes</span></div>;
+    }
+    if (inFootnote) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
+
+    if (/^REFERENCES:?$/i.test(t)) {
+      inReferences = true; inImpression = false;
+      return <div key={i} style={{ marginTop:16, borderTop:'1px solid '+(colors.border||'#e2e8f0'), paddingTop:8, marginBottom:4 }}><span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.12em', color:'#94a3b8', textTransform:'uppercase' }}>References</span></div>;
+    }
+    if (inReferences) return <div key={i} style={{ fontSize:9, color:'#94a3b8', lineHeight:1.6, paddingLeft:4, marginBottom:2 }}>{t}</div>;
+
+    const isHeader = /^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):?$/.test(t);
+    const isMetaLine = /^(HISTORY|COMPARISON):?/.test(t);
+    const isExamHeading = /^(MRI|CT|RADIOGRAPHS)\b/.test(t) && t === t.toUpperCase() && t.length > 3;
+    if (isExamHeading) return <div key={i} style={{ marginBottom:10 }}><span style={{ fontSize:13, fontWeight:900, letterSpacing:'0.1em', color:colors.hdr||'#1e3a5f' }}>{t}</span></div>;
+    if (isMetaLine) return <div key={i} style={{ marginTop: i > 0 ? 16 : 0, marginBottom:4, fontSize:12, fontWeight:700, letterSpacing:'0.08em', color:colors.hdr||'#1e3a5f' }}>{t}</div>;
+    if (isHeader) {
+      inImpression = t.startsWith('IMPRESSION');
+      return (
+        <div key={i} style={{ marginTop: i > 0 ? 20 : 0, marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: colors.hdr || '#1e3a5f', display: 'inline-block' }}>{t}</span>
+        </div>
+      );
+    }
+
+    const isNumbered = /^\d+\./.test(t);
+    if (isNumbered || inImpression) {
+      const num = t.match(/^\d+\./)?.[0];
+      return (
+        <div key={i} style={{ marginTop: 5, paddingLeft: 4, fontSize: 13, lineHeight: 1.7, display: 'flex', gap: 6 }}>
+          {num && <span style={{ fontWeight: 700, color: '#2563eb', flexShrink: 0 }}>{num}</span>}
+          <span style={{ color: bodyColor, fontWeight: 400 }}>{num ? t.slice(num.length).trim() : t}</span>
+        </div>
+      );
+    }
+
+    const colonIdx = t.indexOf(':');
+    const isSubheader = colonIdx > 0 && colonIdx < 60 && /^[A-Z]/.test(t);
+    if (isSubheader) {
+      const label = t.slice(0, colonIdx + 1);
+      const value = t.slice(colonIdx + 1).trim();
+      const isAbsent = /^absent\.?$/i.test(value);
+      const isAllNeg = isAbsent ||
+        /^intact\.?$/i.test(value) ||
+        /^no significant canal or foraminal narrowing\.?$/i.test(value) ||
+        /^no fracture or contusion\. no osteonecrosis\. no marrow infiltration or bone lesion\.?$/i.test(value) ||
+        /^no fracture or cortical disruption\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value);
+      const isBones = /^bones/i.test(label);
+      if (isBones && !isAllNeg) {
+        const sentences = value.match(/[^.!?]+[.!?]*/g) || [value];
+        const negPattern = /^(no fracture|no osteonecrosis|no marrow|no avascular|no bone lesion|no aggressive|no cortical)/i;
+        return (
+          <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: lblColor }}>{label} </span>
+            {sentences.map((s, si) => {
+              const st = s.trim();
+              const sentNeg = negPattern.test(st);
+              return <span key={si} style={{ fontSize: 13, color: sentNeg ? negColor : posColor, fontWeight: sentNeg ? 400 : posWeight }}>{st}{si < sentences.length - 1 ? ' ' : ''}</span>;
+            })}
+          </div>
+        );
+      }
+      return (
+        <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: lblColor }}>{label} </span>
+          <span style={{ fontSize: 13, color: isAllNeg ? negColor : posColor, fontWeight: isAllNeg ? 400 : posWeight }}>{value}</span>
+        </div>
+      );
+    }
+
+    return <div key={i} style={{ fontSize: 13, color: inImpression ? bodyColor : posColor, fontWeight: inImpression ? 400 : posWeight, lineHeight: 1.8, paddingLeft: 4 }}>{t}</div>;
+  });
+}
 
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
 const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -45,6 +175,8 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
   // Self-contained per LucidMSK architecture note — does not touch page.js's dictation state.
   const [isDictating, setIsDictating] = useState(false);
   const [micError, setMicError] = useState('');
+  const [isCleaning, setIsCleaning] = useState(false);
+  const [isLocked, setIsLocked] = useState(false); // true = formatted/locked preview, like Col 2
   const recognitionRef = useRef(null);
   const keepaliveRef = useRef(null);
   const graceRef = useRef(false);
@@ -129,6 +261,7 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { setMicError('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
+    setIsLocked(false);
     // Seed with existing content so dictation appends rather than overwrites
     const existing = saveContent.trim();
     finalTranscriptRef.current = existing ? existing + ' ' : '';
@@ -184,6 +317,25 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
     const report = (generatedReport || '').trim();
     if (!report) return;
     setSaveContent(prev => prev.trim() ? prev.trim() + '\n\n' + report : report);
+    setIsLocked(false);
+  };
+
+  // Send raw dictated text through AI cleanup: fixes "period"/"comma"/"new paragraph"
+  // and corrects phonetic mis-transcriptions of MSK terminology (same kind of pass
+  // Col 1 → Generate does for reports).
+  const handleCleanup = async () => {
+    const raw = saveContent.trim();
+    if (!raw) return;
+    setIsCleaning(true); setError(''); setSuccess('');
+    try {
+      const cleaned = await cleanupTemplateDictation(raw);
+      setSaveContent(cleaned.trim());
+      finalTranscriptRef.current = cleaned.trim() + ' ';
+      setIsLocked(true);
+    } catch (e) {
+      setError('Cleanup failed: ' + (e?.message || 'network error') + '. You can edit the text manually.');
+    }
+    setIsCleaning(false);
   };
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -397,7 +549,7 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
           {tab === 'save' && (
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               <div style={{ fontSize:12, color:c.sub, lineHeight:1.6 }}>
-                Build a new template here — separate from your current report. Dictate it, type it, or import your last generated report below.
+                Build a new template here — separate from your current report. Dictate it, type it, or import your last generated report, then tap <strong style={{ color:c.txt }}>✨ Clean Up & Format</strong> to fix punctuation and dictation errors.
               </div>
 
               <div style={{ fontSize:12, color:c.sub, background:c.bgCard, borderRadius:8, padding:'8px 12px', border:`1px solid ${c.border}` }}>
@@ -406,18 +558,20 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
 
               {micError && <div style={{ fontSize:12, color:c.red, background:dm?'rgba(248,113,113,0.1)':'#fef2f2', border:`1px solid ${dm?'#991b1b':'#fca5a5'}`, borderRadius:8, padding:'8px 12px' }}>{micError}</div>}
 
-              <div style={{ display:'flex', gap:8 }}>
-                <button onClick={toggleDictation}
-                  style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'10px 0', borderRadius:9, border:`1.5px solid ${isDictating ? '#fca5a5' : c.border}`, background:isDictating ? (dm?'rgba(239,68,68,0.12)':'#fef2f2') : c.bgCard, color:isDictating ? '#dc2626' : c.txt, fontSize:13, fontWeight:600, cursor:'pointer', transition:'all 0.15s' }}>
-                  <span style={{ width:8, height:8, borderRadius:'50%', background:isDictating ? '#ef4444' : '#94a3b8', boxShadow:isDictating ? '0 0 8px #ef4444' : 'none', flexShrink:0, transition:'all 0.3s' }} />
-                  {isDictating ? '⏹ Stop Dictation' : '🎤 Dictate Template'}
-                </button>
-                <button onClick={handleImportReport} disabled={!generatedReport?.trim() || isDictating}
-                  title={generatedReport?.trim() ? 'Add your current generated report into this template' : 'No report generated yet'}
-                  style={{ flex:1, padding:'10px 0', borderRadius:9, border:`1.5px solid ${c.border}`, background:c.bgCard, color:(!generatedReport?.trim()||isDictating) ? c.sub : c.txt, fontSize:13, fontWeight:600, cursor:(!generatedReport?.trim()||isDictating) ? 'not-allowed' : 'pointer', opacity:(!generatedReport?.trim()||isDictating) ? 0.55 : 1, transition:'all 0.15s' }}>
-                  📋 Import Report
-                </button>
-              </div>
+              {!isLocked && (
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={toggleDictation}
+                    style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'10px 0', borderRadius:9, border:`1.5px solid ${isDictating ? '#fca5a5' : c.border}`, background:isDictating ? (dm?'rgba(239,68,68,0.12)':'#fef2f2') : c.bgCard, color:isDictating ? '#dc2626' : c.txt, fontSize:13, fontWeight:600, cursor:'pointer', transition:'all 0.15s' }}>
+                    <span style={{ width:8, height:8, borderRadius:'50%', background:isDictating ? '#ef4444' : '#94a3b8', boxShadow:isDictating ? '0 0 8px #ef4444' : 'none', flexShrink:0, transition:'all 0.3s' }} />
+                    {isDictating ? '⏹ Stop Dictation' : '🎤 Dictate Template'}
+                  </button>
+                  <button onClick={handleImportReport} disabled={!generatedReport?.trim() || isDictating}
+                    title={generatedReport?.trim() ? 'Add your current generated report into this template' : 'No report generated yet'}
+                    style={{ flex:1, padding:'10px 0', borderRadius:9, border:`1.5px solid ${c.border}`, background:c.bgCard, color:(!generatedReport?.trim()||isDictating) ? c.sub : c.txt, fontSize:13, fontWeight:600, cursor:(!generatedReport?.trim()||isDictating) ? 'not-allowed' : 'pointer', opacity:(!generatedReport?.trim()||isDictating) ? 0.55 : 1, transition:'all 0.15s' }}>
+                    📋 Import Report
+                  </button>
+                </div>
+              )}
 
               <div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
@@ -430,18 +584,53 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
 
               <div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
-                  <label style={{ fontSize:12, fontWeight:600, color:c.sub }}>Template Content</label>
-                  {saveContent.trim() && (
-                    <button onClick={() => { setSaveContent(''); finalTranscriptRef.current = ''; }}
-                      style={{ fontSize:11, color:c.sub, background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>
-                      Clear
-                    </button>
-                  )}
+                  <label style={{ fontSize:12, fontWeight:600, color:c.sub }}>
+                    Template Content {isLocked && <span style={{ fontWeight:400, color:c.sub }}>· 🔒 Locked Preview</span>}
+                  </label>
+                  <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                    {saveContent.trim() && !isLocked && (
+                      <button onClick={() => setIsLocked(true)}
+                        style={{ fontSize:11, color:c.accent, background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>
+                        🔒 Preview
+                      </button>
+                    )}
+                    {isLocked && (
+                      <button onClick={() => setIsLocked(false)}
+                        style={{ fontSize:11, color:c.accent, background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>
+                        ✏️ Edit
+                      </button>
+                    )}
+                    {saveContent.trim() && (
+                      <button onClick={() => { setSaveContent(''); finalTranscriptRef.current = ''; setIsLocked(false); }}
+                        style={{ fontSize:11, color:c.sub, background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <textarea value={saveContent} onChange={e => setSaveContent(e.target.value)}
-                  style={{ ...c.inp, minHeight:180, resize:'vertical', lineHeight:1.6, fontFamily:'Georgia,"Times New Roman",serif', fontSize:12, border: isDictating ? '1.5px solid #ef4444' : c.inp.border, boxShadow: isDictating ? '0 0 0 3px rgba(239,68,68,0.1)' : 'none' }}
-                  placeholder="Tap 🎤 Dictate Template above, type directly, or import your current report…" />
+
+                {isLocked ? (
+                  <div style={{ background:c.bgCard, border:`1px solid ${c.border}`, borderRadius:8, padding:'14px 16px', minHeight:180, maxHeight:320, overflowY:'auto', fontFamily:"Georgia,'Times New Roman',serif" }}>
+                    {formatReport(saveContent, dm ? {
+                      neg:'#64748b', pos:'#fbbf24', lbl:'#94a3b8', body:'#cbd5e1', posW:600, border:'#334155', hdr:'#93c5fd'
+                    } : {
+                      neg:'#6b7280', pos:'#dc2626', lbl:'#1e293b', body:'#1e293b', posW:600, border:'#e2e8f0', hdr:'#1e3a5f'
+                    })}
+                  </div>
+                ) : (
+                  <textarea value={saveContent} onChange={e => setSaveContent(e.target.value)}
+                    style={{ ...c.inp, minHeight:180, resize:'vertical', lineHeight:1.6, fontFamily:'Georgia,"Times New Roman",serif', fontSize:12, border: isDictating ? '1.5px solid #ef4444' : c.inp.border, boxShadow: isDictating ? '0 0 0 3px rgba(239,68,68,0.1)' : 'none' }}
+                    placeholder="Tap 🎤 Dictate Template above, type directly, or import your current report…" />
+                )}
               </div>
+
+              {!isLocked && (
+                <button onClick={handleCleanup} disabled={isCleaning || isDictating || !saveContent.trim()}
+                  title="Fix dictated punctuation (period/comma/new paragraph) and correct misheard MSK terminology"
+                  style={{ width:'100%', padding:'10px 0', borderRadius:9, border:'none', background:(isCleaning||isDictating||!saveContent.trim())?'#9ca3af':'linear-gradient(135deg,#7c3aed,#2563eb)', color:'white', fontSize:13, fontWeight:700, cursor:(isCleaning||isDictating||!saveContent.trim())?'not-allowed':'pointer', boxShadow:(isCleaning||isDictating||!saveContent.trim())?'none':'0 4px 16px rgba(124,58,237,0.3)', transition:'all 0.12s' }}>
+                  {isCleaning ? '⏳ Cleaning up…' : '✨ Clean Up & Format Dictation'}
+                </button>
+              )}
 
               <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', padding:'8px 12px', borderRadius:8, border:`1px solid ${saveShared?(dm?'#4f46e5':'#c4b5fd'):(c.border)}`, background:saveShared?(dm?'#1e1b4b':'#f5f3ff'):'transparent', transition:'all 0.12s' }}>
                 <input type="checkbox" checked={saveShared} onChange={e => setSaveShared(e.target.checked)} style={{ width:15, height:15, accentColor:'#4f46e5', cursor:'pointer' }}/>
