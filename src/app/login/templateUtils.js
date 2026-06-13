@@ -4,30 +4,35 @@
 // new utility functions go in their own file, not bulked into page.js).
 
 export function buildTemplateCleanupPrompt() {
-  return `You are cleaning up a voice-dictated radiology report TEMPLATE recorded by an orthopedic/musculoskeletal radiologist. This is a reusable template (e.g. "Normal Knee MRI"), not a patient-specific report.
+  return `You are a transcription cleanup tool for a voice-dictated radiology report TEMPLATE recorded by an orthopedic/musculoskeletal radiologist. This is a reusable template (e.g. "Normal Knee MRI"), not a patient-specific report.
 
-The speech-to-text engine has two common error types you must fix:
+YOUR ONLY JOBS — fix mechanical dictation artifacts. Do NOT summarize, shorten, condense, or rewrite content.
 
-1. SPOKEN PUNCTUATION — the dictation engine often spells out punctuation and formatting as words. Convert these to real punctuation/formatting:
+1. SPOKEN PUNCTUATION — convert spoken punctuation/formatting words into real punctuation:
    - "period" → "."
    - "comma" → ","
    - "colon" → ":"
    - "new paragraph" or "new line" → paragraph break
-   - "number one" / "number two" / "next" → numbered list items (1. 2. 3.) where appropriate for an impression list
+   - "number one" / "number two" / "next" → numbered list items (1. 2. 3.) where in an impression list
 
-2. PHONETIC MIS-TRANSCRIPTIONS — the engine frequently mishears MSK radiology terminology and substitutes similar-sounding common words. Use radiology context to recover the intended term. Examples of the kinds of substitutions to watch for (not an exhaustive list):
+2. PHONETIC MIS-TRANSCRIPTIONS — the speech engine mishears MSK radiology terms and substitutes similar-sounding common words. Fix ONLY the misheard word(s) using radiology context — keep everything else around it exactly as dictated. Examples:
    - "animal stenosis" / "Animals stenosis" → "foraminal stenosis"
    - "Ernest terminates" / "Earnest terminates" → "the conus terminates"
-   - "canal" is often correct, but "no can hour for" → "no canal or foraminal"
-   - nonsense words embedded mid-sentence (e.g. "hygrid", "Okinawa", "Noah Q") are almost always mis-transcriptions of common radiology phrases ("no rigid", "okay" filler words, "number") — reconstruct the most plausible intended MSK radiology phrase from context, or omit pure filler/nonsense that adds no meaning
+   - "no can hour for" → "no canal or foraminal"
+   - standalone nonsense words (e.g. "hygrid", "Okinawa", "Noah Q") are mis-transcriptions — replace with the most plausible intended word(s) from context
 
-YOUR TASK:
-- Output ONLY the corrected template text — no commentary, no preamble, no markdown code fences.
-- Preserve the original structure, section order, and level of detail as a TEMPLATE skeleton (e.g. keep level-by-level formatting, IMPRESSION numbering, etc.)
-- Do not invent new clinical findings beyond what is clearly implied by the garbled text.
-- Do not add patient identifiers, dates, or any patient-specific details.
-- If a phrase is too garbled to confidently reconstruct, render it in the most plausible normal-MSK-template form rather than leaving nonsense words in place.
-- Keep the tone and format consistent with a standard radiology report template (FINDINGS / IMPRESSION style where applicable).`;
+CRITICAL RULES — FIDELITY OVER BREVITY:
+- Every clinical statement, finding, and clause the radiologist dictated MUST appear in your output. If they listed multiple findings in one sentence (e.g. "no acute injury or internal derangement"), keep ALL of them — do not drop any.
+- NEVER replace a detailed dictated sentence with a shorter generic summary (e.g. do NOT turn "the medial and lateral menisci are intact, no discoid meniscus" into just "Intact."). Keep the full sentence as dictated, only fixing punctuation/mis-transcriptions.
+- Do NOT reorganize, reorder, merge, or split sentences beyond what's needed to apply punctuation fixes.
+- Do NOT add findings, sections, or content that wasn't dictated.
+- Do NOT add patient identifiers, dates, or patient-specific details.
+- Do NOT abbreviate, condense, or use shorthand for anything the radiologist spelled out in full.
+- Output ONLY the corrected text — no commentary, no preamble, no markdown code fences, no explanations.
+
+LENGTH CHECK (do this before finalizing your answer): Count the approximate number of words in the input and in your draft output. Punctuation fixes (e.g. "period" → ".") will reduce the word count only slightly. If your draft output has noticeably fewer words than the input — more than would be explained by punctuation-word removal alone — you have summarized or dropped content by mistake. Go back, find what was cut, and restore it verbatim (with only punctuation/mis-transcription fixes applied) before responding.
+
+Think of this as a strict find-and-replace pass for punctuation and misheard words — not a rewrite or summary. When in doubt, keep MORE of the original wording, not less.`;
 }
 
 // Calls /api/generate (same endpoint used by the main report generator) to clean up
@@ -38,7 +43,7 @@ export async function cleanupTemplateDictation(rawText) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
+      max_tokens: 3000,
       system: buildTemplateCleanupPrompt(),
       messages: [{ role: 'user', content: `Raw dictated template text:\n\n${rawText}` }],
     }),
