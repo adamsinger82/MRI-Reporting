@@ -7487,7 +7487,7 @@ export default function DashboardPage() {
                       <div style={{ fontSize:32 }}>🔩</div>
                       <div style={{ fontSize:13,fontWeight:600,color:dm?'#64748b':'#94a3b8' }}>Select an implant type in the left panel to load the complication checklist and grading systems.</div>
                     </div>
-                  : <ReferencePanel selectedBodyPart={selectedBodyPart} modality={modality} spineRegion={spineRegion} dm={dm} />
+                  : <ReferencePanel selectedBodyPart={selectedBodyPart} modality={modality} spineRegion={spineRegion} darkMode={dm} />
             }
           </div>
         </div>
