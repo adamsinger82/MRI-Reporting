@@ -82,7 +82,7 @@ const MRI_GRADING_DATA = {
       {
         id: 'modified_insall_salvati',
         label: 'Modified Insall-Salvati Ratio — Patellar Height',
-        isGradingScale: false,
+        isGradingScale: true,
         plane: 'Sagittal',
         description: 'Modified Insall-Salvati ratio (Caton-Deschamps or Grelsamer modification) for assessing patellar height on MRI. Measured on the most lateral sagittal slice showing the full patellar articular cartilage. More reliable than original Insall-Salvati on MRI because it uses the articular surface rather than the patellar ligament insertion.',
         diagram: null,
@@ -101,7 +101,7 @@ const MRI_GRADING_DATA = {
       {
         id: 'tttg_mri',
         label: 'TT-TG Distance (MRI) — Tibial Tubercle to Trochlear Groove',
-        isGradingScale: false,
+        isGradingScale: true,
         plane: 'Axial (composite measurement)',
         description: 'TT-TG distance measured on MRI by superimposing the axial slice at the level of the tibial tubercle with the axial slice at the deepest point of the trochlear groove. The perpendicular distance between the two points on a horizontal reference line through the posterior condyles. Gold standard measurement for patellar instability workup.',
         diagram: null,
@@ -139,7 +139,7 @@ const MRI_GRADING_DATA = {
       {
         id: 'patellar_tilt',
         label: 'Patellar Tilt Angle',
-        isGradingScale: false,
+        isGradingScale: true,
         plane: 'Axial',
         description: 'Lateral patellar tilt angle measured on axial MRI at the level of mid-patella. Angle between the horizontal (posterior condyle reference) and a line along the lateral patellar facet. Assesses lateral retinacular tightness and patellar tracking.',
         diagram: null,
@@ -174,7 +174,7 @@ const MRI_GRADING_DATA = {
       {
         id: 'meniscus_extrusion',
         label: 'Meniscal Extrusion',
-        isGradingScale: false,
+        isGradingScale: true,
         plane: 'Coronal',
         description: 'Meniscal body extrusion beyond the tibial margin measured on coronal MRI. Medial meniscus extrusion is strongly associated with root tears and degenerative disease. Measured as perpendicular distance from the medial tibial margin to the outermost margin of the meniscal body.',
         diagram: null,
@@ -225,6 +225,25 @@ const MRI_GRADING_DATA = {
           { label: 'Grade 3', value: 'Partial-thickness defect ≥ 50% depth, not through to bone' },
           { label: 'Grade 4', value: 'Full-thickness cartilage loss with exposed subchondral bone' },
           { label: 'Bone marrow edema', value: 'Note subchondral BME pattern; correlates with overlying cartilage loss and pain' },
+        ],
+      },
+      {
+        id: 'posterior_tibial_slope',
+        label: 'Posterior Tibial Slope (PTS)',
+        isGradingScale: true,
+        plane: 'Sagittal',
+        description: 'Slope of the medial and lateral tibial plateau relative to the tibial shaft axis on midsagittal MRI. Increased slope is a major risk factor for ACL graft failure and is increasingly assessed pre-operatively in ACL reconstruction planning.',
+        diagram: null,
+        citations: [
+          { label: 'Dejour H, Bonnin M. — Tibial translation after anterior cruciate ligament rupture: significance of the posterior tibial slope. J Bone Joint Surg Br 1994;76(5):745-749.', url: 'https://scholar.google.com/scholar?q=Dejour+Bonnin+posterior+tibial+slope+ACL+1994' },
+          { label: 'Hudek R et al. — Is noncontact ACL injury associated with the posterior tibial slope? Clin Orthop Relat Res 2011.', url: 'https://scholar.google.com/scholar?q=Hudek+posterior+tibial+slope+ACL+injury+MRI+measurement+2011' },
+        ],
+        normalValues: [
+          { label: 'Medial plateau (normal)', value: '~ 5–7°' },
+          { label: 'Lateral plateau (normal)', value: '~ 3–5°' },
+          { label: 'Elevated slope', value: '> 12° associated with significantly increased ACL graft failure risk' },
+          { label: 'Measurement technique', value: 'Angle between a line perpendicular to the tibial shaft long-axis (or posterior cortical line) and a tangent to the medial or lateral tibial plateau on the corresponding midsagittal slice' },
+          { label: 'Clinical note', value: 'Consider slope-reducing osteotomy in revision ACL reconstruction when slope is markedly elevated' },
         ],
       },
     ],
