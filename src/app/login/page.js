@@ -5253,9 +5253,8 @@ function ReferencePanel({ selectedBodyPart, modality = 'MRI', spineRegion = 'lum
               <div key={m.id} onClick={() => setSelectedMeasurementId(m.id)}
                 style={{ padding:'7px 10px',background:dm?'#0f172a':'#f8fafc',borderRadius:7,border:'1px solid '+(dm?'#334155':'#f1f5f9'),cursor:'pointer' }}>
                 <div style={{ fontSize:12,fontWeight:600,color:'#0891b2' }}>{m.label}</div>
-                {m.isGradingScale
-                  ? <div style={{ fontSize:11,color:dm?'#60a5fa':'#0369a1',fontWeight:500 }}>View grading scale →</div>
-                  : <div style={{ fontSize:11,color:dm?'#94a3b8':'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{m.normalValues[0]?.label}: {m.normalValues[0]?.value}</div>
+                {!m.isGradingScale &&
+                  <div style={{ fontSize:11,color:dm?'#94a3b8':'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{m.normalValues[0]?.label}: {m.normalValues[0]?.value}</div>
                 }
               </div>
             ))}

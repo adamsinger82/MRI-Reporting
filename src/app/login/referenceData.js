@@ -175,7 +175,7 @@ const JOINT_DATA = {
       },
       {
         id: 'goutallier',
-        label: 'Goutallier Classification (Fatty Infiltration)',
+        label: 'Goutallier Classification (Muscle Belly Fatty Infiltration)',
         isGradingScale: true,
         plane: 'Coronal oblique / axial',
         description: 'Fatty infiltration of rotator cuff musculature graded 0–4. Higher grade predicts worse surgical outcomes. Assessed on T1 sequences.',
@@ -214,7 +214,7 @@ const JOINT_DATA = {
       },
       {
         id: 'stump-length',
-        label: 'Tendon Stump Length (Repair Quality)',
+        label: 'Tendon Stump Length (Tendon Quality)',
         isGradingScale: true,
         plane: 'Coronal oblique',
         description: 'Length of remaining tendon from footprint to tear edge. Longer stump = better tissue quality for repair.',
@@ -269,7 +269,7 @@ const JOINT_DATA = {
       },
       {
         id: 'glenoid-track',
-        label: 'Glenoid Track (On-Track vs Off-Track)',
+        label: 'Glenoid Track (Engaging Hill-Sachs Lesion)',
         isGradingScale: true,
         plane: 'Axial + coronal',
         description: 'Determines if a Hill-Sachs lesion engages the anterior glenoid during shoulder motion. Guides decision for Latarjet vs Bankart repair.',
@@ -287,7 +287,7 @@ const JOINT_DATA = {
       },
       {
         id: 'habermeyer',
-        label: 'Habermeyer Classification (Subscapularis Tears)',
+        label: 'Habermeyer Classification (Biceps Pulley Instability)',
         isGradingScale: true,
         plane: 'Sagittal oblique',
         description: 'Classifies subscapularis tears by extent of tendon involvement. Guides surgical planning.',
@@ -306,7 +306,7 @@ const JOINT_DATA = {
       },
       {
         id: 'modified-outerbridge-shoulder',
-        label: 'Modified Outerbridge Classification (Glenohumeral Cartilage)',
+        label: 'Modified Outerbridge Classification (Cartilage Wear)',
         plane: 'All planes',
         description: 'Grades glenohumeral articular cartilage damage on MRI. Applied independently to humeral head and glenoid articular surfaces.',
         isGradingScale: true,
@@ -957,6 +957,7 @@ const JOINT_DATA = {
       {
         id: 'denis',
         label: 'Denis Classification (Sacral Fractures)',
+        isGradingScale: true,
         plane: 'Coronal CT / MRI',
         description: 'Classifies sacral fractures by zone of involvement relative to the sacral foramina. Higher zone = higher neurologic risk.',
         normalValues: [

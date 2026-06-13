@@ -324,7 +324,7 @@ const MRI_GRADING_DATA = {
       },
       {
         id: 'neural_foraminal_stenosis_lumbar',
-        label: 'Neural Foraminal Stenosis Grading (Lumbar)',
+        label: 'Neural Foraminal Stenosis Grading',
         isGradingScale: true,
         spineRegions: ['thoracic','lumbar'],
         plane: 'Sagittal T1',
@@ -343,7 +343,7 @@ const MRI_GRADING_DATA = {
       },
       {
         id: 'disc_nomenclature',
-        label: 'Disc Nomenclature',
+        label: 'Disc Nomenclature (Herniation Terminology)',
         isGradingScale: true,
         spineRegions: ['cervical','thoracic','lumbar'],
         plane: 'Axial T2 / Sagittal',
@@ -364,7 +364,7 @@ const MRI_GRADING_DATA = {
       },
       {
         id: 'pfirrmann_disc',
-        label: 'Pfirrmann Disc Degeneration Grading',
+        label: 'Pfirrmann (Disc Degeneration)',
         isGradingScale: true,
         spineRegions: ['cervical','lumbar'],
         plane: 'Sagittal T2',
@@ -384,7 +384,7 @@ const MRI_GRADING_DATA = {
       },
       {
         id: 'spondylolisthesis_meyerding',
-        label: 'Spondylolisthesis — Meyerding Grading',
+        label: 'Meyerding Spondylolisthesis (Vertebral Body Slippage)',
         isGradingScale: true,
         spineRegions: ['cervical','lumbar'],
         plane: 'Sagittal',
@@ -404,8 +404,8 @@ const MRI_GRADING_DATA = {
       },
       {
         id: 'spinal_alignment_mri',
-        label: 'Spinal Alignment — Coronal and Sagittal Balance',
-        isGradingScale: false,
+        label: 'Spinal Alignment (Coronal and Sagittal Balance)',
+        isGradingScale: true,
         spineRegions: ['thoracic','lumbar'],
         plane: 'Standing long-cassette X-ray / MRI scout',
         description: 'Global spinal alignment parameters. SVA and PI-LL mismatch are primary surgical targets.',
@@ -426,7 +426,7 @@ const MRI_GRADING_DATA = {
       },
       {
         id: 'modic_changes',
-        label: 'Modic Changes — Vertebral Endplate Signal',
+        label: 'Modic Changes (Endplate Signal)',
         isGradingScale: true,
         spineRegions: ['cervical','thoracic','lumbar'],
         plane: 'Sagittal T1 + STIR',
