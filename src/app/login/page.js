@@ -305,6 +305,10 @@ PARASPINAL SOFT TISSUES: default text is "No acute abnormality." — NOT "intact
 
 CANAL AND NEURAL FORAMINA: Do NOT generate this as a standalone FINDINGS heading. Canal and foraminal stenosis belongs exclusively under individual LEVELS entries.
 
+CORD / CONUS / CAUDA EQUINA heading — INCLUDE ONLY: conus medullaris tip level/termination, intrinsic cord signal abnormality (e.g. syrinx, myelomalacia, demyelination), and cauda equina nerve root crowding/clumping NOT attributable to a specific disc level.
+CORD / CONUS / CAUDA EQUINA heading — DO NOT INCLUDE: disc herniation/protrusion/extrusion, or nerve root compression/displacement caused by a disc — even if the dictation mentions a nerve root by name (e.g. "compressing the left L5 nerve root"). ANY finding describing a disc compressing, displacing, or impinging a nerve root belongs exclusively under the corresponding LEVELS entry for that disc level (e.g. an L4-5 disc extrusion compressing the L5 nerve root → "L4-L5:" line under LEVELS), never under Cord/Conus/Cauda Equina.
+LEVEL INFERENCE: If a disc-level nerve root relationship is dictated but the disc level itself is ambiguous or not stated, use standard lumbar numbering to infer it — a paracentral/foraminal disc at level X-Y typically compresses the traversing nerve root numbered Y in the lateral recess/foramen (e.g. an L4-5 disc most commonly compresses the L5 nerve root; an L5-S1 disc most commonly compresses the S1 nerve root). Place the finding under the inferred LEVELS entry.
+
 FACET JOINTS: Facet joint edema, effusion, erosion, synovitis, arthrosis — report under individual LEVELS entries, NOT as a standalone FINDINGS heading.
 
 BONES heading — include if dictated: pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas, fractures, marrow signal abnormality. Default marrow text when nothing abnormal: "No marrow infiltration or aggressive osseous lesion."
@@ -340,8 +344,10 @@ WHAT ALWAYS GETS ITS OWN LINE (never grouped):
 - AVN (with Ficat/ARCO stage)
 - Aggressive or indeterminate osseous lesion
 - Fracture of high urgency (pelvic ring, vertebral with cord compromise)
-- Incidental finding unrelated to primary pathology (e.g. renal cyst on hip MRI)
+- Incidental finding unrelated to primary pathology (e.g. an incidental cyst, e.g. renal or adnexal, on a non-abdominal MRI)
 - Normal exam → ${normalImpressionText}
+
+SPINE INCIDENTAL CYST GARBLE — ADNEXAL vs RENAL: On lumbar/pelvic spine MRI, an incidentally noted cyst near the kidneys/pelvis is far more often an ADNEXAL cyst (ovarian/pelvic) than a renal cyst, and speech recognition frequently mangles "adnexal" into phonetically similar nonsense (e.g. "at nexle", "a nexel", "an exile", "and nexel"). If the dictation contains a garbled word resembling "adnexal" immediately before "cyst," transcribe it as "adnexal cyst," NOT "renal cyst" — do not substitute organ names based on a prompt example; use only what best phonetically matches the garbled dictation.
 
 
 GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
@@ -6515,6 +6521,7 @@ export default function DashboardPage() {
   const [modality, setModality] = useState('MRI');
   const [dictationText, setDictationText] = useState('');
   const [generatedReport, setGeneratedReport] = useState('');
+  const [isEditingReport, setIsEditingReport] = useState(false); // Col 2 edit toggle
   const [isGenerating, setIsGenerating] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [micError, setMicError] = useState('');
@@ -6662,6 +6669,7 @@ export default function DashboardPage() {
     const textToUse = isRheum ? rheumFreeText : dictationText;
     if (!textToUse.trim()) return;
     setGeneratedReport(''); // always clears center col — any button can override
+    setIsEditingReport(false);
     setIsGenerating(true);
     const lat = showSide ? side : '';
     // ── Mass mode resolution ─────────────────────────────────────────────────
@@ -6699,6 +6707,7 @@ export default function DashboardPage() {
   const generateRheumReport = async () => {
     setIsGeneratingRheum(true);
     setGeneratedReport(''); // always clears and replaces center col
+    setIsEditingReport(false);
     const jLabel = RHEUM_JOINTS[rheumJoint]?.label || rheumJoint;
     // Build a structured finding list from checked boxes
     const checkedFindings = [];
@@ -6737,13 +6746,10 @@ export default function DashboardPage() {
 
   const startKeepalive = (getRecRef) => {
     stopKeepalive();
-    keepaliveTimerRef.current = setInterval(() => {
-      if (gracePeriodRef.current) return; // final result just came in — let Chrome finish processing
-      const rec = getRecRef();
-      if (!rec) { stopKeepalive(); return; }
-      // Force restart before browser's ~5s silence timeout
-      try { rec.stop(); } catch {}
-    }, 4000);
+    // Periodic forced restarts were fragmenting continuous speech into small chunks,
+    // each transcribed without sentence context — causing both garbling and mid-word
+    // cutoffs. Rely solely on the natural onend auto-restart loop below, which already
+    // handles browser silence timeouts and reseeds from finalTranscriptPersistRef.
   };
 
   const stopKeepalive = () => {
@@ -6823,10 +6829,13 @@ export default function DashboardPage() {
   const inp = { width:'100%',padding:'9px 12px',border:'1px solid '+(dm?'#334155':'#dde3ed'),borderRadius:8,fontSize:14,boxSizing:'border-box',color:dm?'#e2e8f0':'#1e293b',outline:'none',background:dm?'#0f172a':'white' };
   const lbl = { fontSize:11,fontWeight:600,color:dm?'#94a3b8':'#64748b',textTransform:'uppercase',letterSpacing:'0.07em',display:'block',marginBottom:5 };
 
-  const colHdr = (gradient, icon, title) => (
-    <div style={{ background:gradient,padding:'15px 18px',display:'flex',alignItems:'center',gap:10 }}>
-      <span style={{ fontSize:18,filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>{icon}</span>
-      <span style={{ color:'white',fontWeight:800,fontSize:13,textTransform:'uppercase',letterSpacing:'0.14em',textShadow:'0 1px 3px rgba(0,0,0,0.2)' }}>{title}</span>
+  const colHdr = (gradient, icon, title, extra) => (
+    <div style={{ background:gradient,padding:'15px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10 }}>
+      <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+        <span style={{ fontSize:18,filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>{icon}</span>
+        <span style={{ color:'white',fontWeight:800,fontSize:13,textTransform:'uppercase',letterSpacing:'0.14em',textShadow:'0 1px 3px rgba(0,0,0,0.2)' }}>{title}</span>
+      </div>
+      {extra || null}
     </div>
   );
 
@@ -7379,6 +7388,7 @@ export default function DashboardPage() {
                     setDictationText('');
                     setRheumFreeText('');
                     setGeneratedReport('');
+                    setIsEditingReport(false);
                   }} disabled={!canReset}
                     title="Clear dictation and report — start next case"
                     style={{ flex:1,padding:'10px 12px',borderRadius:9,border:'1.5px solid '+(canReset?(dm?'#475569':'#cbd5e1'):(dm?'#1e293b':'#e2e8f0')),background:canReset?(dm?'#1e293b':'#f8fafc'):(dm?'#0f172a':'#f1f5f9'),color:canReset?(dm?'#94a3b8':'#64748b'):(dm?'#334155':'#cbd5e1'),fontSize:12,fontWeight:600,cursor:canReset?'pointer':'not-allowed',transition:'all 0.15s',flexShrink:0 }}
@@ -7394,29 +7404,41 @@ export default function DashboardPage() {
 
         {/* Col 2 — Report */}
         <div className={`msk-col${mobileTab===1?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
-          {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report')}
+          {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report',
+            generatedReport && !isGenerating ? (
+              <button onClick={() => setIsEditingReport(e => !e)}
+                style={{ display:'flex',alignItems:'center',gap:5,padding:'5px 11px',borderRadius:7,border:'1px solid rgba(255,255,255,0.35)',background:isEditingReport?'rgba(255,255,255,0.22)':'rgba(255,255,255,0.1)',color:'white',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s' }}>
+                {isEditingReport ? '🔒 Lock' : '✏️ Edit'}
+              </button>
+            ) : null
+          )}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
-            <div className="msk-report-box" style={{ flex:1,padding:'14px 16px',border:'1px solid '+(dm?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
+            <div className="msk-report-box" style={{ flex:1,padding:isEditingReport?0:'14px 16px',border:'1px solid '+(dm?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
               {isGenerating
                 ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
                 : generatedReport
-                  ? <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, dm ? {
-                      neg:'#64748b',   // dark mode normals: medium slate — visible but subdued
-                      pos:'#fbbf24',   // dark mode positives: amber/yellow — warm, clear, not harsh
-                      lbl:'#94a3b8',   // subheading labels
-                      body:'#cbd5e1',  // impression body text
-                      posW:600,
-                      border:'#334155',
-                      hdr:'#93c5fd'
-                    } : {
-                      neg:'#6b7280',   // light mode normals: grey
-                      pos:'#dc2626',   // light mode positives: red
-                      lbl:'#1e293b',
-                      body:'#1e293b',
-                      posW:600,
-                      border:'#e2e8f0',
-                      hdr:'#1e3a5f'
-                    })}</div>
+                  ? (isEditingReport
+                      ? <textarea value={generatedReport} onChange={e => setGeneratedReport(e.target.value)}
+                          style={{ width:'100%',height:'100%',minHeight:340,maxHeight:'65vh',padding:'14px 16px',border:'none',borderRadius:10,outline:'none',resize:'vertical',boxSizing:'border-box',background:dm?'#0f172a':'white',color:dm?'#e2e8f0':'#1e293b',fontFamily:"Georgia,'Times New Roman',serif",fontSize:13,lineHeight:1.7 }}
+                        />
+                      : <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, dm ? {
+                          neg:'#64748b',   // dark mode normals: medium slate — visible but subdued
+                          pos:'#fbbf24',   // dark mode positives: amber/yellow — warm, clear, not harsh
+                          lbl:'#94a3b8',   // subheading labels
+                          body:'#cbd5e1',  // impression body text
+                          posW:600,
+                          border:'#334155',
+                          hdr:'#93c5fd'
+                        } : {
+                          neg:'#6b7280',   // light mode normals: grey
+                          pos:'#dc2626',   // light mode positives: red
+                          lbl:'#1e293b',
+                          body:'#1e293b',
+                          posW:600,
+                          border:'#e2e8f0',
+                          hdr:'#1e3a5f'
+                        })}</div>
+                    )
                   : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
               }
             </div>
