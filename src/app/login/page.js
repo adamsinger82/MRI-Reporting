@@ -7293,8 +7293,8 @@ export default function DashboardPage() {
                 <span style={{ fontSize:11,fontWeight:600,color:includeDoseOpt?(dm?'#22d3ee':'#0e7490'):(dm?'#64748b':'#64748b') }}>Include dose optimization sentence</span>
               </label>
             )}
-            {/* ── Arthroplasty checkbox (CT only, shoulder/hip/knee) ── */}
-            {isCT && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) && (
+            {/* ── Arthroplasty checkbox (MRI + CT, shoulder/hip/knee) ── */}
+            {!isRheum && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) && (
               <div style={{ display:'flex',flexDirection:'column',gap:6 }}>
                 <label style={{ display:'flex',alignItems:'center',gap:8,cursor:'pointer',padding:'7px 10px',borderRadius:7,border:'1px solid '+(arthroplastyEnabled?(dm?'#0891b2':'#a5f3fc'):(dm?'#334155':'#e2e8f0')),background:arthroplastyEnabled?(dm?'#0c2d36':'#ecfeff'):(dm?'#0f172a':'#f8fafc'),transition:'all 0.15s' }}>
                   <input type="checkbox" checked={arthroplastyEnabled} onChange={e=>{ setArthroplastyEnabled(e.target.checked); if(!e.target.checked){ setArthroplastyType(''); setArthroplastyChecklist({}); setArthroplastyGrading(''); }}} style={{ width:14,height:14,accentColor:'#0891b2',cursor:'pointer' }}/>
@@ -7449,12 +7449,12 @@ export default function DashboardPage() {
         {/* Col 3 — Reference */}
         <div className={`msk-col${mobileTab===2?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
           {colHdr(
-            arthroplastyEnabled && isCT && ARTHROPLASTY_JOINTS.includes(selectedBodyPart)
+            arthroplastyEnabled && ARTHROPLASTY_JOINTS.includes(selectedBodyPart)
               ? 'linear-gradient(135deg,#0e7490,#0891b2)'
               : isRheum ? 'linear-gradient(135deg,#7c2d92,#a855f7)' : isCT ? 'linear-gradient(135deg,#0e7490,#0891b2)' : 'linear-gradient(135deg,#1d4ed8,#4f46e5)',
-            arthroplastyEnabled && isCT && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) ? '🔩' : isRheum ? '🩻' : isCT ? '🦴' : '📐',
-            arthroplastyEnabled && isCT && ARTHROPLASTY_JOINTS.includes(selectedBodyPart)
-              ? `${selectedBodyPart.charAt(0).toUpperCase()+selectedBodyPart.slice(1)} Arthroplasty — CT Review`
+            arthroplastyEnabled && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) ? '🔩' : isRheum ? '🩻' : isCT ? '🦴' : '📐',
+            arthroplastyEnabled && ARTHROPLASTY_JOINTS.includes(selectedBodyPart)
+              ? `${selectedBodyPart.charAt(0).toUpperCase()+selectedBodyPart.slice(1)} Arthroplasty — ${modality} Review`
               : isRheum ? 'Rheum DDx Builder' : isCT ? 'CT Fracture Classification' : 'MRI Grading Reference'
           )}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
@@ -7470,7 +7470,7 @@ export default function DashboardPage() {
                   isGenerating={isGeneratingRheum}
                   dm={dm}
                 />
-              : arthroplastyEnabled && isCT && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) && (arthroplastyType || ARTHROPLASTY_DATA[selectedBodyPart]?.types.length === 1)
+              : arthroplastyEnabled && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) && (arthroplastyType || ARTHROPLASTY_DATA[selectedBodyPart]?.types.length === 1)
                 ? <ArthroplastyPanel
                     joint={selectedBodyPart}
                     arthroplastyType={arthroplastyType}
@@ -7482,7 +7482,7 @@ export default function DashboardPage() {
                     setArthroplastyImageTab={setArthroplastyImageTab}
                     dm={dm}
                   />
-                : arthroplastyEnabled && isCT && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) && !arthroplastyType
+                : arthroplastyEnabled && ARTHROPLASTY_JOINTS.includes(selectedBodyPart) && !arthroplastyType
                   ? <div style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:10,color:dm?'#475569':'#94a3b8',textAlign:'center',padding:24 }}>
                       <div style={{ fontSize:32 }}>🔩</div>
                       <div style={{ fontSize:13,fontWeight:600,color:dm?'#64748b':'#94a3b8' }}>Select an implant type in the left panel to load the complication checklist and grading systems.</div>
