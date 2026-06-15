@@ -382,7 +382,7 @@ const JOINT_DATA = {
           { label: "Notzli HP et al. Contour of the femoral head-neck junction as predictor of anterior impingement. J Bone Joint Surg Br 2002", url: "https://scholar.google.com/scholar?q=Notzli%20Wyss%20Stoecklin%20contour%20femoral%20head%20neck%20junction%20anterior%20impingement%202002" },
           { label: "Clohisy JC et al. A systematic approach to the plain radiographic evaluation of the hip. J Bone Joint Surg Am 2008", url: "https://scholar.google.com/scholar?q=Clohisy%20systematic%20approach%20plain%20radiographic%20evaluation%20hip%202008" },
         ],
-        diagram: 'hip-alpha',
+        diagram: null,
       },
       {
         id: 'lce-angle',
@@ -399,7 +399,7 @@ const JOINT_DATA = {
           { label: "Tannast M et al. Radiographic analysis of femoroacetabular impingement. J Bone Joint Surg Am 2007", url: "https://scholar.google.com/scholar?q=Tannast%20radiographic%20analysis%20femoroacetabular%20impingement%202007" },
           { label: "Wiberg G. Studies on dysplastic acetabula and congenital subluxation. Acta Chir Scand 1939 (supplement)", url: "https://scholar.google.com/scholar?q=Wiberg%20studies%20dysplastic%20acetabula%20congenital%20subluxation%20center%20edge%20angle%201939" },
         ],
-        diagram: 'hip-lce',
+        diagram: null,
       },
       {
         id: 'femoral-anteversion',
@@ -415,7 +415,7 @@ const JOINT_DATA = {
           { label: "Murphy SB et al. Measurement of femoral anteversion by MRI. J Pediatr Orthop 1987", url: "https://scholar.google.com/scholar?q=Murphy%20measurement%20femoral%20anteversion%20MRI%201987" },
           { label: "Tönnis D, Heinecke A. Diminished femoral anteversion and functional changes in knee joint. J Pediatr Orthop 1991", url: "https://scholar.google.com/scholar?q=Tonnis%20Heinecke%20diminished%20femoral%20anteversion%20functional%20changes%20knee%20joint%201991" },
         ],
-        diagram: 'hip-anteversion',
+        diagram: null,
       },
       {
         id: 'ifi-qfs',
@@ -434,14 +434,14 @@ const JOINT_DATA = {
           { label: "Singer AD et al. Ischiofemoral impingement syndrome: a meta-analysis. Skeletal Radiol 2015", url: "https://scholar.google.com/scholar?q=Singer%20Subhawong%20Jose%20Tresley%20Clifford%20ischiofemoral%20impingement%20syndrome%20meta-analysis%20Skeletal%20Radiology%202015" },
           { label: "Torriani M et al. Ischiofemoral impingement syndrome on MRI. AJR 2009", url: "https://scholar.google.com/scholar?q=Torriani%20ischiofemoral%20impingement%20syndrome%20MRI%20quadratus%20femoris%202009" },
         ],
-        diagram: 'hip-ifi-qfs',
+        diagram: null,
       },
       {
         id: 'tonnis',
         label: 'Tönnis Grading (Hip OA)',
         isGradingScale: true,
         plane: 'Coronal',
-        description: 'Grades glenohumeral osteoarthritis severity. Guides timing of surgical intervention for FAI and dysplasia.',
+        description: 'Grades hip osteoarthritis severity. Guides timing of surgical intervention for FAI and dysplasia.',
         normalValues: [
           { label: 'Grade 0', value: 'No OA — normal joint' },
           { label: 'Grade 1', value: 'Mild: subchondral sclerosis, slight joint space loss' },
@@ -453,7 +453,7 @@ const JOINT_DATA = {
           { label: "Tonnis D, Heinecke A. Acetabular and femoral anteversion: relationship with hip osteoarthritis. J Bone Joint Surg Am 1999", url: "https://scholar.google.com/scholar?q=Tonnis%20Heinecke%20acetabular%20femoral%20anteversion%20relationship%20osteoarthritis%20hip%201999" },
           { label: "Clohisy JC et al. A systematic approach to the plain radiographic evaluation of the young adult hip. J Bone Joint Surg Am 2008", url: "https://scholar.google.com/scholar?q=Clohisy%20systematic%20plain%20radiographic%20evaluation%20young%20adult%20hip%20Tonnis%202008" },
         ],
-        diagram: 'hip-tonnis',
+        diagram: null,
       },
       {
         id: 'ficat-arlet-femoral-avn',
@@ -503,7 +503,7 @@ const JOINT_DATA = {
           { label: 'Overhang', value: 'Rim > 2 mm lateral to sourcil' },
           { label: 'Post-arthroplasty', value: 'Cup overhang > 5 mm = impingement risk' },
         ],
-        diagram: 'hip-cup-overhang',
+        diagram: null,
       },
     ],
   },
