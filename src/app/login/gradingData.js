@@ -105,8 +105,7 @@ const MRI_GRADING_DATA = {
         plane: 'Axial (composite measurement)',
         description: 'TT-TG distance measured on MRI by superimposing the axial slice at the level of the tibial tubercle with the axial slice at the deepest point of the trochlear groove. The perpendicular distance between the two points on a horizontal reference line through the posterior condyles. Gold standard measurement for patellar instability workup.',
         diagram: null,
-        citations: [
-          { label: 'Dejour H et al. — TT-TG and patellar instability. Rev Chir Orthop 1994;80(3):211-227.', url: 'https://scholar.google.com/scholar?q=Dejour+TT-TG+patellar+instability+1994' },
+        singleImage: '/images/msk/TTTG.jpg',
           { label: 'Tensho K et al. — TT-TG MRI vs CT. Am J Sports Med 2015;43(1):172-179.', url: 'https://scholar.google.com/scholar?q=Tensho+TT-TG+MRI+CT+comparison+2015' },
         ],
         normalValues: [
