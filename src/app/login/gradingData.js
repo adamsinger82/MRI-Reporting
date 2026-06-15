@@ -474,6 +474,7 @@ const MRI_GRADING_DATA = {
         plane: 'Coronal',
         description: 'Grading of thumb metacarpophalangeal ulnar collateral ligament (UCL) injuries ("gamekeeper\'s/skier\'s thumb"). Identifying a Stener lesion is critical — a displaced ligament stump cannot heal nonoperatively.',
         diagram: null,
+        singleImage: '/images/msk/stener.jpg',
         normalValues: [
           { label: 'Grade I (sprain)', value: 'Ligament thickened/edematous; fibers continuous; no instability' },
           { label: 'Grade II (partial tear)', value: 'Partial fiber discontinuity; ligament remains in anatomic position relative to the adductor aponeurosis' },
@@ -484,6 +485,23 @@ const MRI_GRADING_DATA = {
         citations: [
           { label: 'Stener B. — Displacement of the ruptured ulnar collateral ligament of the metacarpo-phalangeal joint of the thumb. J Bone Joint Surg Br 1962;44:869-879.', url: 'https://scholar.google.com/scholar?q=Stener+displacement+ruptured+ulnar+collateral+ligament+thumb+metacarpophalangeal+1962' },
           { label: 'Hergan K et al. — Sonography and MRI of the thumb ulnar collateral ligament: a comparative study. Eur Radiol 1997.', url: 'https://scholar.google.com/scholar?q=Hergan+sonography+MRI+thumb+ulnar+collateral+ligament+Stener+lesion+1997' },
+        ],
+      },
+      {
+        id: 'flexor-tendon-zones-thumb',
+        label: 'Flexor Pollicis Longus Zone Classification (T1–T3)',
+        isGradingScale: true,
+        plane: 'Sagittal',
+        description: 'Zone classification specific to the flexor pollicis longus (FPL) tendon of the thumb. The thumb has only one interphalangeal joint and a shorter flexor sheath than the fingers, so it uses a separate 3-zone (T1–T3) system rather than the finger Zone I–V system.',
+        diagram: null,
+        normalValues: [
+          { label: 'Zone T1', value: 'Distal to the interphalangeal (IP) joint — FPL insertion onto the distal phalanx' },
+          { label: 'Zone T2', value: 'From the A1 pulley to the IP joint, spanning the oblique pulley — the thumb\'s analog of finger "no man\'s land," with the highest risk of adhesion after repair' },
+          { label: 'Zone T3', value: 'Thenar eminence, proximal to the A1 pulley — musculotendinous region' },
+          { label: 'Clinical note', value: 'Zone T2 injuries carry the highest risk of tendon adhesion/stiffness due to the confined oblique pulley and limited gliding space' },
+        ],
+        citations: [
+          { label: 'Doyle JR. — Anatomy of the finger flexor tendon sheath and pulley system: a current review. J Hand Surg Am 1989.', url: 'https://scholar.google.com/scholar?q=Doyle+anatomy+finger+flexor+tendon+sheath+pulley+system+thumb+zones+1989' },
         ],
       },
     ],
@@ -525,6 +543,94 @@ const MRI_GRADING_DATA = {
         ],
         citations: [
           { label: 'Bansal A, Carlan SJ. — Imaging of finger collateral ligament injuries. AJR 2014.', url: 'https://scholar.google.com/scholar?q=imaging+finger+collateral+ligament+injuries+MCP+PIP+grading' },
+        ],
+      },
+      {
+        id: 'flexor-tendon-injury-grading',
+        label: 'Flexor Tendon Injury Grading',
+        isGradingScale: true,
+        plane: 'Sagittal / Axial',
+        description: 'Grading of flexor digitorum superficialis (FDS) and profundus (FDP) tendon injuries based on degree of fiber disruption and retraction — guides surgical urgency and repair technique.',
+        diagram: null,
+        canalImages: [
+          { label: 'Normal', src: '/images/msk/flexor_normal.jpg' },
+          { label: 'Tear', src: '/images/msk/flexor_tear.jpg' },
+        ],
+        normalValues: [
+          { label: 'Grade 1 (tendinosis / partial tear < 50%)', value: 'Increased intrasubstance signal; > 50% of fibers intact; tendon contour preserved' },
+          { label: 'Grade 2 (partial tear ≥ 50%)', value: 'Partial-thickness discontinuity ≥ 50% of cross-sectional area; tendon thinning ± sheath fluid' },
+          { label: 'Grade 3 (complete tear, no retraction)', value: 'Full-thickness discontinuity; tendon ends remain in apposition (intact vincula/pulleys limit retraction)' },
+          { label: 'Grade 4 (complete tear with retraction)', value: 'Full-thickness discontinuity with proximal stump retraction — describe retraction level (digit, palm, or wrist) for surgical planning' },
+          { label: 'Associated findings', value: 'Annular pulley rupture (bowstringing), flexor sheath fluid/hematoma, and whether FDS, FDP, or both are involved' },
+        ],
+        citations: [
+          { label: 'Lee SJ, Jazrawi LM. — Imaging of flexor tendon injuries. Curr Probl Diagn Radiol 2014.', url: 'https://scholar.google.com/scholar?q=imaging+flexor+tendon+injuries+hand+grading+MRI' },
+        ],
+      },
+      {
+        id: 'flexor-tendon-zones-fingers',
+        label: 'Flexor Tendon Zone Classification (Zones I–V)',
+        isGradingScale: true,
+        plane: 'Sagittal',
+        description: 'Verdan zone classification of the flexor tendon system in the fingers, used to localize injuries and predict prognosis and repair complexity. Zone II ("no man\'s land") historically carries the worst prognosis due to FDS/FDP crowding within the flexor sheath.',
+        diagram: null,
+        normalValues: [
+          { label: 'Zone I', value: 'Distal to the FDS insertion — FDP insertion onto the distal phalanx only' },
+          { label: 'Zone II ("no man\'s land")', value: 'A1 pulley to the FDS insertion — both FDS and FDP travel together within the flexor sheath and dense pulley system; highest risk of adhesion after repair' },
+          { label: 'Zone III', value: 'Distal palm — from the distal edge of the carpal tunnel (transverse carpal ligament) to the A1 pulley; lumbrical origins' },
+          { label: 'Zone IV', value: 'Within the carpal tunnel — median nerve and all 9 flexor tendons travel together' },
+          { label: 'Zone V', value: 'Proximal to the carpal tunnel (distal forearm) — musculotendinous junction region' },
+        ],
+        citations: [
+          { label: 'Verdan C. — Practical considerations for primary and secondary repair in flexor tendon injuries. Surg Clin North Am 1964.', url: 'https://scholar.google.com/scholar?q=Verdan+flexor+tendon+zones+classification+hand+1964' },
+          { label: 'Doyle JR. — Anatomy of the finger flexor tendon sheath and pulley system: a current review. J Hand Surg Am 1989.', url: 'https://scholar.google.com/scholar?q=Doyle+anatomy+finger+flexor+tendon+sheath+pulley+system+zones+1989' },
+        ],
+      },
+    ],
+  },
+  // ── MRI: Hand ───────────────────────────────────────────────────────────
+  hand: {
+    label: 'Hand — MRI',
+    measurements: [
+      {
+        id: 'flexor-tendon-injury-grading-hand',
+        label: 'Flexor Tendon Injury Grading',
+        isGradingScale: true,
+        plane: 'Sagittal / Axial',
+        description: 'Grading of flexor digitorum superficialis (FDS) and profundus (FDP) tendon injuries based on degree of fiber disruption and retraction — guides surgical urgency and repair technique.',
+        diagram: null,
+        canalImages: [
+          { label: 'Normal', src: '/images/msk/flexor_normal.jpg' },
+          { label: 'Tear', src: '/images/msk/flexor_tear.jpg' },
+        ],
+        normalValues: [
+          { label: 'Grade 1 (tendinosis / partial tear < 50%)', value: 'Increased intrasubstance signal; > 50% of fibers intact; tendon contour preserved' },
+          { label: 'Grade 2 (partial tear ≥ 50%)', value: 'Partial-thickness discontinuity ≥ 50% of cross-sectional area; tendon thinning ± sheath fluid' },
+          { label: 'Grade 3 (complete tear, no retraction)', value: 'Full-thickness discontinuity; tendon ends remain in apposition (intact vincula/pulleys limit retraction)' },
+          { label: 'Grade 4 (complete tear with retraction)', value: 'Full-thickness discontinuity with proximal stump retraction — describe retraction level (digit, palm, or wrist) for surgical planning' },
+          { label: 'Associated findings', value: 'Annular pulley rupture (bowstringing), flexor sheath fluid/hematoma, and whether FDS, FDP, or both are involved' },
+        ],
+        citations: [
+          { label: 'Lee SJ, Jazrawi LM. — Imaging of flexor tendon injuries. Curr Probl Diagn Radiol 2014.', url: 'https://scholar.google.com/scholar?q=imaging+flexor+tendon+injuries+hand+grading+MRI' },
+        ],
+      },
+      {
+        id: 'flexor-tendon-zones-hand',
+        label: 'Flexor Tendon Zone Classification (Zones I–V)',
+        isGradingScale: true,
+        plane: 'Sagittal',
+        description: 'Verdan zone classification of the flexor tendon system, used to localize injuries and predict prognosis and repair complexity. Zone II ("no man\'s land") historically carries the worst prognosis due to FDS/FDP crowding within the flexor sheath.',
+        diagram: null,
+        normalValues: [
+          { label: 'Zone I', value: 'Distal to the FDS insertion — FDP insertion onto the distal phalanx only' },
+          { label: 'Zone II ("no man\'s land")', value: 'A1 pulley to the FDS insertion — both FDS and FDP travel together within the flexor sheath and dense pulley system; highest risk of adhesion after repair' },
+          { label: 'Zone III', value: 'Distal palm — from the distal edge of the carpal tunnel (transverse carpal ligament) to the A1 pulley; lumbrical origins' },
+          { label: 'Zone IV', value: 'Within the carpal tunnel — median nerve and all 9 flexor tendons travel together' },
+          { label: 'Zone V', value: 'Proximal to the carpal tunnel (distal forearm) — musculotendinous junction region' },
+        ],
+        citations: [
+          { label: 'Verdan C. — Practical considerations for primary and secondary repair in flexor tendon injuries. Surg Clin North Am 1964.', url: 'https://scholar.google.com/scholar?q=Verdan+flexor+tendon+zones+classification+hand+1964' },
+          { label: 'Doyle JR. — Anatomy of the finger flexor tendon sheath and pulley system: a current review. J Hand Surg Am 1989.', url: 'https://scholar.google.com/scholar?q=Doyle+anatomy+finger+flexor+tendon+sheath+pulley+system+zones+1989' },
         ],
       },
     ],
