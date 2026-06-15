@@ -60,7 +60,6 @@ const ARTHROPLASTY_DATA = {
             id: 'goutallier_rtsa',
             label: 'Goutallier Classification — Rotator Cuff Fatty Infiltration (Preop Planning)',
             description: 'Grades fatty infiltration of the rotator cuff musculature on CT/MRI. Higher grades (3–4) predict poor cuff function and favor reverse over anatomic TSA. Part of the preoperative rotator cuff arthropathy (RCA) assessment alongside Hamada and Favard.',
-            image: { src: '/images/msk/RCA_glenoid_wear.jpg', caption: 'Rotator cuff arthropathy — glenoid wear and cuff musculature assessment used for Goutallier, Hamada, and Favard grading.' },
             grades: [
               { grade: 'Grade 0', desc: 'Normal muscle — no fat' },
               { grade: 'Grade 1', desc: 'Some fatty streaks within the muscle' },
@@ -75,7 +74,6 @@ const ARTHROPLASTY_DATA = {
             id: 'hamada',
             label: 'Hamada Classification — Cuff Tear Arthropathy',
             description: 'Stages the severity of cuff tear arthropathy (CTA) based on acromiohumeral interval narrowing and secondary glenohumeral degenerative change. Grades 4–5 represent advanced CTA and are a primary indication for rTSA.',
-            image: { src: '/images/msk/RCA_glenoid_wear.jpg', caption: 'Rotator cuff arthropathy — glenoid wear and cuff musculature assessment used for Goutallier, Hamada, and Favard grading.' },
             grades: [
               { grade: 'Grade 1', desc: 'Acromiohumeral interval (AHI) > 6 mm; no degenerative change' },
               { grade: 'Grade 2', desc: 'AHI ≤ 5 mm (narrowed); no degenerative change' },
@@ -117,7 +115,7 @@ const ARTHROPLASTY_DATA = {
           { id: 'atsa_stress', label: 'Stress shielding / cortical thinning', critical: false },
           { id: 'atsa_het_oss', label: 'Heterotopic ossification', critical: false },
           { id: 'atsa_glenoid_wear', label: 'Progressive glenoid bone loss / eccentric wear', critical: false },
-          { id: 'atsa_metallosis', label: 'Metallosis / metal debris reaction (fractured metal-backed glenoid component, synovitis, periarticular erosion)', critical: true },
+          { id: 'atsa_metallosis', label: 'Metallosis / metal debris reaction', critical: true },
         ],
         gradings: [
           {
@@ -350,7 +348,7 @@ const ARTHROPLASTY_EXAMPLE_IMAGES = {
   // ── Shoulder — Anatomic TSA (aTSA) ────────────────────────────────────────────
   atsa_glenoid_loose: {
     src: '/images/msk/failed_atsa_glenoid_out.jpg',
-    caption: 'Failed aTSA — glenoid component displaced/loose ("glenoid component is out").',
+    caption: 'Failed aTSA — the glenoid component (lucent polyethylene surrounded by radiodense cement) has displaced away from the glenoid.',
   },
   atsa_overstuff: {
     src: '/images/msk/tsa_glenoid_out_overstuff.jpg',
@@ -362,7 +360,7 @@ const ARTHROPLASTY_EXAMPLE_IMAGES = {
   },
   atsa_metallosis: {
     src: '/images/msk/metallosis_tsa_fractured_glenoid.jpg',
-    caption: 'Fractured metal-backed glenoid component with displacement, metallosis (metal debris), and periarticular erosion.',
+    caption: 'Example: fractured metal-backed glenoid component, displaced, with metal debris (metallosis), synovitis, and periarticular erosion. Not all metallosis cases involve a fractured component.',
   },
   // ── Shoulder — Reverse TSA (rTSA) ─────────────────────────────────────────────
   rtsa_acromial: {

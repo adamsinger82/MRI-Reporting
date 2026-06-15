@@ -553,14 +553,13 @@ const MRI_GRADING_DATA = {
         description: 'Grading of flexor digitorum superficialis (FDS) and profundus (FDP) tendon injuries based on degree of fiber disruption and retraction — guides surgical urgency and repair technique.',
         diagram: null,
         canalImages: [
-          { label: 'Normal', src: '/images/msk/flexor_normal.jpg' },
-          { label: 'Tear', src: '/images/msk/flexor_tear.jpg' },
+          { label: '', src: '/images/msk/flexor_normal.jpg' },
+          { label: '', src: '/images/msk/flexor_tear.jpg' },
         ],
         normalValues: [
           { label: 'Grade 1 (tendinosis / partial tear < 50%)', value: 'Increased intrasubstance signal; > 50% of fibers intact; tendon contour preserved' },
           { label: 'Grade 2 (partial tear ≥ 50%)', value: 'Partial-thickness discontinuity ≥ 50% of cross-sectional area; tendon thinning ± sheath fluid' },
-          { label: 'Grade 3 (complete tear, no retraction)', value: 'Full-thickness discontinuity; tendon ends remain in apposition (intact vincula/pulleys limit retraction)' },
-          { label: 'Grade 4 (complete tear with retraction)', value: 'Full-thickness discontinuity with proximal stump retraction — describe retraction level (digit, palm, or wrist) for surgical planning' },
+          { label: 'Grade 3 (complete tear)', value: 'Full-thickness discontinuity; describe retraction (intact vincula/pulleys may limit retraction) and level (digit, palm, or wrist) for surgical planning' },
           { label: 'Associated findings', value: 'Annular pulley rupture (bowstringing), flexor sheath fluid/hematoma, and whether FDS, FDP, or both are involved' },
         ],
         citations: [
@@ -600,14 +599,13 @@ const MRI_GRADING_DATA = {
         description: 'Grading of flexor digitorum superficialis (FDS) and profundus (FDP) tendon injuries based on degree of fiber disruption and retraction — guides surgical urgency and repair technique.',
         diagram: null,
         canalImages: [
-          { label: 'Normal', src: '/images/msk/flexor_normal.jpg' },
-          { label: 'Tear', src: '/images/msk/flexor_tear.jpg' },
+          { label: '', src: '/images/msk/flexor_normal.jpg' },
+          { label: '', src: '/images/msk/flexor_tear.jpg' },
         ],
         normalValues: [
           { label: 'Grade 1 (tendinosis / partial tear < 50%)', value: 'Increased intrasubstance signal; > 50% of fibers intact; tendon contour preserved' },
           { label: 'Grade 2 (partial tear ≥ 50%)', value: 'Partial-thickness discontinuity ≥ 50% of cross-sectional area; tendon thinning ± sheath fluid' },
-          { label: 'Grade 3 (complete tear, no retraction)', value: 'Full-thickness discontinuity; tendon ends remain in apposition (intact vincula/pulleys limit retraction)' },
-          { label: 'Grade 4 (complete tear with retraction)', value: 'Full-thickness discontinuity with proximal stump retraction — describe retraction level (digit, palm, or wrist) for surgical planning' },
+          { label: 'Grade 3 (complete tear)', value: 'Full-thickness discontinuity; describe retraction (intact vincula/pulleys may limit retraction) and level (digit, palm, or wrist) for surgical planning' },
           { label: 'Associated findings', value: 'Annular pulley rupture (bowstringing), flexor sheath fluid/hematoma, and whether FDS, FDP, or both are involved' },
         ],
         citations: [
