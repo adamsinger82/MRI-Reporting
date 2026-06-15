@@ -106,6 +106,8 @@ const MRI_GRADING_DATA = {
         description: 'TT-TG distance measured on MRI by superimposing the axial slice at the level of the tibial tubercle with the axial slice at the deepest point of the trochlear groove. The perpendicular distance between the two points on a horizontal reference line through the posterior condyles. Gold standard measurement for patellar instability workup.',
         diagram: null,
         singleImage: '/images/msk/TTTG.jpg',
+        citations: [
+          { label: 'Dejour H et al. — TT-TG and patellar instability. Rev Chir Orthop 1994;80(3):211-227.', url: 'https://scholar.google.com/scholar?q=Dejour+TT-TG+patellar+instability+1994' },
           { label: 'Tensho K et al. — TT-TG MRI vs CT. Am J Sports Med 2015;43(1):172-179.', url: 'https://scholar.google.com/scholar?q=Tensho+TT-TG+MRI+CT+comparison+2015' },
         ],
         normalValues: [
@@ -246,24 +248,16 @@ const MRI_GRADING_DATA = {
         ],
       },
       {
-        id: 'ramp-lesion-thaunat-greif',
-        label: 'Meniscal Ramp Lesion (Thaunat / Greif Classification)',
+        id: 'ramp-lesion-greif',
+        label: 'Meniscal Ramp Lesion (Greif Classification)',
         isGradingScale: true,
         plane: 'Sagittal + Coronal',
-        description: 'Classification of posteromedial meniscocapsular ("ramp") lesions of the medial meniscus, frequently associated with ACL tears. Thaunat is the arthroscopic classification (Type 1–5, by location and stability); Greif adapted this for MRI based on signal at the meniscocapsular junction (Grade 0–3).',
+        description: 'MRI-based grading of posteromedial meniscocapsular ("ramp") lesions of the medial meniscus, frequently associated with ACL tears, based on signal characteristics at the meniscocapsular junction.',
         diagram: null,
         citations: [
-          { label: 'Thaunat M et al. — Classification and surgical repair of ramp lesions of the medial meniscus. Arthrosc Tech 2016;5(4):e871-e875.', url: 'https://scholar.google.com/scholar?q=Thaunat+classification+surgical+repair+ramp+lesions+medial+meniscus+2016' },
           { label: 'Greif DN et al. — MRI appearance of different meniscal ramp lesion types, with arthroscopic confirmation. Knee Surg Sports Traumatol Arthrosc 2020;28(11):3543-3550.', url: 'https://scholar.google.com/scholar?q=Greif+MRI+appearance+meniscal+ramp+lesion+types+arthroscopic+confirmation+2020' },
         ],
         normalValues: [
-          { label: '── THAUNAT (Arthroscopic) ──', value: '' },
-          { label: 'Type 1', value: 'Peripheral meniscocapsular tear posterior to the popliteus tendon — stable' },
-          { label: 'Type 2', value: 'Partial-thickness tear of the inferior meniscal surface at the meniscocapsular junction — stable' },
-          { label: 'Type 3', value: 'Complete meniscocapsular junction tear, vertical/longitudinal — unstable' },
-          { label: 'Type 4', value: 'Meniscotibial (coronary) ligament tear, more anterior — unstable' },
-          { label: 'Type 5', value: 'Double lesion — combined meniscocapsular + meniscotibial tears — unstable' },
-          { label: '── GREIF (MRI) ──', value: '' },
           { label: 'Grade 0', value: 'Normal — no signal abnormality at the posteromedial meniscocapsular junction' },
           { label: 'Grade 1', value: 'Linear increased T2 signal at the junction without full discontinuity (partial-thickness)' },
           { label: 'Grade 2', value: 'Full-thickness linear high signal traversing the meniscocapsular junction, without displacement' },
