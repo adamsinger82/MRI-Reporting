@@ -246,7 +246,8 @@ const JOINT_DATA = {
           { label: "Goutallier D et al. Influence of cuff muscle fatty degeneration on outcomes after repair. J Shoulder Elbow Surg 2003", url: "https://scholar.google.com/scholar?q=Goutallier%20influence%20cuff%20muscle%20fatty%20degeneration%20outcomes%20repair%202003" },
           { label: "Iannotti JP et al. Glenoid morphology as a predictor of surgical complications. J Bone Joint Surg Am 2003", url: "https://scholar.google.com/scholar?q=Iannotti%20glenoid%20morphology%20predictor%20surgical%20complications%20shoulder%20arthroplasty%202003" },
         ],
-        diagram: 'shoulder-walch',
+        diagram: null,
+        singleImage: '/images/msk/walch.jpg',
       },
       {
         id: 'seebauer',

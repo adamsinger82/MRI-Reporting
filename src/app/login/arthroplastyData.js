@@ -27,12 +27,15 @@ const ARTHROPLASTY_DATA = {
           { id: 'rtsa_cement', label: 'Cement mantle fracture / hardware failure (screw fracture)', critical: false },
           { id: 'rtsa_stress', label: 'Stress shielding / cortical thinning (humeral shaft)', critical: false },
           { id: 'rtsa_het_oss', label: 'Heterotopic ossification', critical: false },
+          { id: 'rtsa_liner_dissoc', label: 'Polyethylene liner dissociation from the humeral tray (loss of glenosphere-humeral component spacing — may preclude closed reduction)', critical: true },
+          { id: 'rtsa_metallosis', label: 'Metallosis / metal debris reaction (synovitis, dark periprosthetic tissue/fluid)', critical: false },
         ],
         gradings: [
           {
             id: 'sirveaux',
             label: 'Sirveaux Classification — Inferior Scapular Notching (rTSA)',
             description: 'Sirveaux classification grades inferior scapular notching in reverse TSA. Assessed on CT coronal/axial images and X-ray. Key prognostic factor for glenosphere/baseplate loosening and long-term failure.',
+            image: { src: '/images/msk/scap_notching_grade.jpg', caption: 'Sirveaux grading reference — inferior scapular notch progression relative to the inferior baseplate screw.' },
             grades: [
               { grade: 'Grade 0', desc: 'No notching — normal scapular neck' },
               { grade: 'Grade 1', desc: 'Notch within the pillar of the scapula (inferior to inferior screw hole)' },
@@ -53,6 +56,50 @@ const ARTHROPLASTY_DATA = {
             ],
             citation: 'Wright TW & Cofield RH. Humeral fractures after shoulder arthroplasty. J Bone Joint Surg Am 1995;77(9):1340-1346.',
           },
+          {
+            id: 'goutallier_rtsa',
+            label: 'Goutallier Classification — Rotator Cuff Fatty Infiltration (Preop Planning)',
+            description: 'Grades fatty infiltration of the rotator cuff musculature on CT/MRI. Higher grades (3–4) predict poor cuff function and favor reverse over anatomic TSA. Part of the preoperative rotator cuff arthropathy (RCA) assessment alongside Hamada and Favard.',
+            image: { src: '/images/msk/RCA_glenoid_wear.jpg', caption: 'Rotator cuff arthropathy — glenoid wear and cuff musculature assessment used for Goutallier, Hamada, and Favard grading.' },
+            grades: [
+              { grade: 'Grade 0', desc: 'Normal muscle — no fat' },
+              { grade: 'Grade 1', desc: 'Some fatty streaks within the muscle' },
+              { grade: 'Grade 2', desc: 'Fat content less than muscle (< 50%)' },
+              { grade: 'Grade 3', desc: 'Fat content equal to muscle (~50%)' },
+              { grade: 'Grade 4', desc: 'Fat content greater than muscle (> 50%)' },
+              { grade: 'Surgical relevance', desc: 'Grade ≥ 3 for the infraspinatus/teres minor strongly favors rTSA over aTSA in cuff tear arthropathy' },
+            ],
+            citation: 'Goutallier D et al. Fatty muscle degeneration in cuff ruptures: pre- and postoperative evaluation by CT scan. Clin Orthop Relat Res 1994;(304):78-83.',
+          },
+          {
+            id: 'hamada',
+            label: 'Hamada Classification — Cuff Tear Arthropathy',
+            description: 'Stages the severity of cuff tear arthropathy (CTA) based on acromiohumeral interval narrowing and secondary glenohumeral degenerative change. Grades 4–5 represent advanced CTA and are a primary indication for rTSA.',
+            image: { src: '/images/msk/RCA_glenoid_wear.jpg', caption: 'Rotator cuff arthropathy — glenoid wear and cuff musculature assessment used for Goutallier, Hamada, and Favard grading.' },
+            grades: [
+              { grade: 'Grade 1', desc: 'Acromiohumeral interval (AHI) > 6 mm; no degenerative change' },
+              { grade: 'Grade 2', desc: 'AHI ≤ 5 mm (narrowed); no degenerative change' },
+              { grade: 'Grade 3', desc: '"Acetabularization" — concave remodeling of the acromion undersurface articulating with the humeral head' },
+              { grade: 'Grade 4A', desc: 'Glenohumeral arthritis (osteophytes/sclerosis) WITHOUT acetabularization' },
+              { grade: 'Grade 4B', desc: 'Glenohumeral arthritis WITH acetabularization' },
+              { grade: 'Grade 5', desc: '"Femoralization" — collapse/rounding of the humeral head articulating with the acetabularized acromion' },
+            ],
+            citation: 'Hamada K et al. Roentgenographic findings in massive rotator cuff tears: a long-term observation. Clin Orthop Relat Res 1990;(254):92-96; modified by Hamada K et al. J Shoulder Elbow Surg 2011.',
+          },
+          {
+            id: 'favard',
+            label: 'Favard Classification — Glenoid Erosion in Cuff Tear Arthropathy',
+            description: 'Describes the pattern of glenoid erosion in cuff tear arthropathy, distinguishing concentric (central) from eccentric (superior) wear patterns. Erosion pattern guides glenoid component selection (e.g., bone grafting, augmented baseplate) in rTSA.',
+            image: { src: '/images/msk/RCA_glenoid_wear.jpg', caption: 'Rotator cuff arthropathy — glenoid wear and cuff musculature assessment used for Goutallier, Hamada, and Favard grading.' },
+            grades: [
+              { grade: 'E0', desc: 'No erosion — concentric glenoid' },
+              { grade: 'E1', desc: 'Mild concentric erosion — erosion center remains medial to the base of the coracoid' },
+              { grade: 'E2', desc: 'Severe concentric erosion — erosion extends medial to the coracoid base' },
+              { grade: 'E3', desc: 'Mild superior (eccentric) erosion — biconcave glenoid' },
+              { grade: 'E4', desc: 'Severe superior (eccentric) erosion — significant superior glenoid bone loss' },
+            ],
+            citation: 'Favard L et al. Reverse prostheses in arthropathies with cuff tear: are survivorship and function maintained over time? Clin Orthop Relat Res 2011;469(9):2469-2475.',
+          },
         ],
       },
       atsa: {
@@ -70,6 +117,7 @@ const ARTHROPLASTY_DATA = {
           { id: 'atsa_stress', label: 'Stress shielding / cortical thinning', critical: false },
           { id: 'atsa_het_oss', label: 'Heterotopic ossification', critical: false },
           { id: 'atsa_glenoid_wear', label: 'Progressive glenoid bone loss / eccentric wear', critical: false },
+          { id: 'atsa_metallosis', label: 'Metallosis / metal debris reaction (fractured metal-backed glenoid component, synovitis, periarticular erosion)', critical: true },
         ],
         gradings: [
           {
@@ -136,6 +184,7 @@ const ARTHROPLASTY_DATA = {
           { id: 'tha_femoral_loose', label: 'Femoral stem loosening (radiolucent lines Gruen Zones 1–14)', critical: false },
           { id: 'tha_trunnion', label: 'Trunnion corrosion (taper junction — mixed MoP / MoM heads)', critical: false },
           { id: 'tha_iliopsoas', label: 'Iliopsoas impingement (anterior cup overhang — groin pain)', critical: false },
+          { id: 'tha_ip_bursitis', label: 'Iliopsoas bursitis (peritendinous fluid collection, often from cup overhang/impingement)', critical: false },
           { id: 'tha_acetab_malpos', label: 'Acetabular component malposition (inclination / anteversion)', critical: false },
           { id: 'tha_infection', label: 'Periprosthetic joint infection', critical: true },
           { id: 'tha_pseudo', label: 'Pseudotumor (ALTR solid/cystic mass — MoM or trunnion)', critical: true },
@@ -146,6 +195,7 @@ const ARTHROPLASTY_DATA = {
             id: 'vancouver',
             label: 'Vancouver Classification — Periprosthetic Femoral Fracture (THA)',
             description: 'Vancouver classification for periprosthetic femoral fractures in THA. Determines surgical strategy based on fracture location, stem stability, and bone stock. CT defines fracture morphology and bone quality.',
+            image: { src: '/images/msk/PPF_THA_fem.jpg', caption: 'Example: Vancouver B-type periprosthetic femoral fracture at the level of the femoral stem.' },
             grades: [
               { grade: 'Type A (trochanteric)', desc: 'AG = greater trochanter; AL = lesser trochanter; usually stable stem; fixation ± cabling' },
               { grade: 'Type B1', desc: 'Fracture at/around stem, STABLE implant — ORIF (plate/cerclage); good bone stock' },
@@ -218,6 +268,7 @@ const ARTHROPLASTY_DATA = {
           { id: 'tka_arthrofibrosis', label: 'Arthrofibrosis / posterior capsule calcification', critical: false },
           { id: 'tka_stress_shielding', label: 'Stress shielding / distal femoral cortical thinning', critical: false },
           { id: 'tka_stiffness', label: 'Flexion space imbalance / posterior condylar offset alteration', critical: false },
+          { id: 'tka_vascular', label: 'Vascular injury — pseudoaneurysm (recurrent hemarthrosis, contrast blush along posterior capsule communicating with the joint)', critical: true },
         ],
         gradings: [
           {
@@ -274,4 +325,80 @@ const ARTHROPLASTY_DATA = {
 
 const ARTHROPLASTY_JOINTS = ['shoulder', 'hip', 'knee'];
 
-export { ARTHROPLASTY_DATA, ARTHROPLASTY_JOINTS };
+// ─── EXAMPLE IMAGES ──────────────────────────────────────────────────────────
+// Keyed by checklist item id. Single image: {src, caption}. Multiple: {images:[{src,caption}, ...]}
+const ARTHROPLASTY_EXAMPLE_IMAGES = {
+  // ── Hip (THA) ──────────────────────────────────────────────────────────────
+  tha_pseudo: {
+    src: '/images/msk/ALTR_THA.jpg',
+    caption: 'Adverse local tissue reaction (ALTR) / pseudotumor in THA — solid/cystic periarticular soft tissue mass.',
+  },
+  tha_ip_bursitis: {
+    src: '/images/msk/IP_bursitis.jpg',
+    caption: 'Iliopsoas bursitis — peritendinous fluid collection anterior to the acetabular component, often related to cup overhang/impingement.',
+  },
+  tha_particle: {
+    images: [
+      { src: '/images/msk/osteolysis_THA_CT.jpg', caption: 'CT — femoral-sided osteolysis from particle disease (arrows).' },
+      { src: '/images/msk/osteolysis_THA_MRI.jpg', caption: 'MRI — corresponding femoral-sided osteolysis from particle disease (arrows).' },
+    ],
+  },
+  tha_ppf: {
+    src: '/images/msk/PPF_THA_fem.jpg',
+    caption: 'Periprosthetic femoral fracture, Vancouver type B (fracture at/around the stem with implant loosening).',
+  },
+  // ── Shoulder — Anatomic TSA (aTSA) ────────────────────────────────────────────
+  atsa_glenoid_loose: {
+    src: '/images/msk/failed_atsa_glenoid_out.jpg',
+    caption: 'Failed aTSA — glenoid component displaced/loose ("glenoid component is out").',
+  },
+  atsa_overstuff: {
+    src: '/images/msk/tsa_glenoid_out_overstuff.jpg',
+    caption: 'Overstuffed aTSA with an oversized humeral head component, contributing to glenoid component failure.',
+  },
+  atsa_infection: {
+    src: '/images/msk/infected_tsa.png',
+    caption: 'Infected TSA — extensive periprosthetic erosions and soft tissue swelling.',
+  },
+  atsa_metallosis: {
+    src: '/images/msk/metallosis_tsa_fractured_glenoid.jpg',
+    caption: 'Fractured metal-backed glenoid component with displacement, metallosis (metal debris), and periarticular erosion.',
+  },
+  // ── Shoulder — Reverse TSA (rTSA) ─────────────────────────────────────────────
+  rtsa_acromial: {
+    src: '/images/msk/acromion_fx.jpg',
+    caption: 'Acromial / scapular spine stress fracture after rTSA.',
+  },
+  rtsa_notching: {
+    src: '/images/msk/scapular_notching.jpg',
+    caption: 'Inferior scapular notching after rTSA (see Sirveaux grading for staging).',
+  },
+  rtsa_ppf: {
+    images: [
+      { src: '/images/msk/ppf_scapula_loose_hw.jpg', caption: 'Scapular periprosthetic fracture resulting in glenoid hardware loosening with abnormal cranial angulation of the glenosphere.' },
+      { src: '/images/msk/ppf_humeral_rtsa.jpg', caption: 'Humeral-sided periprosthetic fracture after rTSA.' },
+    ],
+  },
+  rtsa_liner_dissoc: {
+    src: '/images/msk/polyetheylene_liner_dissociation.jpg',
+    caption: 'Polyethylene liner dissociated from the humeral tray, displaced with loss of glenosphere-humeral spacing — may preclude closed reduction.',
+    citation: 'Familiari F et al. Polyethylene liner dissociation after reverse shoulder arthroplasty. JSES Int 2022;7(2):247-251. https://pmc.ncbi.nlm.nih.gov/articles/PMC9998731/',
+  },
+  rtsa_cement: {
+    src: '/images/msk/central_screw_fx_rtsa_xr.jpg',
+    caption: 'Fracture of the glenoid baseplate central screw with resultant loosening and abnormal cranial angulation of the glenosphere.',
+  },
+  rtsa_metallosis: {
+    images: [
+      { src: '/images/msk/metallosis_rtsa.jpg', caption: 'Metallosis after rTSA — faint metal debris within the joint.' },
+    ],
+    caption: 'Arthroscopic correlation: black-stained synovium from metal debris and foreign body reaction (biopsy-proven).',
+  },
+  // ── Knee (TKA) ─────────────────────────────────────────────────────────────
+  tka_vascular: {
+    src: '/images/msk/tibial_artery_tka.jpg',
+    caption: 'Recurrent hemarthrosis after TKA — contrast blush along the posterior joint capsule consistent with a pseudoaneurysm communicating with the joint, subsequently coiled.',
+  },
+};
+
+export { ARTHROPLASTY_DATA, ARTHROPLASTY_JOINTS, ARTHROPLASTY_EXAMPLE_IMAGES };

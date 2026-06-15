@@ -5029,7 +5029,7 @@ ANGIOLIPOMA vs LIPOMA CHEAT SHEET:
 }
 
 // ─── ARTHROPLASTY MODULE ─────────────────────────────────────────────────────
-import { ARTHROPLASTY_DATA, ARTHROPLASTY_JOINTS } from './arthroplastyData';
+import { ARTHROPLASTY_DATA, ARTHROPLASTY_JOINTS, ARTHROPLASTY_EXAMPLE_IMAGES } from './arthroplastyData';
 
 function ArthroplastyPanel({ joint, arthroplastyType, arthroplastyChecklist, setArthroplastyChecklist, arthroplastyGrading, setArthroplastyGrading, arthroplastyImageTab, setArthroplastyImageTab, dm }) {
   const data = ARTHROPLASTY_DATA[joint];
@@ -5042,9 +5042,37 @@ function ArthroplastyPanel({ joint, arthroplastyType, arthroplastyChecklist, set
 
   const toggleCheck = (id) => setArthroplastyChecklist(prev => ({ ...prev, [id]: !prev[id] }));
   const checkedCount = items.filter(i => arthroplastyChecklist[i.id]).length;
+  const [popupImg, setPopupImg] = useState(null); // {src, caption} or {images:[{src,caption}], caption}
 
   return (
     <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
+      {/* Image popup overlay */}
+      {popupImg && (
+        <div onClick={() => setPopupImg(null)} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,0.72)',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+          <div onClick={e => e.stopPropagation()} style={{background:dm?'#1e293b':'#ffffff',borderRadius:12,overflow:'hidden',maxWidth:560,width:'100%',boxShadow:'0 24px 64px rgba(0,0,0,0.5)',display:'flex',flexDirection:'column',maxHeight:'90vh',overflowY:'auto'}}>
+            {(popupImg.images || [popupImg]).map((img,idx) => (
+              <div key={idx}>
+                <img src={img.src} alt="Example image" style={{width:'100%',display:'block',maxHeight:380,objectFit:'contain',background:'#000'}} />
+                {img.caption && (
+                  <p style={{margin:0,padding:'10px 14px 0',fontSize:11,color:dm?'#94a3b8':'#64748b',lineHeight:1.5}}>{img.caption}</p>
+                )}
+              </div>
+            ))}
+            {popupImg.caption && popupImg.images && (
+              <p style={{margin:0,padding:'8px 14px 0',fontSize:11,color:dm?'#94a3b8':'#64748b',lineHeight:1.5,fontStyle:'italic'}}>{popupImg.caption}</p>
+            )}
+            {popupImg.citation && (
+              <p style={{margin:0,padding:'8px 14px 0',fontSize:10,color:dm?'#475569':'#94a3b8',lineHeight:1.5,fontStyle:'italic'}}>📚 {popupImg.citation}</p>
+            )}
+            <div style={{padding:'12px 14px'}}>
+              <button onClick={() => setPopupImg(null)}
+                style={{width:'100%',padding:'9px',borderRadius:8,border:'none',cursor:'pointer',background:'linear-gradient(135deg,#0e7490,#0891b2)',color:'white',fontSize:13,fontWeight:700,letterSpacing:'0.02em'}}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header bar */}
       <div style={{ background:dm?'rgba(8,145,178,0.15)':'#ecfeff',border:'1px solid '+(dm?'#164e63':'#a5f3fc'),borderRadius:8,padding:'8px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
         <span style={{ fontSize:11,fontWeight:700,color:dm?'#22d3ee':'#0e7490',letterSpacing:'0.06em',textTransform:'uppercase' }}>
@@ -5072,6 +5100,12 @@ function ArthroplastyPanel({ joint, arthroplastyType, arthroplastyChecklist, set
               <span style={{ fontSize:11,color:arthroplastyChecklist[item.id]?(item.critical?(dm?'#fca5a5':'#dc2626'):(dm?'#22d3ee':'#0e7490')):(dm?'#94a3b8':'#475569'),lineHeight:1.35,fontWeight:arthroplastyChecklist[item.id]?600:400 }}>
                 {item.critical && <span style={{ fontSize:9,marginRight:3,verticalAlign:'middle' }}>⚠️</span>}
                 {item.label}
+                {ARTHROPLASTY_EXAMPLE_IMAGES[item.id] && (
+                  <span onClick={e => { e.preventDefault(); e.stopPropagation(); setPopupImg(ARTHROPLASTY_EXAMPLE_IMAGES[item.id]); }}
+                    style={{fontSize:9,fontWeight:500,color:'#60a5fa',cursor:'pointer',textDecoration:'underline',display:'block',marginTop:2,WebkitTextFillColor:'#60a5fa'}}>
+                    🔍 Show Example
+                  </span>
+                )}
               </span>
             </label>
           ))}
@@ -5098,6 +5132,14 @@ function ArthroplastyPanel({ joint, arthroplastyType, arthroplastyChecklist, set
           <div>
             <div style={{ fontSize:11,fontWeight:700,color:dm?'#22d3ee':'#0891b2',marginBottom:3 }}>{selectedGrading.label}</div>
             <div style={{ fontSize:10,color:dm?'#94a3b8':'#64748b',marginBottom:8,lineHeight:1.5,fontStyle:'italic' }}>{selectedGrading.description}</div>
+            {selectedGrading.image && (
+              <div style={{ marginBottom:8 }}>
+                <img src={selectedGrading.image.src} alt={selectedGrading.label} style={{ width:'100%',maxWidth:480,display:'block',margin:'0 auto',borderRadius:6 }} />
+                {selectedGrading.image.caption && (
+                  <p style={{ margin:'4px 0 0',fontSize:10,color:dm?'#94a3b8':'#64748b',lineHeight:1.4,textAlign:'center',fontStyle:'italic' }}>{selectedGrading.image.caption}</p>
+                )}
+              </div>
+            )}
             <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:6 }}>
               {selectedGrading.grades.map((g,i) => (
                 <div key={i} style={{ background:dm?'rgba(255,255,255,0.03)':'white',border:'1px solid '+(dm?'#1e293b':'#f1f5f9'),borderRadius:5,padding:'6px 8px' }}>
