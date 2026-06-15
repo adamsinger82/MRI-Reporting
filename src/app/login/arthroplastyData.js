@@ -60,6 +60,7 @@ const ARTHROPLASTY_DATA = {
             id: 'goutallier_rtsa',
             label: 'Goutallier Classification — Rotator Cuff Fatty Infiltration (Preop Planning)',
             description: 'Grades fatty infiltration of the rotator cuff musculature on CT/MRI. Higher grades (3–4) predict poor cuff function and favor reverse over anatomic TSA. Part of the preoperative rotator cuff arthropathy (RCA) assessment alongside Hamada and Favard.',
+            image: { src: '/images/msk/goutallier.jpg', caption: 'Goutallier grading reference — fatty infiltration of rotator cuff musculature.' },
             grades: [
               { grade: 'Grade 0', desc: 'Normal muscle — no fat' },
               { grade: 'Grade 1', desc: 'Some fatty streaks within the muscle' },
@@ -74,6 +75,7 @@ const ARTHROPLASTY_DATA = {
             id: 'hamada',
             label: 'Hamada Classification — Cuff Tear Arthropathy',
             description: 'Stages the severity of cuff tear arthropathy (CTA) based on acromiohumeral interval narrowing and secondary glenohumeral degenerative change. Grades 4–5 represent advanced CTA and are a primary indication for rTSA.',
+            image: { src: '/images/msk/hamada.jpg', caption: 'Hamada grading reference — acromiohumeral interval and cuff tear arthropathy staging.' },
             grades: [
               { grade: 'Grade 1', desc: 'Acromiohumeral interval (AHI) > 6 mm; no degenerative change' },
               { grade: 'Grade 2', desc: 'AHI ≤ 5 mm (narrowed); no degenerative change' },
@@ -180,7 +182,7 @@ const ARTHROPLASTY_DATA = {
           { id: 'tha_het_oss', label: 'Heterotopic ossification (Brooker classification)', critical: false },
           { id: 'tha_acetab_loose', label: 'Acetabular component loosening (shell migration, radiolucent lines Zones I–III)', critical: false },
           { id: 'tha_femoral_loose', label: 'Femoral stem loosening (radiolucent lines Gruen Zones 1–14)', critical: false },
-          { id: 'tha_trunnion', label: 'Trunnion corrosion (taper junction — mixed MoP / MoM heads)', critical: false },
+          { id: 'tha_trunnion', label: 'Trunnion corrosion / trunnionosis (taper junction corrosion — mixed MoP/MoM or large-head MoP; may progress to head-neck dissociation)', critical: true },
           { id: 'tha_iliopsoas', label: 'Iliopsoas impingement (anterior cup overhang — groin pain)', critical: false },
           { id: 'tha_ip_bursitis', label: 'Iliopsoas bursitis (peritendinous fluid collection, often from cup overhang/impingement)', critical: false },
           { id: 'tha_acetab_malpos', label: 'Acetabular component malposition (inclination / anteversion)', critical: false },
@@ -193,7 +195,7 @@ const ARTHROPLASTY_DATA = {
             id: 'vancouver',
             label: 'Vancouver Classification — Periprosthetic Femoral Fracture (THA)',
             description: 'Vancouver classification for periprosthetic femoral fractures in THA. Determines surgical strategy based on fracture location, stem stability, and bone stock. CT defines fracture morphology and bone quality.',
-            image: { src: '/images/msk/PPF_THA_fem.jpg', caption: 'Example: Vancouver B-type periprosthetic femoral fracture at the level of the femoral stem.' },
+            image: { src: '/images/msk/PPF_THA_Fem.jpg', caption: 'Example: Vancouver B-type periprosthetic femoral fracture at the level of the femoral stem.' },
             grades: [
               { grade: 'Type A (trochanteric)', desc: 'AG = greater trochanter; AL = lesser trochanter; usually stable stem; fixation ± cabling' },
               { grade: 'Type B1', desc: 'Fracture at/around stem, STABLE implant — ORIF (plate/cerclage); good bone stock' },
@@ -342,8 +344,12 @@ const ARTHROPLASTY_EXAMPLE_IMAGES = {
     ],
   },
   tha_ppf: {
-    src: '/images/msk/PPF_THA_fem.jpg',
+    src: '/images/msk/PPF_THA_Fem.jpg',
     caption: 'Periprosthetic femoral fracture, Vancouver type B (fracture at/around the stem with implant loosening).',
+  },
+  tha_trunnion: {
+    src: '/images/msk/trunnion_corrosion_separation.jpg',
+    caption: 'Trunnionosis progression: XR and CT show ill-defined radiodense debris in the joint space due to metal deposition. Core needle biopsy of the synovial tissue reveals thick, black-staining tissue, with pathology confirming a foreign body reaction. A follow-up radiograph shows subtle shift of the femoral neck at its interface with the head, reflecting progressive trunnion corrosion and loosening. The final radiograph demonstrates complete head-neck dissociation of the femoral component. Explanted hardware confirms corrosion at the trunnion.',
   },
   // ── Shoulder — Anatomic TSA (aTSA) ────────────────────────────────────────────
   atsa_glenoid_loose: {
@@ -374,11 +380,11 @@ const ARTHROPLASTY_EXAMPLE_IMAGES = {
   rtsa_ppf: {
     images: [
       { src: '/images/msk/ppf_scapula_loose_hw.jpg', caption: 'Scapular periprosthetic fracture resulting in glenoid hardware loosening with abnormal cranial angulation of the glenosphere.' },
-      { src: '/images/msk/ppf_humeral_rtsa.jpg', caption: 'Humeral-sided periprosthetic fracture after rTSA.' },
+      { src: '/images/msk/ppf_humeral_rTSA.jpg', caption: 'Humeral-sided periprosthetic fracture after rTSA.' },
     ],
   },
   rtsa_liner_dissoc: {
-    src: '/images/msk/polyetheylene_liner_dissociation.jpg',
+    src: '/images/msk/Polyethylene_liner_dissociation.jpg',
     caption: 'Polyethylene liner dissociated from the humeral tray, displaced with loss of glenosphere-humeral spacing — may preclude closed reduction.',
     citation: 'Familiari F et al. Polyethylene liner dissociation after reverse shoulder arthroplasty. JSES Int 2022;7(2):247-251. https://pmc.ncbi.nlm.nih.gov/articles/PMC9998731/',
   },
