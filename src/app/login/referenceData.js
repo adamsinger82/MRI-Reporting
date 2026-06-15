@@ -935,7 +935,8 @@ const JOINT_DATA = {
           { label: "Sanders R et al. Operative treatment of displaced intraarticular calcaneal fractures. J Bone Joint Surg Am 1992", url: "https://scholar.google.com/scholar?q=Sanders%20operative%20treatment%20displaced%20intraarticular%20calcaneal%20fractures%20J%20Bone%20Joint%20Surg%201992" },
           { label: "Rammelt S, Zwipp H. Calcaneus fractures: facts, controversies and recent developments. Injury 2004", url: "https://scholar.google.com/scholar?q=Rammelt%20Zwipp%20calcaneus%20fractures%20facts%20controversies%20Sanders%20classification%202004" },
         ],
-        diagram: 'ankle-sanders',
+        diagram: null,
+        singleImage: '/images/msk/sanders_calcaneus.jpg',
       },
       {
         id: 'ankle-fracture-weber-lh',
