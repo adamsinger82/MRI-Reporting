@@ -3854,7 +3854,14 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
     if (validQs.length < 3) return setEditErr('At least 3 complete questions required.');
     setEditSaving(true);
     try {
-      const payload = { ...editForm, duration_min: parseInt(editForm.duration_min)||null, question_count: validQs.length };
+      const payload = {
+        ...editForm,
+        duration_min: parseInt(editForm.duration_min)||null,
+        question_count: validQs.length,
+        video_url: editForm.content_type === 'pdf' ? '' : editForm.video_url,
+        file_url:  editForm.content_type === 'video' ? '' : editForm.file_url,
+        url: editForm.content_type === 'pdf' ? editForm.file_url : editForm.video_url,
+      };
       const res = await fetch(`${SUPABASE_URL}/rest/v1/cme_modules?id=eq.${editingModule.id}`, {
         method: 'PATCH',
         headers: { ...sbH, 'Prefer': 'return=representation' },
@@ -3993,8 +4000,12 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   const lbl  = { color:'#90cdf4', fontSize:12, fontWeight:700, letterSpacing:'0.04em', display:'block', marginBottom:4 };
 
   if (activeModule) {
-    const isVideo = activeModule.content_type === 'video' || activeModule.video_url;
-    const isPdf   = activeModule.content_type === 'pdf'   || activeModule.file_url;
+    const isPdf   = activeModule.content_type === 'pdf'
+      ? true
+      : activeModule.content_type === 'video'
+        ? false
+        : !!activeModule.file_url;
+    const isVideo = !isPdf && (activeModule.content_type === 'video' || !!activeModule.video_url);
     const contentUrl = activeModule.video_url || activeModule.file_url || activeModule.url || '';
     const alreadyPassed = completedIds.has(activeModule.id);
     const passThreshold = parseFloat(activeModule.pass_threshold) || 0.75;
@@ -4272,7 +4283,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
               <label style={lbl}>Content Type</label>
               <div style={{ display:'flex', gap:8, marginBottom:10 }}>
                 {['video','pdf'].map(ct => (
-                  <button key={ct} type="button" onClick={() => setEditForm(f=>({...f,content_type:ct}))}
+                  <button key={ct} type="button" onClick={() => setEditForm(f=>({...f, content_type:ct, video_url: ct==='pdf' ? '' : f.video_url, file_url: ct==='video' ? '' : f.file_url, url: ''}))}
                     style={{ padding:'7px 18px', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer', border:`1px solid ${editForm.content_type===ct?'rgba(99,179,237,0.5)':'rgba(99,179,237,0.15)'}`, background:editForm.content_type===ct?'rgba(99,179,237,0.12)':'transparent', color:editForm.content_type===ct?'#90cdf4':'#64748b' }}>
                     {ct==='video'?'▶️ Video (YouTube)':'📄 PDF / Slides'}
                   </button>
