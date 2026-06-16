@@ -4075,7 +4075,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
               {/* PDF embed */}
               {isPdf && !isVideo && contentUrl && (
                 <div style={{ marginBottom:18 }}>
-                  <iframe src={contentUrl} style={{ width:'100%', height:500, border:'1px solid rgba(99,179,237,0.15)', borderRadius:10 }} title="CME Module PDF" />
+                  <iframe src={`${contentUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`} style={{ width:'100%', height:'80vh', minHeight:600, border:'1px solid rgba(99,179,237,0.15)', borderRadius:10 }} title="CME Module PDF" />
                 </div>
               )}
 
