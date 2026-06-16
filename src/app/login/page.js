@@ -46,13 +46,13 @@ const ANATOMY_MRI = {
   wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Articular Cartilage, Bones, Muscles, Soft Tissues',
   elbow:'UCL (Ulnar Collateral Ligament — medial), LUCL (Lateral Ulnar Collateral Ligament — lateral), RCL (Radial Collateral Ligament — lateral), Annular Ligament, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Brachialis Tendon, Triceps Tendon, Ulnar Nerve, Median Nerve, Radial Nerve / Posterior Interosseous Nerve, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
   ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
-  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Paraspinal Soft Tissues, Facet Joints, Bones, Cord / Conus / Cauda Equina',
+  spine:'Vertebral Alignment, Vertebral Bodies, Disc Spaces, Paraspinal Soft Tissues, Bones',
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Regional Neurovascular Structures, Soft Tissues',
   foot:'Plantar Fascia, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
-  'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
-  'tibia/fibula':'Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, Posterior Tibial Tendon, Flexor Digitorum Longus, Flexor Hallucis Longus, Peroneus Longus, Peroneus Brevis, Anterior Compartment Musculature, Posterior Compartment Musculature, Lateral Compartment Musculature, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Regional Neurovascular Structures, Soft Tissues',
-  humerus:'Deltoid Muscle, Biceps Brachii, Brachialis, Triceps Brachii, Coracobrachialis, Radial Nerve, Axillary Nerve, Ulnar Nerve, Humerus (cortex / medullary canal / periosteum), Bone Marrow Signal, Soft Tissues',
-  forearm:'Flexor Carpi Radialis, Flexor Carpi Ulnaris, Flexor Digitorum Superficialis, Flexor Digitorum Profundus, Flexor Pollicis Longus, Pronator Teres, Pronator Quadratus, Extensor Carpi Radialis Longus and Brevis, Extensor Carpi Ulnaris, Extensor Digitorum, Extensor Pollicis Longus and Brevis, Abductor Pollicis Longus, Brachioradialis, Supinator, Radius, Ulna, Interosseous Membrane, Radial Nerve, Median Nerve, Ulnar Nerve, Bone Marrow Signal, Soft Tissues',
+  'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Muscles, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
+  'tibia/fibula':'Muscles, Posterior Tibial Tendon, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Regional Neurovascular Structures, Soft Tissues',
+  humerus:'Muscles, Radial Nerve, Axillary Nerve, Ulnar Nerve, Humerus (cortex / medullary canal / periosteum), Bone Marrow Signal, Soft Tissues',
+  forearm:'Muscles, Radius, Ulna, Interosseous Membrane, Radial Nerve, Median Nerve, Ulnar Nerve, Bone Marrow Signal, Soft Tissues',
   hand:'Flexor Tendons (FDS and FDP per ray), Extensor Tendons (per ray), Intrinsic Muscles (interossei and lumbricals), Thenar Muscles, Hypothenar Muscles, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Metacarpals, Metacarpophalangeal Joints, Articular Cartilage, Bones, Muscles, Soft Tissues',
   thumb:'Flexor Pollicis Longus Tendon, Extensor Pollicis Longus Tendon, Extensor Pollicis Brevis Tendon, Abductor Pollicis Longus Tendon, Ulnar Collateral Ligament (UCL — gamekeeper / skier thumb), Radial Collateral Ligament, Volar Plate, Adductor Pollicis Aponeurosis, Thenar Muscles, Sesamoids, First CMC Joint (trapeziometacarpal), MCP Joint, IP Joint, Articular Cartilage, Bones, Soft Tissues',
   fingers:'Flexor Digitorum Superficialis Tendon, Flexor Digitorum Profundus Tendon, Central Slip and Extensor Hood, Lateral Bands, Annular Pulleys (A1 through A5 per finger), Collateral Ligaments (radial and ulnar per joint), Volar Plate, PIP Joint, DIP Joint, MCP Joint, Articular Cartilage, Bones, Soft Tissues',
@@ -66,7 +66,7 @@ const ANATOMY_CT = {
   wrist:'Bones, Dislocation or Subluxation, Radiocarpal Joint Space, Midcarpal Joint Space, Soft Tissues',
   elbow:'Bones, Joint Effusion, Dislocation or Subluxation, Joint Space, Soft Tissues',
   ankle:'Bones, Joint Effusion, Dislocation or Subluxation, Tibiotalar Joint Space, Subtalar Joint Space, Soft Tissues',
-  spine:'Vertebral Alignment, Vertebral Bodies, Disc Spaces, Spinal Canal, Neural Foramina, Facet Joints, Soft Tissues',
+  spine:'Vertebral Alignment, Vertebral Bodies, Disc Spaces, Spinal Canal, Neural Foramina, Soft Tissues',
   pelvis:'Pelvic Ring, Sacroiliac Joints, Pubic Symphysis, Hip Joints, Acetabula, Soft Tissues',
   foot:'Bones, Lisfranc Joint Complex, Dislocation or Subluxation, Joint Spaces, Soft Tissues',
   'femur/thigh':'Femur (cortex / medullary canal / periosteum), Soft Tissue Compartments, Soft Tissues',
@@ -131,6 +131,14 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
   const gradingContext = buildGradingContext(part, modality);
   const gradingBlock = gradingContext
     ? `\n\nGRADING SCALES IN USE FOR THIS JOINT (apply these when grading is mentioned in dictation):\n${gradingContext}`
+    : '';
+
+  const cordConusBlock = (part === 'spine' && !isCT)
+    ? (spineRegion === 'cervical'
+        ? `CORD heading (cervical spine ONLY — applies to this exam) — heading title is exactly "Cord:". INCLUDE ONLY: intrinsic cord signal abnormality, cord expansion, or cord atrophy. Do NOT include a conus medullaris sentence and do NOT include a cauda equina sentence — neither structure is present at the cervical level, so neither may appear anywhere in this heading or elsewhere in FINDINGS. DO NOT INCLUDE disc herniation/protrusion/extrusion or nerve root compression caused by a disc — those belong exclusively under the corresponding LEVELS entry. Default when nothing abnormal is dictated: "No cord expansion, atrophy, or signal abnormality." If cord clumping, thickening, a mass, or arachnoiditis is dictated, describe it in this heading.`
+        : spineRegion === 'thoracic'
+        ? `CORD / CONUS heading (thoracic spine ONLY — applies to this exam) — heading title is exactly "Cord / Conus:". INCLUDE: intrinsic cord signal abnormality, cord expansion, cord atrophy, AND conus medullaris tip level/termination. Do NOT include a cauda equina sentence — cauda equina is not addressed at the thoracic level. DO NOT INCLUDE disc herniation/protrusion/extrusion or nerve root compression caused by a disc — those belong exclusively under the corresponding LEVELS entry. Default when nothing abnormal is dictated: "No cord expansion, atrophy, or signal abnormality. The conus medullaris terminates at a normal level." If cord or conus clumping, thickening, a mass, or arachnoiditis is dictated, describe it in this heading.`
+        : `CONUS / CAUDA EQUINA heading (lumbar spine ONLY — applies to this exam) — heading title is exactly "Conus / Cauda Equina:". INCLUDE: conus medullaris tip level/termination, AND cauda equina nerve root distribution/crowding NOT attributable to a specific disc level. DO NOT INCLUDE disc herniation/protrusion/extrusion or nerve root compression/displacement caused by a disc — even if the dictation mentions a nerve root by name (e.g. "compressing the left L5 nerve root"). ANY finding describing a disc compressing, displacing, or impinging a nerve root belongs exclusively under the corresponding LEVELS entry for that disc level, never here. Default when nothing abnormal is dictated: "The conus medullaris terminates at a normal level. Cauda equina nerve roots are normal in distribution." SILENT DROP RULE: if the dictation describes moderate or severe canal stenosis at ANY level in this case, silently drop the "Cauda equina nerve roots are normal in distribution." sentence from this heading — do not replace it with any other comment, just omit it (the conus sentence stays). MASS/CLUMPING OVERRIDE: if clumping, thickening, a mass, or arachnoiditis involving the cauda equina nerve roots is dictated, describe that finding in this heading regardless of whether canal stenosis is also present elsewhere in the case.`)
     : '';
 
   return `You are a subspecialty MSK radiologist generating a structured ${modalityName} report.
@@ -297,29 +305,35 @@ FOREARM (RADIUS/ULNA):
 
 SPINE-SPECIFIC FINDINGS RULES:
 
-INTERVERTEBRAL DISCS heading — INCLUDE ONLY: desiccation (global or by level), annular fissures/tears (by level), Schmorl nodes (by level), Modic changes (type and level).
-INTERVERTEBRAL DISCS heading — DO NOT INCLUDE: disc herniations, protrusions, extrusions, bulges, spinal canal stenosis, foraminal stenosis. These belong exclusively under LEVELS.
-INTERVERTEBRAL DISCS default when nothing abnormal: "No acute abnormality." — NOT "intact."
+BONES heading — REINFORCEMENT (applies to spine and every other body part): There is exactly ONE bones-related heading in the entire FINDINGS section, titled "Bones:". It is forbidden to ALSO generate any heading named after an individual bone (e.g. "Humerus:", "Femur:", "Vertebral Bodies:" as a bone-marrow heading, "L4:", etc.) anywhere in FINDINGS, even if that bone is mentioned elsewhere in the anatomy list for context (e.g. "Vertebral Bodies" as an alignment/morphology heading is fine — it must never also carry marrow/fracture/lesion content, which belongs ONLY in "Bones:"). Before finalizing, scan your own draft FINDINGS section: if you see any heading that names a specific bone and also contains fracture, marrow, lesion, or AVN language, DELETE that heading and move its content into "Bones:" instead. This is a zero-tolerance rule.
+BONES heading (spine) — include if dictated: pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas, fractures, marrow signal abnormality. Default marrow text when nothing abnormal: "No marrow infiltration or aggressive osseous lesion."
+BONES heading (spine) — EXCLUSION: facet joint bone marrow edema or facet infection is reported ONLY under the Facet Joints heading (see below), never duplicated under Bones.
 
-PARASPINAL SOFT TISSUES: default text is "No acute abnormality." — NOT "intact."
+DISC SPACES heading — INCLUDE: disc desiccation (global or by level), Modic changes and endplate changes (type and level), Schmorl nodes (by level), annular fissures/tears and high peripheral signal intensity zones (by level), and disc signal/morphologic changes of discitis (e.g. increased STIR/T2 disc signal, indistinct endplates — see DISCITIS / OSTEOMYELITIS ALERT below for impression handling). Every one of these findings, when dictated, MUST appear under Disc Spaces in FINDINGS — do not let any of them surface only in the impression.
+DISC SPACES heading — DO NOT INCLUDE: disc herniations, protrusions, extrusions, bulges, spinal canal stenosis, foraminal stenosis. These belong exclusively under LEVELS.
+DISC SPACES default when nothing abnormal: "No acute abnormality." — NOT "intact."
+
+PARASPINAL SOFT TISSUES heading — INCLUDE: any finding in the paraspinal soft tissues, visceral/solid organs (e.g. kidney, adrenal, liver edge), great vessels (e.g. aortic findings), or fluid collections that is dictated anywhere in the case, even if mentioned only in passing or as an incidental aside. This is mandatory — an incidental organ or vascular finding must be written as a sentence under THIS heading in FINDINGS (in addition to its own IMPRESSION line); it must never appear ONLY in the impression with the Paraspinal Soft Tissues heading left at its normal default.
+PARASPINAL SOFT TISSUES default when nothing is dictated: "No acute abnormality." — NOT "intact."
 
 CANAL AND NEURAL FORAMINA: Do NOT generate this as a standalone FINDINGS heading. Canal and foraminal stenosis belongs exclusively under individual LEVELS entries.
 
-CORD / CONUS / CAUDA EQUINA heading — INCLUDE ONLY: conus medullaris tip level/termination, intrinsic cord signal abnormality (e.g. syrinx, myelomalacia, demyelination), and cauda equina nerve root crowding/clumping NOT attributable to a specific disc level.
-CORD / CONUS / CAUDA EQUINA heading — DO NOT INCLUDE: disc herniation/protrusion/extrusion, or nerve root compression/displacement caused by a disc — even if the dictation mentions a nerve root by name (e.g. "compressing the left L5 nerve root"). ANY finding describing a disc compressing, displacing, or impinging a nerve root belongs exclusively under the corresponding LEVELS entry for that disc level (e.g. an L4-5 disc extrusion compressing the L5 nerve root → "L4-L5:" line under LEVELS), never under Cord/Conus/Cauda Equina.
-CORD / CONUS / CAUDA EQUINA default when conus level/termination is NOT dictated: "The conus medullaris terminates at a normal level. No intrinsic cord signal abnormality." Do NOT write "termination is not dictated" or any phrase implying missing information — always phrase the default as a normal finding.
 LEVEL INFERENCE: If a disc-level nerve root relationship is dictated but the disc level itself is ambiguous or not stated, use standard lumbar numbering to infer it — a paracentral/foraminal disc at level X-Y typically compresses the traversing nerve root numbered Y in the lateral recess/foramen (e.g. an L4-5 disc most commonly compresses the L5 nerve root; an L5-S1 disc most commonly compresses the S1 nerve root). Place the finding under the inferred LEVELS entry.
 
-FACET JOINTS heading — ALWAYS generate this heading in FINDINGS (it is a required structure for spine). Level-specific facet findings (edema, effusion, erosion, synovitis, arthrosis at a particular level) are ALSO reported under the corresponding LEVELS entry, not instead of this heading. Default text for the Facet Joints heading when nothing facet-specific is dictated: "No facet arthropathy or effusion." Never write "See LEVELS." as the Facet Joints heading text — always give the normal-default sentence above unless dictation describes a global/non-level-specific facet finding.
+FACET JOINTS heading — CONDITIONAL: generate this heading ONLY when the dictation describes facet joint bone marrow edema or facet joint infection. If neither is dictated anywhere in the case, do NOT generate a Facet Joints heading at all.
+FACET JOINTS heading — when generated, default/positive text is built ONLY from the edema/infection finding itself (e.g. "Facet Joints: Bone marrow edema involving the right L4-L5 facet joint." or "Facet Joints: Findings concerning for facet joint infection at [level].").
+FACET JOINTS heading — EXCLUSION: facet arthrosis/hypertrophy that contributes to canal or neural foraminal narrowing is reported exclusively under the corresponding LEVELS entry — it never triggers or populates the Facet Joints heading.
+FACET JOINTS heading — EXCLUSION: facet bone marrow edema/infection reported here must NOT also be duplicated under the Bones heading.
+Never write "See LEVELS." as Facet Joints heading text.
 
-BONES heading — include if dictated: pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas, fractures, marrow signal abnormality. Default marrow text when nothing abnormal: "No marrow infiltration or aggressive osseous lesion."
+${cordConusBlock}
 
 DISCITIS / OSTEOMYELITIS ALERT — apply when dictation mentions increased STIR or T2 signal in a disc:
 Search the dictation for additional signs: endplate erosion, paraspinal collection/abscess, epidural collection/abscess, enhancement pattern.
 - IF additional signs of infection ARE present (endplate erosion, paraspinal/epidural collection or abscess): Use impression language "Findings are concerning for discitis/osteomyelitis at [level]. Paraspinal/epidural involvement as above. Urgent clinical and laboratory correlation recommended."
 - IF ONLY increased STIR/T2 disc signal, no additional signs mentioned: Use impression language "Increased STIR/T2 signal is present within the [level] disc, which in isolation is nonspecific and may reflect degenerative change; however, early discitis can have a similar appearance. Correlation with clinical symptoms and laboratory values (ESR, CRP, WBC) is recommended. If there is concern for early infection, short-interval follow-up MRI with contrast is recommended."
 
-REGIONAL NEUROVASCULAR STRUCTURES: Generate this heading for ALL non-spine MRI joints. Default text when not dictated: "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
+REGIONAL NEUROVASCULAR STRUCTURES: Generate this heading for ALL non-spine MRI joints. Default text when not dictated: "No acute abnormality."
 
 SPINE:
 - MULTILEVEL DISC DISEASE: → "Multilevel degenerative disc disease most significant at [worst level(s)] with [worst complication — e.g. moderate spinal stenosis, neural foraminal narrowing], as above."
@@ -352,11 +366,12 @@ SPINE INCIDENTAL CYST GARBLE — ADNEXAL vs RENAL: On lumbar/pelvic spine MRI, a
 
 
 GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
-- Muscles: "No high-grade fatty infiltration or volume loss. No intramuscular edema to suggest denervation, myositis, or strain."
+- Muscles: "No high-grade fatty infiltration or volume loss. No intramuscular edema to suggest denervation, myositis, or strain. No atrophy."
+- MUSCLES HEADING — LONG BONE CONSOLIDATION RULE (humerus, forearm, femur/thigh, tibia/fibula — NOT elbow): all individual muscles in the region consolidate under a single "Muscles:" heading. If the dictation does NOT specifically call out an abnormal muscle, use the default sentence above with no individual muscle names. If the dictation DOES specifically dictate a finding in a named muscle (e.g. a hamstring or quadriceps tear, a compartment muscle strain), name that specific muscle within the Muscles heading text (e.g. "Muscles: Grade 2a biceps femoris long head strain at the myotendinous junction, as detailed below. Remaining musculature shows no high-grade fatty infiltration, volume loss, edema, or atrophy."). When a specific muscle is named this way, use that same muscle name when applying BAMIC or Fredericson-style grading in the IMPRESSION.
 - Articular Cartilage: "Preserved." (NOT "intact" — use "preserved" for all joints)
 - Soft Tissues: "No acute abnormality." (NOT "intact")
 - Bones (MRI): always include "No marrow infiltration or aggressive osseous lesion." as part of the Bones subheading unless a specific lesion is dictated.
-- Regional Neurovascular Structures (all non-spine, non-wrist MRI joints): default "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
+- Regional Neurovascular Structures / named nerve headings (e.g. Median Nerve, Ulnar Nerve, Radial Nerve, Neurovascular Bundle — all non-spine MRI joints): default "No acute abnormality."
 - POSTSURGICAL CHANGE (ALL MRI joints): If the dictation describes any surgical changes, postoperative findings, or hardware at any location, generate a separate "Postsurgical Change:" heading in the FINDINGS section and place ALL such findings there. Do NOT scatter postsurgical findings under other headings (e.g. Soft Tissues, Bones, joint-specific headings). If no surgical changes are dictated, do NOT generate this heading.
 
 STYLE RULES:
