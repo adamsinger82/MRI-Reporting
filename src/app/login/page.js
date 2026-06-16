@@ -3677,7 +3677,7 @@ const CME_SPECIALTIES = ['All', 'Knee', 'Shoulder', 'Hip', 'Ankle', 'Wrist/Hand'
 const CME_FORMATS     = ['All', 'Video Lecture', 'Case-Based Module', 'Quiz/Self-Assessment', 'Podcast', 'Article Review', 'Slide Deck'];
 const CME_CREDITS     = ['All', '0.25 AMA PRA Cat 1', '0.5 AMA PRA Cat 1', '1.0 AMA PRA Cat 1', '1.5 AMA PRA Cat 1', '2.0 AMA PRA Cat 1'];
 
-function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
+function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }) {
   const [modules, setModules]         = useState([]);
   const [loading, setLoading]         = useState(true);
   const [search, setSearch]           = useState('');
@@ -3910,6 +3910,21 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
       if (Array.isArray(data)) setTestQuestions(data);
     } catch(e) { console.error('loadQuestions error', e); }
   };
+
+  // If the CME tab was opened with a specific module requested (e.g. clicked from
+  // the report generator's "Related CME Available" banner), jump straight into that
+  // module's detail screen — same path as clicking it from the library grid — once
+  // the modules list has finished loading. Fires once per mount via the ref guard.
+  const didAutoOpenRef = useRef(false);
+  useEffect(() => {
+    if (didAutoOpenRef.current) return;
+    if (!initialModuleId || loading || !modules.length) return;
+    const match = modules.find(m => m.id === initialModuleId);
+    if (match) {
+      didAutoOpenRef.current = true;
+      openModule(match);
+    }
+  }, [initialModuleId, loading, modules]);
 
   const submitTest = async () => {
     if (!currentUser || !activeModule) return;
@@ -4543,7 +4558,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   );
 }
 
-function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
+function MSKHubModal({ initialTab, initialModuleId, onClose, currentUser, isAdmin }) {
   const [tab, setTab]                 = useState(initialTab || 'research');
   const [jobs, setJobs]               = useState([]);
   const [pending, setPending]         = useState([]);
@@ -4726,7 +4741,7 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
           )}
 
           {/* ── CME tab ── */}
-          {tab === 'cme' && <CmeTabInner currentUser={currentUser} isAdmin={isAdmin} sbHeaders={sbHeaders} sbUrl={sbUrl} />}
+          {tab === 'cme' && <CmeTabInner currentUser={currentUser} isAdmin={isAdmin} sbHeaders={sbHeaders} sbUrl={sbUrl} initialModuleId={initialModuleId} />}
 
           {/* ── Admin tab ── */}
           {tab === 'admin' && isAdmin && (
@@ -6651,7 +6666,7 @@ function findCmeMatches(reportText, modules, selectedBodyPart) {
   return scored.slice(0, 3);
 }
 
-function CmeBanner({ matches, dm }) {
+function CmeBanner({ matches, dm, onOpenModule }) {
   if (!matches?.length) return null;
   return (
     <div style={{
@@ -6666,11 +6681,12 @@ function CmeBanner({ matches, dm }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {matches.map(m => (
-          <a
+          <div
             key={m.id}
-            href={m.url || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpenModule?.(m.id)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpenModule?.(m.id); }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -6680,7 +6696,7 @@ function CmeBanner({ matches, dm }) {
               borderRadius: 7,
               padding: '7px 10px',
               textDecoration: 'none',
-              cursor: m.url ? 'pointer' : 'default',
+              cursor: 'pointer',
             }}
           >
             <span style={{ fontSize: 14 }}>📋</span>
@@ -6695,7 +6711,7 @@ function CmeBanner({ matches, dm }) {
             <span style={{ fontSize: 10, fontWeight: 800, color: 'white', background: dm ? '#16a34a' : '#22c55e', borderRadius: 5, padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0 }}>
               CLAIM CME
             </span>
-          </a>
+          </div>
         ))}
       </div>
     </div>
@@ -6875,6 +6891,7 @@ export default function DashboardPage() {
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
   const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs' | 'cme'
+  const [hubInitialModuleId, setHubInitialModuleId] = useState(null); // set when jumping straight to a specific CME module
   const [cmeModules, setCmeModules] = useState([]);  // CME library — loaded once at app mount
 
   const [darkMode, setDarkMode] = useState(false);
@@ -7264,7 +7281,7 @@ export default function DashboardPage() {
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
-      {showHub && <MSKHubModal initialTab={hubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
+      {showHub && <MSKHubModal initialTab={hubTab} initialModuleId={hubInitialModuleId} onClose={() => { setShowHub(false); setHubInitialModuleId(null); }} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showTemplates && <TemplatesPanel authUser={authUser} generatedReport={generatedReport} selectedBodyPart={selectedBodyPart} modality={modality} onLoad={r => setGeneratedReport(r)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
 
       {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
@@ -7801,7 +7818,11 @@ export default function DashboardPage() {
               : isRheum ? 'Rheum DDx Builder' : isCT ? 'CT Fracture Classification' : 'MRI Grading Reference'
           )}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
-            <CmeBanner matches={findCmeMatches(generatedReport, cmeModules, selectedBodyPart)} dm={dm} />
+            <CmeBanner
+              matches={findCmeMatches(generatedReport, cmeModules, selectedBodyPart)}
+              dm={dm}
+              onOpenModule={(moduleId) => { setHubTab('cme'); setHubInitialModuleId(moduleId); setShowHub(true); }}
+            />
             {isRheum
               ? <RheumDDxPanel
                   rheumJoint={rheumJoint}

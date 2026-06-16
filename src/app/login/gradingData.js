@@ -215,7 +215,7 @@ const MRI_GRADING_DATA = {
         isGradingScale: true,
         plane: 'All planes',
         description: 'Modified Outerbridge grading of articular cartilage on MRI. ICRS (International Cartilage Repair Society) classification is equivalent and also widely used.',
-        diagram: null,
+        singleImage: '/images/msk/modified_outerbridge.jpg',
         citations: [
           { label: 'Outerbridge RE. — Etiology of chondromalacia patellae. J Bone Joint Surg Br 1961;43:752-757.', url: 'https://scholar.google.com/scholar?q=Outerbridge+chondromalacia+patellae+classification+1961' },
         ],
