@@ -4075,7 +4075,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
               {/* PDF embed */}
               {isPdf && !isVideo && contentUrl && (
                 <div style={{ marginBottom:18 }}>
-                  <iframe src={`${contentUrl}#navpanes=0&toolbar=0`} style={{ width:'100%', height:'80vh', minHeight:600, border:'1px solid rgba(99,179,237,0.15)', borderRadius:10 }} title="CME Module PDF" />
+                  <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin + contentUrl : contentUrl)}&embedded=true`} style={{ width:'100%', height:'80vh', minHeight:600, border:'1px solid rgba(99,179,237,0.15)', borderRadius:10 }} title="CME Module PDF" />
                 </div>
               )}
 
