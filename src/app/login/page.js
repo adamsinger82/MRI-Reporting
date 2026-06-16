@@ -4227,6 +4227,104 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
           )}
         </div>
       </div>
+
+      {/* ── Edit Module Modal ─────────────────────────────────────────────── */}
+      {isAdmin && editingModule && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', zIndex:9999, display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'24px 16px' }}>
+          <div style={{ background:'#0d1929', border:'1px solid rgba(99,179,237,0.2)', borderRadius:14, width:'100%', maxWidth:760, padding:'28px 28px 24px' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+              <div style={{ color:'#90cdf4', fontSize:15, fontWeight:700 }}>✏️ Edit Module</div>
+              <button onClick={() => { setEditingModule(null); setEditErr(''); setEditOk(''); }}
+                style={{ background:'none', border:'none', color:'#718096', fontSize:20, cursor:'pointer', lineHeight:1 }}>✕</button>
+            </div>
+            {editErr && <div style={{ color:'#fc8181', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{editErr}</div>}
+            {editOk  && <div style={{ color:'#68d391', background:'rgba(104,211,145,0.08)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{editOk}</div>}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+              <div><label style={lbl}>Module Title *</label><input style={inp} value={editForm.title||''} onChange={e => setEditForm(f=>({...f,title:e.target.value}))} /></div>
+              <div><label style={lbl}>Author / Faculty</label><input style={inp} value={editForm.author||''} onChange={e => setEditForm(f=>({...f,author:e.target.value}))} /></div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:12, marginBottom:12 }}>
+              <div><label style={lbl}>Specialty</label>
+                <select style={inp} value={editForm.specialty||'Knee'} onChange={e => setEditForm(f=>({...f,specialty:e.target.value}))}>
+                  {CME_SPECIALTIES.filter(s=>s!=='All').map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Format</label>
+                <select style={inp} value={editForm.format||'Video Lecture'} onChange={e => setEditForm(f=>({...f,format:e.target.value}))}>
+                  {CME_FORMATS.filter(f=>f!=='All').map(f => <option key={f}>{f}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Credits</label>
+                <select style={inp} value={editForm.credits||'1.0'} onChange={e => setEditForm(f=>({...f,credits:e.target.value}))}>
+                  {CME_CREDITS.filter(c=>c!=='All').map(c => <option key={c} value={c.split(' ')[0]}>{c}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Duration (min)</label><input style={inp} type="number" value={editForm.duration_min||''} onChange={e => setEditForm(f=>({...f,duration_min:e.target.value}))} /></div>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={lbl}>Description *</label>
+              <textarea style={{ ...inp, minHeight:70, resize:'vertical' }} value={editForm.description||''} onChange={e => setEditForm(f=>({...f,description:e.target.value}))} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={lbl}>Learning Objectives <span style={{ color:'#4a5568', fontWeight:400 }}>(one per line)</span></label>
+              <textarea style={{ ...inp, minHeight:70, resize:'vertical' }} value={editForm.objectives||''} onChange={e => setEditForm(f=>({...f,objectives:e.target.value}))} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={lbl}>Content Type</label>
+              <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+                {['video','pdf'].map(ct => (
+                  <button key={ct} type="button" onClick={() => setEditForm(f=>({...f,content_type:ct}))}
+                    style={{ padding:'7px 18px', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer', border:`1px solid ${editForm.content_type===ct?'rgba(99,179,237,0.5)':'rgba(99,179,237,0.15)'}`, background:editForm.content_type===ct?'rgba(99,179,237,0.12)':'transparent', color:editForm.content_type===ct?'#90cdf4':'#64748b' }}>
+                    {ct==='video'?'▶️ Video (YouTube)':'📄 PDF / Slides'}
+                  </button>
+                ))}
+              </div>
+              {editForm.content_type==='video'
+                ? <input style={inp} value={editForm.video_url||''} onChange={e => setEditForm(f=>({...f,video_url:e.target.value,url:e.target.value}))} placeholder="https://www.youtube.com/watch?v=..." />
+                : <input style={inp} value={editForm.file_url||''} onChange={e => setEditForm(f=>({...f,file_url:e.target.value,url:e.target.value}))} placeholder="/pdf/CME_Module01_Spine_Content.pdf" />
+              }
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                <label style={{ ...lbl, marginBottom:0 }}>Post-Test Questions * <span style={{ color:'#4a5568', fontWeight:400 }}>(min 3)</span></label>
+                <button type="button" onClick={() => setEditQuestions(qs=>[...qs,{question_text:'',options:['','','',''],correct_index:0}])}
+                  style={{ padding:'5px 12px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:6, color:'#90cdf4', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                  + Add Question
+                </button>
+              </div>
+              {editQuestions.map((q,qi) => (
+                <div key={qi} style={{ background:'rgba(15,23,42,0.6)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:10, padding:'14px 16px', marginBottom:10 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                    <span style={{ color:'#90cdf4', fontSize:12, fontWeight:700 }}>Q{qi+1}</span>
+                    {editQuestions.length > 3 && (
+                      <button type="button" onClick={() => setEditQuestions(qs=>qs.filter((_,i)=>i!==qi))}
+                        style={{ background:'none', border:'none', color:'#fc8181', fontSize:11, cursor:'pointer', padding:0 }}>✕ Remove</button>
+                    )}
+                  </div>
+                  <input style={{ ...inp, marginBottom:8 }} value={q.question_text} onChange={e => setEditQuestions(qs=>qs.map((x,i)=>i===qi?{...x,question_text:e.target.value}:x))} placeholder={`Question ${qi+1}...`} />
+                  {q.options.map((opt,oi) => (
+                    <div key={oi} style={{ display:'flex', gap:6, alignItems:'center', marginBottom:5 }}>
+                      <input type="radio" name={`edit_correct_${qi}`} checked={q.correct_index===oi} onChange={() => setEditQuestions(qs=>qs.map((x,i)=>i===qi?{...x,correct_index:oi}:x))} style={{ accentColor:'#68d391' }} />
+                      <input style={{ ...inp, flex:1 }} value={opt} onChange={e => setEditQuestions(qs=>qs.map((x,i)=>i===qi?{...x,options:x.options.map((o,j)=>j===oi?e.target.value:o)}:x))} placeholder={`Option ${String.fromCharCode(65+oi)}`} />
+                    </div>
+                  ))}
+                  <div style={{ fontSize:10, color:'#4a5568', marginTop:4 }}>● = correct answer</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={saveEditModule} disabled={editSaving}
+                style={{ flex:1, padding:'11px', background:editSaving?'#1a3a5c':'linear-gradient(135deg,#2b6cb0,#1a3a5c)', border:'1px solid rgba(99,179,237,0.3)', borderRadius:9, color:'#e2e8f0', fontSize:13, fontWeight:700, cursor:editSaving?'not-allowed':'pointer' }}>
+                {editSaving ? '⏳ Saving...' : '💾 Save Changes'}
+              </button>
+              <button onClick={() => { setEditingModule(null); setEditErr(''); setEditOk(''); }}
+                style={{ padding:'11px 20px', background:'transparent', border:'1px solid rgba(99,179,237,0.15)', borderRadius:9, color:'#718096', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     );
   }
 
@@ -4364,104 +4462,6 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
             style={{ padding:'10px 24px', background:'linear-gradient(135deg,rgba(245,189,64,0.2),rgba(245,189,64,0.08))', border:'1px solid rgba(245,189,64,0.35)', borderRadius:9, color:'#f6bd40', fontSize:13, fontWeight:700, cursor:saving?'not-allowed':'pointer' }}>
             {saving ? '⏳ Publishing...' : '🚀 Publish Module'}
           </button>
-        </div>
-      )}
-
-      {/* ── Edit Module Modal ─────────────────────────────────────────────── */}
-      {isAdmin && editingModule && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', zIndex:9999, display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'24px 16px' }}>
-          <div style={{ background:'#0d1929', border:'1px solid rgba(99,179,237,0.2)', borderRadius:14, width:'100%', maxWidth:760, padding:'28px 28px 24px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-              <div style={{ color:'#90cdf4', fontSize:15, fontWeight:700 }}>✏️ Edit Module</div>
-              <button onClick={() => { setEditingModule(null); setEditErr(''); setEditOk(''); }}
-                style={{ background:'none', border:'none', color:'#718096', fontSize:20, cursor:'pointer', lineHeight:1 }}>✕</button>
-            </div>
-            {editErr && <div style={{ color:'#fc8181', background:'rgba(245,101,101,0.08)', border:'1px solid rgba(245,101,101,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{editErr}</div>}
-            {editOk  && <div style={{ color:'#68d391', background:'rgba(104,211,145,0.08)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:14 }}>{editOk}</div>}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-              <div><label style={lbl}>Module Title *</label><input style={inp} value={editForm.title||''} onChange={e => setEditForm(f=>({...f,title:e.target.value}))} /></div>
-              <div><label style={lbl}>Author / Faculty</label><input style={inp} value={editForm.author||''} onChange={e => setEditForm(f=>({...f,author:e.target.value}))} /></div>
-            </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:12, marginBottom:12 }}>
-              <div><label style={lbl}>Specialty</label>
-                <select style={inp} value={editForm.specialty||'Knee'} onChange={e => setEditForm(f=>({...f,specialty:e.target.value}))}>
-                  {CME_SPECIALTIES.filter(s=>s!=='All').map(s => <option key={s}>{s}</option>)}
-                </select>
-              </div>
-              <div><label style={lbl}>Format</label>
-                <select style={inp} value={editForm.format||'Video Lecture'} onChange={e => setEditForm(f=>({...f,format:e.target.value}))}>
-                  {CME_FORMATS.filter(f=>f!=='All').map(f => <option key={f}>{f}</option>)}
-                </select>
-              </div>
-              <div><label style={lbl}>Credits</label>
-                <select style={inp} value={editForm.credits||'1.0'} onChange={e => setEditForm(f=>({...f,credits:e.target.value}))}>
-                  {CME_CREDITS.filter(c=>c!=='All').map(c => <option key={c} value={c.split(' ')[0]}>{c}</option>)}
-                </select>
-              </div>
-              <div><label style={lbl}>Duration (min)</label><input style={inp} type="number" value={editForm.duration_min||''} onChange={e => setEditForm(f=>({...f,duration_min:e.target.value}))} /></div>
-            </div>
-            <div style={{ marginBottom:12 }}>
-              <label style={lbl}>Description *</label>
-              <textarea style={{ ...inp, minHeight:70, resize:'vertical' }} value={editForm.description||''} onChange={e => setEditForm(f=>({...f,description:e.target.value}))} />
-            </div>
-            <div style={{ marginBottom:12 }}>
-              <label style={lbl}>Learning Objectives <span style={{ color:'#4a5568', fontWeight:400 }}>(one per line)</span></label>
-              <textarea style={{ ...inp, minHeight:70, resize:'vertical' }} value={editForm.objectives||''} onChange={e => setEditForm(f=>({...f,objectives:e.target.value}))} />
-            </div>
-            <div style={{ marginBottom:12 }}>
-              <label style={lbl}>Content Type</label>
-              <div style={{ display:'flex', gap:8, marginBottom:10 }}>
-                {['video','pdf'].map(ct => (
-                  <button key={ct} type="button" onClick={() => setEditForm(f=>({...f,content_type:ct}))}
-                    style={{ padding:'7px 18px', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer', border:`1px solid ${editForm.content_type===ct?'rgba(99,179,237,0.5)':'rgba(99,179,237,0.15)'}`, background:editForm.content_type===ct?'rgba(99,179,237,0.12)':'transparent', color:editForm.content_type===ct?'#90cdf4':'#64748b' }}>
-                    {ct==='video'?'▶️ Video (YouTube)':'📄 PDF / Slides'}
-                  </button>
-                ))}
-              </div>
-              {editForm.content_type==='video'
-                ? <input style={inp} value={editForm.video_url||''} onChange={e => setEditForm(f=>({...f,video_url:e.target.value,url:e.target.value}))} placeholder="https://www.youtube.com/watch?v=..." />
-                : <input style={inp} value={editForm.file_url||''} onChange={e => setEditForm(f=>({...f,file_url:e.target.value,url:e.target.value}))} placeholder="/pdf/CME_Module01_Spine_Content.pdf" />
-              }
-            </div>
-            <div style={{ marginBottom:16 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                <label style={{ ...lbl, marginBottom:0 }}>Post-Test Questions * <span style={{ color:'#4a5568', fontWeight:400 }}>(min 3)</span></label>
-                <button type="button" onClick={() => setEditQuestions(qs=>[...qs,{question_text:'',options:['','','',''],correct_index:0}])}
-                  style={{ padding:'5px 12px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:6, color:'#90cdf4', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                  + Add Question
-                </button>
-              </div>
-              {editQuestions.map((q,qi) => (
-                <div key={qi} style={{ background:'rgba(15,23,42,0.6)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:10, padding:'14px 16px', marginBottom:10 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                    <span style={{ color:'#90cdf4', fontSize:12, fontWeight:700 }}>Q{qi+1}</span>
-                    {editQuestions.length > 3 && (
-                      <button type="button" onClick={() => setEditQuestions(qs=>qs.filter((_,i)=>i!==qi))}
-                        style={{ background:'none', border:'none', color:'#fc8181', fontSize:11, cursor:'pointer', padding:0 }}>✕ Remove</button>
-                    )}
-                  </div>
-                  <input style={{ ...inp, marginBottom:8 }} value={q.question_text} onChange={e => setEditQuestions(qs=>qs.map((x,i)=>i===qi?{...x,question_text:e.target.value}:x))} placeholder={`Question ${qi+1}...`} />
-                  {q.options.map((opt,oi) => (
-                    <div key={oi} style={{ display:'flex', gap:6, alignItems:'center', marginBottom:5 }}>
-                      <input type="radio" name={`edit_correct_${qi}`} checked={q.correct_index===oi} onChange={() => setEditQuestions(qs=>qs.map((x,i)=>i===qi?{...x,correct_index:oi}:x))} style={{ accentColor:'#68d391' }} />
-                      <input style={{ ...inp, flex:1 }} value={opt} onChange={e => setEditQuestions(qs=>qs.map((x,i)=>i===qi?{...x,options:x.options.map((o,j)=>j===oi?e.target.value:o)}:x))} placeholder={`Option ${String.fromCharCode(65+oi)}`} />
-                    </div>
-                  ))}
-                  <div style={{ fontSize:10, color:'#4a5568', marginTop:4 }}>● = correct answer</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display:'flex', gap:10 }}>
-              <button onClick={saveEditModule} disabled={editSaving}
-                style={{ flex:1, padding:'11px', background:editSaving?'#1a3a5c':'linear-gradient(135deg,#2b6cb0,#1a3a5c)', border:'1px solid rgba(99,179,237,0.3)', borderRadius:9, color:'#e2e8f0', fontSize:13, fontWeight:700, cursor:editSaving?'not-allowed':'pointer' }}>
-                {editSaving ? '⏳ Saving...' : '💾 Save Changes'}
-              </button>
-              <button onClick={() => { setEditingModule(null); setEditErr(''); setEditOk(''); }}
-                style={{ padding:'11px 20px', background:'transparent', border:'1px solid rgba(99,179,237,0.15)', borderRadius:9, color:'#718096', fontSize:13, fontWeight:700, cursor:'pointer' }}>
-                Cancel
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
