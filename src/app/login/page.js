@@ -4006,7 +4006,9 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
         ? false
         : !!activeModule.file_url;
     const isVideo = !isPdf && (activeModule.content_type === 'video' || !!activeModule.video_url);
-    const contentUrl = activeModule.video_url || activeModule.file_url || activeModule.url || '';
+    const contentUrl = isPdf
+      ? (activeModule.file_url || activeModule.url || '')
+      : (activeModule.video_url || activeModule.url || '');
     const alreadyPassed = completedIds.has(activeModule.id);
     const passThreshold = parseFloat(activeModule.pass_threshold) || 0.75;
     const allAnswered = testQuestions.length > 0 && testQuestions.every(q => testAnswers[q.id] !== undefined);
@@ -4283,7 +4285,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
               <label style={lbl}>Content Type</label>
               <div style={{ display:'flex', gap:8, marginBottom:10 }}>
                 {['video','pdf'].map(ct => (
-                  <button key={ct} type="button" onClick={() => setEditForm(f=>({...f, content_type:ct, video_url: ct==='pdf' ? '' : f.video_url, file_url: ct==='video' ? '' : f.file_url, url: ''}))}
+                  <button key={ct} type="button" onClick={() => setEditForm(f=>({...f, content_type:ct, video_url: ct==='pdf' ? '' : f.video_url, file_url: ct==='video' ? '' : f.file_url}))}
                     style={{ padding:'7px 18px', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer', border:`1px solid ${editForm.content_type===ct?'rgba(99,179,237,0.5)':'rgba(99,179,237,0.15)'}`, background:editForm.content_type===ct?'rgba(99,179,237,0.12)':'transparent', color:editForm.content_type===ct?'#90cdf4':'#64748b' }}>
                     {ct==='video'?'▶️ Video (YouTube)':'📄 PDF / Slides'}
                   </button>
