@@ -4226,7 +4226,6 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
             </div>
           )}
         </div>
-      </div>
 
       {/* ── Edit Module Modal ─────────────────────────────────────────────── */}
       {isAdmin && editingModule && (
@@ -4325,6 +4324,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
           </div>
         </div>
       )}
+      </div>
     );
   }
 
