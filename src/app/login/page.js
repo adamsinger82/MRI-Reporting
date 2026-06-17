@@ -3677,7 +3677,7 @@ const CME_SPECIALTIES = ['All', 'Knee', 'Shoulder', 'Hip', 'Ankle', 'Wrist/Hand'
 const CME_FORMATS     = ['All', 'Video Lecture', 'Case-Based Module', 'Quiz/Self-Assessment', 'Podcast', 'Article Review', 'Slide Deck'];
 const CME_CREDITS     = ['All', '0.25 AMA PRA Cat 1', '0.5 AMA PRA Cat 1', '1.0 AMA PRA Cat 1', '1.5 AMA PRA Cat 1', '2.0 AMA PRA Cat 1'];
 
-function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }) {
+function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   const [modules, setModules]         = useState([]);
   const [loading, setLoading]         = useState(true);
   const [search, setSearch]           = useState('');
@@ -3704,6 +3704,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }
   const [saving, setSaving]           = useState(false);
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const thumbInputRef = useRef(null);
+  const editThumbInputRef = useRef(null);
 
   // ── Edit module state ──────────────────────────────────────────────────────
   const [editingModule, setEditingModule] = useState(null);
@@ -3821,6 +3822,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }
       objectives:    mod.objectives || '',
       author:        mod.author || '',
       thumbnail_url: mod.thumbnail_url || '',
+      pathology_tags: Array.isArray(mod.pathology_tags) ? mod.pathology_tags.join(', ') : (mod.pathology_tags || ''),
       content_type:  mod.content_type || (mod.file_url ? 'pdf' : 'video'),
       video_url:     mod.video_url || (mod.content_type === 'video' ? mod.url : '') || '',
       file_url:      mod.file_url  || (mod.content_type === 'pdf'   ? mod.url : '') || '',
@@ -3865,6 +3867,10 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }
         video_url: editForm.content_type === 'pdf' ? '' : editForm.video_url,
         file_url:  editForm.content_type === 'video' ? '' : editForm.file_url,
         url: editForm.content_type === 'pdf' ? editForm.file_url : editForm.video_url,
+        pathology_tags: (editForm.pathology_tags || '')
+          .split(',')
+          .map(t => t.trim().toLowerCase())
+          .filter(Boolean),
       };
       const res = await fetch(`${SUPABASE_URL}/rest/v1/cme_modules?id=eq.${editingModule.id}`, {
         method: 'PATCH',
@@ -3911,21 +3917,6 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }
     } catch(e) { console.error('loadQuestions error', e); }
   };
 
-  // If the CME tab was opened with a specific module requested (e.g. clicked from
-  // the report generator's "Related CME Available" banner), jump straight into that
-  // module's detail screen — same path as clicking it from the library grid — once
-  // the modules list has finished loading. Fires once per mount via the ref guard.
-  const didAutoOpenRef = useRef(false);
-  useEffect(() => {
-    if (didAutoOpenRef.current) return;
-    if (!initialModuleId || loading || !modules.length) return;
-    const match = modules.find(m => m.id === initialModuleId);
-    if (match) {
-      didAutoOpenRef.current = true;
-      openModule(match);
-    }
-  }, [initialModuleId, loading, modules]);
-
   const submitTest = async () => {
     if (!currentUser || !activeModule) return;
     setTestLoading(true);
@@ -3969,13 +3960,13 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }
     setTestResult(null);
   };
 
-  const uploadThumbnail = async (file) => {
+  const uploadThumbnail = async (file, targetSetter = setUploadForm, targetErrSetter = setUploadErr) => {
     if (!file) return;
     const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
-    if (!allowed.includes(file.type)) { setUploadErr('Thumbnail must be a JPG, PNG, WebP, or GIF image.'); return; }
-    if (file.size > 5 * 1024 * 1024) { setUploadErr('Thumbnail must be under 5MB.'); return; }
+    if (!allowed.includes(file.type)) { targetErrSetter('Thumbnail must be a JPG, PNG, WebP, or GIF image.'); return; }
+    if (file.size > 5 * 1024 * 1024) { targetErrSetter('Thumbnail must be under 5MB.'); return; }
     setThumbnailUploading(true);
-    setUploadErr('');
+    targetErrSetter('');
     try {
       const ext      = file.name.split('.').pop();
       const filename = `cme-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -3994,10 +3985,10 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }
       );
       if (!res.ok) { const e = await res.json(); throw new Error(e.message || JSON.stringify(e)); }
       const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/cme-thumbnails/${filename}`;
-      setUploadForm(f => ({ ...f, thumbnail_url: publicUrl }));
+      targetSetter(f => ({ ...f, thumbnail_url: publicUrl }));
     } catch(e) {
       console.error('uploadThumbnail error', e);
-      setUploadErr(`Thumbnail upload failed: ${e.message}`);
+      targetErrSetter(`Thumbnail upload failed: ${e.message}`);
     }
     setThumbnailUploading(false);
   };
@@ -4273,6 +4264,29 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
               <div><label style={lbl}>Module Title *</label><input style={inp} value={editForm.title||''} onChange={e => setEditForm(f=>({...f,title:e.target.value}))} /></div>
               <div><label style={lbl}>Author / Faculty</label><input style={inp} value={editForm.author||''} onChange={e => setEditForm(f=>({...f,author:e.target.value}))} /></div>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={lbl}>Pathology Tags <span style={{ color:'#4a5568', fontWeight:400 }}>(comma-separated)</span></label>
+              <input style={inp} value={editForm.pathology_tags||''} onChange={e => setEditForm(f=>({...f,pathology_tags:e.target.value}))} placeholder="rotator cuff tear, impingement" />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={lbl}>Thumbnail Image <span style={{ color:'#4a5568', fontWeight:400 }}>(optional — JPG, PNG, or WebP · max 5MB)</span></label>
+              <input ref={editThumbInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display:'none' }} onChange={e => uploadThumbnail(e.target.files[0], setEditForm, setEditErr)} />
+              <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                <button type="button" onClick={() => editThumbInputRef.current?.click()} disabled={thumbnailUploading}
+                  style={{ padding:'9px 16px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:8, color: thumbnailUploading ? '#4a5568' : '#90cdf4', fontSize:12, fontWeight:700, cursor: thumbnailUploading ? 'not-allowed' : 'pointer', flexShrink:0 }}>
+                  {thumbnailUploading ? '⏳ Uploading...' : '📁 Choose Image'}
+                </button>
+                {editForm.thumbnail_url
+                  ? <div style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
+                      <img src={editForm.thumbnail_url} alt="thumbnail preview" style={{ height:40, width:70, objectFit:'cover', borderRadius:5, border:'1px solid rgba(99,179,237,0.2)' }} />
+                      <span style={{ color:'#68d391', fontSize:11, fontWeight:700 }}>✅ Set</span>
+                      <button type="button" onClick={() => { setEditForm(f=>({...f,thumbnail_url:''})); if(editThumbInputRef.current) editThumbInputRef.current.value=''; }}
+                        style={{ background:'none', border:'none', color:'#fc8181', fontSize:11, cursor:'pointer', padding:0 }}>✕ Remove</button>
+                    </div>
+                  : <span style={{ color:'#374151', fontSize:11 }}>No image selected — module will show default 🎓 icon</span>
+                }
+              </div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:12, marginBottom:12 }}>
               <div><label style={lbl}>Specialty</label>
@@ -4558,7 +4572,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }
   );
 }
 
-function MSKHubModal({ initialTab, initialModuleId, onClose, currentUser, isAdmin }) {
+function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
   const [tab, setTab]                 = useState(initialTab || 'research');
   const [jobs, setJobs]               = useState([]);
   const [pending, setPending]         = useState([]);
@@ -4741,7 +4755,7 @@ function MSKHubModal({ initialTab, initialModuleId, onClose, currentUser, isAdmi
           )}
 
           {/* ── CME tab ── */}
-          {tab === 'cme' && <CmeTabInner currentUser={currentUser} isAdmin={isAdmin} sbHeaders={sbHeaders} sbUrl={sbUrl} initialModuleId={initialModuleId} />}
+          {tab === 'cme' && <CmeTabInner currentUser={currentUser} isAdmin={isAdmin} sbHeaders={sbHeaders} sbUrl={sbUrl} />}
 
           {/* ── Admin tab ── */}
           {tab === 'admin' && isAdmin && (
@@ -6666,7 +6680,7 @@ function findCmeMatches(reportText, modules, selectedBodyPart) {
   return scored.slice(0, 3);
 }
 
-function CmeBanner({ matches, dm, onOpenModule }) {
+function CmeBanner({ matches, dm }) {
   if (!matches?.length) return null;
   return (
     <div style={{
@@ -6681,12 +6695,11 @@ function CmeBanner({ matches, dm, onOpenModule }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {matches.map(m => (
-          <div
+          <a
             key={m.id}
-            role="button"
-            tabIndex={0}
-            onClick={() => onOpenModule?.(m.id)}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpenModule?.(m.id); }}
+            href={m.url || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -6696,7 +6709,7 @@ function CmeBanner({ matches, dm, onOpenModule }) {
               borderRadius: 7,
               padding: '7px 10px',
               textDecoration: 'none',
-              cursor: 'pointer',
+              cursor: m.url ? 'pointer' : 'default',
             }}
           >
             <span style={{ fontSize: 14 }}>📋</span>
@@ -6711,7 +6724,7 @@ function CmeBanner({ matches, dm, onOpenModule }) {
             <span style={{ fontSize: 10, fontWeight: 800, color: 'white', background: dm ? '#16a34a' : '#22c55e', borderRadius: 5, padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0 }}>
               CLAIM CME
             </span>
-          </div>
+          </a>
         ))}
       </div>
     </div>
@@ -6891,7 +6904,6 @@ export default function DashboardPage() {
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
   const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs' | 'cme'
-  const [hubInitialModuleId, setHubInitialModuleId] = useState(null); // set when jumping straight to a specific CME module
   const [cmeModules, setCmeModules] = useState([]);  // CME library — loaded once at app mount
 
   const [darkMode, setDarkMode] = useState(false);
@@ -7281,7 +7293,7 @@ export default function DashboardPage() {
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
-      {showHub && <MSKHubModal initialTab={hubTab} initialModuleId={hubInitialModuleId} onClose={() => { setShowHub(false); setHubInitialModuleId(null); }} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
+      {showHub && <MSKHubModal initialTab={hubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showTemplates && <TemplatesPanel authUser={authUser} generatedReport={generatedReport} selectedBodyPart={selectedBodyPart} modality={modality} onLoad={r => setGeneratedReport(r)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
 
       {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
@@ -7818,11 +7830,7 @@ export default function DashboardPage() {
               : isRheum ? 'Rheum DDx Builder' : isCT ? 'CT Fracture Classification' : 'MRI Grading Reference'
           )}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
-            <CmeBanner
-              matches={findCmeMatches(generatedReport, cmeModules, selectedBodyPart)}
-              dm={dm}
-              onOpenModule={(moduleId) => { setHubTab('cme'); setHubInitialModuleId(moduleId); setShowHub(true); }}
-            />
+            <CmeBanner matches={findCmeMatches(generatedReport, cmeModules, selectedBodyPart)} dm={dm} />
             {isRheum
               ? <RheumDDxPanel
                   rheumJoint={rheumJoint}
