@@ -3677,7 +3677,80 @@ const CME_SPECIALTIES = ['All', 'Knee', 'Shoulder', 'Hip', 'Ankle', 'Wrist/Hand'
 const CME_FORMATS     = ['All', 'Video Lecture', 'Case-Based Module', 'Quiz/Self-Assessment', 'Podcast', 'Article Review', 'Slide Deck'];
 const CME_CREDITS     = ['All', '0.25 AMA PRA Cat 1', '0.5 AMA PRA Cat 1', '1.0 AMA PRA Cat 1', '1.5 AMA PRA Cat 1', '2.0 AMA PRA Cat 1'];
 
-function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
+// ── Bulk question paste parser ────────────────────────────────────────────
+// Accepts a pasted block of quiz questions in a forgiving numbered format:
+//   1. Question text?
+//   A) wrong option
+//   *B) correct option        <- asterisk marks the correct answer
+//   C) wrong option
+//   D) wrong option
+// Also accepts "(correct)" as a suffix instead of a leading asterisk, lowercase
+// letters, and either "1." or "1)" numbering. Returns { questions, errors } —
+// errors are human-readable strings describing exactly which question failed and
+// why, so the admin can fix just that one rather than re-pasting everything.
+function parsePastedQuestions(raw) {
+  if (!raw || !raw.trim()) return { questions: [], errors: ['Nothing to parse \u2014 paste your questions into the box first.'] };
+  const errors = [];
+  const lines = raw.split('\n');
+  const blocks = [];
+  let current = [];
+  const qStartRe = /^\s*\d+[\.\)]\s+/;
+  for (const line of lines) {
+    if (qStartRe.test(line) && current.length) {
+      blocks.push(current);
+      current = [line];
+    } else {
+      current.push(line);
+    }
+  }
+  if (current.length) blocks.push(current);
+
+  const questions = [];
+  const optRe = /^\s*(\*)?\s*([A-Da-d])[\.\)]\s*(.*)$/;
+
+  blocks.forEach((block, bi) => {
+    const nonEmpty = block.filter(l => l.trim());
+    if (!nonEmpty.length) return;
+    const qLine = nonEmpty[0].replace(qStartRe, '').trim();
+    const optLines = nonEmpty.slice(1);
+    const options = ['', '', '', ''];
+    let correct_index = null;
+    let parsedAny = false;
+    optLines.forEach(line => {
+      const m = line.match(optRe);
+      if (!m) return;
+      parsedAny = true;
+      const isCorrect = !!m[1] || /\(correct\)/i.test(line);
+      const letter = m[2].toUpperCase();
+      const idx = letter.charCodeAt(0) - 65;
+      let text = m[3].replace(/\(correct\)/i, '').trim();
+      if (idx >= 0 && idx < 4) {
+        options[idx] = text;
+        if (isCorrect) correct_index = idx;
+      }
+    });
+    if (!qLine) { errors.push(`Question ${bi+1}: missing question text.`); return; }
+    if (!parsedAny || options.some(o => !o)) { errors.push(`Question ${bi+1} ("${qLine.slice(0,40)}${qLine.length>40?'...':''}"): needs exactly 4 lettered options (A\u2013D).`); return; }
+    if (correct_index === null) { errors.push(`Question ${bi+1} ("${qLine.slice(0,40)}${qLine.length>40?'...':''}"): no correct answer marked \u2014 put a * before the correct letter, e.g. "*C) ..." or add "(correct)" after it.`); return; }
+    questions.push({ question_text: qLine, options, correct_index });
+  });
+
+  return { questions, errors };
+}
+
+const PASTE_FORMAT_HELP = `1. Question text goes here?
+A) Wrong option
+*B) Correct option
+C) Wrong option
+D) Wrong option
+
+2. Next question?
+A) Wrong option
+B) Wrong option
+C) Wrong option
+*D) Correct option`;
+
+function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl, initialModuleId }) {
   const [modules, setModules]         = useState([]);
   const [loading, setLoading]         = useState(true);
   const [search, setSearch]           = useState('');
@@ -3713,6 +3786,14 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   const [editErr, setEditErr]             = useState('');
   const [editOk, setEditOk]               = useState('');
   const [editSaving, setEditSaving]       = useState(false);
+
+  // ── Bulk question paste state (upload + edit each get their own box) ───────
+  const [uploadPasteText, setUploadPasteText] = useState('');
+  const [uploadPasteErrors, setUploadPasteErrors] = useState([]);
+  const [showUploadPasteBox, setShowUploadPasteBox] = useState(false);
+  const [editPasteText, setEditPasteText] = useState('');
+  const [editPasteErrors, setEditPasteErrors] = useState([]);
+  const [showEditPasteBox, setShowEditPasteBox] = useState(false);
 
   const sbH = sbHeaders ? sbHeaders() : (() => {
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -3849,6 +3930,9 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
       ]);
     }
     setEditingModule(mod);
+    setShowEditPasteBox(false);
+    setEditPasteText('');
+    setEditPasteErrors([]);
   };
 
   // ── Save edits back to Supabase ────────────────────────────────────────────
@@ -3915,6 +3999,41 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
       const data = await res.json();
       if (Array.isArray(data)) setTestQuestions(data);
     } catch(e) { console.error('loadQuestions error', e); }
+  };
+
+  // If the CME tab was opened with a specific module requested (e.g. clicked from
+  // the report generator's "Related CME Available" banner), jump straight into that
+  // module's detail screen once the modules list has finished loading.
+  const didAutoOpenRef = useRef(false);
+  useEffect(() => {
+    if (didAutoOpenRef.current) return;
+    if (!initialModuleId || loading || !modules.length) return;
+    const match = modules.find(m => m.id === initialModuleId);
+    if (match) {
+      didAutoOpenRef.current = true;
+      openModule(match);
+    }
+  }, [initialModuleId, loading, modules]);
+
+  // Parses uploadPasteText and REPLACES the current uploadQuestions rows with the
+  // result on success. On any parse error, nothing is replaced — errors are shown
+  // instead so the admin can fix the pasted text without losing already-typed rows.
+  const handleUploadPasteImport = () => {
+    const { questions, errors } = parsePastedQuestions(uploadPasteText);
+    if (errors.length) { setUploadPasteErrors(errors); return; }
+    setUploadQuestions(questions);
+    setUploadPasteErrors([]);
+    setUploadPasteText('');
+    setShowUploadPasteBox(false);
+  };
+
+  const handleEditPasteImport = () => {
+    const { questions, errors } = parsePastedQuestions(editPasteText);
+    if (errors.length) { setEditPasteErrors(errors); return; }
+    setEditQuestions(questions);
+    setEditPasteErrors([]);
+    setEditPasteText('');
+    setShowEditPasteBox(false);
   };
 
   const submitTest = async () => {
@@ -4332,11 +4451,45 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
             <div style={{ marginBottom:16 }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
                 <label style={{ ...lbl, marginBottom:0 }}>Post-Test Questions * <span style={{ color:'#4a5568', fontWeight:400 }}>(min 3)</span></label>
-                <button type="button" onClick={() => setEditQuestions(qs=>[...qs,{question_text:'',options:['','','',''],correct_index:0}])}
-                  style={{ padding:'5px 12px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:6, color:'#90cdf4', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                  + Add Question
-                </button>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button type="button" onClick={() => setShowEditPasteBox(s => !s)}
+                    style={{ padding:'5px 12px', background:'rgba(104,211,145,0.1)', border:'1px solid rgba(104,211,145,0.25)', borderRadius:6, color:'#68d391', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                    📋 Paste Questions
+                  </button>
+                  <button type="button" onClick={() => setEditQuestions(qs=>[...qs,{question_text:'',options:['','','',''],correct_index:0}])}
+                    style={{ padding:'5px 12px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:6, color:'#90cdf4', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                    + Add Question
+                  </button>
+                </div>
               </div>
+              {showEditPasteBox && (
+                <div style={{ background:'rgba(15,23,42,0.6)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:10, padding:'14px 16px', marginBottom:10 }}>
+                  <div style={{ color:'#718096', fontSize:10.5, marginBottom:8, whiteSpace:'pre-wrap', fontFamily:'monospace', lineHeight:1.5 }}>{PASTE_FORMAT_HELP}</div>
+                  <textarea
+                    value={editPasteText}
+                    onChange={e => setEditPasteText(e.target.value)}
+                    placeholder="Paste your questions here, in the format shown above..."
+                    style={{ ...inp, minHeight:160, fontFamily:'monospace', fontSize:11.5, resize:'vertical', marginBottom:8 }}
+                  />
+                  {editPasteErrors.length > 0 && (
+                    <div style={{ background:'rgba(252,129,129,0.1)', border:'1px solid rgba(252,129,129,0.25)', borderRadius:6, padding:'8px 10px', marginBottom:8 }}>
+                      {editPasteErrors.map((e, i) => (
+                        <div key={i} style={{ color:'#fc8181', fontSize:11, marginBottom:i<editPasteErrors.length-1?4:0 }}>• {e}</div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button type="button" onClick={handleEditPasteImport}
+                      style={{ padding:'7px 16px', background:'rgba(104,211,145,0.15)', border:'1px solid rgba(104,211,145,0.35)', borderRadius:6, color:'#68d391', fontSize:11.5, fontWeight:700, cursor:'pointer' }}>
+                      Import &amp; Replace Questions Below
+                    </button>
+                    <button type="button" onClick={() => { setShowEditPasteBox(false); setEditPasteText(''); setEditPasteErrors([]); }}
+                      style={{ padding:'7px 16px', background:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#718096', fontSize:11.5, cursor:'pointer' }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
               {editQuestions.map((q,qi) => (
                 <div key={qi} style={{ background:'rgba(15,23,42,0.6)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:10, padding:'14px 16px', marginBottom:10 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
@@ -4482,11 +4635,45 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
           <div style={{ marginBottom:16 }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
               <label style={{ ...lbl, marginBottom:0 }}>Post-Test Questions * <span style={{ color:'#4a5568', fontWeight:400 }}>(min 3, all 4 options required)</span></label>
-              <button type="button" onClick={() => setUploadQuestions(qs => [...qs, { question_text:'', options:['','','',''], correct_index:0 }])}
-                style={{ padding:'5px 12px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:6, color:'#90cdf4', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                + Add Question
-              </button>
+              <div style={{ display:'flex', gap:8 }}>
+                <button type="button" onClick={() => setShowUploadPasteBox(s => !s)}
+                  style={{ padding:'5px 12px', background:'rgba(104,211,145,0.1)', border:'1px solid rgba(104,211,145,0.25)', borderRadius:6, color:'#68d391', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                  📋 Paste Questions
+                </button>
+                <button type="button" onClick={() => setUploadQuestions(qs => [...qs, { question_text:'', options:['','','',''], correct_index:0 }])}
+                  style={{ padding:'5px 12px', background:'rgba(99,179,237,0.08)', border:'1px solid rgba(99,179,237,0.2)', borderRadius:6, color:'#90cdf4', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                  + Add Question
+                </button>
+              </div>
             </div>
+            {showUploadPasteBox && (
+              <div style={{ background:'rgba(15,23,42,0.6)', border:'1px solid rgba(104,211,145,0.2)', borderRadius:10, padding:'14px 16px', marginBottom:10 }}>
+                <div style={{ color:'#718096', fontSize:10.5, marginBottom:8, whiteSpace:'pre-wrap', fontFamily:'monospace', lineHeight:1.5 }}>{PASTE_FORMAT_HELP}</div>
+                <textarea
+                  value={uploadPasteText}
+                  onChange={e => setUploadPasteText(e.target.value)}
+                  placeholder="Paste your questions here, in the format shown above..."
+                  style={{ ...inp, minHeight:160, fontFamily:'monospace', fontSize:11.5, resize:'vertical', marginBottom:8 }}
+                />
+                {uploadPasteErrors.length > 0 && (
+                  <div style={{ background:'rgba(252,129,129,0.1)', border:'1px solid rgba(252,129,129,0.25)', borderRadius:6, padding:'8px 10px', marginBottom:8 }}>
+                    {uploadPasteErrors.map((e, i) => (
+                      <div key={i} style={{ color:'#fc8181', fontSize:11, marginBottom:i<uploadPasteErrors.length-1?4:0 }}>• {e}</div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display:'flex', gap:8 }}>
+                  <button type="button" onClick={handleUploadPasteImport}
+                    style={{ padding:'7px 16px', background:'rgba(104,211,145,0.15)', border:'1px solid rgba(104,211,145,0.35)', borderRadius:6, color:'#68d391', fontSize:11.5, fontWeight:700, cursor:'pointer' }}>
+                    Import &amp; Replace Questions Below
+                  </button>
+                  <button type="button" onClick={() => { setShowUploadPasteBox(false); setUploadPasteText(''); setUploadPasteErrors([]); }}
+                    style={{ padding:'7px 16px', background:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#718096', fontSize:11.5, cursor:'pointer' }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
             {uploadQuestions.map((q, qi) => (
               <div key={qi} style={{ background:'rgba(15,23,42,0.6)', border:'1px solid rgba(99,179,237,0.1)', borderRadius:10, padding:'14px 16px', marginBottom:10 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
@@ -4572,7 +4759,7 @@ function CmeTabInner({ currentUser, isAdmin, sbHeaders, sbUrl }) {
   );
 }
 
-function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
+function MSKHubModal({ initialTab, initialModuleId, onClose, currentUser, isAdmin }) {
   const [tab, setTab]                 = useState(initialTab || 'research');
   const [jobs, setJobs]               = useState([]);
   const [pending, setPending]         = useState([]);
@@ -4755,7 +4942,7 @@ function MSKHubModal({ initialTab, onClose, currentUser, isAdmin }) {
           )}
 
           {/* ── CME tab ── */}
-          {tab === 'cme' && <CmeTabInner currentUser={currentUser} isAdmin={isAdmin} sbHeaders={sbHeaders} sbUrl={sbUrl} />}
+          {tab === 'cme' && <CmeTabInner currentUser={currentUser} isAdmin={isAdmin} sbHeaders={sbHeaders} sbUrl={sbUrl} initialModuleId={initialModuleId} />}
 
           {/* ── Admin tab ── */}
           {tab === 'admin' && isAdmin && (
@@ -6680,7 +6867,7 @@ function findCmeMatches(reportText, modules, selectedBodyPart) {
   return scored.slice(0, 3);
 }
 
-function CmeBanner({ matches, dm }) {
+function CmeBanner({ matches, dm, onOpenModule }) {
   if (!matches?.length) return null;
   return (
     <div style={{
@@ -6695,11 +6882,12 @@ function CmeBanner({ matches, dm }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {matches.map(m => (
-          <a
+          <div
             key={m.id}
-            href={m.url || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpenModule?.(m.id)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpenModule?.(m.id); }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -6709,7 +6897,7 @@ function CmeBanner({ matches, dm }) {
               borderRadius: 7,
               padding: '7px 10px',
               textDecoration: 'none',
-              cursor: m.url ? 'pointer' : 'default',
+              cursor: 'pointer',
             }}
           >
             <span style={{ fontSize: 14 }}>📋</span>
@@ -6724,7 +6912,7 @@ function CmeBanner({ matches, dm }) {
             <span style={{ fontSize: 10, fontWeight: 800, color: 'white', background: dm ? '#16a34a' : '#22c55e', borderRadius: 5, padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0 }}>
               CLAIM CME
             </span>
-          </a>
+          </div>
         ))}
       </div>
     </div>
@@ -6903,6 +7091,7 @@ export default function DashboardPage() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
+  const [hubInitialModuleId, setHubInitialModuleId] = useState(null); // set when jumping straight to a specific CME module
   const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs' | 'cme'
   const [cmeModules, setCmeModules] = useState([]);  // CME library — loaded once at app mount
 
@@ -7293,7 +7482,7 @@ export default function DashboardPage() {
       {showAtlas && <AtlasModal onClose={() => setShowAtlas(false)} />}
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} />}
-      {showHub && <MSKHubModal initialTab={hubTab} onClose={() => setShowHub(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
+      {showHub && <MSKHubModal initialTab={hubTab} initialModuleId={hubInitialModuleId} onClose={() => { setShowHub(false); setHubInitialModuleId(null); }} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showTemplates && <TemplatesPanel authUser={authUser} generatedReport={generatedReport} selectedBodyPart={selectedBodyPart} modality={modality} onLoad={r => setGeneratedReport(r)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
 
       {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
@@ -7830,7 +8019,11 @@ export default function DashboardPage() {
               : isRheum ? 'Rheum DDx Builder' : isCT ? 'CT Fracture Classification' : 'MRI Grading Reference'
           )}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
-            <CmeBanner matches={findCmeMatches(generatedReport, cmeModules, selectedBodyPart)} dm={dm} />
+            <CmeBanner
+              matches={findCmeMatches(generatedReport, cmeModules, selectedBodyPart)}
+              dm={dm}
+              onOpenModule={(moduleId) => { setHubTab('cme'); setHubInitialModuleId(moduleId); setShowHub(true); }}
+            />
             {isRheum
               ? <RheumDDxPanel
                   rheumJoint={rheumJoint}
