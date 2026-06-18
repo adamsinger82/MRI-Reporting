@@ -42,11 +42,11 @@ const ABSENT_STRUCTURES = [
 const ANATOMY_MRI = {
   knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Muscles, Regional Neurovascular Structures, Soft Tissues',
   shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenoid Labrum, Acromial Undersurface, Subacromial and Subdeltoid Bursa, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
-  hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Proximal Hamstring Tendons, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Trochanteric Bursa, Proximal Hamstring Tendons, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
   wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Articular Cartilage, Bones, Muscles, Soft Tissues',
   elbow:'UCL (Ulnar Collateral Ligament — medial), LUCL (Lateral Ulnar Collateral Ligament — lateral), RCL (Radial Collateral Ligament — lateral), Annular Ligament, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Brachialis Tendon, Triceps Tendon, Ulnar Nerve, Median Nerve, Radial Nerve / Posterior Interosseous Nerve, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
   ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
-  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Paraspinal Soft Tissues, Facet Joints, Bones, Cord / Conus / Cauda Equina',
+  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Paraspinal Soft Tissues, Bones, Cord / Conus / Cauda Equina',
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Regional Neurovascular Structures, Soft Tissues',
   foot:'Plantar Fascia, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
   'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
@@ -66,7 +66,7 @@ const ANATOMY_CT = {
   wrist:'Bones, Dislocation or Subluxation, Radiocarpal Joint Space, Midcarpal Joint Space, Soft Tissues',
   elbow:'Bones, Joint Effusion, Dislocation or Subluxation, Joint Space, Soft Tissues',
   ankle:'Bones, Joint Effusion, Dislocation or Subluxation, Tibiotalar Joint Space, Subtalar Joint Space, Soft Tissues',
-  spine:'Vertebral Alignment, Vertebral Bodies, Disc Spaces, Spinal Canal, Neural Foramina, Facet Joints, Soft Tissues',
+  spine:'Vertebral Alignment, Vertebral Bodies, Disc Spaces, Spinal Canal, Neural Foramina, Soft Tissues',
   pelvis:'Pelvic Ring, Sacroiliac Joints, Pubic Symphysis, Hip Joints, Acetabula, Soft Tissues',
   foot:'Bones, Lisfranc Joint Complex, Dislocation or Subluxation, Joint Spaces, Soft Tissues',
   'femur/thigh':'Femur (cortex / medullary canal / periosteum), Soft Tissue Compartments, Soft Tissues',
@@ -77,8 +77,12 @@ const ANATOMY_CT = {
 };
 
 const ANATOMY = ANATOMY_MRI; // backward compat
-function getAnatomy(part, isCT) {
-  return isCT ? (ANATOMY_CT[part] || ANATOMY_MRI[part]) : (ANATOMY_MRI[part] || '');
+function getAnatomy(part, isCT, spineRegion) {
+  let anatomy = isCT ? (ANATOMY_CT[part] || ANATOMY_MRI[part]) : (ANATOMY_MRI[part] || '');
+  if (part === 'spine' && !isCT && (spineRegion === 'cervical' || spineRegion === 'thoracic')) {
+    anatomy = anatomy.replace('Cord / Conus / Cauda Equina', 'Cord');
+  }
+  return anatomy;
 }
 
 
@@ -122,7 +126,7 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
     : `Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast.`;
 
   const findingsRules = isCT
-    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent." Soft Tissues — write "No acute soft tissue abnormality." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR language. 4. BONES RULE — all three on same line: Fracture/cortical disruption (or "No fracture or cortical disruption."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). 5. JOINT SPACE RULE — for each joint space: address narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis."`
+    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent." Soft Tissues — write "No acute soft tissue abnormality." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR language. 4. BONES RULE — all three on same line: Fracture (or "No fracture."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). 5. JOINT SPACE RULE — for each joint space: address narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis."`
     : `FINDINGS RULES: 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses — write "absent" not "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — use a SINGLE heading "Bones:" for ALL bone findings. Address all three on the same line: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion." BONES SCOPE: include acute fractures, bone contusions, stress reactions/stress fractures, AVN, bone lesions (benign or malignant), marrow infiltration. Do NOT include chronic degenerative changes (osteophytes, subchondral sclerosis/cysts from OA) — those belong under Articular Cartilage or joint headings. CRITICAL: Do NOT create any subheading named after an individual bone (e.g. do NOT write "Femur:", "Tibia:", "Patella:", "Fibula:", "Calcaneus:", "Talus:" etc. as standalone findings headings). All bone findings consolidate under the single "Bones:" heading.`;
   const normalImpressionText = isCT
     ? `If entirely normal: "No significant CT findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`
@@ -141,11 +145,13 @@ CRITICAL FORMATTING RULES:
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 
-ANATOMY TO COVER for ${part}: ${getAnatomy(part, isCT)}
-Generate a subheading for EVERY structure listed above.
+ANATOMY TO COVER for ${part}: ${getAnatomy(part, isCT, spineRegion)}
+Generate a subheading for EVERY structure listed above, EXCEPT Soft Tissues — see the Soft Tissues rule under GLOBAL DEFAULTS below, which can require omitting that heading entirely.
 ${findingsRules}
 IMPRESSION RULES:
-CORE PRINCIPLE: The impression must read like a subspecialty MSK radiologist's synthesis — not a transcription of the findings list. Group related findings under a single unifying clinical diagnosis whenever possible. Use "as above" to refer back to findings rather than repeating measurements, grades, or signal descriptions. Aim for 1-4 impression items. A laundry list is always wrong.
+CORE PRINCIPLE: The impression must read like a subspecialty MSK radiologist's synthesis — not a transcription of the findings list. Group related findings under a single unifying clinical diagnosis whenever possible. Aim for 1-4 impression items. A laundry list is always wrong.
+PERTINENT NEGATIVES — DO NOT PROMOTE TO IMPRESSION: A dictated negative finding (e.g. "no significant posterior centering of the humeral head," "no narrowing of the acromioclavicular humeral interval," or similar normal/negative observations made to rule out a specific diagnosis) belongs ONLY in the FINDINGS section. Never generate a standalone impression line/item consisting of a negative finding — a pertinent negative carries no actionable diagnosis on its own and adds no value in the impression. The only exception is when a normal/negative finding is the central point of the entire exam (e.g. the overall normal-exam line, ${normalImpressionText}) — routine negative findings within an otherwise abnormal exam should never appear as their own impression item.
+"AS ABOVE" USAGE — STRICT LIMIT: Use the phrase "as above" no more than once or twice in the entire impression, reserved only for the most clinically significant point(s) being summarized. Only use "as above" to reference a finding that was described in at least 2-3 sentences of detail in the FINDINGS section — never use it to reference a single short phrase or one-line finding. Do not default to "as above" as a general-purpose reference; most impression items should restate the key clinical conclusion concisely in their own words instead.
 
 NAMED SYNDROME PATTERNS — recognize and use these by name when the findings fit:
 
@@ -165,15 +171,26 @@ SHOULDER-SPECIFIC FINDINGS DEFAULTS AND RULES:
 - Coracoclavicular ligament complex / coracoacromial ligament complex: if dictated, place findings under the AC Joint heading — NOT as a separate heading.
 - Do NOT generate a "Glenohumeral Joint: intact" heading. This heading does not exist.
 - crescent zone: do NOT capitalize — write "crescent zone" not "Crescent Zone"
+- NEVER use the words "supraspinous" or "infraspinous" anywhere in the report — these are misspellings/mis-transcriptions of "supraspinatus" and "infraspinatus" and must never appear in generated output, even if dictation contains them. Always use "supraspinatus" and "infraspinatus."
+- HUMERAL HEAD FOCAL T2 SIGNAL — TRAUMA vs ARTHRITIS (humeral head only; does NOT apply to other bones/joints and does NOT override the foot reactive osteitis / osteomyelitis rule): When dictation describes a focal area of increased T2 signal in the humeral head without explicitly stating it is a Hill-Sachs lesion or explicitly stating it is degenerative/arthritic, determine which it is using these dictated cues:
+  LEAN ARTHRITIS/DEGENERATIVE if dictation specifically states the signal is subchondral marrow edema, mentions cartilage loss at that location, or mentions subchondral cysts.
+  LEAN TRAUMA/CONTUSION (Hill-Sachs) if dictation mentions other signs of dislocation, such as an anteroinferior (or posteroinferior) labral tear, OR if none of the arthritis cues above are present.
+  If genuinely ambiguous (cues for both, or truly nothing to disambiguate), phrase the Bones finding as ambiguous: "Focal area of increased T2 signal involving the posterolateral humeral head, which could reflect a Hill-Sachs impaction injury versus a degenerative etiology; clinical correlation recommended." Do NOT silently default this finding into an osteoarthrosis/cartilage-loss impression line unless an arthritis cue above is actually dictated — doing so changes the clinical meaning of the finding (it may instead represent a contusion from a dislocation event).
 
 SHOULDER:
 - MASSIVE ROTATOR CUFF TEAR: Tears of 2+ tendons with muscle atrophy/fatty infiltration → "Massive rotator cuff tear involving the [tendons] with [Goutallier grade] fatty infiltration and [Patte stage] muscle retraction, as above." If superior humeral head migration or glenohumeral arthritis present add: "findings consistent with rotator cuff arthropathy."
-- BANKART / ANTERIOR INSTABILITY: Anterior labral tear + Hill-Sachs + osseous Bankart → "Anterior glenohumeral instability pattern with Bankart lesion[/osseous Bankart], Hill-Sachs deformity, as above."
-- POSTERIOR INSTABILITY: Posterior labral tear + reverse Hill-Sachs → "Posterior glenohumeral instability pattern with reverse Bankart lesion and reverse Hill-Sachs deformity, as above."
-- SLAP: Superior labral tear → "SLAP tear [type if determinable], as above."
-- SUBACROMIAL IMPINGEMENT: Hooked acromion/AC arthritis + supraspinatus pathology → "Subacromial impingement pattern with [partial/full] supraspinatus [tendinosis/tear], as above."
+- ANTERIOR/POSTERIOR DISLOCATION — UNIFIED SUMMARY RULE: When dictation describes an anteroinferior labral tear (suggesting anterior dislocation) or a posteroinferior labral tear (suggesting posterior dislocation), combine ALL associated instability findings (Bankart/reverse Bankart, osseous Bankart, Hill-Sachs/reverse Hill-Sachs, capsular tear, glenoid cartilage injury, and any associated SLAP tear) into a single summarized impression line rather than separate lines for instability and SLAP — even when a SLAP tear is also present. Use the pattern: "Evidence of recent [anterior/posterior] shoulder dislocation with [bipolar bone injury, if applicable — see BIPOLAR rule below] and extensive tearing of the labrum, as above."
+  BIPOLAR BONE INJURY: Include "with bipolar bone injury" ONLY when there is a bony injury on BOTH sides of the joint — i.e. a Hill-Sachs (or reverse Hill-Sachs) lesion of the humeral head AND a bony/osseous glenoid injury (osseous Bankart, glenoid rim fracture). If only a Hill-Sachs/reverse Hill-Sachs lesion is present with no bony glenoid injury (e.g. only a soft tissue Bankart), do NOT mention bipolar bone injury.
+  ON-TRACK/OFF-TRACK SENTENCE: When bipolar bone injury is present, append: "Consider CT to better characterize degree of bony injury and determine whether Hill-Sachs lesion is on track or off track." Do NOT include this sentence when bipolar bone injury is not present.
+  SNYDER CLASSIFICATION EXCEPTION: If the dictation provides enough detail to assign a Snyder SLAP classification type, replace "extensive tearing of the labrum" with the specific type, e.g. "Evidence of anterior shoulder dislocation with Type 5 SLAP tear[, as above]" (still followed by bipolar bone injury / on-track-off-track language per the rules above if applicable).
+  Do NOT generate separate standalone impression lines for the instability pattern and the SLAP tear when this unified rule applies — they collapse into the single summary line above.
+- SUBACROMIAL IMPINGEMENT: Only invoke impingement when BOTH of the following are present in dictation:
+  (A) an anatomic narrowing/crowding finding — type 3 (hooked) acromion, narrowed acromiohumeral interval/arch, or a subacromial spur, AND
+  (B) at least moderate subacromial/subdeltoid bursitis and/or a supraspinatus/infraspinatus tear.
+  Do NOT invoke impingement from bursitis or a cuff tear alone, and do NOT invoke it from anatomic narrowing alone — both an (A) and a (B) component must be dictated.
+  If both are present, phrase it as clinical correlation, not an asserted diagnosis: "[Anatomic finding from A, e.g. narrowed acromiohumeral interval] with associated [tear and/or bursitis from B], as above — correlate for clinical evidence of subacromial impingement, as impingement is a clinical diagnosis supported by these imaging findings."
 - AC SEPARATION: AC joint injury → "Acromioclavicular separation [Rockwood grade if determinable], as above."
-- DISLOCATION: Anterior or posterior dislocation findings → "Sequela of [anterior/posterior] glenohumeral dislocation with [associated findings], as above."
+- DISLOCATION (no labral tear dictated, e.g. dislocation with only bone/capsule findings and no Bankart-pattern labral injury): "Sequela of [anterior/posterior] glenohumeral dislocation with [associated findings], as above." If a labral tear consistent with anterior or posterior dislocation IS dictated, use the ANTERIOR/POSTERIOR DISLOCATION — UNIFIED SUMMARY RULE above instead of this line.
 
 ANKLE:
 - INVERSION INJURY: ATFL ± CFL ± PTFL tears + bone bruising → "Sequela of inversion ankle injury with [lateral ligament complex] tear(s) and [osseous/osteochondral] injury, as above."
@@ -187,11 +204,20 @@ FOOT MRI — FINDINGS HEADING RULES:
 - DO NOT include Achilles tendon, peroneal tendons, or posterior tibial tendon headings in a foot MRI UNLESS they are specifically dictated. These are ankle structures.
 - BONES — REACTIVE OSTEITIS RULE: When dictation describes high T2/STIR signal in bone WITHOUT corresponding low T1 signal change, report as: "Reactive osteitis versus early osteomyelitis cannot be excluded. Clinical and laboratory correlation recommended." when infection is a clinical concern. If clearly post-traumatic or mechanical context, use "reactive marrow edema."
 
+FOOT CT — FINDINGS HEADING RULES:
+- LISFRANC JOINT COMPLEX: CT cannot directly visualize the Lisfranc ligament (a soft tissue structure). Never default to "intact" for this heading. Default when not dictated: "No widening of the Lisfranc interval." Only describe ligament integrity itself if explicitly dictated, and even then phrase findings in terms of joint alignment/interval widening rather than ligament signal/tear.
+
 HIP:
 - FAI CAM: CAM deformity + labral tear + cartilage damage → "CAM-type femoroacetabular impingement with anterosuperior labral tear[/cartilage injury], as above."
 - FAI PINCER: Overcoverage + labral tear → "Pincer-type femoroacetabular impingement with labral [degeneration/tear], as above."
 - MIXED FAI: Both → "Mixed-type FAI with labral pathology, as above."
 - AVN: Always own line with Ficat stage if determinable.
+
+HIP MRI — FINDINGS HEADING RULES:
+- TROCHANTERIC BURSA: own separate heading. Default when not dictated: "No trochanteric bursitis." Do NOT place peritrochanteric signal/edema findings under Regional Neurovascular Structures or Soft Tissues — they belong here.
+  - If dictation mentions fluid in the trochanteric bursa or trochanteric bursitis: report as "[Mild/moderate/severe, if graded] trochanteric bursitis."
+  - If dictation mentions peritrochanteric edema or edema-like signal WITHOUT mentioning fluid or bursitis specifically: report as "Nonspecific peritrochanteric edema, correlate for clinical evidence of trochanteric pain syndrome."
+- SUBGLUTEUS MEDIUS / SUBGLUTEUS MINIMUS BURSA: these are anatomically distinct from the trochanteric bursa and from each other. If dictation mentions fluid in the subgluteus medius bursa, report it under the Gluteus Medius Tendon heading (e.g. "Subgluteus medius bursitis." alongside any tendon findings) — NOT under Trochanteric Bursa. If dictation mentions fluid in the subgluteus minimus bursa, report it under the Gluteus Minimus Tendon heading in the same way — NOT under Trochanteric Bursa. Never merge findings from these three bursae (trochanteric, subgluteus medius, subgluteus minimus) into a single heading or sentence.
 
 
 NON-ARTHROGRAPHIC DISCLAIMER LOGIC (applies to wrist, shoulder, and hip):
@@ -239,6 +265,13 @@ PELVIS MRI — FINDINGS HEADING RULES:
 - SACROILIAC JOINTS heading: report ONLY findings directly related to the SI joints — trauma, OA, sacroiliitis, infection. Do NOT place lumbar spine, surgical hardware, or any non-SI-joint findings here.
 - PUBIC SYMPHYSIS heading: default when not dictated: "No acute abnormality." (NOT "intact")
 - HIP JOINTS heading: default when not dictated: "No acute abnormality." (NOT "intact")
+
+FEMUR/THIGH MRI — FINDINGS HEADING RULES:
+- LYMPH NODES: if dictation assesses lymph nodes (e.g. groin, inguinal), report under their own "Lymph Nodes:" heading — do NOT place under Soft Tissues. Default when not dictated: not applicable (omit heading if not assessed). When dictated as normal: "No enlarging lymph nodes identified[, with attention to the right/left groin if specified]."
+- INCIDENTAL SURGICAL/MEDICAL HISTORY (e.g. "status post hysterectomy"): report under its own brief heading, e.g. "Other:" or as its own incidental-finding sentence — do NOT fold into Soft Tissues alongside unrelated musculoskeletal findings.
+- GANGLION CYST: report under its own heading or alongside the most anatomically relevant structure if one is dictated (e.g. near a specific tendon) — do NOT default it into the general Soft Tissues sentence purely because no other heading exists; give it its own short "Ganglion Cyst:" line if no better anatomic home applies.
+- NON-NATIVE STRUCTURES CAUGHT ON LARGE FIELD-OF-VIEW (gluteus medius tendon, joint effusion, acetabular labrum, or other hip-region structures not native to the femur/thigh anatomy list): these are NOT part of the mandatory femur/thigh structure list, but if dictation describes findings in one of them, give that finding its own heading using the structure's proper name (e.g. "Gluteus Medius Tendon:", "Joint Effusion:", "Acetabular Labrum:") rather than placing it under Soft Tissues. Only generate these headings when the structure is actually dictated.
+- Subcutaneous edema and true non-specific soft tissue findings remain under Soft Tissues, but do NOT use Soft Tissues as a catch-all for findings that belong under one of the headings above (lymph nodes, incidental history, ganglion cyst, or a properly named non-native structure).
 
 FEMUR/THIGH — BAMIC GRADING (British Athletics Muscle Injury Classification):
 Apply BAMIC grading when a hamstring or thigh muscle injury is identified. BAMIC classifies injuries by anatomic location (muscle belly vs. myotendinous junction vs. central/intramuscular tendon) and cross-sectional area (CSA) involvement:
@@ -305,12 +338,16 @@ PARASPINAL SOFT TISSUES: default text is "No acute abnormality." — NOT "intact
 
 CANAL AND NEURAL FORAMINA: Do NOT generate this as a standalone FINDINGS heading. Canal and foraminal stenosis belongs exclusively under individual LEVELS entries.
 
-CORD / CONUS / CAUDA EQUINA heading — INCLUDE ONLY: conus medullaris tip level/termination, intrinsic cord signal abnormality (e.g. syrinx, myelomalacia, demyelination), and cauda equina nerve root crowding/clumping NOT attributable to a specific disc level.
+LISTHESIS DIRECTION — AMBIGUOUS DICTATION: This applies to the Vertebral Alignment FINDINGS heading and to the IMPRESSION alike. If dictation clearly states "antero-" or "retro-" (or an unambiguous garbled form of one of those specific prefixes), use "anterolisthesis" or "retrolisthesis" accordingly. If the dictation describes listhesis/slippage at a level but the antero/retro direction is garbled, unclear, or not stated, use the generic term "listhesis" (e.g. "Grade 1 listhesis of L4 over L5") rather than guessing a direction — do NOT default to anterolisthesis or retrolisthesis when the direction itself was not clearly dictated.
+
+CORD / CONUS / CAUDA EQUINA heading — REGION-SPECIFIC: ${spineRegion === 'cervical' || spineRegion === 'thoracic'
+  ? `For ${spineRegion} spine, the conus medullaris and cauda equina are NOT present at this level — do NOT use the "Cord / Conus / Cauda Equina" heading or any conus/cauda language. Instead generate a heading titled simply "Cord:" that addresses only the spinal cord itself — cord caliber/signal and any intrinsic cord signal abnormality (e.g. syrinx, myelomalacia, demyelination, cord compression/myelomalacia from canal stenosis if directly described as cord signal change rather than a level-specific stenosis). Default when nothing abnormal is dictated: "Normal cord caliber and signal. No intrinsic cord signal abnormality." Do NOT include disc herniation/protrusion/extrusion or nerve root compression/displacement caused by a disc under this heading — those belong exclusively under the corresponding LEVELS entry, exactly as in the lumbar rule below.`
+  : `CORD / CONUS / CAUDA EQUINA heading — INCLUDE ONLY: conus medullaris tip level/termination, intrinsic cord signal abnormality (e.g. syrinx, myelomalacia, demyelination), and cauda equina nerve root crowding/clumping NOT attributable to a specific disc level.
 CORD / CONUS / CAUDA EQUINA heading — DO NOT INCLUDE: disc herniation/protrusion/extrusion, or nerve root compression/displacement caused by a disc — even if the dictation mentions a nerve root by name (e.g. "compressing the left L5 nerve root"). ANY finding describing a disc compressing, displacing, or impinging a nerve root belongs exclusively under the corresponding LEVELS entry for that disc level (e.g. an L4-5 disc extrusion compressing the L5 nerve root → "L4-L5:" line under LEVELS), never under Cord/Conus/Cauda Equina.
-CORD / CONUS / CAUDA EQUINA default when conus level/termination is NOT dictated: "The conus medullaris terminates at a normal level. No intrinsic cord signal abnormality." Do NOT write "termination is not dictated" or any phrase implying missing information — always phrase the default as a normal finding.
+CORD / CONUS / CAUDA EQUINA default when conus level/termination is NOT dictated: "The conus medullaris terminates at a normal level. No intrinsic cord signal abnormality." Do NOT write "termination is not dictated" or any phrase implying missing information — always phrase the default as a normal finding.`}
 LEVEL INFERENCE: If a disc-level nerve root relationship is dictated but the disc level itself is ambiguous or not stated, use standard lumbar numbering to infer it — a paracentral/foraminal disc at level X-Y typically compresses the traversing nerve root numbered Y in the lateral recess/foramen (e.g. an L4-5 disc most commonly compresses the L5 nerve root; an L5-S1 disc most commonly compresses the S1 nerve root). Place the finding under the inferred LEVELS entry.
 
-FACET JOINTS heading — ALWAYS generate this heading in FINDINGS (it is a required structure for spine). Level-specific facet findings (edema, effusion, erosion, synovitis, arthrosis at a particular level) are ALSO reported under the corresponding LEVELS entry, not instead of this heading. Default text for the Facet Joints heading when nothing facet-specific is dictated: "No facet arthropathy or effusion." Never write "See LEVELS." as the Facet Joints heading text — always give the normal-default sentence above unless dictation describes a global/non-level-specific facet finding.
+FACET JOINTS heading — MRI ONLY, SILENT BY DEFAULT (this heading does not exist on CT spine at all — never generate it for CT spine under any circumstance). For MRI spine: do NOT generate a "Facet Joints:" heading by default — it is not a mandatory structure. Only generate this heading if dictation describes facet marrow edema or facet infection/septic arthritis at one or more levels; in that case the heading should state only that marrow edema/infection finding (with level if given), e.g. "Facet Joints: Marrow edema at the L4-L5 facet joints." Facet arthrosis, degeneration, hypertrophy, synovitis, or effusion (i.e. ordinary degenerative facet findings) belong EXCLUSIVELY under the corresponding LEVELS entry for that level — never under a Facet Joints heading, and these findings alone do NOT justify generating a Facet Joints heading. If there is no facet marrow edema or infection anywhere in the dictation, omit the Facet Joints heading entirely.
 
 BONES heading — include if dictated: pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas, fractures, marrow signal abnormality. Default marrow text when nothing abnormal: "No marrow infiltration or aggressive osseous lesion."
 
@@ -322,10 +359,11 @@ Search the dictation for additional signs: endplate erosion, paraspinal collecti
 REGIONAL NEUROVASCULAR STRUCTURES: Generate this heading for ALL non-spine MRI joints. Default text when not dictated: "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
 
 SPINE:
+- MILD MULTILEVEL SPONDYLOSIS — COLLAPSE RULE: If, across ALL levels of the spine, findings are limited to mild degenerative changes (disc desiccation, mild disc bulges/protrusions, Schmorl nodes, mild Modic changes, mild/grade 1 listhesis, mild facet changes) with NO significant/moderate-or-greater canal stenosis and NO moderate-or-greater foraminal stenosis at any level, do NOT itemize each mild finding as a separate impression line. Instead collapse the entire impression into 1-2 brief lines, e.g.: "1. No acute lumbar spine fracture. 2. Mild [lumbar/cervical/thoracic] spondylosis without high-grade canal or foraminal narrowing at any level." Reserve itemized, level-by-level impression lines (disc herniation with nerve involvement, significant stenosis, spondylolisthesis with neural compromise, etc.) for cases where at least one level has a clinically significant finding — moderate or greater canal/foraminal stenosis, nerve root compression, or a comparable actionable abnormality. The detailed level-by-level findings always remain in FINDINGS/LEVELS regardless of this collapse rule; this rule affects IMPRESSION construction only.
 - MULTILEVEL DISC DISEASE: → "Multilevel degenerative disc disease most significant at [worst level(s)] with [worst complication — e.g. moderate spinal stenosis, neural foraminal narrowing], as above."
 - SINGLE LEVEL: → "[Level] disc herniation/protrusion with [nerve involvement if present], as above."
 - COMPRESSION FRACTURE: → "[Acute/subacute/chronic] compression fracture [level], [height loss %], as above." If multiple: group as "multilevel compression fractures."
-- SPONDYLOLISTHESIS: → "Grade [I-IV] [antero/retro]listhesis at [level] with [associated stenosis if present], as above."
+- SPONDYLOLISTHESIS: → "Grade [I-IV] [antero/retro]listhesis at [level] with [associated stenosis if present], as above." Use plain "listhesis" instead of "anterolisthesis"/"retrolisthesis" per the LISTHESIS DIRECTION rule under SPINE-SPECIFIC FINDINGS RULES if direction was not clearly dictated. Use plain "listhesis" instead of "anterolisthesis"/"retrolisthesis" per the LISTHESIS DIRECTION rule above if direction was not clearly dictated.
 
 GENERAL NAMED SYNDROMES (any joint):
 - COMPLEX REGIONAL PAIN SYNDROME (CRPS): Periarticular osteopenia + soft tissue edema pattern → "Imaging findings consistent with complex regional pain syndrome, clinical correlation recommended."
@@ -350,11 +388,17 @@ WHAT ALWAYS GETS ITS OWN LINE (never grouped):
 
 SPINE INCIDENTAL CYST GARBLE — ADNEXAL vs RENAL: On lumbar/pelvic spine MRI, an incidentally noted cyst near the kidneys/pelvis is far more often an ADNEXAL cyst (ovarian/pelvic) than a renal cyst, and speech recognition frequently mangles "adnexal" into phonetically similar nonsense (e.g. "at nexle", "a nexel", "an exile", "and nexel"). If the dictation contains a garbled word resembling "adnexal" immediately before "cyst," transcribe it as "adnexal cyst," NOT "renal cyst" — do not substitute organ names based on a prompt example; use only what best phonetically matches the garbled dictation.
 
+SPINE DICTATION GARBLE CORRECTIONS — speech recognition frequently mangles these spine-specific terms. Silently correct to the proper term when the dictation phonetically resembles the garbled forms below; never comment on the correction.
+- SCHMORL NODE: garbled forms include "tomorrow's node," "schmoral node," "shmoral node," "small node" (in a vertebral body/endplate context). Correct to "Schmorl node."
+- MODIC CHANGE: garbled forms include "motor can play change," "motor can change," "motor can," "modic can change" (in an endplate/disc context). Correct to "Modic change" (with the dictated or inferable type number, e.g. "Type 1 Modic change").
+- THECAL SAC: garbled forms include "vehicle sack," "fecal sac," "thecal sack," "the cal sac" (in a spinal canal/disc contact context). Correct to "thecal sac."
+- DISC LEVEL NUMBERING: speech recognition frequently mangles vertebral level pairs (e.g. "L3 special for" for "L3-L4," "a4/05" for "L4-L5," "05 over S1" for "L5 over S1," "l5/s1" remains "L5-S1"). When dictation contains a garbled phrase in the pattern of a vertebral level followed by a number or another level-like fragment, infer the intended disc level pair using standard sequential lumbar/thoracic/cervical numbering (e.g. L3 is followed by L4, L4 by L5, L5 by S1) and write it in standard "L#-L#" or "L#-S1" format. Do not fabricate a level that doesn't fit the sequential anatomy.
+
 
 GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
 - Muscles: "No high-grade fatty infiltration or volume loss. No intramuscular edema to suggest denervation, myositis, or strain."
 - Articular Cartilage: "Preserved." (NOT "intact" — use "preserved" for all joints)
-- Soft Tissues: "No acute abnormality." (NOT "intact")
+- Soft Tissues: default when nothing else applies: "No acute abnormality." (NOT "intact"). This default is for the Soft Tissues heading ONLY and must NOT be used to contradict findings reported elsewhere. If the dictation describes an injury to a muscle, tendon, or ligament, a joint effusion, a fluid collection, or a mass — these are reported under their own appropriate headings (Muscles, the specific tendon/ligament heading, Joint Effusion, Soft Tissues mass/collection description, etc.). If, after placing all dictated findings under their proper headings, there is no separate soft-tissue finding left to report and no unrelated incidental finding — OMIT THE SOFT TISSUES HEADING ENTIRELY. Do NOT generate a Soft Tissues heading just to write a qualified/hedged statement like "No acute abnormality beyond the above" or "No additional acute abnormality" — go silent instead. Only generate the Soft Tissues heading when either (a) there is a genuine, distinct soft tissue finding not captured by another heading, or (b) the EXCEPTION below applies. EXCEPTION — incidental findings unrelated to the joint being imaged (e.g. an incidentally noted renal or adnexal cyst on a spine MRI) ARE appropriately described under Soft Tissues (or Paraspinal Soft Tissues for spine) even when other acute findings exist elsewhere in the exam, since they are a separate, unrelated structure.
 - Bones (MRI): always include "No marrow infiltration or aggressive osseous lesion." as part of the Bones subheading unless a specific lesion is dictated.
 - Regional Neurovascular Structures (all non-spine, non-wrist MRI joints): default "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
 - POSTSURGICAL CHANGE (ALL MRI joints): If the dictation describes any surgical changes, postoperative findings, or hardware at any location, generate a separate "Postsurgical Change:" heading in the FINDINGS section and place ALL such findings there. Do NOT scatter postsurgical findings under other headings (e.g. Soft Tissues, Bones, joint-specific headings). If no surgical changes are dictated, do NOT generate this heading.
@@ -362,7 +406,7 @@ GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
 STYLE RULES:
 - Number each item. Most important/urgent first.
 - Use named syndromes and clinical mechanisms — not signal descriptions or grade numbers
-- "as above" replaces repeating measurements, grades, signal characteristics — but use it SPARINGLY: maximum one "as above" per impression line, and only when the finding has genuine complexity worth referencing. DO NOT use "as above" for simple, self-evident findings.
+- "as above" usage is governed by the single global limit stated in IMPRESSION RULES above (max once or twice for the entire impression) — do not exceed that limit here.
 - Do NOT write "modified Outerbridge grade X", "T2 hyperintensity", "low signal on T1" in the impression
 - ${normalImpressionText}
 - CARTILAGE / OA RULE (knee): If Modified Outerbridge grading in 2+ compartments → single DEGENERATIVE line, not per-compartment.
@@ -383,10 +427,11 @@ Speech recognition frequently garbles anatomic cartilage surface names. When car
     - "medial tibial plateau"
     - "lateral tibial plateau"
 When speech recognition produces garbled text that phonetically resembles one of these surfaces, silently correct to the proper anatomic term and include it in the report. Never ignore a cartilage grade because the surface name was garbled — always attempt to match to the nearest anatomic surface above.
-- SIMPLIFIED IMPRESSION PRINCIPLE: Synthesize findings into a single clinical diagnosis where possible. DO NOT list every individual finding component — name the pattern, then add only the most clinically critical features.
+- SIMPLIFIED IMPRESSION PRINCIPLE: Synthesize findings into a single clinical diagnosis where possible. DO NOT list every individual finding component — name the pattern only.
   WRONG: "Advanced glenohumeral osteoarthrosis with modified Outerbridge grade 3 to 4 cartilage loss involving both articular surfaces, marginal osteophytes, multifocal subchondral marrow edema preferentially at the glenoid, circumferential labral tearing, osteochondral debris and/or synovitis within a small joint effusion."
-  RIGHT: "Severe glenohumeral joint osteoarthrosis with circumferential labral tearing and small debris-containing joint effusion."
-  The rule: name the overarching diagnosis + at most 2 clinically actionable features. Everything else is implicit in the diagnosis or detailed in FINDINGS.${gradingBlock}
+  ALSO WRONG (still too detailed): "Severe glenohumeral joint osteoarthrosis with subchondral cystic change and sclerosis, marginal inferior osteophyte, and a 14 mm intraarticular osteochondral body within the subscapularis recess, as above."
+  RIGHT: "Severe glenohumeral joint osteoarthrosis, as above."
+  OSTEOARTHROSIS RULE: When the impression item is degenerative joint disease/osteoarthrosis, name the diagnosis with its severity grade and stop there — "[Mild/moderate/advanced/severe] [joint] osteoarthrosis, as above." Cartilage grading, osteophytes, subchondral cysts/sclerosis, loose bodies, and similar findings that are routine accompaniments of that severity of osteoarthrosis should NOT be listed individually in the impression — they are implicit in the diagnosis and already detailed in FINDINGS. Only add an extra feature beyond the diagnosis name if it is clinically actionable and NOT a typical/expected feature of that severity of osteoarthrosis (e.g. a large loose body causing mechanical symptoms, or a feature changing management).${gradingBlock}
 MASS / TUMOR / CANCER RULES — apply whenever dictation mentions a mass, tumor, cancer, malignancy, neoplasm, carcinoma, sarcoma, lymphoma, metastasis, lesion with oncologic context, or recurrence:
 
 BNCT PATTERN RECOGNITION — REPORT GENERATOR:
@@ -436,6 +481,7 @@ Lead the impression with exactly one of the following phrases based on what the 
   - "Complete response to therapy." — if mass has resolved or shows no residual viable tumor
 State size and key change (or stability) in the same sentence after the lead phrase.
 Example: "Tumor progression. The [location] mass has increased in size from X cm to Y cm compared to [date]."
+This treatment-response/recurrence-status line MUST be impression item #1 — it is the reason for the exam and always takes priority over chronic, degenerative, or incidental findings, regardless of how many other findings are dictated. Never let chronic/degenerative impression items precede it.
 
 IMPRESSION — POST-RESECTION:
 The primary impression point must address tumor recurrence status. Use exactly one of:
@@ -444,6 +490,8 @@ The primary impression point must address tumor recurrence status. Use exactly o
   - "Findings consistent with local tumor recurrence." — if definitive
 This must be the FIRST or SECOND line of the impression.
 Do NOT lead with soft tissue edema, fluid, or secondary findings when recurrence status is the clinical question.
+
+IMPRESSION — MASS/TUMOR FOLLOW-UP CASES, CHRONIC/INCIDENTAL FINDINGS COLLAPSE: In any mass/tumor follow-up or post-resection case, after the primary treatment-response/recurrence-status item, do NOT itemize each individual chronic, degenerative, or incidental finding as its own impression line (e.g. do not give separate lines for each tendon tear, heterotopic ossification, muscle strain, tendinosis, joint effusion, labral degeneration, or ganglion cyst). Collapse ALL such secondary findings into a single brief impression line, e.g. "Additional chronic/degenerative changes as described above in detail." or "Additional incidental findings as above." The detailed individual descriptions remain in FINDINGS — this rule only affects how they're summarized in the IMPRESSION.
 
 
 FORMAT — one blank line between each section:
@@ -462,7 +510,10 @@ ${part === 'spine' ? `
 LEVELS:
 List each intervertebral level as: "L1-L2: finding" — one per line.
 If not mentioned write: "No significant canal or foraminal narrowing."
-Cover all levels for the ${spineRegion} spine.
+Cover all levels for the ${spineRegion} spine.${spineRegion === 'cervical' ? `
+CERVICAL LEVELS — COVERAGE AND FORMAT: Cover C1-C2, C2-C3, C3-C4, C4-C5, C5-C6, C6-C7, C7-T1, and T1-T2 — do NOT stop level coverage at C6-C7 or C7-T1; coverage must extend through T1-T2, since foraminal narrowing at the cervicothoracic junction can cause hand symptoms.
+C1-C2 — CANAL ONLY: The C1-C2 level has no intervertebral disc or true neural foramen in the standard sense. For the C1-C2 line, assess canal stenosis ONLY — do NOT include a foraminal narrowing assessment for this level. Default when not dictated: "No significant canal narrowing." (omit any mention of foraminal narrowing for C1-C2 specifically).
+All other cervical levels (C2-C3 through T1-T2) use the standard format and default: "No significant canal or foraminal narrowing."` : ''}
 ` : ''}
 IMPRESSION:
 1. Finding one
@@ -572,7 +623,7 @@ function formatReport(txt, colors = {}) {
         /^intact\.?$/i.test(value) ||
         /^no significant canal or foraminal narrowing\.?$/i.test(value) ||
         /^no fracture or contusion\. no osteonecrosis\. no marrow infiltration or bone lesion\.?$/i.test(value) ||
-        /^no fracture or cortical disruption\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value);
+        /^no fracture\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value);
       const isBones = /^bones/i.test(label);
       if (isBones && !isAllNeg) {
         const sentences = value.match(/[^.!?]+[.!?]*/g) || [value];
