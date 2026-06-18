@@ -7276,6 +7276,17 @@ export default function DashboardPage() {
     setArthroplastyGrading('');
     setArthroplastyImageTab(0);
   };
+  // Full reset when switching MRI/CT/Rheum modality — clears Col 1 module state,
+  // Col 2 report, and (via clearing generatedReport) the Col 3 CME match banner.
+  const resetForModalitySwitch = () => {
+    resetArthroplasty();
+    resetIncidentals();
+    setRheumJoint('knee'); setRheumLaterality('left'); setRheumViews('2');
+    setRheumChecks({}); setRheumFreeText('');
+    setGeneratedReport('');
+    setDictationText('');
+    setIsEditingReport(false);
+  };
 
   const generateReport = async () => {
     const textToUse = isRheum ? rheumFreeText : dictationText;
@@ -7628,7 +7639,7 @@ export default function DashboardPage() {
               {id:'CT',  label:'CT',  active:'linear-gradient(135deg,#0e7490,#0891b2)'},
               {id:'Rheum',label:'Rheum', active:'linear-gradient(135deg,#7c2d92,#a855f7)'},
             ].map(({id,label,active}) => (
-              <button key={id} onClick={() => setModality(id)}
+              <button key={id} onClick={() => { setModality(id); resetForModalitySwitch(); }}
                 style={{ padding:'6px 18px',borderRadius:8,border:'none',cursor:'pointer',fontSize:13,fontWeight:700,letterSpacing:'0.06em',transition:'all 0.2s',
                   background:modality===id?active:'transparent',
                   color:modality===id?'white':'rgba(255,255,255,0.45)',
@@ -7789,7 +7800,7 @@ export default function DashboardPage() {
               {id:'CT',  label:'CT',  active:'linear-gradient(135deg,#0e7490,#0891b2)'},
               {id:'Rheum',label:'Rheum', active:'linear-gradient(135deg,#7c2d92,#a855f7)'},
             ].map(({id,label,active}) => (
-              <button key={id} onClick={() => { setModality(id); setMobileDrawer(false); }}
+              <button key={id} onClick={() => { setModality(id); resetForModalitySwitch(); setMobileDrawer(false); }}
                 style={{ flex:1,padding:'10px 8px',borderRadius:8,border:'none',cursor:'pointer',fontSize:14,fontWeight:700,letterSpacing:'0.06em',transition:'all 0.2s',
                   background:modality===id?active:'transparent',
                   color:modality===id?'white':'rgba(255,255,255,0.45)',
@@ -7847,7 +7858,7 @@ export default function DashboardPage() {
             <div style={{ display:'flex',gap:8 }}>
               {isRheum ? (<>
                 <div style={{ flex:2 }}><label style={lbl}>Joint / Region</label>
-                  <select style={inp} value={rheumJoint} onChange={e => { setRheumJoint(e.target.value); setRheumChecks({}); }}>
+                  <select style={inp} value={rheumJoint} onChange={e => { setRheumJoint(e.target.value); setRheumChecks({}); setGeneratedReport(''); setIsEditingReport(false); }}>
                     {[['hand','Hand'],['wrist','Wrist'],['elbow','Elbow'],['shoulder','Shoulder'],['hip','Hip'],['knee','Knee'],['foot','Foot'],['si','SI Joints'],['c-spine','Cervical Spine'],['t-spine','Thoracic Spine'],['l-spine','Lumbar Spine']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                 </div>
@@ -7869,7 +7880,7 @@ export default function DashboardPage() {
                 </div>
               </>) : (<>
                 <div style={{ flex:2 }}><label style={lbl}>Body Part</label>
-                  <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetIncidentals(); resetArthroplasty(); }}>
+                  <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetIncidentals(); resetArthroplasty(); setGeneratedReport(''); setIsEditingReport(false); }}>
                     {(isCT ? BODY_PARTS_CT : BODY_PARTS).map(b => {
                       const LABELS = {'femur/thigh':'Femur / Thigh','tibia/fibula':'Tibia / Fibula','humerus':'Humerus','forearm':'Forearm','fingers':'Fingers'};
                       const label = LABELS[b] || (b.charAt(0).toUpperCase()+b.slice(1));
