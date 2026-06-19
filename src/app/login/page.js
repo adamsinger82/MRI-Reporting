@@ -43,21 +43,21 @@ const ABSENT_STRUCTURES = [
 // MRI anatomy — full soft tissue detail
 const ANATOMY_MRI = {
   knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Muscles, Regional Neurovascular Structures, Soft Tissues',
-  shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenoid Labrum, Acromial Undersurface, Subacromial and Subdeltoid Bursa, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  shoulder:'Supraspinatus Tendon, Infraspinatus Tendon, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenoid Labrum, Acromial Undersurface, Subacromial and Subdeltoid Bursa, Articular Cartilage, Bones, Joint Effusion, Capsulitis, Muscles, Regional Neurovascular Structures, Soft Tissues',
   hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Trochanteric Bursa, Proximal Hamstring Tendons, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
   wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Articular Cartilage, Bones, Muscles, Soft Tissues',
   elbow:'UCL (Ulnar Collateral Ligament — medial), LUCL (Lateral Ulnar Collateral Ligament — lateral), RCL (Radial Collateral Ligament — lateral), Annular Ligament, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Brachialis Tendon, Triceps Tendon, Ulnar Nerve, Median Nerve, Radial Nerve / Posterior Interosseous Nerve, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
-  ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Achilles Tendon, Posterior Tibial Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
-  spine:'Vertebral Alignment, Vertebral Bodies, Intervertebral Discs, Paraspinal Soft Tissues, Bones, Cord / Conus / Cauda Equina',
+  ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Tibialis Anterior Tendon, Extensor Hallucis Longus Tendon, Extensor Digitorum Longus Tendon, Achilles Tendon, Posterior Tibial Tendon, Flexor Digitorum Longus Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Tarsal Tunnel, Sinus Tarsi, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  spine:'Vertebral Alignment, Intervertebral Discs, Paraspinal Soft Tissues, Bones, Cord / Conus / Cauda Equina',
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Regional Neurovascular Structures, Soft Tissues',
-  foot:'Plantar Fascia, Lisfranc Ligament Complex, Plantar Plate, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  foot:'Plantar Fascia, Lisfranc Ligament Complex, MTP Joint Plantar Plate Complexes, Interdigital/Morton\'s Neuroma, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
   'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
   'tibia/fibula':'Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, Posterior Tibial Tendon, Flexor Digitorum Longus, Flexor Hallucis Longus, Peroneus Longus, Peroneus Brevis, Anterior Compartment Musculature, Posterior Compartment Musculature, Lateral Compartment Musculature, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Regional Neurovascular Structures, Soft Tissues',
   humerus:'Deltoid Muscle, Biceps Brachii, Brachialis, Triceps Brachii, Coracobrachialis, Radial Nerve, Axillary Nerve, Ulnar Nerve, Humerus (cortex / medullary canal / periosteum), Bone Marrow Signal, Soft Tissues',
   forearm:'Flexor Carpi Radialis, Flexor Carpi Ulnaris, Flexor Digitorum Superficialis, Flexor Digitorum Profundus, Flexor Pollicis Longus, Pronator Teres, Pronator Quadratus, Extensor Carpi Radialis Longus and Brevis, Extensor Carpi Ulnaris, Extensor Digitorum, Extensor Pollicis Longus and Brevis, Abductor Pollicis Longus, Brachioradialis, Supinator, Radius, Ulna, Interosseous Membrane, Radial Nerve, Median Nerve, Ulnar Nerve, Bone Marrow Signal, Soft Tissues',
-  hand:'Flexor Tendons (FDS and FDP per ray), Extensor Tendons (per ray), Intrinsic Muscles (interossei and lumbricals), Thenar Muscles, Hypothenar Muscles, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Metacarpals, Metacarpophalangeal Joints, Articular Cartilage, Bones, Muscles, Soft Tissues',
-  thumb:'Flexor Pollicis Longus Tendon, Extensor Pollicis Longus Tendon, Extensor Pollicis Brevis Tendon, Abductor Pollicis Longus Tendon, Ulnar Collateral Ligament (UCL — gamekeeper / skier thumb), Radial Collateral Ligament, Volar Plate, Adductor Pollicis Aponeurosis, Thenar Muscles, Sesamoids, First CMC Joint (trapeziometacarpal), MCP Joint, IP Joint, Articular Cartilage, Bones, Soft Tissues',
-  fingers:'Flexor Digitorum Superficialis Tendon, Flexor Digitorum Profundus Tendon, Central Slip and Extensor Hood, Lateral Bands, Annular Pulleys (A1 through A5 per finger), Collateral Ligaments (radial and ulnar per joint), Volar Plate, PIP Joint, DIP Joint, MCP Joint, Articular Cartilage, Bones, Soft Tissues',
+  hand:'Flexor Tendons, Extensor Tendons, Muscles, Joint Spaces, Joint Capsule, Metacarpophalangeal Joints, Articular Cartilage, Bones, Soft Tissues',
+  thumb:'Flexor Pollicis Longus Tendon, 1st MCP Joint Space, 1st MCP Capsule, First CMC Joint (trapeziometacarpal), Visualized CMC Joints, Articular Cartilage, Bones, Soft Tissues',
+  fingers:'Flexor Tendon, Extensor Tendon Apparatus, Joints, Joint Capsule, Articular Cartilage, Bones, Soft Tissues',
 };
 
 // CT anatomy — bone/joint/soft tissue only, no tendons/ligaments/labrum
@@ -103,6 +103,20 @@ function buildGradingContext(part, modality) {
 }
 
 
+// ─── BILATERAL BODY PART PLURALIZATION ──────────────────────────────────────
+// Used in TECHNIQUE text when laterality is bilateral, e.g. "bilateral hands"
+// not "bilateral hand". Handles irregular plurals explicitly.
+const BODY_PART_PLURALS = {
+  'foot': 'feet',
+  'femur/thigh': 'femurs/thighs',
+  'tibia/fibula': 'tibias/fibulas',
+};
+function pluralizeBodyPart(part) {
+  if (BODY_PART_PLURALS[part]) return BODY_PART_PLURALS[part];
+  if (/[sxz]$|[cs]h$/.test(part)) return part + 'es';
+  return part + 's';
+}
+
 // REPORT HEADING BUILDER
 function buildReportHeading(modality, part, lat, con, spineRegion) {
   const isCT = modality === 'CT';
@@ -123,13 +137,17 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
   const isCT = modality === 'CT';
   const modalityName = isCT ? 'CT' : 'MRI';
   const doseOptSentence = doseOpt ? ' One or more of the following dose optimizing techniques were utilized for this exam: automated exposure control, adjustment of the mA and/or kV according to patient size, and/or use of iterative reconstruction technique.' : '';
+  const isBilateral = (lat || '').toLowerCase() === 'bilateral';
+  const techniquePartLabel = part === 'spine'
+    ? spineRegion + ' spine'
+    : (isBilateral ? pluralizeBodyPart(part) : part);
   const techniqueText = isCT
-    ? `CT scan of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast. Multiplanar reformats were created.${doseOptSentence}`
-    : `Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part} ${con} IV contrast.`;
+    ? `CT scan of the ${lat ? lat + ' ' : ''}${techniquePartLabel} ${con} IV contrast. Multiplanar reformats were created.${doseOptSentence}`
+    : `Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${techniquePartLabel} ${con} IV contrast.`;
 
   const findingsRules = isCT
-    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent." Soft Tissues — write "No acute soft tissue abnormality." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR language. 4. BONES RULE — all three on same line: Fracture (or "No fracture."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). 5. JOINT SPACE RULE — for each joint space: address narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis."`
-    : `FINDINGS RULES: 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses — write "absent" not "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — use a SINGLE heading "Bones:" for ALL bone findings. Address all three on the same line: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion." BONES SCOPE: include acute fractures, bone contusions, stress reactions/stress fractures, AVN, bone lesions (benign or malignant), marrow infiltration. Do NOT include chronic degenerative changes (osteophytes, subchondral sclerosis/cysts from OA) — those belong under Articular Cartilage or joint headings. CRITICAL: Do NOT create any subheading named after an individual bone (e.g. do NOT write "Femur:", "Tibia:", "Patella:", "Fibula:", "Calcaneus:", "Talus:" etc. as standalone findings headings). All bone findings consolidate under the single "Bones:" heading.`;
+    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent." Soft Tissues — write "No acute soft tissue abnormality." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR language. 4. BONES RULE — all three on same line: Fracture (or "No fracture."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). Do NOT restate osteoarthrosis/joint space narrowing severity under Bones — see JOINT SPACE RULE below; OA-related findings are reported ONCE, under Joint Space only, never duplicated under Bones. 5. JOINT SPACE RULE — for each joint space: address narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis." This is the SOLE location for osteoarthrosis/degenerative joint space findings — never also summarize OA severity under Bones. 6. ATHEROSCLEROSIS: report under Soft Tissues, never under Bones.`
+    : `FINDINGS RULES: 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses — write "absent" not "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — use a SINGLE heading "Bones:" for ALL bone findings. Address all three on the same line: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion." BONES SCOPE: include acute fractures, bone contusions, stress reactions/stress fractures, AVN, bone lesions (benign or malignant), marrow infiltration. Do NOT include chronic degenerative changes (osteophytes, subchondral sclerosis/cysts from OA) — those belong under Articular Cartilage or joint headings. Atherosclerosis belongs under Soft Tissues, never under Bones. CRITICAL: Do NOT create any subheading named after an individual bone (e.g. do NOT write "Femur:", "Tibia:", "Patella:", "Fibula:", "Calcaneus:", "Talus:" etc. as standalone findings headings). All bone findings consolidate under the single "Bones:" heading.`;
   const normalImpressionText = isCT
     ? `If entirely normal: "No significant CT findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`
     : `If entirely normal: "No significant MRI findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`;
@@ -146,6 +164,8 @@ CRITICAL FORMATTING RULES:
 - ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes — but is not limited to — phrases like "I interpreted X as Y", "I assumed you meant Z", "Note: I understood [term] to mean [term]", "I corrected [word] to [word]", "[term] interpreted as [term]", or any similar phrasing. If speech recognition produced garbled text, silently use your best clinical interpretation without any comment. The output must contain ONLY the formal radiology report sections: the exam heading, HISTORY, COMPARISON, TECHNIQUE, FINDINGS, IMPRESSION, and optionally FOOTNOTE/REFERENCES. Any sentence that is not part of the formal report is strictly forbidden.
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
+- TECHNIQUE FORMATTING — STRICT: The technique text must immediately follow "TECHNIQUE:" on the SAME line, separated only by a single space. NEVER put a line break between "TECHNIQUE:" and the technique sentence. Example: "TECHNIQUE: Multiplanar multisequence MRI of the right knee without IV contrast." — never "TECHNIQUE:\nMultiplanar multisequence MRI..."
+- TITLE/TECHNIQUE CONTRAST CONSISTENCY — CRITICAL: The contrast wording in the exam title heading (e.g. "WITH CONTRAST", "WITHOUT CONTRAST", "WITH AND WITHOUT CONTRAST") MUST exactly match the contrast wording used in the TECHNIQUE line below it. Do NOT independently re-derive or rephrase the contrast status for the title — copy it verbatim/consistently from the technique sentence's contrast phrase. A title reading "WITHOUT AND WITHOUT CONTRAST" or any wording that does not exactly correspond to the technique's contrast statement is a critical error and must never occur.
 
 ANATOMY TO COVER for ${part}: ${getAnatomy(part, isCT, spineRegion)}
 Generate a subheading for EVERY structure listed above, EXCEPT Soft Tissues — see the Soft Tissues rule under GLOBAL DEFAULTS below, which can require omitting that heading entirely.
@@ -154,6 +174,19 @@ IMPRESSION RULES:
 CORE PRINCIPLE: The impression must read like a subspecialty MSK radiologist's synthesis — not a transcription of the findings list. Group related findings under a single unifying clinical diagnosis whenever possible. Aim for 1-4 impression items. A laundry list is always wrong.
 PERTINENT NEGATIVES — DO NOT PROMOTE TO IMPRESSION: A dictated negative finding (e.g. "no significant posterior centering of the humeral head," "no narrowing of the acromioclavicular humeral interval," or similar normal/negative observations made to rule out a specific diagnosis) belongs ONLY in the FINDINGS section. Never generate a standalone impression line/item consisting of a negative finding — a pertinent negative carries no actionable diagnosis on its own and adds no value in the impression. The only exception is when a normal/negative finding is the central point of the entire exam (e.g. the overall normal-exam line, ${normalImpressionText}) — routine negative findings within an otherwise abnormal exam should never appear as their own impression item.
 "AS ABOVE" USAGE — STRICT LIMIT: Use the phrase "as above" no more than once or twice in the entire impression, reserved only for the most clinically significant point(s) being summarized. Only use "as above" to reference a finding that was described in at least 2-3 sentences of detail in the FINDINGS section — never use it to reference a single short phrase or one-line finding. Do not default to "as above" as a general-purpose reference; most impression items should restate the key clinical conclusion concisely in their own words instead.
+
+IMPRESSION ORDERING — ACUITY FIRST, THEN SEVERITY (applies to ALL body parts/joints): The "reason for the exam" is NOT a valid criterion for impression ordering — it is usually too non-specific to drive ordering. Instead, order impression items as follows:
+1. ACUTE FINDINGS FIRST: if any acute process is present (e.g. hardware/instrumentation complication, fracture, infection, acute tendon/ligament tear), it must be impression item #1, regardless of body part or how many chronic/degenerative findings are also present.
+2. IF NOTHING ACUTE: order by severity/clinical significance — the most severe or most likely-to-be-symptomatic finding leads, followed by lesser findings.
+Postsurgical/hardware findings are NOT automatically impression item #1 — only promote them to #1 if there is an actual hardware complication (e.g. loosening, fracture, malposition, infection). Stable/expected postsurgical changes with no complication are ordered by severity like any other chronic finding, not automatically first.
+
+IMPRESSION INCLUSION FILTER — ACTIONABLE/INCIDENTAL ONLY: A finding belongs in the IMPRESSION only if it is actionable or clinically relevant — i.e., either (a) an acute process, or (b) something that requires imaging follow-up or clinical correlation. Incidental, benign, non-actionable findings (e.g. a simple renal cyst, diverticulosis without diverticulitis, a benign-appearing hemangioma) stay in FINDINGS only and are never promoted to the IMPRESSION.
+
+DEBRIS / SYNOVITIS — JOINT EFFUSION HEADING (applies to ALL joints): Intra-articular bodies, loose bodies, nodular synovitis, chondral debris, osteochondral debris, and synovitis are documented under the JOINT EFFUSION heading — they do not get their own separate heading. IMPRESSION: if bodies/debris are specifically called (intra-articular bodies, loose bodies, chondral debris, or osteochondral debris), state "debris-containing effusion" in the impression. If only synovitis/nodular synovitis is called with no bodies/debris dictated, do NOT add "debris-containing effusion" to the impression.
+
+GLOBAL TERMINOLOGY CORRECTIONS:
+- "enthesophytic" is never correct — always use "enthesopathic" instead, anywhere this term would be generated. "Enthesopathic" should typically be followed by "change(s)" or "spur" (e.g. "enthesopathic changes," "enthesopathic spur") rather than left as a bare adjective.
+- TENDON TEAR INFERENCE: if dictation contains "full thickness" followed by "partial...tearing" (with the word "width" seemingly dropped from transcription), infer and insert "width" so the finding reads "full thickness, partial width tearing" rather than the garbled "full thickness partial tearing."
 
 NAMED SYNDROME PATTERNS — recognize and use these by name when the findings fit:
 
@@ -178,6 +211,8 @@ SHOULDER-SPECIFIC FINDINGS DEFAULTS AND RULES:
   LEAN ARTHRITIS/DEGENERATIVE if dictation specifically states the signal is subchondral marrow edema, mentions cartilage loss at that location, or mentions subchondral cysts.
   LEAN TRAUMA/CONTUSION (Hill-Sachs) if dictation mentions other signs of dislocation, such as an anteroinferior (or posteroinferior) labral tear, OR if none of the arthritis cues above are present.
   If genuinely ambiguous (cues for both, or truly nothing to disambiguate), phrase the Bones finding as ambiguous: "Focal area of increased T2 signal involving the posterolateral humeral head, which could reflect a Hill-Sachs impaction injury versus a degenerative etiology; clinical correlation recommended." Do NOT silently default this finding into an osteoarthrosis/cartilage-loss impression line unless an arthritis cue above is actually dictated — doing so changes the clinical meaning of the finding (it may instead represent a contusion from a dislocation event).
+- CAPSULITIS — SEPARATE HEADING (NOT part of Joint Effusion): Generate a dedicated "Capsulitis:" heading, distinct from Joint Effusion. Route the following findings here when dictated: thickening or edema of the axillary pouch, thickening or edema of the joint capsule, rotator interval effacement, edema/inflammation of the capsule or rotator interval, subcoracoid fat effacement. Default when none of these are dictated: "No findings of capsulitis are currently present."
+- TRACE BURSITIS: when "trace" subacromial/subdeltoid bursitis is dictated, it does NOT need to be included in the IMPRESSION, and does NOT need a "non-specific" qualifier added to it.
 
 SHOULDER:
 - MASSIVE ROTATOR CUFF TEAR: Tears of 2+ tendons with muscle atrophy/fatty infiltration → "Massive rotator cuff tear involving the [tendons] with [Goutallier grade] fatty infiltration and [Patte stage] muscle retraction, as above." If superior humeral head migration or glenohumeral arthritis present add: "findings consistent with rotator cuff arthropathy."
@@ -201,8 +236,16 @@ ANKLE:
 - HAGLUND SYNDROME: Insertional Achilles tendinopathy + Haglund deformity + retrocalcaneal bursitis → "Haglund syndrome with insertional Achilles tendinopathy, Haglund deformity, and retrocalcaneal bursitis, as above."
 - OSTEOCHONDRAL LESION TALUS: OLT → always own line: "Osteochondral lesion of the talar [medial/lateral] dome, as above."
 
+ANKLE MRI — FINDINGS HEADING RULES:
+- ALWAYS-LISTED TENDONS: Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, and Flexor Digitorum Longus are ALWAYS listed/generated as their own tendon subheadings on every ankle MRI, with default "intact" language, even when not specifically called out in dictation — this is in addition to the previously always-reported tendons (Tibialis Posterior, Peroneus Longus, Peroneus Brevis, Flexor Hallucis Longus, Achilles).
+- RETROCALCANEAL BURSA: report under/alongside the ACHILLES TENDON heading — do NOT generate retrocalcaneal bursa as its own standalone heading.
+- TARSAL TUNNEL: own separate heading. Default when not dictated: "No mass in the tarsal tunnel."
+- SINUS TARSI: own separate heading. Default when not dictated: "Normal."
+
 FOOT MRI — FINDINGS HEADING RULES:
 - PLANTAR FASCIA: default when not dictated: "No fibroma or acute injury." Do NOT default to "intact."
+- MTP JOINT PLANTAR PLATE COMPLEXES (FOOT MRI ONLY): use the heading "MTP Joint Plantar Plate Complexes:" (not "Plantar Plate:") — this rename applies to Foot MRI only, not to other body parts. Default when not dictated: "No acute injury."
+- INTERDIGITAL/MORTON'S NEUROMA (FOOT MRI ONLY): generate a heading "Interdigital/Morton's Neuroma:". Default when not dictated: "None."
 - DO NOT include Achilles tendon, peroneal tendons, or posterior tibial tendon headings in a foot MRI UNLESS they are specifically dictated. These are ankle structures.
 - BONES — REACTIVE OSTEITIS RULE: When dictation describes high T2/STIR signal in bone WITHOUT corresponding low T1 signal change, report as: "Reactive osteitis versus early osteomyelitis cannot be excluded. Clinical and laboratory correlation recommended." when infection is a clinical concern. If clearly post-traumatic or mechanical context, use "reactive marrow edema."
 
@@ -220,6 +263,7 @@ HIP MRI — FINDINGS HEADING RULES:
   - If dictation mentions fluid in the trochanteric bursa or trochanteric bursitis: report as "[Mild/moderate/severe, if graded] trochanteric bursitis."
   - If dictation mentions peritrochanteric edema or edema-like signal WITHOUT mentioning fluid or bursitis specifically: report as "Nonspecific peritrochanteric edema, correlate for clinical evidence of trochanteric pain syndrome."
 - SUBGLUTEUS MEDIUS / SUBGLUTEUS MINIMUS BURSA: these are anatomically distinct from the trochanteric bursa and from each other. If dictation mentions fluid in the subgluteus medius bursa, report it under the Gluteus Medius Tendon heading (e.g. "Subgluteus medius bursitis." alongside any tendon findings) — NOT under Trochanteric Bursa. If dictation mentions fluid in the subgluteus minimus bursa, report it under the Gluteus Minimus Tendon heading in the same way — NOT under Trochanteric Bursa. Never merge findings from these three bursae (trochanteric, subgluteus medius, subgluteus minimus) into a single heading or sentence.
+- ILIOPSOAS BURSA/TENDON SHEATH FLUID (hip and pelvis): if dictation describes fluid in the iliopsoas bursa or iliopsoas tendon sheath, report this finding under the ILIOPSOAS heading (not a separate bursa heading). Default behavior when tendinosis or tear is NOT specifically dictated: describe the fluid finding, then state "No tendon tear." Do not assume or add tendinosis language unless specifically dictated — only the no-tear status gets a default statement.
 
 
 NON-ARTHROGRAPHIC DISCLAIMER LOGIC (applies to wrist, shoulder, and hip):
@@ -243,6 +287,30 @@ WRIST:
 - SCAPHOLUNATE DISSOCIATION: SL ligament tear + widening → "Scapholunate ligament tear with [static/dynamic] instability pattern, as above."
 - KIENBOCK: Lunate AVN → "Kienbock disease [Lichtman stage if determinable], as above."
 
+HAND MRI — FINDINGS HEADING RULES:
+- FLEXOR / EXTENSOR TENDONS: report as "Flexor Tendons:" and "Extensor Tendons:" — do NOT add parenthetical qualifiers like "(per ray)" or "(FDS/FDP)" to these headings or their default text.
+- MUSCLES: lump Thenar, Hypothenar, and Lumbricales into a SINGLE "Muscles:" heading/line — do not separate into three headings.
+- MEDIAN / ULNAR NERVE: do NOT report median or ulnar nerve on Hand MRI — these are Wrist structures only and do not belong on a Hand MRI report.
+- JOINT SPACES heading (renamed from "Joints"): cartilage loss, subchondral cyst/edema, osteophytes, erosions, and synovitis are lumped together by default under "Joint Spaces:". If specific joints are called out by name in dictation (e.g. "2nd MCP," "1st CMC"), describe each named joint individually within the Joint Spaces section rather than using one blanket statement.
+- JOINT CAPSULE heading: covers Ulnar Collateral Ligament (UCL), Radial Collateral Ligament (RCL), and Volar Plate. SILENT BY DEFAULT — do not generate this heading or mention these structures unless specifically called out in dictation. If called out, report the dictated finding(s) under "Joint Capsule:".
+- METACARPALS: report under BONES, not as part of Joint Spaces or as a separate heading.
+
+THUMB MRI — FINDINGS HEADING RULES (Thumb is the exception to the Hand "Joint Capsule silent by default" rule):
+- REMOVED STRUCTURES — do NOT generate these headings at all, even with default/intact language: Extensor Pollicis Brevis Tendon, Abductor Pollicis Longus Tendon, Adductor Pollicis Aponeurosis, Sesamoids.
+- 1ST MCP JOINT SPACE: own heading for cartilage/joint findings at the 1st MCP joint.
+- 1ST MCP CAPSULE: own heading, ALWAYS present (this is the Thumb-specific exception — unlike Hand, these structures are not silenced). Contains, in this section:
+  - Ulnar Collateral Ligament: default "No high-grade partial or complete tear at the MCP joint."
+  - Radial Collateral Ligament: default "No high-grade partial or complete tear at the MCP joint."
+  - Volar Plate: default "Intact."
+- CARTILAGE: report in two separate sections — one for the 1st MCP joint, one for the Visualized CMC joint(s).
+
+FINGER MRI — FINDINGS HEADING RULES:
+- FLEXOR TENDON: combine FDS and FDP into a single "Flexor Tendon:" heading.
+- EXTENSOR TENDON APPARATUS: combine the extensor mechanism components (central slip, extensor hood, lateral bands) into a single "Extensor Tendon Apparatus:" heading.
+- JOINTS heading: lump DIP/PIP/MCP joints together by default. If specific joints are called out by name (e.g. "3rd and 4th PIP"), describe each named joint individually within the Joints section, same lumped-but-expandable pattern as Hand.
+- ANNULAR PULLEYS: silent by default — do not mention unless specifically called out in dictation.
+- JOINT CAPSULE heading: lump Volar Plate, Ulnar Collateral Ligament, and Radial Collateral Ligament into a single "Joint Capsule:" heading. Default when not dictated: "No acute capsular sprain." If any of these ligaments/capsule structures are specifically dictated, list the dictated finding(s) instead of the default.
+
 ELBOW:
 - LATERAL EPICONDYLOSIS/TEAR: Common extensor origin → "Lateral epicondylosis[/partial tear of common extensor origin], as above." (tennis elbow)
 - MEDIAL EPICONDYLOSIS/TEAR: Common flexor origin → "Medial epicondylosis[/partial tear of common flexor origin], as above." (golfer's elbow)
@@ -263,7 +331,7 @@ PELVIS:
 - SACRAL INSUFFICIENCY: Bilateral sacral ala fractures in elderly → "Sacral insufficiency fractures, as above."
 
 PELVIS MRI — FINDINGS HEADING RULES:
-- ILIOPSOAS heading: use exactly "Iliopsoas:" (NOT "Iliopsoas Muscles:"). Default when not dictated: "No tear or bursitis."
+- ILIOPSOAS heading: use exactly "Iliopsoas:" (NOT "Iliopsoas Muscles:"). Default when not dictated: "No tear or bursitis." If dictation describes fluid in the iliopsoas bursa or tendon sheath, report it here; if tendinosis/tear is not specifically dictated, describe the fluid then state "No tendon tear."
 - SACROILIAC JOINTS heading: report ONLY findings directly related to the SI joints — trauma, OA, sacroiliitis, infection. Do NOT place lumbar spine, surgical hardware, or any non-SI-joint findings here.
 - PUBIC SYMPHYSIS heading: default when not dictated: "No acute abnormality." (NOT "intact")
 - HIP JOINTS heading: default when not dictated: "No acute abnormality." (NOT "intact")
@@ -332,11 +400,22 @@ FOREARM (RADIUS/ULNA):
 
 SPINE-SPECIFIC FINDINGS RULES:
 
+VERTEBRAL BODIES — NO STANDALONE SECTION: Do NOT generate a separate "Vertebral Bodies:" heading. Vertebral body height is reported under the BONES heading instead (e.g. "Bones: Vertebral body heights preserved. No marrow infiltration or aggressive osseous lesion."). Vertebral alignment (listhesis, etc.) continues to be reported under the Vertebral Alignment heading as before — only the body-height/body-integrity content moves to Bones.
+
 INTERVERTEBRAL DISCS heading — INCLUDE ONLY: desiccation (global or by level), annular fissures/tears (by level), Schmorl nodes (by level), Modic changes (type and level).
 INTERVERTEBRAL DISCS heading — DO NOT INCLUDE: disc herniations, protrusions, extrusions, bulges, spinal canal stenosis, foraminal stenosis. These belong exclusively under LEVELS.
 INTERVERTEBRAL DISCS default when nothing abnormal: "No acute abnormality." — NOT "intact."
+MODIC CHANGE PLACEMENT — REMINDER: Modic changes ALWAYS go under the Intervertebral Discs heading (with type and level) — never under LEVELS, never under Bones, never anywhere else.
+
+LIGAMENTUM FLAVUM — TERMINOLOGY CORRECTION: The correct term is "ligamentum flavum infolding," never "ligamentum flavum folding." If dictation says "folding" (or a phonetically similar garbled form) in the context of ligamentum flavum, always generate "infolding" — never generate the word "folding" alone in this context.
 
 PARASPINAL SOFT TISSUES: default text is "No acute abnormality." — NOT "intact."
+
+VERTEBRAL HEMANGIOMA — BENIGN, BONES HEADING, NOT IN IMPRESSION BY DEFAULT: When a hemangioma is described, it is a benign finding and is reported under the BONES heading. Do NOT promote a typical/benign hemangioma to the IMPRESSION. The ONLY exception is when the hemangioma is specifically dictated as "atypical" or "aggressive" — in that case it does belong in the IMPRESSION as it requires follow-up/clinical correlation.
+
+SACROILIAC (SI) JOINTS — LUMBAR SPINE MRI ONLY: If SI joints are specifically dictated, report them under their own "Sacroiliac Joints:" heading placed ABOVE the LEVELS section (i.e., before the level-by-level disc/level findings in FINDINGS). If SI joints are NOT dictated, remain completely silent — do NOT generate this heading at all, do NOT default to a normal/unremarkable statement. This SI joint rule applies only to lumbar spine.
+
+LUMBAR SPINE LEVEL-NUMBERING DISCLAIMER — TECHNIQUE ONLY: If dictation includes a statement establishing the vertebral level-numbering convention (e.g. "Dictation assumes last segmented vertebral body designated as L5," including any accompanying disc-space/image/series identifier sentence used to establish this convention), this entire statement belongs ONLY in the TECHNIQUE section. Do NOT repeat, paraphrase, or otherwise include this numbering-convention statement in FINDINGS.
 
 CANAL AND NEURAL FORAMINA: Do NOT generate this as a standalone FINDINGS heading. Canal and foraminal stenosis belongs exclusively under individual LEVELS entries.
 
@@ -351,7 +430,7 @@ LEVEL INFERENCE: If a disc-level nerve root relationship is dictated but the dis
 
 FACET JOINTS heading — MRI ONLY, SILENT BY DEFAULT (this heading does not exist on CT spine at all — never generate it for CT spine under any circumstance). For MRI spine: do NOT generate a "Facet Joints:" heading by default — it is not a mandatory structure. Only generate this heading if dictation describes facet marrow edema or facet infection/septic arthritis at one or more levels; in that case the heading should state only that marrow edema/infection finding (with level if given), e.g. "Facet Joints: Marrow edema at the L4-L5 facet joints." Facet arthrosis, degeneration, hypertrophy, synovitis, or effusion (i.e. ordinary degenerative facet findings) belong EXCLUSIVELY under the corresponding LEVELS entry for that level — never under a Facet Joints heading, and these findings alone do NOT justify generating a Facet Joints heading. If there is no facet marrow edema or infection anywhere in the dictation, omit the Facet Joints heading entirely.
 
-BONES heading — include if dictated: pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas, fractures, marrow signal abnormality. Default marrow text when nothing abnormal: "No marrow infiltration or aggressive osseous lesion."
+BONES heading — include if dictated: vertebral body heights (default "Vertebral body heights preserved." when not otherwise dictated), pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas (described as benign — see VERTEBRAL HEMANGIOMA rule above), fractures, marrow signal abnormality. Default marrow text when nothing abnormal: "No marrow infiltration or aggressive osseous lesion." Example default Bones line when everything is normal: "Bones: Vertebral body heights preserved. No marrow infiltration or aggressive osseous lesion."
 
 DISCITIS / OSTEOMYELITIS ALERT — apply when dictation mentions increased STIR or T2 signal in a disc:
 Search the dictation for additional signs: endplate erosion, paraspinal collection/abscess, epidural collection/abscess, enhancement pattern.
@@ -503,8 +582,7 @@ HISTORY:
 
 COMPARISON: None.
 
-TECHNIQUE:
-${techniqueText}
+TECHNIQUE: ${techniqueText}
 
 FINDINGS:
 Structure Name: finding
@@ -6908,6 +6986,20 @@ const CME_PATHOLOGY_KEYWORDS = [
   'femoroacetabular','hamstring',
 ];
 
+// RA-SPECIFIC OVER-TRIGGER GUARD: 'rheumatoid arthritis' is a generic phrase
+// that can appear in passing (e.g. a differential list) on many unrelated
+// reports, causing the RA module to surface far too often. Require the report
+// to also mention at least one RA-specific imaging finding before crediting
+// the keyword match — plain mention of the words "rheumatoid arthritis" alone
+// (e.g. buried in a differential) is not enough.
+const RA_SUPPORTING_FINDINGS = [
+  'pannus','marginal erosion','periarticular osteopenia','symmetric joint space loss',
+  'symmetric polyarticular','rheumatoid nodule','synovial enhancement',
+];
+function isRaKeywordCredible(reportLower) {
+  return RA_SUPPORTING_FINDINGS.some(f => reportLower.includes(f));
+}
+
 // Negation words that, when found immediately before a matched pathology phrase,
 // mean the finding was explicitly ruled out — and should not count as a match.
 // Radiology reports are formulaic ("No labral tear.", "Without acute fracture.",
@@ -6930,7 +7022,27 @@ function phraseMatchesPositively(textLower, phrase) {
   }
 }
 
-function findCmeMatches(reportText, modules, selectedBodyPart) {
+// Spine-region keywords used to detect when a CME module's title is specific
+// to one spine region (cervical/thoracic/lumbar) — so a module written for one
+// region doesn't surface on a report for a different region (e.g. a Lumbar
+// module should not appear on a Cervical spine report, even though both share
+// the generic 'Spine' specialty tag).
+const SPINE_REGION_TITLE_KEYWORDS = {
+  cervical: ['cervical', 'neck', 'c-spine'],
+  thoracic: ['thoracic', 't-spine'],
+  lumbar: ['lumbar', 'l-spine', 'low back', 'lower back'],
+};
+function moduleMatchesSpineRegion(moduleTitleLower, spineRegion) {
+  if (!spineRegion) return true; // non-spine body part, nothing to filter
+  const allRegions = Object.keys(SPINE_REGION_TITLE_KEYWORDS);
+  const mentionedRegions = allRegions.filter(r =>
+    SPINE_REGION_TITLE_KEYWORDS[r].some(kw => moduleTitleLower.includes(kw))
+  );
+  if (!mentionedRegions.length) return true; // generic spine module, no region called out — always allowed
+  return mentionedRegions.includes(spineRegion); // region-specific module — only allowed for matching region
+}
+
+function findCmeMatches(reportText, modules, selectedBodyPart, spineRegion, completedIds) {
   if (!reportText || !modules?.length) return [];
 
   // Hard filter: only consider modules tagged for this body part's specialty,
@@ -6938,8 +7050,11 @@ function findCmeMatches(reportText, modules, selectedBodyPart) {
   const allowedSpecialty = BODYPART_TO_CME_SPECIALTY[selectedBodyPart];
   const candidates = modules.filter(m => {
     if (!m.specialty) return false;
-    if (CROSS_CUTTING_CME_SPECIALTIES.includes(m.specialty)) return true;
-    return m.specialty === allowedSpecialty;
+    if (completedIds && completedIds.has(m.id)) return false; // skip already-completed modules
+    const specialtyOk = CROSS_CUTTING_CME_SPECIALTIES.includes(m.specialty) || m.specialty === allowedSpecialty;
+    if (!specialtyOk) return false;
+    if (selectedBodyPart === 'spine' && !moduleMatchesSpineRegion((m.title || '').toLowerCase(), spineRegion)) return false;
+    return true;
   });
   if (!candidates.length) return [];
 
@@ -6959,7 +7074,9 @@ function findCmeMatches(reportText, modules, selectedBodyPart) {
     // "shoulder" or "MRI" are not in this list, so generic body-part overlap can't score.
     const titleLower = (m.title || '').toLowerCase();
     CME_PATHOLOGY_KEYWORDS.forEach(kw => {
-      if (titleLower.includes(kw) && phraseMatchesPositively(reportLower, kw)) score += 1;
+      if (!titleLower.includes(kw) || !phraseMatchesPositively(reportLower, kw)) return;
+      if (kw === 'rheumatoid arthritis' && !isRaKeywordCredible(reportLower)) return; // guard against generic/differential-only mentions
+      score += 1;
     });
     return { ...m, score };
   }).filter(m => m.score > 0);
@@ -7106,6 +7223,17 @@ export default function DashboardPage() {
     }).catch(() => {});
   }, []);
 
+  // ── Fetch this user's completed CME module IDs (so findCmeMatches can skip
+  // already-completed modules instead of resurfacing them repeatedly) ──────
+  useEffect(() => {
+    if (!authUser?.id) { setCompletedCmeIds(new Set()); return; }
+    fetch(`${SUPABASE_URL}/rest/v1/cme_completions?select=module_id&user_id=eq.${authUser.id}`, {
+      headers: { apikey: getAnonKey(), Authorization: `Bearer ${authUser.access_token || getAnonKey()}` }
+    }).then(r => r.ok ? r.json() : []).then(data => {
+      if (Array.isArray(data)) setCompletedCmeIds(new Set(data.map(x => x.module_id)));
+    }).catch(() => {});
+  }, [authUser?.id]);
+
   const handleLogin = async (user) => {
     // Load prefs BEFORE setting authUser so auto-save guard doesn't overwrite them
     const prefs = loadUserPrefs(user.id);
@@ -7195,6 +7323,7 @@ export default function DashboardPage() {
   const [hubInitialModuleId, setHubInitialModuleId] = useState(null); // set when jumping straight to a specific CME module
   const [hubTab, setHubTab] = useState('research'); // 'research' | 'jobs' | 'cme'
   const [cmeModules, setCmeModules] = useState([]);  // CME library — loaded once at app mount
+  const [completedCmeIds, setCompletedCmeIds] = useState(new Set());  // this user's completed module IDs — used to skip already-done modules in CME matching
 
   const [darkMode, setDarkMode] = useState(false);
   const dm = darkMode;
@@ -7338,6 +7467,17 @@ export default function DashboardPage() {
     setIsEditingReport(false);
   };
 
+  // Full reset when switching the Col 1 body part dropdown, or the Col 1 spine
+  // region (C/T/L) sub-dropdown — clears Col 1 dictation text plus Col 2/3,
+  // same as a modality switch, so no stale content carries over between parts.
+  const resetForBodyPartSwitch = () => {
+    resetIncidentals();
+    resetArthroplasty();
+    setGeneratedReport('');
+    setDictationText('');
+    setIsEditingReport(false);
+  };
+
   const generateReport = async () => {
     const textToUse = isRheum ? rheumFreeText : dictationText;
     if (!textToUse.trim()) return;
@@ -7436,7 +7576,11 @@ export default function DashboardPage() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
     setMicError('');
-    finalTranscriptPersistRef.current = '';
+    // Seed from whatever is already in the box (rather than wiping it) so that
+    // stopping and resuming dictation APPENDS to existing text instead of
+    // erasing it — matches expected "continue where I left off" behavior.
+    const existingText = isRheumRef.current ? rheumFreeText : dictationText;
+    finalTranscriptPersistRef.current = existingText ? existingText + ' ' : '';
 
     // Factory: builds a fresh recognition instance with all handlers correctly scoped.
     // Called once on start and again on every auto-restart (fixes Edge stale-closure bug).
@@ -7930,7 +8074,7 @@ export default function DashboardPage() {
                 </div>
               </>) : (<>
                 <div style={{ flex:2 }}><label style={lbl}>Body Part</label>
-                  <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetIncidentals(); resetArthroplasty(); setGeneratedReport(''); setIsEditingReport(false); }}>
+                  <select style={inp} value={selectedBodyPart} onChange={e => { setSelectedBodyPart(e.target.value); resetForBodyPartSwitch(); }}>
                     {(isCT ? BODY_PARTS_CT : BODY_PARTS).map(b => {
                       const LABELS = {'femur/thigh':'Femur / Thigh','tibia/fibula':'Tibia / Fibula','humerus':'Humerus','forearm':'Forearm','fingers':'Fingers'};
                       const label = LABELS[b] || (b.charAt(0).toUpperCase()+b.slice(1));
@@ -7944,7 +8088,7 @@ export default function DashboardPage() {
                   </select>
                 </div>}
                 {selectedBodyPart === 'spine' && <div style={{ flex:1 }}><label style={lbl}>Region</label>
-                  <select style={inp} value={spineRegion} onChange={e => setSpineRegion(e.target.value)}>
+                  <select style={inp} value={spineRegion} onChange={e => { setSpineRegion(e.target.value); resetForBodyPartSwitch(); }}>
                     <option value="cervical">Cervical</option><option value="thoracic">Thoracic</option><option value="lumbar">Lumbar</option>
                   </select>
                 </div>}
@@ -8132,7 +8276,7 @@ export default function DashboardPage() {
           )}
           <div className="msk-ref-panel" style={{ padding:16,flex:1,overflowY:'auto' }}>
             <CmeBanner
-              matches={findCmeMatches(generatedReport, cmeModules, selectedBodyPart)}
+              matches={findCmeMatches(generatedReport, cmeModules, selectedBodyPart, spineRegion, completedCmeIds)}
               dm={dm}
               onOpenModule={(moduleId) => { setHubTab('cme'); setHubInitialModuleId(moduleId); setShowHub(true); }}
             />
