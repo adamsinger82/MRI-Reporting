@@ -51,10 +51,10 @@ const ANATOMY_MRI = {
   spine:'Vertebral Alignment, Intervertebral Discs, Paraspinal Soft Tissues, Bones, Cord / Conus / Cauda Equina',
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Regional Neurovascular Structures, Soft Tissues',
   foot:'Plantar Fascia, Lisfranc Ligament Complex, MTP Joint Plantar Plate Complexes, Interdigital/Morton\'s Neuroma, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
-  'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Femur, Bone Marrow Signal, Soft Tissues',
-  'tibia/fibula':'Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, Posterior Tibial Tendon, Flexor Digitorum Longus, Flexor Hallucis Longus, Peroneus Longus, Peroneus Brevis, Anterior Compartment Musculature, Posterior Compartment Musculature, Lateral Compartment Musculature, Interosseous Membrane, Tibia (cortex / medullary canal / periosteum), Fibula, Bone Marrow Signal, Regional Neurovascular Structures, Soft Tissues',
-  humerus:'Deltoid Muscle, Biceps Brachii, Brachialis, Triceps Brachii, Coracobrachialis, Radial Nerve, Axillary Nerve, Ulnar Nerve, Humerus (cortex / medullary canal / periosteum), Bone Marrow Signal, Soft Tissues',
-  forearm:'Flexor Carpi Radialis, Flexor Carpi Ulnaris, Flexor Digitorum Superficialis, Flexor Digitorum Profundus, Flexor Pollicis Longus, Pronator Teres, Pronator Quadratus, Extensor Carpi Radialis Longus and Brevis, Extensor Carpi Ulnaris, Extensor Digitorum, Extensor Pollicis Longus and Brevis, Abductor Pollicis Longus, Brachioradialis, Supinator, Radius, Ulna, Interosseous Membrane, Radial Nerve, Median Nerve, Ulnar Nerve, Bone Marrow Signal, Soft Tissues',
+  'femur/thigh':'Proximal Hamstring Tendons (conjoint tendon at ischial tuberosity), Biceps Femoris Long Head, Biceps Femoris Short Head, Semimembranosus, Semitendinosus, Quadriceps Muscle Group (rectus femoris / vastus lateralis / vastus medialis / vastus intermedius), Adductor Muscle Group, Iliotibial Band, Femoral Neurovascular Bundle, Bones, Soft Tissues',
+  'tibia/fibula':'Bones, Tendons, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  humerus:'Bones, Tendons, Muscles, Radial Nerve, Axillary Nerve, Ulnar Nerve, Soft Tissues',
+  forearm:'Bones, Tendons, Muscles, Radial Nerve, Median Nerve, Ulnar Nerve, Soft Tissues',
   hand:'Flexor Tendons, Extensor Tendons, Muscles, Joint Spaces, Joint Capsule, Metacarpophalangeal Joints, Articular Cartilage, Bones, Soft Tissues',
   thumb:'Flexor Pollicis Longus Tendon, 1st MCP Joint Space, 1st MCP Capsule, First CMC Joint (trapeziometacarpal), Visualized CMC Joints, Articular Cartilage, Bones, Soft Tissues',
   fingers:'Flexor Tendon, Extensor Tendon Apparatus, Joints, Joint Capsule, Articular Cartilage, Bones, Soft Tissues',
@@ -72,9 +72,9 @@ const ANATOMY_CT = {
   pelvis:'Pelvic Ring, Sacroiliac Joints, Pubic Symphysis, Hip Joints, Acetabula, Soft Tissues',
   foot:'Bones, Lisfranc Joint Complex, Dislocation or Subluxation, Joint Spaces, Soft Tissues',
   'femur/thigh':'Femur (cortex / medullary canal / periosteum), Soft Tissue Compartments, Soft Tissues',
-  'tibia/fibula':'Tibia (cortex / medullary canal / periosteum), Fibula, Interosseous Membrane, Soft Tissues',
+  'tibia/fibula':'Bones, Soft Tissues',
   humerus:'Humerus (cortex / medullary canal / periosteum), Soft Tissues',
-  forearm:'Radius, Ulna, Interosseous Membrane, Soft Tissues',
+  forearm:'Bones, Soft Tissues',
   hand:'Metacarpals, Phalanges, CMC Joints, MCP Joints, IP Joints, Dislocation or Subluxation, Soft Tissues',
 };
 
@@ -146,7 +146,7 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
     : `Multiplanar multisequence MRI of the ${lat ? lat + ' ' : ''}${techniquePartLabel} ${con} IV contrast.`;
 
   const findingsRules = isCT
-    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent." Soft Tissues — write "No acute soft tissue abnormality." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR language. 4. BONES RULE — all three on same line: Fracture (or "No fracture."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). Do NOT restate osteoarthrosis/joint space narrowing severity under Bones — see JOINT SPACE RULE below; OA-related findings are reported ONCE, under Joint Space only, never duplicated under Bones. 5. JOINT SPACE RULE — for each joint space: address narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis." This is the SOLE location for osteoarthrosis/degenerative joint space findings — never also summarize OA severity under Bones. 6. ATHEROSCLEROSIS: report under Soft Tissues, never under Bones.`
+    ? `FINDINGS RULES (CT): 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Dislocation or Subluxation — write "absent." Soft Tissues — write "No acute soft tissue abnormality." 2. Positive: exact dictated words only. 3. CT language only: attenuation, cortical integrity, trabecular pattern, osteophytes, subchondral cysts, chondrocalcinosis. No T1/T2/STIR language. 4. BONES RULE — use a SINGLE "Bones:" heading for ALL bone findings. All three on the same line: Fracture (or "No fracture."), Osteonecrosis (or "No osteonecrosis."), Osseous lesion (or "No aggressive osseous lesion."). Do NOT restate osteoarthrosis/joint space narrowing severity under Bones — see JOINT SPACE RULE below; OA-related findings are reported ONCE, under Joint Space only, never duplicated under Bones. CRITICAL: Do NOT create any subheading named after an individual bone (e.g. do NOT write "Tibia:", "Fibula:", "Femur:", "Patella:", "Calcaneus:", "Talus:", "Radius:", "Ulna:", "Humerus:", etc. as standalone findings headings). ALL bone findings — regardless of how many bones the study covers — consolidate under the single "Bones:" heading; describe each bone within that section's text as needed. 5. JOINT SPACE RULE — for each joint space: address narrowing, osteophytes, subchondral cysts, chondrocalcinosis — or write "Preserved joint space without osteophytes, subchondral cysts, or chondrocalcinosis." This is the SOLE location for osteoarthrosis/degenerative joint space findings — never also summarize OA severity under Bones. 6. ATHEROSCLEROSIS: report under Soft Tissues, never under Bones.`
     : `FINDINGS RULES: 1. Not mentioned: write "intact." EXCEPTION: Joint Effusion, Baker Cyst, bursae, soft tissue masses — write "absent" not "intact." 2. Positive: exact dictated words only, no added morphology/signal/measurements. 3. BONES RULE — use a SINGLE heading "Bones:" for ALL bone findings. Address all three on the same line: Fracture/contusion (or "No fracture or contusion."), Osteonecrosis (or "No osteonecrosis."), Marrow signal (or "No marrow infiltration or bone lesion.") — three sentences on same line. Example: "Bones: No fracture or contusion. No osteonecrosis. No marrow infiltration or bone lesion." BONES SCOPE: include acute fractures, bone contusions, stress reactions/stress fractures, AVN, bone lesions (benign or malignant), marrow infiltration. Do NOT include chronic degenerative changes (osteophytes, subchondral sclerosis/cysts from OA) — those belong under Articular Cartilage or joint headings. Atherosclerosis belongs under Soft Tissues, never under Bones. CRITICAL: Do NOT create any subheading named after an individual bone (e.g. do NOT write "Femur:", "Tibia:", "Patella:", "Fibula:", "Calcaneus:", "Talus:" etc. as standalone findings headings). All bone findings consolidate under the single "Bones:" heading.`;
   const normalImpressionText = isCT
     ? `If entirely normal: "No significant CT findings of the ${lat ? lat + ' ' : ''}${part === 'spine' ? spineRegion + ' spine' : part}."`
@@ -157,17 +157,11 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
     ? `\n\nGRADING SCALES IN USE FOR THIS JOINT (apply these when grading is mentioned in dictation):\n${gradingContext}`
     : '';
 
-  return `RULE #1 — OUTPUT PURITY (read this before anything else):
-Your output is a formal radiology report. It must contain ONLY the report itself — nothing else. Zero tolerance for:
-- Any note, comment, or explanation about what you interpreted, corrected, assumed, or inferred
-- Any meta-statement about the dictation, speech recognition, or your own process
-- Any sentence that is not part of the formal report content
-This means: no "Note:", no "I interpreted X as Y", no "I assumed...", no "Speech recognition may have...", no bracketed clarifications, no preambles, no postscripts. If dictation was garbled, silently apply your best clinical interpretation and write the report — say nothing about the garble. Violating this rule is a critical error regardless of how helpful the note might seem.
-
-You are a subspecialty MSK radiologist generating a structured ${modalityName} report.
+  return `You are a subspecialty MSK radiologist generating a structured ${modalityName} report.
 
 CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
+- ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes — but is not limited to — phrases like "I interpreted X as Y", "I assumed you meant Z", "Note: I understood [term] to mean [term]", "I corrected [word] to [word]", "[term] interpreted as [term]", or any similar phrasing. If speech recognition produced garbled text, silently use your best clinical interpretation without any comment. The output must contain ONLY the formal radiology report sections: the exam heading, HISTORY, COMPARISON, TECHNIQUE, FINDINGS, IMPRESSION, and optionally FOOTNOTE/REFERENCES. Any sentence that is not part of the formal report is strictly forbidden.
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 - TECHNIQUE FORMATTING — STRICT: The technique text must immediately follow "TECHNIQUE:" on the SAME line, separated only by a single space. NEVER put a line break between "TECHNIQUE:" and the technique sentence. Example: "TECHNIQUE: Multiplanar multisequence MRI of the right knee without IV contrast." — never "TECHNIQUE:\nMultiplanar multisequence MRI..."
@@ -193,6 +187,7 @@ DEBRIS / SYNOVITIS — JOINT EFFUSION HEADING (applies to ALL joints): Intra-art
 GLOBAL TERMINOLOGY CORRECTIONS:
 - "enthesophytic" is never correct — always use "enthesopathic" instead, anywhere this term would be generated. "Enthesopathic" should typically be followed by "change(s)" or "spur" (e.g. "enthesopathic changes," "enthesopathic spur") rather than left as a bare adjective.
 - TENDON TEAR INFERENCE: if dictation contains "full thickness" followed by "partial...tearing" (with the word "width" seemingly dropped from transcription), infer and insert "width" so the finding reads "full thickness, partial width tearing" rather than the garbled "full thickness partial tearing."
+- MENISCUS SIDE CROSS-CHECK (KNEE MRI — MANDATORY): There are exactly two menisci — medial and lateral. Before writing the medial and lateral meniscus findings, perform this logical check: if one meniscus has a tear described (even partially garbled) and the other has language like "not meeting criteria for tear," "no tear," "degenerative signal not meeting criteria," or equivalent negative language — verify that the tear is assigned to the correct side. If the dictation attributes a tear to side A but also states side A does NOT meet criteria for tear, this is a contradiction — the tear must actually belong to side B. Silently reassign: give the tear finding to the meniscus described as torn (the one WITHOUT the "not meeting criteria" qualifier), and give the intact/degenerative-only finding to the meniscus described as not meeting tear criteria. EXAMPLE: dictation says "tear of the anterior horn/body junction of the medial meniscus without displaced flaps … degenerative intrasubstance signal in the medial meniscus not meeting criteria for tear" — both findings are attributed to the medial meniscus, which is impossible. The tear must be the lateral meniscus finding; the degenerative signal is the medial meniscus finding. Reassign accordingly without comment.
 
 NAMED SYNDROME PATTERNS — recognize and use these by name when the findings fit:
 
@@ -436,7 +431,7 @@ LEVEL INFERENCE: If a disc-level nerve root relationship is dictated but the dis
 
 FACET JOINTS heading — MRI ONLY, SILENT BY DEFAULT (this heading does not exist on CT spine at all — never generate it for CT spine under any circumstance). For MRI spine: do NOT generate a "Facet Joints:" heading by default — it is not a mandatory structure. Only generate this heading if dictation describes facet marrow edema or facet infection/septic arthritis at one or more levels; in that case the heading should state only that marrow edema/infection finding (with level if given), e.g. "Facet Joints: Marrow edema at the L4-L5 facet joints." Facet arthrosis, degeneration, hypertrophy, synovitis, or effusion (i.e. ordinary degenerative facet findings) belong EXCLUSIVELY under the corresponding LEVELS entry for that level — never under a Facet Joints heading, and these findings alone do NOT justify generating a Facet Joints heading. If there is no facet marrow edema or infection anywhere in the dictation, omit the Facet Joints heading entirely.
 
-BONES heading — include if dictated: vertebral body heights (default "Vertebral body heights preserved." when not otherwise dictated), pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas (described as benign — see VERTEBRAL HEMANGIOMA rule above), fractures, marrow signal abnormality. Default marrow text when nothing abnormal: "No marrow infiltration or aggressive osseous lesion." Example default Bones line when everything is normal: "Bones: Vertebral body heights preserved. No marrow infiltration or aggressive osseous lesion."
+BONES heading — include if dictated: vertebral body heights (default "Vertebral body heights preserved." when not otherwise dictated), pars defect (location/level), pedicle or pars stress reaction, vertebral hemangiomas (described as benign — see VERTEBRAL HEMANGIOMA rule above), fractures, marrow signal abnormality. Default text when nothing abnormal: "No fracture. No marrow infiltration or aggressive osseous lesion." Example default Bones line when everything is normal: "Bones: Vertebral body heights preserved. No fracture. No marrow infiltration or aggressive osseous lesion." CRITICAL: "No fracture." MUST always appear in the Bones line for ALL spine MRI and CT reports — it is never omitted even when nothing else is abnormal.
 
 DISCITIS / OSTEOMYELITIS ALERT — apply when dictation mentions increased STIR or T2 signal in a disc:
 Search the dictation for additional signs: endplate erosion, paraspinal collection/abscess, epidural collection/abscess, enhancement pattern.
@@ -609,38 +604,6 @@ IMPRESSION:
 function isAbsentStructure(label) {
   const l = label.toLowerCase().replace(':','').trim();
   return ABSENT_STRUCTURES.some(s => l.includes(s));
-}
-
-// Safety-net: strip any lines that look like dictation parsing notes leaking into the report.
-// This is a last-resort client-side guard — the prompt already forbids these, but models
-// occasionally emit them anyway. Matches lines that start with common note patterns.
-function stripParsingNotes(text) {
-  if (!text) return text;
-  const notePatterns = [
-    /^note\s*:/i,
-    /^i interpreted\b/i,
-    /^i assumed\b/i,
-    /^i corrected\b/i,
-    /^i understood\b/i,
-    /^speech recognition\b/i,
-    /^dictation note\s*:/i,
-    /^parsing note\s*:/i,
-    /^\[note\]/i,
-    /^\(note\)/i,
-    /^correction\s*:/i,
-    /^clarification\s*:/i,
-    /^interpretation\s*:/i,
-    /^transcription note\s*:/i,
-    /^the dictation\s+(appears|seems|may|contained|had)\b/i,
-    /^it appears the\b/i,
-    /^please note\s*:/i,
-  ];
-  return text
-    .split('\n')
-    .filter(line => !notePatterns.some(p => p.test(line.trim())))
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n') // collapse extra blank lines left behind
-    .trim();
 }
 
 function formatReport(txt, colors = {}) {
@@ -6158,7 +6121,7 @@ CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
 - Section headers (TECHNIQUE, FINDINGS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
-- ABSOLUTE RULE — ZERO TOLERANCE (REMINDER): RULE #1 at the top of this prompt applies here too. Output must contain ONLY formal radiology report sections. Any note, annotation, correction notice, or commentary is a critical error. Silently apply best clinical interpretation — never explain or annotate it.
+- ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes phrases like "I interpreted X as Y", "I assumed you meant Z", or any notation about speech recognition corrections. Silently apply best clinical interpretation. Output must contain ONLY formal radiology report content.
 
 TECHNIQUE:
 ${latLabel} radiograph of the ${jLabel.toLowerCase()}${viewsLabel}.
@@ -7549,7 +7512,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else { setGeneratedReport(stripParsingNotes(data?.content?.[0]?.text) || 'Error generating report.'); setMobileTab(1); }
+      else { setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.'); setMobileTab(1); }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGenerating(false);
   };
@@ -7586,7 +7549,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else { setGeneratedReport(stripParsingNotes(data?.content?.[0]?.text) || 'Error generating report.'); setMobileTab(1); }
+      else { setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.'); setMobileTab(1); }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGeneratingRheum(false);
   };
