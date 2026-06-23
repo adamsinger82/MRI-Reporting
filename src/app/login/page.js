@@ -157,11 +157,17 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
     ? `\n\nGRADING SCALES IN USE FOR THIS JOINT (apply these when grading is mentioned in dictation):\n${gradingContext}`
     : '';
 
-  return `You are a subspecialty MSK radiologist generating a structured ${modalityName} report.
+  return `RULE #1 — OUTPUT PURITY (read this before anything else):
+Your output is a formal radiology report. It must contain ONLY the report itself — nothing else. Zero tolerance for:
+- Any note, comment, or explanation about what you interpreted, corrected, assumed, or inferred
+- Any meta-statement about the dictation, speech recognition, or your own process
+- Any sentence that is not part of the formal report content
+This means: no "Note:", no "I interpreted X as Y", no "I assumed...", no "Speech recognition may have...", no bracketed clarifications, no preambles, no postscripts. If dictation was garbled, silently apply your best clinical interpretation and write the report — say nothing about the garble. Violating this rule is a critical error regardless of how helpful the note might seem.
+
+You are a subspecialty MSK radiologist generating a structured ${modalityName} report.
 
 CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
-- ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes — but is not limited to — phrases like "I interpreted X as Y", "I assumed you meant Z", "Note: I understood [term] to mean [term]", "I corrected [word] to [word]", "[term] interpreted as [term]", or any similar phrasing. If speech recognition produced garbled text, silently use your best clinical interpretation without any comment. The output must contain ONLY the formal radiology report sections: the exam heading, HISTORY, COMPARISON, TECHNIQUE, FINDINGS, IMPRESSION, and optionally FOOTNOTE/REFERENCES. Any sentence that is not part of the formal report is strictly forbidden.
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 - TECHNIQUE FORMATTING — STRICT: The technique text must immediately follow "TECHNIQUE:" on the SAME line, separated only by a single space. NEVER put a line break between "TECHNIQUE:" and the technique sentence. Example: "TECHNIQUE: Multiplanar multisequence MRI of the right knee without IV contrast." — never "TECHNIQUE:\nMultiplanar multisequence MRI..."
@@ -603,6 +609,38 @@ IMPRESSION:
 function isAbsentStructure(label) {
   const l = label.toLowerCase().replace(':','').trim();
   return ABSENT_STRUCTURES.some(s => l.includes(s));
+}
+
+// Safety-net: strip any lines that look like dictation parsing notes leaking into the report.
+// This is a last-resort client-side guard — the prompt already forbids these, but models
+// occasionally emit them anyway. Matches lines that start with common note patterns.
+function stripParsingNotes(text) {
+  if (!text) return text;
+  const notePatterns = [
+    /^note\s*:/i,
+    /^i interpreted\b/i,
+    /^i assumed\b/i,
+    /^i corrected\b/i,
+    /^i understood\b/i,
+    /^speech recognition\b/i,
+    /^dictation note\s*:/i,
+    /^parsing note\s*:/i,
+    /^\[note\]/i,
+    /^\(note\)/i,
+    /^correction\s*:/i,
+    /^clarification\s*:/i,
+    /^interpretation\s*:/i,
+    /^transcription note\s*:/i,
+    /^the dictation\s+(appears|seems|may|contained|had)\b/i,
+    /^it appears the\b/i,
+    /^please note\s*:/i,
+  ];
+  return text
+    .split('\n')
+    .filter(line => !notePatterns.some(p => p.test(line.trim())))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n') // collapse extra blank lines left behind
+    .trim();
 }
 
 function formatReport(txt, colors = {}) {
@@ -6120,7 +6158,7 @@ CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
 - Section headers (TECHNIQUE, FINDINGS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
-- ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes phrases like "I interpreted X as Y", "I assumed you meant Z", or any notation about speech recognition corrections. Silently apply best clinical interpretation. Output must contain ONLY formal radiology report content.
+- ABSOLUTE RULE — ZERO TOLERANCE (REMINDER): RULE #1 at the top of this prompt applies here too. Output must contain ONLY formal radiology report sections. Any note, annotation, correction notice, or commentary is a critical error. Silently apply best clinical interpretation — never explain or annotate it.
 
 TECHNIQUE:
 ${latLabel} radiograph of the ${jLabel.toLowerCase()}${viewsLabel}.
@@ -7511,7 +7549,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else { setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.'); setMobileTab(1); }
+      else { setGeneratedReport(stripParsingNotes(data?.content?.[0]?.text) || 'Error generating report.'); setMobileTab(1); }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGenerating(false);
   };
@@ -7548,7 +7586,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else { setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.'); setMobileTab(1); }
+      else { setGeneratedReport(stripParsingNotes(data?.content?.[0]?.text) || 'Error generating report.'); setMobileTab(1); }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGeneratingRheum(false);
   };
