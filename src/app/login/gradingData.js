@@ -1339,10 +1339,11 @@ const CT_GRADING_DATA = {
         isGradingScale: true,
         plane: 'Axial + Coronal',
         description: 'Young-Burgess classification of pelvic ring fractures by mechanism. CT with 3D reconstruction is the definitive imaging. Correlates with hemorrhagic injury and ligamentous disruption pattern. Tile classification (A/B/C) based on stability is also widely used.',
-singleImage: '/images/msk/youngburgess.jpg',
+        singleImage: '/images/msk/youngburgess.jpg',
         citations: [
           { label: 'Young JW & Burgess AR. — Radiologic Management of Pelvic Ring Fractures. 1987.', url: 'https://scholar.google.com/scholar?q=Young%20Burgess%20pelvic%20ring%20fracture%20classification%20radiologic%20management' },
           { label: 'Tile M. — Fractures of the Pelvis and Acetabulum. 3rd ed. 2003.', url: 'https://scholar.google.com/scholar?q=Tile%20fractures%20pelvis%20acetabulum%20classification%20stability' },
+          { label: 'Becker I et al. Pubic symphysis width in non-pregnant adults. Eur Radiol 2021. PMC8198205.', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8198205/' },
         ],
         normalValues: [
           { label: 'LC I (Lateral Compression)', value: 'Sacral buckle fracture + ipsilateral pubic rami fractures — stable; lowest hemorrhage risk' },
@@ -1356,6 +1357,7 @@ singleImage: '/images/msk/youngburgess.jpg',
           { label: 'Tile A', value: 'Stable — posterior arch intact' },
           { label: 'Tile B', value: 'Rotationally unstable, vertically stable — posterior arch partially intact' },
           { label: 'Tile C', value: 'Rotationally + vertically unstable — posterior arch completely disrupted' },
+          { label: '⚠ Symphysis note', value: 'Normal pubic symphysis ≤ 6 mm in non-pregnant adults; > 10 mm = diagnostic of diastasis — critical for APC grading' },
         ],
       },
       {
