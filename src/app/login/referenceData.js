@@ -1302,7 +1302,7 @@ const JOINT_DATA = {
         citations: [
           { label: "Burgess AR et al. Pelvic ring disruptions: effective classification and treatment protocols. J Trauma 1990", url: "https://scholar.google.com/scholar?q=Burgess%20pelvic%20ring%20disruptions%20effective%20classification%20treatment%20protocols%20J%20Trauma%201990" },
         ],
-        diagram: 'pelvis-young-burgess',
+singleImage: '/images/msk/youngburgess.jpg',
       },
       {
         id: 'denis',
