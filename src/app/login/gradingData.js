@@ -1339,7 +1339,7 @@ const CT_GRADING_DATA = {
         isGradingScale: true,
         plane: 'Axial + Coronal',
         description: 'Young-Burgess classification of pelvic ring fractures by mechanism. CT with 3D reconstruction is the definitive imaging. Correlates with hemorrhagic injury and ligamentous disruption pattern. Tile classification (A/B/C) based on stability is also widely used.',
-        diagram: null,
+singleImage: '/images/msk/youngburgess.jpg',
         citations: [
           { label: 'Young JW & Burgess AR. — Radiologic Management of Pelvic Ring Fractures. 1987.', url: 'https://scholar.google.com/scholar?q=Young%20Burgess%20pelvic%20ring%20fracture%20classification%20radiologic%20management' },
           { label: 'Tile M. — Fractures of the Pelvis and Acetabulum. 3rd ed. 2003.', url: 'https://scholar.google.com/scholar?q=Tile%20fractures%20pelvis%20acetabulum%20classification%20stability' },
