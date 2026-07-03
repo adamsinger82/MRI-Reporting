@@ -1,5 +1,22 @@
 'use client';
 export const dynamic = 'force-dynamic'; // v2026-05-22 03:00
+
+// ─────────────────────────────────────────────────────────────────────────
+// LucidMSK Architecture Rule — New Code Goes in Separate Files
+//
+// - New data objects (grading scales, joint data, labels, lookup tables) →
+//   new file in src/app/login/, e.g. wristData.js, spineData.js. Export
+//   named constants, import here.
+// - New React components (panels, modals, UI widgets) → new file, e.g.
+//   CmePanel.jsx, AtlasPanel.jsx. Default or named export, import here.
+// - New utility functions (prompt builders, formatters, calculators) →
+//   new file, e.g. promptUtils.js, reportUtils.js. Named exports, import here.
+// - page.js gets only: the import line + any minimal wiring (state, props,
+//   JSX placement). No new bulk.
+// - Exception: tiny one-liners (a new useState, a flag, a short conditional)
+//   are fine directly in page.js.
+// ─────────────────────────────────────────────────────────────────────────
+
 import { useState, useRef, useEffect } from 'react';
 // LucidMSK logo font
 if (typeof document !== 'undefined' && !document.getElementById('rajdhani-font')) {
@@ -16,6 +33,8 @@ import { MRI_GRADING_DATA, CT_GRADING_DATA } from './gradingData';
 import TemplatesPanel from './TemplatesPanel';
 import ResearchAdminForm from './ResearchAdminForm';
 import { fetchResearchPosts, deleteResearchPost } from './researchUtils';
+import DeviceSafetyPanel from './DeviceSafetyPanel';
+import QuickContactsPanel from './QuickContactsPanel';
 
 // ─── MODALITY-AWARE DATA SELECTOR ────────────────────────────────────────────
 // Returns the correct grading data object for a given body part and modality.
@@ -3660,7 +3679,7 @@ function RecommendArticleForm({ currentUser, onClose }) {
 
 // ─── RESEARCH MODAL ────────────────────────────────────────────────────────
 // ─── MSK HUB DROPDOWN ────────────────────────────────────────────────────────
-function MSKHubDropdown({ onOpenResearch, onOpenJobs, onOpenCme }) {
+function MSKHubDropdown({ onOpenResearch, onOpenJobs, onOpenCme, onOpenDevices, onOpenContacts }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -3693,10 +3712,24 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs, onOpenCme }) {
           </button>
           <button
             onClick={() => { setOpen(false); onOpenJobs(); }}
-            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background='transparent'}>
             💼 Jobs Board
+          </button>
+          <button
+            onClick={() => { setOpen(false); onOpenDevices(); }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+            🩻 Device Safety
+          </button>
+          <button
+            onClick={() => { setOpen(false); onOpenContacts(); }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+            📞 My Numbers
           </button>
 
         </div>
@@ -5066,6 +5099,8 @@ function MSKHubModal({ initialTab, initialModuleId, onClose, currentUser, isAdmi
             { id:'research', label:'📰 Latest Research' },
             { id:'cme',      label:'🎓 CME' },
             { id:'jobs',     label:'💼 Jobs Board' },
+            { id:'devices',  label:'🩻 Device Safety' },
+            { id:'contacts', label:'📞 My Numbers' },
             ...(isAdmin     ? [{ id:'admin', label:`🛡️ Admin${pending.length > 0 ? ` (${pending.length})` : ''}` }] : []),
           ].map(t => (
             <button key={t.id}
@@ -5081,6 +5116,12 @@ function MSKHubModal({ initialTab, initialModuleId, onClose, currentUser, isAdmi
 
           {/* ── Research tab — existing ResearchModal content ── */}
           {tab === 'research' && <ResearchModalInner currentUser={currentUser} isAdmin={isAdmin} />}
+
+          {/* ── Device Safety tab ── */}
+          {tab === 'devices' && <DeviceSafetyPanel currentUser={currentUser} />}
+
+          {/* ── My Numbers tab ── */}
+          {tab === 'contacts' && <QuickContactsPanel currentUser={currentUser} />}
 
           {/* ── Jobs Board tab ── */}
           {tab === 'jobs' && (
@@ -7862,6 +7903,8 @@ export default function DashboardPage() {
             onOpenResearch={() => { setHubTab('research'); setShowHub(true); }}
             onOpenCme={() => { setHubTab('cme'); setShowHub(true); }}
             onOpenJobs={() => { setHubTab('jobs'); setShowHub(true); }}
+            onOpenDevices={() => { setHubTab('devices'); setShowHub(true); }}
+            onOpenContacts={() => { setHubTab('contacts'); setShowHub(true); }}
           />
 
           {/* DDx button */}
