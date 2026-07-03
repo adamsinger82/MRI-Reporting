@@ -35,6 +35,7 @@ import ResearchAdminForm from './ResearchAdminForm';
 import { fetchResearchPosts, deleteResearchPost } from './researchUtils';
 import DeviceSafetyPanel from './DeviceSafetyPanel';
 import QuickContactsPanel from './QuickContactsPanel';
+import { useColumnLayout } from './columnLayoutUtils';
 
 // ─── MODALITY-AWARE DATA SELECTOR ────────────────────────────────────────────
 // Returns the correct grading data object for a given body part and modality.
@@ -7369,6 +7370,7 @@ export default function DashboardPage() {
 
   const [darkMode, setDarkMode] = useState(false);
   const dm = darkMode;
+  const layout = useColumnLayout(authUser);
   const recognitionRef = useRef(null);
   const isRheumRef = useRef(false); // tracks current modality for STT handler
   const finalTranscriptPersistRef = useRef(''); // persists transcript across recognition restarts
@@ -7898,6 +7900,20 @@ export default function DashboardPage() {
             <span>{dm ? '☀️' : '🌙'}</span> {dm ? 'Light' : 'Dark'}
           </button>
 
+          {/* Column layout: rearrange toggle + reset */}
+          <button onClick={layout.toggleRearrangeMode}
+            title={layout.rearrangeMode ? 'Done rearranging columns' : 'Drag columns to reorder'}
+            style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:layout.rearrangeMode?'rgba(99,102,241,0.35)':'rgba(255,255,255,0.08)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
+            <span>⠿</span> {layout.rearrangeMode ? 'Done' : 'Layout'}
+          </button>
+          {layout.isCustomized && (
+            <button onClick={layout.reset}
+              title="Reset column layout to default"
+              style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:'rgba(255,255,255,0.08)',color:'white',fontSize:12,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s',backdropFilter:'blur(4px)' }}>
+              <span>↺</span> Reset
+            </button>
+          )}
+
           {/* MSK Hub dropdown */}
           <MSKHubDropdown
             onOpenResearch={() => { setHubTab('research'); setShowHub(true); }}
@@ -8087,10 +8103,13 @@ export default function DashboardPage() {
       </div>
 
       {/* ── THREE COLUMN GRID ── */}
-      <div className="msk-grid">
+      <div className="msk-grid" style={layout.gridStyle}>
 
         {/* Col 1 — Dictation */}
-        <div className={`msk-col${mobileTab===0?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div className={`msk-col${mobileTab===0?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column',...layout.orderStyle(0) }}>
+          {layout.rearrangeMode && (
+            <div {...layout.dragProps(0)} title="Drag to reorder" style={{ cursor:'grab',textAlign:'center',padding:'4px 0',fontSize:12,letterSpacing:'0.2em',color:dm?'#64748b':'#94a3b8',background:dm?'rgba(255,255,255,0.03)':'#f8fafc',borderBottom:'1px solid '+(dm?'#334155':'#e2e8f0'),userSelect:'none' }}>⠿</div>
+          )}
           {colHdr(isRheum?'linear-gradient(135deg,#7c2d92,#a855f7)':isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#2563eb)', isRheum?'🩻':isCT?'🔬':'📝', isRheum?'X-Ray Dictation (Rheum)':isCT?'CT Dictation Input':'MRI Dictation Input')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
             <div style={{ display:'flex',gap:8 }}>
@@ -8263,8 +8282,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        <layout.Handle slot={0} />
+
         {/* Col 2 — Report */}
-        <div className={`msk-col${mobileTab===1?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div className={`msk-col${mobileTab===1?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column',...layout.orderStyle(1) }}>
+          {layout.rearrangeMode && (
+            <div {...layout.dragProps(1)} title="Drag to reorder" style={{ cursor:'grab',textAlign:'center',padding:'4px 0',fontSize:12,letterSpacing:'0.2em',color:dm?'#64748b':'#94a3b8',background:dm?'rgba(255,255,255,0.03)':'#f8fafc',borderBottom:'1px solid '+(dm?'#334155':'#e2e8f0'),userSelect:'none' }}>⠿</div>
+          )}
           {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report',
             generatedReport && !isGenerating ? (
               <button onClick={() => setIsEditingReport(e => !e)}
@@ -8307,8 +8331,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        <layout.Handle slot={1} />
+
         {/* Col 3 — Reference */}
-        <div className={`msk-col${mobileTab===2?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column' }}>
+        <div className={`msk-col${mobileTab===2?' mobile-active':''}`} style={{ background:dm?'#1e293b':'white',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.18)',display:'flex',flexDirection:'column',...layout.orderStyle(2) }}>
+          {layout.rearrangeMode && (
+            <div {...layout.dragProps(2)} title="Drag to reorder" style={{ cursor:'grab',textAlign:'center',padding:'4px 0',fontSize:12,letterSpacing:'0.2em',color:dm?'#64748b':'#94a3b8',background:dm?'rgba(255,255,255,0.03)':'#f8fafc',borderBottom:'1px solid '+(dm?'#334155':'#e2e8f0'),userSelect:'none' }}>⠿</div>
+          )}
           {colHdr(
             arthroplastyEnabled && ARTHROPLASTY_JOINTS.includes(selectedBodyPart)
               ? 'linear-gradient(135deg,#0e7490,#0891b2)'
@@ -8400,6 +8429,9 @@ export default function DashboardPage() {
 
           /* Larger tap targets for buttons */
           .msk-col button { min-height:44px !important; }
+
+          /* Resize handles are a desktop-only affordance */
+          .msk-resize-handle { display:none !important; }
         }
 
         /* Desktop: hide mobile-only elements */
