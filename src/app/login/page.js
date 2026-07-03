@@ -8391,6 +8391,10 @@ export default function DashboardPage() {
       <style>{`
         .msk-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; padding:16px; box-sizing:border-box; }
 
+        .msk-resize-handle-line { background:${dm?'rgba(148,163,184,0.45)':'rgba(100,116,139,0.35)'}; transition:background 0.15s,width 0.15s; }
+        .msk-resize-handle:hover .msk-resize-handle-line { background:#2563eb; width:4px !important; }
+        .msk-resize-handle:active .msk-resize-handle-line { background:#1d4ed8; width:4px !important; }
+
         /* ── MOBILE STYLES (≤768px) — desktop completely unaffected ── */
         @media (max-width:768px) {
 

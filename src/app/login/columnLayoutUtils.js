@@ -232,7 +232,7 @@ export function useColumnLayout(authUser) {
         touchAction: 'none',
       }}
     >
-      <div style={{ width: 3, height: 32, borderRadius: 2, background: 'rgba(148,163,184,0.35)' }} />
+      <div className="msk-resize-handle-line" style={{ width: 2, height: '100%', borderRadius: 2 }} />
     </div>
   ), [startResize]);
 
