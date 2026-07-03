@@ -142,7 +142,7 @@ export default function MskConsultPanel({ currentUser }) {
         <div style={{ background: '#0f172a', border: '1px solid rgba(99,179,237,0.15)', borderRadius: 10, padding: '10px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
             <span style={{ color: '#e2e8f0', fontSize: 12, fontWeight: 600 }}>
-              {usageLoaded ? `$${usage.remaining.toFixed(2)} remaining` : 'Loading usage…'}
+              {usageLoaded ? `${Math.max(0, 100 - pct).toFixed(0)}% remaining` : 'Loading usage…'}
             </span>
             <span style={{ color: '#718096', fontSize: 11 }}>{pct.toFixed(0)}% used</span>
           </div>

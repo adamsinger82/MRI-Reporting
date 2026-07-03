@@ -3681,7 +3681,7 @@ function RecommendArticleForm({ currentUser, onClose }) {
 
 // ─── RESEARCH MODAL ────────────────────────────────────────────────────────
 // ─── MSK HUB DROPDOWN ────────────────────────────────────────────────────────
-function MSKHubDropdown({ onOpenResearch, onOpenJobs, onOpenCme, onOpenDevices, onOpenContacts }) {
+function MSKHubDropdown({ onOpenResearch, onOpenJobs, onOpenCme, onOpenDevices, onOpenContacts, onOpenConsult }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -3728,10 +3728,17 @@ function MSKHubDropdown({ onOpenResearch, onOpenJobs, onOpenCme, onOpenDevices, 
           </button>
           <button
             onClick={() => { setOpen(false); onOpenContacts(); }}
-            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',borderBottom:'1px solid rgba(99,179,237,0.08)',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background='transparent'}>
             📞 My Numbers
+          </button>
+          <button
+            onClick={() => { setOpen(false); onOpenConsult(); }}
+            style={{ display:'block',width:'100%',padding:'11px 18px',background:'transparent',border:'none',color:'#cbd5e0',fontSize:13,textAlign:'left',cursor:'pointer',transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(99,179,237,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+            💬 MSK-Consult
           </button>
 
         </div>
@@ -7926,6 +7933,7 @@ export default function DashboardPage() {
             onOpenJobs={() => { setHubTab('jobs'); setShowHub(true); }}
             onOpenDevices={() => { setHubTab('devices'); setShowHub(true); }}
             onOpenContacts={() => { setHubTab('contacts'); setShowHub(true); }}
+            onOpenConsult={() => { setHubTab('consult'); setShowHub(true); }}
           />
 
           {/* DDx button */}
