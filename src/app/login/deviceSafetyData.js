@@ -48,6 +48,12 @@ export const DEVICES = [
       'Stimulation lead courses cephalad into the submandibular/neck region toward the hypoglossal nerve — pacemakers and ICDs do not have a lead in this location.',
       'No leads enter the heart/great vessels, distinguishing it from cardiac devices.',
     ],
+    xrayCheckpoints: [
+      'Trace the stimulation lead continuously from generator to the submandibular region — look for any break, kink, or discontinuity.',
+      'Confirm the separate respiratory sensing lead is also intact and connected at the generator header.',
+      'No evidence of lead migration, coiling, or disconnection at the header.',
+      'Note generator model markings if visible, to confirm exact MR parameters.',
+    ],
     lookalikes: ['pacemaker', 'vagal-nerve-stimulator'],
     referenceLinks: [
       { label: 'Inspire Medical Systems — official site', url: 'https://www.inspiresleep.com' },
@@ -66,6 +72,11 @@ export const DEVICES = [
     distinguishing: [
       'Generator sits in left upper chest (classically left, unlike Inspire which is typically right-sided).',
       'Single lead courses cephalad along the left neck toward the vagus nerve, wrapping the carotid sheath — no intracardiac or intrathoracic lead course.',
+    ],
+    xrayCheckpoints: [
+      'Trace the single lead from generator up the neck — confirm no fracture or discontinuity along its course.',
+      'Confirm the lead connects securely at the generator header, with no visible gap or loop suggesting disconnection.',
+      'Note generator laterality (left vs. right) and any visible model markings.',
     ],
     lookalikes: ['inspire-hypoglossal', 'pacemaker'],
     referenceLinks: [
@@ -86,6 +97,12 @@ export const DEVICES = [
       'Generator can (thin), typically 1–2 leads seen coursing through the subclavian vein into the right atrium and/or right ventricle.',
       'Leads terminate WITHIN the cardiac chambers (atrial and/or ventricular tip) — this is the key differentiator from an ICD, which has a visibly thicker shock coil segment.',
       'No lead should be seen coursing toward the neck (that would suggest Inspire/VNS) or coiled in the epidural/intrathecal space (spinal cord stimulator/pump).',
+    ],
+    xrayCheckpoints: [
+      'Count and trace each lead from the header to its cardiac chamber terminus — confirm no fractures and no abandoned/capped leads.',
+      'Confirm each lead tip is appropriately positioned (atrial and/or ventricular) with no evidence of retraction or migration.',
+      'Check specifically for any disconnected, coiled, or redundant lead segments suggesting an abandoned lead — abandoned leads change MR safety status.',
+      'Note generator model markings if visible.',
     ],
     lookalikes: ['icd', 'loop-recorder'],
     referenceLinks: [
@@ -108,6 +125,12 @@ export const DEVICES = [
       'Look for one or two radiodense "shock coil" segments along the lead — a longer, denser, coiled segment in the right ventricle (and sometimes SVC) — this is the single most reliable distinguishing feature from a pacemaker lead.',
       'Leads terminate in the right ventricle ± right atrium, same general course as a pacemaker.',
     ],
+    xrayCheckpoints: [
+      'Trace each lead, including the shock coil segment(s), for continuity — no fractures or breaks anywhere along the coil or pace/sense conductor.',
+      'Confirm lead tip position in the right ventricle (± atrium) is stable, with no migration.',
+      'Specifically check for abandoned or capped/oversewn leads — a common and important source of MR contraindication for ICD systems.',
+      'Note generator model markings if visible.',
+    ],
     lookalikes: ['pacemaker', 'loop-recorder'],
     referenceLinks: [
       { label: 'Medtronic — MR Conditional Search Tool', url: 'https://www.medtronic.com/en-us/healthcare-professionals/mri-resources/mr-conditional-search-tool.html' },
@@ -128,6 +151,11 @@ export const DEVICES = [
       'No leads at all — small (matchstick-sized), thin radiodense strip typically implanted subcutaneously over the left parasternal chest, NOT connected to the heart.',
       'Absence of any transvenous lead is the key differentiator from every other cardiac device on this list.',
     ],
+    xrayCheckpoints: [
+      'Confirm no leads are present at all — this device should appear as a small standalone strip with no wires.',
+      'Confirm the expected subcutaneous (left parasternal) location, without migration.',
+      'If any lead-like structure is seen, reconsider the diagnosis — this may not be a loop recorder.',
+    ],
     lookalikes: ['pacemaker', 'icd'],
     referenceLinks: [
       { label: 'Medtronic — MR Conditional Search Tool', url: 'https://www.medtronic.com/en-us/healthcare-professionals/mri-resources/mr-conditional-search-tool.html' },
@@ -147,6 +175,11 @@ export const DEVICES = [
       'Small generator implanted in the upper buttock/posterior pelvis (not abdominal wall), with a lead coursing to the S3 sacral foramen — the sacral foramen lead entry point is the hallmark finding.',
       'Distinguish from an intrathecal pump: pumps sit in the anterior abdominal wall with a catheter coursing posteriorly into the spinal canal, whereas sacral stimulators are entirely posterior/pelvic.',
     ],
+    xrayCheckpoints: [
+      'Trace the lead from the generator to the S3 sacral foramen — confirm no fracture or discontinuity.',
+      'Confirm the lead tip remains at the foramen without migration.',
+      'Note generator model markings if visible, to determine InterStim II vs. InterStim Micro vs. Axonics (different MR conditions apply).',
+    ],
     lookalikes: ['intrathecal-pump'],
     referenceLinks: [
       { label: 'Medtronic — MRI Resources for Implanted Devices', url: 'https://www.medtronic.com/en-us/healthcare-professionals/mri-resources.html' },
@@ -164,6 +197,11 @@ export const DEVICES = [
     conditions: 'The large majority of contemporary IVC filters are MR Safe/Conditional at 1.5T and 3T. Confirm filter type if uncertain — extremely rare legacy filters may carry restrictions.',
     distinguishing: [
       'Conical or cage-like metallic structure in the midline at the level of the renal veins, oriented along the course of the IVC — distinct silhouette from any stimulator or pump.',
+    ],
+    xrayCheckpoints: [
+      'Confirm filter position at the expected level (usually infrarenal, near the renal veins) without evidence of migration, tilt, or caval wall penetration.',
+      'Confirm all filter struts/legs are intact — no fractured or missing components.',
+      'Note filter type/shape if possible — helps confirm MR status, though nearly all are MR Safe.',
     ],
     lookalikes: [],
     referenceLinks: [
@@ -183,6 +221,12 @@ export const DEVICES = [
       'Battery/generator implanted in the buttock or abdominal wall (flank), connected to one or two thin percutaneous or paddle-type leads that course into the epidural space and run cephalad along the spinal canal, typically to the thoracic level.',
       'Leads sit in the EPIDURAL space, parallel to and just posterior to the vertebral bodies on lateral views — never enter the thecal sac itself.',
       'Key differentiator from an intrathecal pump: SCS leads run cephalad within the epidural space (spinal cord stimulation target); pump catheters terminate at a single low lumbar level (intrathecal drug delivery target) and the pump reservoir is visibly larger/rounder than an SCS battery.',
+    ],
+    xrayCheckpoints: [
+      'Trace the lead(s) from the battery through the epidural space — confirm no fracture, migration, or disconnection at the header.',
+      'Confirm leads remain in the epidural space (not intrathecal) and at the expected cephalad level.',
+      'Check for abandoned leads or battery — a disconnected system changes MR status.',
+      'Note battery model markings if visible.',
     ],
     lookalikes: ['intrathecal-pump'],
     referenceLinks: [
@@ -204,6 +248,11 @@ export const DEVICES = [
       'Round, disc-shaped reservoir implanted in the anterior abdominal wall (subcutaneous, often lower quadrant) — visibly larger and rounder than any neurostimulator battery.',
       'Single catheter courses from the pump posteriorly around the flank into the spinal canal, terminating at a single low lumbar level within the thecal sac (intrathecal) — it does not run cephalad along multiple levels the way an SCS lead does.',
     ],
+    xrayCheckpoints: [
+      'Trace the catheter from the pump to its intrathecal termination — confirm no kinking, fracture, or disconnection.',
+      'Confirm the reservoir/pump remains fixed in the abdominal wall without migration.',
+      'Note pump model markings if visible.',
+    ],
     lookalikes: ['spinal-cord-stimulator'],
     referenceLinks: [
       { label: 'Medtronic — SynchroMed III Intrathecal Pump', url: 'https://www.medtronic.com/en-us/healthcare-professionals/products/neurological/drug-infusion-systems/synchromed-iii-intrathecal-pump.html' },
@@ -223,6 +272,11 @@ export const DEVICES = [
       'Paired radiopaque cylinders within the corpora cavernosa (penile shaft), a pump in the scrotum, and a fluid reservoir in the pelvis near the bladder — this three-component layout is the hallmark.',
       'Distinguish from an artificial urinary sphincter (AUS): AUS has a periurethral cuff instead of paired corporal cylinders, even though both use a scrotal pump and pelvic reservoir.',
     ],
+    xrayCheckpoints: [
+      'Confirm all three components (cylinders, pump, reservoir) are identifiable and connected via visible tubing.',
+      'Look for any disconnection, kinking, or migration of tubing between components.',
+      'Confirm reservoir position in the pelvis without migration into an unexpected location.',
+    ],
     lookalikes: [],
     referenceLinks: [
       { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
@@ -240,6 +294,10 @@ export const DEVICES = [
     distinguishing: [
       'Often invisible or only a faint, thin curvilinear soft-tissue density along the urethra or vaginal wall on radiographs — usually confirmed on cross-sectional imaging rather than X-ray.',
       'Distinguish from older bone-anchor sling systems, which show discrete small metallic anchors fixed to the pubic bone.',
+    ],
+    xrayCheckpoints: [
+      'Mesh itself is often not well seen on radiographs — no specific clearance concern since the material is MR Safe.',
+      'If metallic bone anchors are present (older sling techniques), confirm their fixation position at the pubic bone without migration.',
     ],
     lookalikes: [],
     referenceLinks: [
@@ -259,6 +317,11 @@ export const DEVICES = [
       'Femoral stem with a head component articulating within an acetabular cup indicates total hip arthroplasty.',
       'Hemiarthroplasty (partial replacement) lacks the acetabular cup — the femoral head component articulates directly with the native acetabulum. This presence/absence of a cup is the key differentiator.',
     ],
+    xrayCheckpoints: [
+      'Confirm all expected components (stem, head, and cup if total arthroplasty) are intact without evidence of fracture or loosening.',
+      'Note any periprosthetic lucency or hardware fracture — not an MR safety issue, but worth flagging as an incidental finding.',
+      'Confirm no additional unexpected hardware (e.g., cerclage wires) that might need separate verification.',
+    ],
     lookalikes: [],
     referenceLinks: [
       { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
@@ -276,6 +339,12 @@ export const DEVICES = [
     distinguishing: [
       'Battery/generator implanted in the chest, similar position to a pacemaker, with thin leads running subcutaneously up the neck and through bilateral burr holes into the brain.',
       'Bilateral, symmetric intracranial lead tips are the hallmark — this distinguishes DBS from VNS/Inspire (single, unilateral, neck-only lead) and from cardiac devices (leads stay within the heart, never intracranial).',
+    ],
+    xrayCheckpoints: [
+      'Trace both leads from the generator through the neck into bilateral burr holes — confirm continuity and no fracture.',
+      'Confirm each lead terminates at a stable intracranial target without migration.',
+      'Check for abandoned leads or a disconnected system — this changes MR status.',
+      'Note generator model markings if visible, to determine exact MR parameters (Percept vs. Vercise vs. Infinity).',
     ],
     lookalikes: ['vagal-nerve-stimulator', 'inspire-hypoglossal'],
     referenceLinks: [
@@ -296,6 +365,10 @@ export const DEVICES = [
       'Tightly wound, tangled, ball-like cluster of fine radiodense wire confined to the expected aneurysm location — no discrete rigid blades or hinges.',
       'Distinguish from aneurysm clips by the coiled, amorphous wire-mesh appearance rather than a rigid, discrete blade shape.',
     ],
+    xrayCheckpoints: [
+      'Confirm the coil mass remains confined to the expected aneurysm location without migration.',
+      'No integrity check is required for MR clearance itself (coils are MR Safe), but note any coil protrusion into the parent vessel.',
+    ],
     lookalikes: ['aneurysm-clips'],
     referenceLinks: [
       { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
@@ -313,6 +386,11 @@ export const DEVICES = [
     distinguishing: [
       'Rigid, discrete blade-shaped hardware (straight or curved spring-clip configuration) fixed at the expected aneurysm neck location.',
       'Distinguish from coils by the rigid, hinge-and-blade shape rather than a wound, amorphous wire mass.',
+    ],
+    xrayCheckpoints: [
+      'The single most important pre-scan step: identify clip type/shape and, if possible, match to known nonferromagnetic profiles (titanium, Elgiloy, Phynox) via operative report or manufacturer database.',
+      'If the material cannot be confirmed by any means, do not clear for MRI — treat as unsafe.',
+      'Note clip count and location for documentation purposes.',
     ],
     lookalikes: ['aneurysm-coils'],
     referenceLinks: [
@@ -332,6 +410,10 @@ export const DEVICES = [
       'Tubular metallic stent traversing the liver parenchyma in an oblique course, connecting the portal vein to a hepatic vein.',
       'The transhepatic oblique course is the hallmark, distinguishing it from biliary or other abdominal vascular stents.',
     ],
+    xrayCheckpoints: [
+      'Confirm the stent remains in its expected transhepatic oblique course without migration.',
+      'Confirm no fracture or discontinuity along the stent length.',
+    ],
     lookalikes: ['cbd-stent'],
     referenceLinks: [
       { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
@@ -349,6 +431,10 @@ export const DEVICES = [
     distinguishing: [
       'Thin tubular stent along the expected biliary tree — plastic stents are faintly radiopaque or radiolucent; metallic self-expanding stents show a radiodense mesh pattern.',
       'Often has a pigtail or flanged end projecting into the duodenum. Distinguish from TIPS by its biliary-tree location rather than a transhepatic portal-to-hepatic-vein course.',
+    ],
+    xrayCheckpoints: [
+      'Confirm stent position along the expected biliary tree without migration.',
+      'Confirm no fracture (metallic stents) or displacement (plastic stents).',
     ],
     lookalikes: ['tips-shunt'],
     referenceLinks: [
@@ -368,6 +454,10 @@ export const DEVICES = [
       'Long, tubular, self-expanding mesh stent coursing vertically in the posterior mediastinum along the expected esophageal course.',
       'Distinguish from an airway (tracheobronchial) stent by its posterior, retrocardiac position rather than the airway\u2019s more central/anterior course.',
     ],
+    xrayCheckpoints: [
+      'Confirm the stent remains in the expected esophageal position without migration into the airway or stomach.',
+      'Confirm no fracture along the stent length.',
+    ],
     lookalikes: [],
     referenceLinks: [
       { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
@@ -385,6 +475,10 @@ export const DEVICES = [
     distinguishing: [
       'Small, rounded, parachute- or umbrella-shaped self-expanding nitinol mesh device at the left atrial appendage, near the left heart border.',
       'Distinguish from a coronary stent (elongated, tubular, within a coronary artery) or a prosthetic valve (ring/frame at a valve annulus) by its rounded, cap-like shape and characteristic left atrial appendage location.',
+    ],
+    xrayCheckpoints: [
+      'Confirm device position at the left atrial appendage without migration or embolization.',
+      'Note device generation if possible (WATCHMAN vs. WATCHMAN FLX) — this determines the applicable scan-time restriction.',
     ],
     lookalikes: ['cardiac-valve-replacement'],
     referenceLinks: [
@@ -405,6 +499,10 @@ export const DEVICES = [
       'Thin, tubular, self-expanding mesh stent at the carotid bifurcation in the neck, following the vessel lumen.',
       'Distinguish from surgical clips or staples (from prior carotid endarterectomy) by its mesh, tubular conformation rather than discrete point hardware.',
     ],
+    xrayCheckpoints: [
+      'Confirm stent position at the carotid bifurcation without migration.',
+      'Confirm no fracture along the stent length.',
+    ],
     lookalikes: [],
     referenceLinks: [
       { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
@@ -422,6 +520,10 @@ export const DEVICES = [
     distinguishing: [
       'Large-caliber tubular metallic stent-graft skeleton conforming to the abdominal aorta (EVAR) or thoracic aorta (TEVAR), often bifurcated into the iliac arteries for EVAR.',
       'The large caliber and aortic/iliac distribution distinguish it from smaller peripheral or visceral vascular stents.',
+    ],
+    xrayCheckpoints: [
+      'Confirm graft position with no migration or component separation (for modular systems).',
+      'Confirm all components (main body, limbs) remain connected without a visible gap.',
     ],
     lookalikes: ['tips-shunt'],
     referenceLinks: [
@@ -442,6 +544,10 @@ export const DEVICES = [
       'Ring- or frame-shaped radiodense hardware at the expected location of a cardiac valve annulus (aortic, mitral, etc.).',
       'Surgical mechanical valves show a discrete rigid ring with occluder leaflets; transcatheter valves (TAVR) show a shorter stent-like frame directly at the aortic annulus, often with adjacent native leaflet calcification.',
     ],
+    xrayCheckpoints: [
+      'Confirm the valve frame/ring position at the expected annulus, without evidence of dehiscence or migration.',
+      'Note valve type (mechanical ring vs. transcatheter stent-frame) to help confirm applicable MR conditions.',
+    ],
     lookalikes: ['laac-device'],
     referenceLinks: [
       { label: 'Edwards Lifesciences — Heart Valve MRI Safety Information', url: 'https://edwardsprod.blob.core.windows.net/media/Gb/devices/heart%20valves/hvt/edwards-us-mri-safety-information.pdf' },
@@ -461,6 +567,11 @@ export const DEVICES = [
       'Irregular, often mushroomed or fragmented metallic density with an associated soft-tissue trauma tract; may be single or multiple.',
       'Location relative to critical structures (globe, spinal canal, vasculature) determines the urgency of pre-scan risk assessment.',
     ],
+    xrayCheckpoints: [
+      'Assess fragment shape and any available material/ballistic information to estimate ferromagnetic potential.',
+      'Note precise location relative to the eye, spinal canal, and major vessels/nerves — proximity to these structures raises the stakes of any migration risk.',
+      'If ferromagnetic potential can\u2019t be excluded and the fragment is near a critical structure, do not clear without further workup.',
+    ],
     lookalikes: ['bbs'],
     referenceLinks: [
       { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
@@ -478,6 +589,10 @@ export const DEVICES = [
     distinguishing: [
       'Small (roughly 4\u20135 mm), uniformly round, smooth spherical density.',
       'The perfectly spherical shape (versus the irregular shape of bullet fragments) is the key distinguishing feature. Frequently periorbital/facial or in extremity soft tissue.',
+    ],
+    xrayCheckpoints: [
+      'Note precise BB location, especially proximity to the globe/orbit — periorbital or intraocular BBs are a distinct high-stakes scenario.',
+      'Treat as ferromagnetic unless proven otherwise; do not clear without further assessment if location is critical.',
     ],
     lookalikes: ['bullets-fragments'],
     referenceLinks: [

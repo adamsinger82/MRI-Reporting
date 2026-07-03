@@ -232,6 +232,17 @@ function DeviceCard({ device, expanded, onToggleExpand, bookmarked, onToggleBook
             </ul>
           </div>
 
+          {device.xrayCheckpoints?.length > 0 && (
+            <div style={{ marginTop: 12, background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 8, padding: '10px 12px' }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                ✅ What to Check on X-ray Before Clearing
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 18, color: c.txt, fontSize: 12.5, lineHeight: 1.7 }}>
+                {device.xrayCheckpoints.map((line, i) => <li key={i}>{line}</li>)}
+              </ul>
+            </div>
+          )}
+
           <div style={{ marginTop: 12 }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: c.accent, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
               MR Safety Conditions
