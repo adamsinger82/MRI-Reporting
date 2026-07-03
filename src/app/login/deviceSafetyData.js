@@ -24,11 +24,13 @@ export const BOOKMARKS_TABLE = 'device_bookmarks';
 
 // Anatomic-location categories, in display order
 export const DEVICE_CATEGORIES = [
+  { id: 'head',       label: 'Head / Intracranial', icon: '🧠' },
   { id: 'neck',       label: 'Neck / Upper Chest', icon: '🦴' },
   { id: 'chest',      label: 'Chest',               icon: '🫀' },
   { id: 'abdopelvis', label: 'Abdomen / Pelvis',    icon: '🩻' },
   { id: 'spine',      label: 'Spine',               icon: '🦴' },
   { id: 'extremity',  label: 'Extremities / Other', icon: '🦵' },
+  { id: 'foreign',    label: 'Foreign Bodies (Retained)', icon: '🎯' },
 ];
 
 // mrStatus: 'safe' | 'conditional' | 'unsafe' | 'unknown'
@@ -210,9 +212,281 @@ export const DEVICES = [
     imagePath: '/devices/intrathecal-pump/xray-ap.jpg',
     notes: '',
   },
+  {
+    id: 'penile-implant',
+    name: 'Penile Implant (Inflatable / Malleable Prosthesis)',
+    category: 'abdopelvis',
+    aliases: ['penile pump', 'inflatable penile prosthesis', 'IPP'],
+    mrStatus: 'conditional',
+    conditions: 'Modern penile prostheses (silicone cylinders, titanium/silicone pump and reservoir) are generally MR Conditional/Safe with minimal ferromagnetic content. Confirm manufacturer if an older or unusual construct is suspected.',
+    distinguishing: [
+      'Paired radiopaque cylinders within the corpora cavernosa (penile shaft), a pump in the scrotum, and a fluid reservoir in the pelvis near the bladder — this three-component layout is the hallmark.',
+      'Distinguish from an artificial urinary sphincter (AUS): AUS has a periurethral cuff instead of paired corporal cylinders, even though both use a scrotal pump and pelvic reservoir.',
+    ],
+    lookalikes: [],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/penile-implant/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'vaginal-mesh-sling',
+    name: 'Vaginal Mesh / Suburethral Sling',
+    category: 'abdopelvis',
+    aliases: ['transvaginal mesh', 'midurethral sling', 'TVT', 'TOT'],
+    mrStatus: 'safe',
+    conditions: 'Synthetic mesh/sling material (polypropylene) is nonmetallic and MR Safe. Any associated bone anchors (older sling techniques) are typically nonferromagnetic, but confirm if present.',
+    distinguishing: [
+      'Often invisible or only a faint, thin curvilinear soft-tissue density along the urethra or vaginal wall on radiographs — usually confirmed on cross-sectional imaging rather than X-ray.',
+      'Distinguish from older bone-anchor sling systems, which show discrete small metallic anchors fixed to the pubic bone.',
+    ],
+    lookalikes: [],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/vaginal-mesh-sling/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'hip-arthroplasty',
+    name: 'Hip Arthroplasty (Total / Partial)',
+    category: 'extremity',
+    aliases: ['THA', 'hemiarthroplasty', 'hip replacement'],
+    mrStatus: 'conditional',
+    conditions: 'The large majority of modern hip implants (titanium, cobalt-chromium, ceramic) are MR Conditional at 1.5T and 3T with routine protocols; expect local susceptibility artifact. Confirm component material if an unusual or very old construct is suspected.',
+    distinguishing: [
+      'Femoral stem with a head component articulating within an acetabular cup indicates total hip arthroplasty.',
+      'Hemiarthroplasty (partial replacement) lacks the acetabular cup — the femoral head component articulates directly with the native acetabulum. This presence/absence of a cup is the key differentiator.',
+    ],
+    lookalikes: [],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/hip-arthroplasty/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'deep-brain-stimulator',
+    name: 'Deep Brain Stimulator (DBS)',
+    category: 'head',
+    aliases: ['DBS', 'neurostimulator for Parkinson\u2019s'],
+    mrStatus: 'conditional',
+    conditions: 'Modern DBS systems (Medtronic Percept, Boston Scientific Vercise, Abbott Infinity) are MR Conditional for head-only or full-body scans depending on the exact model and generator settings. Confirm device family and required parameters before scanning — incomplete, fractured, or abandoned lead systems are a contraindication.',
+    distinguishing: [
+      'Battery/generator implanted in the chest, similar position to a pacemaker, with thin leads running subcutaneously up the neck and through bilateral burr holes into the brain.',
+      'Bilateral, symmetric intracranial lead tips are the hallmark — this distinguishes DBS from VNS/Inspire (single, unilateral, neck-only lead) and from cardiac devices (leads stay within the heart, never intracranial).',
+    ],
+    lookalikes: ['vagal-nerve-stimulator', 'inspire-hypoglossal'],
+    referenceLinks: [
+      { label: 'Medtronic — DBS MRI Information', url: 'https://www.medtronic.com/en-us/healthcare-professionals/specialties/neurology/therapies-procedures/deep-brain-stimulation/mri-information.html' },
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/deep-brain-stimulator/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'aneurysm-coils',
+    name: 'Intracranial Aneurysm Coils',
+    category: 'head',
+    aliases: ['GDC coils', 'endovascular coiling', 'platinum coils'],
+    mrStatus: 'safe',
+    conditions: 'Virtually all modern detachable platinum embolization coils are nonferromagnetic and MR Safe at 1.5T and 3T, including immediately after placement.',
+    distinguishing: [
+      'Tightly wound, tangled, ball-like cluster of fine radiodense wire confined to the expected aneurysm location — no discrete rigid blades or hinges.',
+      'Distinguish from aneurysm clips by the coiled, amorphous wire-mesh appearance rather than a rigid, discrete blade shape.',
+    ],
+    lookalikes: ['aneurysm-clips'],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/aneurysm-coils/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'aneurysm-clips',
+    name: 'Intracranial Aneurysm Clips',
+    category: 'head',
+    aliases: ['cerebral aneurysm clip', 'Yasargil clip', 'Sugita clip'],
+    mrStatus: 'unknown',
+    conditions: 'CRITICAL SAFETY POINT: clips placed before the mid-1990s may be made of ferromagnetic stainless steel and are MR UNSAFE. Clips made of titanium, titanium alloy, Elgiloy, Phynox, or MP35N are nonferromagnetic and MR Safe/Conditional. Never assume safety from appearance alone — confirm the specific clip material via operative records or manufacturer documentation. If the material cannot be confirmed, treat as unsafe.',
+    distinguishing: [
+      'Rigid, discrete blade-shaped hardware (straight or curved spring-clip configuration) fixed at the expected aneurysm neck location.',
+      'Distinguish from coils by the rigid, hinge-and-blade shape rather than a wound, amorphous wire mass.',
+    ],
+    lookalikes: ['aneurysm-coils'],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (aneurysm clip lookup by brand/model)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/aneurysm-clips/xray-ap.jpg',
+    notes: 'Classic radiology safety teaching point — always verify material before clearing for MRI.',
+  },
+  {
+    id: 'tips-shunt',
+    name: 'TIPS (Transjugular Intrahepatic Portosystemic Shunt)',
+    category: 'abdopelvis',
+    aliases: ['TIPS stent', 'portosystemic shunt'],
+    mrStatus: 'safe',
+    conditions: 'Modern TIPS stents (nitinol or stainless steel, often ePTFE-covered) are MR Safe/Conditional and can typically be scanned safely without a required waiting period.',
+    distinguishing: [
+      'Tubular metallic stent traversing the liver parenchyma in an oblique course, connecting the portal vein to a hepatic vein.',
+      'The transhepatic oblique course is the hallmark, distinguishing it from biliary or other abdominal vascular stents.',
+    ],
+    lookalikes: ['cbd-stent'],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/tips-shunt/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'cbd-stent',
+    name: 'Common Bile Duct (Biliary) Stent',
+    category: 'abdopelvis',
+    aliases: ['biliary stent', 'CBD stent', 'ERCP stent'],
+    mrStatus: 'safe',
+    conditions: 'Both plastic and metallic (nitinol) biliary stents are MR Safe/Conditional; no special precautions are typically required.',
+    distinguishing: [
+      'Thin tubular stent along the expected biliary tree — plastic stents are faintly radiopaque or radiolucent; metallic self-expanding stents show a radiodense mesh pattern.',
+      'Often has a pigtail or flanged end projecting into the duodenum. Distinguish from TIPS by its biliary-tree location rather than a transhepatic portal-to-hepatic-vein course.',
+    ],
+    lookalikes: ['tips-shunt'],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/cbd-stent/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'esophageal-stent',
+    name: 'Esophageal Stent',
+    category: 'chest',
+    aliases: ['esophageal SEMS'],
+    mrStatus: 'safe',
+    conditions: 'Self-expanding metallic esophageal stents (nitinol) are MR Safe/Conditional.',
+    distinguishing: [
+      'Long, tubular, self-expanding mesh stent coursing vertically in the posterior mediastinum along the expected esophageal course.',
+      'Distinguish from an airway (tracheobronchial) stent by its posterior, retrocardiac position rather than the airway\u2019s more central/anterior course.',
+    ],
+    lookalikes: [],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/esophageal-stent/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'laac-device',
+    name: 'Left Atrial Appendage Closure Device (e.g., WATCHMAN)',
+    category: 'chest',
+    aliases: ['WATCHMAN', 'Amplatzer Amulet', 'LAAO device'],
+    mrStatus: 'conditional',
+    conditions: 'WATCHMAN and WATCHMAN FLX devices are MR Conditional; specific conditions vary by device generation (check the patient\u2019s implant card). Implants placed before 2022 require limiting continuous scan duration to 15 minutes. Confirm device generation before scanning.',
+    distinguishing: [
+      'Small, rounded, parachute- or umbrella-shaped self-expanding nitinol mesh device at the left atrial appendage, near the left heart border.',
+      'Distinguish from a coronary stent (elongated, tubular, within a coronary artery) or a prosthetic valve (ring/frame at a valve annulus) by its rounded, cap-like shape and characteristic left atrial appendage location.',
+    ],
+    lookalikes: ['cardiac-valve-replacement'],
+    referenceLinks: [
+      { label: 'Boston Scientific — WATCHMAN MRI Guidelines', url: 'https://www.bostonscientific.com/imageready/en-US/watchman-mri-guidelines.html' },
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/laac-device/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'carotid-stent',
+    name: 'Carotid Artery Stent',
+    category: 'neck',
+    aliases: ['carotid stenting', 'CAS'],
+    mrStatus: 'safe',
+    conditions: 'Modern self-expanding nitinol carotid stents are MR Safe/Conditional. Older teaching of a mandatory waiting period is largely outdated for current nitinol designs, but confirm manufacturer labeling if an older stent type is suspected.',
+    distinguishing: [
+      'Thin, tubular, self-expanding mesh stent at the carotid bifurcation in the neck, following the vessel lumen.',
+      'Distinguish from surgical clips or staples (from prior carotid endarterectomy) by its mesh, tubular conformation rather than discrete point hardware.',
+    ],
+    lookalikes: [],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/carotid-stent/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'aortic-stent-graft',
+    name: 'Aortic Stent Graft (EVAR / TEVAR)',
+    category: 'abdopelvis',
+    aliases: ['EVAR', 'TEVAR', 'endograft', 'AAA stent graft'],
+    mrStatus: 'conditional',
+    conditions: 'Most modern aortic stent grafts (e.g., Medtronic Endurant, Gore Excluder, Cook Zenith) are MR Conditional at 1.5T and 3T. Confirm manufacturer/model, as exact conditions and scan parameters vary by device.',
+    distinguishing: [
+      'Large-caliber tubular metallic stent-graft skeleton conforming to the abdominal aorta (EVAR) or thoracic aorta (TEVAR), often bifurcated into the iliac arteries for EVAR.',
+      'The large caliber and aortic/iliac distribution distinguish it from smaller peripheral or visceral vascular stents.',
+    ],
+    lookalikes: ['tips-shunt'],
+    referenceLinks: [
+      { label: 'Medtronic — Endurant Stent Graft MRI Safety Information', url: 'https://www.medtronic.com/en-us/l/patients/treatments-therapies/stent-graft-aaa/important-safety-information.html' },
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/aortic-stent-graft/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'cardiac-valve-replacement',
+    name: 'Cardiac Valve Replacement (Surgical or Transcatheter)',
+    category: 'chest',
+    aliases: ['TAVR', 'prosthetic heart valve', 'mechanical valve', 'bioprosthetic valve'],
+    mrStatus: 'conditional',
+    conditions: 'Essentially all modern surgical and transcatheter heart valves (Edwards SAPIEN, Medtronic CoreValve/Evolut, mechanical valves) are MR Conditional/Safe at 1.5T and 3T with no clinically significant heating or displacement expected. Confirm valve type per implant card if documentation is unclear.',
+    distinguishing: [
+      'Ring- or frame-shaped radiodense hardware at the expected location of a cardiac valve annulus (aortic, mitral, etc.).',
+      'Surgical mechanical valves show a discrete rigid ring with occluder leaflets; transcatheter valves (TAVR) show a shorter stent-like frame directly at the aortic annulus, often with adjacent native leaflet calcification.',
+    ],
+    lookalikes: ['laac-device'],
+    referenceLinks: [
+      { label: 'Edwards Lifesciences — Heart Valve MRI Safety Information', url: 'https://edwardsprod.blob.core.windows.net/media/Gb/devices/heart%20valves/hvt/edwards-us-mri-safety-information.pdf' },
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/cardiac-valve-replacement/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'bullets-fragments',
+    name: 'Retained Bullet / Fragment',
+    category: 'foreign',
+    aliases: ['gunshot fragment', 'retained bullet', 'shrapnel'],
+    mrStatus: 'unknown',
+    conditions: 'Most lead-core bullets and fragments are nonferromagnetic and low risk, but some military or steel-jacketed/steel-core ammunition is ferromagnetic and can migrate or heat. Screening for ferromagnetic potential (or a ballistics/manufacturer consult) is recommended before scanning, especially for fragments near the eye, spinal canal, or major vessels/nerves.',
+    distinguishing: [
+      'Irregular, often mushroomed or fragmented metallic density with an associated soft-tissue trauma tract; may be single or multiple.',
+      'Location relative to critical structures (globe, spinal canal, vasculature) determines the urgency of pre-scan risk assessment.',
+    ],
+    lookalikes: ['bbs'],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/bullets-fragments/xray-ap.jpg',
+    notes: '',
+  },
+  {
+    id: 'bbs',
+    name: 'Retained BB',
+    category: 'foreign',
+    aliases: ['BB pellet', 'airsoft/BB gun pellet'],
+    mrStatus: 'unknown',
+    conditions: 'Steel BBs are ferromagnetic and pose a migration/heating risk. Copper-coated or lead BBs are generally safer, but composition often cannot be confirmed radiographically — treat as ferromagnetic until proven otherwise, particularly for periorbital or intraocular BBs, where even a small ferromagnetic fragment can cause vision-threatening injury.',
+    distinguishing: [
+      'Small (roughly 4\u20135 mm), uniformly round, smooth spherical density.',
+      'The perfectly spherical shape (versus the irregular shape of bullet fragments) is the key distinguishing feature. Frequently periorbital/facial or in extremity soft tissue.',
+    ],
+    lookalikes: ['bullets-fragments'],
+    referenceLinks: [
+      { label: 'MRIsafety.com — THE List (cross-manufacturer reference)', url: 'https://www.mrisafety.com' },
+    ],
+    imagePath: '/devices/bbs/xray-ap.jpg',
+    notes: '',
+  },
 ];
-
-// Convenience lookup
 export const getDeviceById = (id) => DEVICES.find(d => d.id === id);
 export const getDevicesByCategory = (categoryId) => DEVICES.filter(d => d.category === categoryId);
 
