@@ -35,6 +35,7 @@ import ResearchAdminForm from './ResearchAdminForm';
 import { fetchResearchPosts, deleteResearchPost } from './researchUtils';
 import DeviceSafetyPanel from './DeviceSafetyPanel';
 import QuickContactsPanel from './QuickContactsPanel';
+import MskConsultPanel from './MskConsultPanel';
 import { useColumnLayout } from './columnLayoutUtils';
 
 // ─── MODALITY-AWARE DATA SELECTOR ────────────────────────────────────────────
@@ -5102,6 +5103,7 @@ function MSKHubModal({ initialTab, initialModuleId, onClose, currentUser, isAdmi
             { id:'jobs',     label:'💼 Jobs Board' },
             { id:'devices',  label:'🩻 Device Safety' },
             { id:'contacts', label:'📞 My Numbers' },
+            { id:'consult',  label:'💬 MSK-Consult' },
             ...(isAdmin     ? [{ id:'admin', label:`🛡️ Admin${pending.length > 0 ? ` (${pending.length})` : ''}` }] : []),
           ].map(t => (
             <button key={t.id}
@@ -5123,6 +5125,9 @@ function MSKHubModal({ initialTab, initialModuleId, onClose, currentUser, isAdmi
 
           {/* ── My Numbers tab ── */}
           {tab === 'contacts' && <QuickContactsPanel currentUser={currentUser} />}
+
+          {/* ── MSK-Consult tab ── */}
+          {tab === 'consult' && <MskConsultPanel currentUser={currentUser} />}
 
           {/* ── Jobs Board tab ── */}
           {tab === 'jobs' && (
