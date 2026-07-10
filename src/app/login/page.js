@@ -31,6 +31,9 @@ import CopyButton from './CopyButton';
 
 import { MRI_GRADING_DATA, CT_GRADING_DATA } from './gradingData';
 import TemplatesPanel from './TemplatesPanel';
+import ReportPreferencesPanel from './ReportPreferencesPanel';
+import { loadReportPrefs, saveReportPrefs, buildPreferenceInstruction } from './reportPreferencesUtils';
+import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
 import ResearchAdminForm from './ResearchAdminForm';
 import { fetchResearchPosts, deleteResearchPost } from './researchUtils';
 import DeviceSafetyPanel from './DeviceSafetyPanel';
@@ -183,6 +186,7 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
 CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
 - ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes — but is not limited to — phrases like "I interpreted X as Y", "I assumed you meant Z", "Note: I understood [term] to mean [term]", "I corrected [word] to [word]", "[term] interpreted as [term]", or any similar phrasing. If speech recognition produced garbled text, silently use your best clinical interpretation without any comment. The output must contain ONLY the formal radiology report sections: the exam heading, HISTORY, COMPARISON, TECHNIQUE, FINDINGS, IMPRESSION, and optionally FOOTNOTE/REFERENCES. Any sentence that is not part of the formal report is strictly forbidden.
+- NO VISIBLE DELIBERATION — ZERO TOLERANCE: NEVER write out your reasoning, planning, or decision process as part of the response. This includes any sentence that narrates how you are analyzing the dictation, resolving ambiguity, or choosing between options — phrases like "I need to determine...", "Let me...", "Actually...", "Wait...", "Re-reading the dictation...", "Per the rules...", "I'll use...", "I think I should...", or any similar first-person deliberative language. Resolve all ambiguity, uncertainty, and rule conflicts SILENTLY before producing a single character of output. The very first characters of your response must be the exam heading (e.g. "MRI RIGHT SHOULDER WITHOUT CONTRAST") — nothing may precede it, not even a single sentence of setup or reasoning.
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 - TECHNIQUE FORMATTING — STRICT: The technique text must immediately follow "TECHNIQUE:" on the SAME line, separated only by a single space. NEVER put a line break between "TECHNIQUE:" and the technique sentence. Example: "TECHNIQUE: Multiplanar multisequence MRI of the right knee without IV contrast." — never "TECHNIQUE:\nMultiplanar multisequence MRI..."
@@ -548,6 +552,7 @@ FINDINGS — MASS HEADING:
 Generate a separate MASS heading in the FINDINGS section.
 Describe: location, size (in centimeters, three dimensions if provided), signal characteristics or density, morphology, margins, and involvement of adjacent structures as dictated.
 Do not fabricate features not present in the dictation.
+EXAM BODY PART IS ALREADY FIXED — NEVER IN QUESTION: The overall exam is ${part}, fixed by the user's dropdown selection, regardless of whether the dictation itself uses the word "${part}" or mentions typical ${part} structures. Never treat the exam's anatomical region as unspecified, and never use a bracketed placeholder (e.g. "[LOCATION]" or "[BODY PART]") for the exam heading, title, or technique line — those always use ${part} as given. The "location" described within the MASS heading above refers only to the mass's position WITHIN the ${part} (e.g. which compartment, muscle, or soft tissue plane) — if the dictation does not specify that sub-location, simply omit that detail and describe the mass using whatever details ARE dictated. Do not let an undictated mass sub-location cause you to question or omit the overall exam body part.
 
 CASE TYPE — apply exactly one of the following three sets of rules:
 ${massMode === 'new' ? `ACTIVE CASE TYPE: NEW CASE (explicitly set by user)
@@ -7373,6 +7378,8 @@ export default function DashboardPage() {
   const [showAtlas, setShowAtlas] = useState(false);
   const [showDdx, setShowDdx] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showReportPrefs, setShowReportPrefs] = useState(false);
+  const [reportPrefs, setReportPrefs] = useState(DEFAULT_REPORT_PREFS);
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
   const [hubInitialModuleId, setHubInitialModuleId] = useState(null); // set when jumping straight to a specific CME module
@@ -7560,8 +7567,8 @@ export default function DashboardPage() {
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
-          max_tokens:2000,
-          system: isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction,
+          max_tokens:3000,
+          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs),
           messages:[{role:'user',content:`Dictated findings:\n\n${isRheum ? rheumFreeText : dictationText}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS — PLACEMENT INSTRUCTIONS:\nFor each incidental finding below: (1) add a brief descriptive sentence in the FINDINGS section under the most relevant existing heading (for spine MRI use "Paraspinal Soft Tissues:"; for non-spine joints use "Soft Tissues:" or "Regional Neurovascular Structures:" as appropriate for aortic findings) — e.g. "Incidentally noted simple-appearing right adnexal cyst measuring up to X cm." (2) add a corresponding numbered line in the IMPRESSION. (3) include the management recommendation and citation in REFERENCES/FOOTNOTE as detailed below. Do NOT place these findings ONLY in the impression — they must also appear in FINDINGS.\n\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
@@ -7598,7 +7605,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:1500,
-          system: buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews),
+          system: buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + buildPreferenceInstruction(reportPrefs),
           messages:[{role:'user',content:`Radiographic findings checked by the radiologist:\n\n${findingsSummary}\n\nPlease generate a structured X-ray report. For the impression (2-3 sentences maximum): use SINGULAR — "The imaging pattern is most consistent with the diagnosis of [X]." If there is a secondary consideration add "Next consideration includes [Y]." (brief). If two entities coexist: "The imaging pattern is most consistent with [X] superimposed with [Y]." KNEE CPPD vs OA: if chondrocalcinosis + isolated patellofemoral narrowing or prominent subchondral cysts → favor CPPD primary; if chondrocalcinosis + tricompartmental or medial narrowing + osteophytes → favor OA primary with CPPD next. Do NOT repeat findings from FINDINGS. Do NOT reference ABCDE or ABCDEs.`}],
         }),
       });
@@ -7722,6 +7729,36 @@ export default function DashboardPage() {
     saveUserPrefs(authUser.id, userPrefs);
   }, [userPrefs, authUser?.id]);
 
+  // Load this user's saved report-style preferences on login, and seed the
+  // session's starting mass-mode / lay-summary state from them exactly once
+  // (does not fight with the user's own in-session toggle changes afterward).
+  // Fetched from Supabase now, so this is async — falls back to defaults
+  // instantly via loadReportPrefs's own error handling if the fetch fails.
+  const reportPrefsSeeded = useRef(false);
+  useEffect(() => {
+    if (!authUser?.id) { reportPrefsSeeded.current = false; return; }
+    let cancelled = false;
+    (async () => {
+      const loaded = await loadReportPrefs(authUser.id, authUser.access_token);
+      if (cancelled) return;
+      setReportPrefs(loaded);
+      if (!reportPrefsSeeded.current) {
+        reportPrefsSeeded.current = true;
+        setMassMode(loaded.defaultMassMode);
+        setLayPersonSummary(loaded.defaultLayPersonSummary);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authUser?.id]);
+
+  // Passed to ReportPreferencesPanel as onSave — async, and intentionally
+  // lets errors propagate (rather than catching them here) so the panel's
+  // Save button can show "Failed to save" instead of silently no-op'ing.
+  const handleSaveReportPrefs = async (prefs) => {
+    await saveReportPrefs(authUser?.id, authUser?.access_token, prefs);
+    setReportPrefs(prefs);
+  };
+
   // Close avatar popup on outside click — uses ref to check if click is outside
   const avatarPopupRef = useRef(null);
   useEffect(() => {
@@ -7796,6 +7833,7 @@ export default function DashboardPage() {
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showHub && <MSKHubModal initialTab={hubTab} initialModuleId={hubInitialModuleId} onClose={() => { setShowHub(false); setHubInitialModuleId(null); }} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showTemplates && <TemplatesPanel authUser={authUser} generatedReport={generatedReport} selectedBodyPart={selectedBodyPart} modality={modality} onLoad={r => setGeneratedReport(r)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
+      {showReportPrefs && <ReportPreferencesPanel dm={darkMode} prefs={reportPrefs} onSave={handleSaveReportPrefs} onClose={() => setShowReportPrefs(false)} />}
 
       {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />
@@ -8257,10 +8295,16 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
-            <button onClick={() => setShowTemplates(true)}
-              style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:'8px 12px',borderRadius:9,border:`1.5px solid ${dm?'#334155':'#dde3ed'}`,background:dm?'#0f172a':'#f8fafc',color:dm?'#94a3b8':'#475569',fontSize:13,fontWeight:600,cursor:'pointer',transition:'all 0.15s' }}>
-              📂 Templates
-            </button>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => setShowTemplates(true)}
+                style={{ flex:1, display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'8px 12px',borderRadius:9,border:`1.5px solid ${dm?'#334155':'#dde3ed'}`,background:dm?'#0f172a':'#f8fafc',color:dm?'#94a3b8':'#475569',fontSize:13,fontWeight:600,cursor:'pointer',transition:'all 0.15s' }}>
+                📂 Templates
+              </button>
+              <button onClick={() => setShowReportPrefs(true)}
+                style={{ flex:1, display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'8px 12px',borderRadius:9,border:`1.5px solid ${dm?'#334155':'#dde3ed'}`,background:dm?'#0f172a':'#f8fafc',color:dm?'#94a3b8':'#475569',fontSize:13,fontWeight:600,cursor:'pointer',transition:'all 0.15s' }}>
+                ⚙️ Preferences
+              </button>
+            </div>
             {(() => {
               const leftHasText = isRheum ? !!rheumFreeText.trim() : !!dictationText.trim();
               const leftDisabled = isGenerating || isGeneratingRheum || !leftHasText;
