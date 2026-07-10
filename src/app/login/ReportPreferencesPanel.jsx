@@ -1,17 +1,23 @@
 'use client';
 // ReportPreferencesPanel.jsx — LucidMSK Report Style Preferences
-// Toggle-only settings panel for per-user report generation style.
+// Two tabs:
+//   Checklist     — every toggle/select preference, explicit per-field control
+//   Report Styles — pick a starting point by reading static example reports
 // Deliberately has NO free-text input anywhere — every control is a
 // button/select from a fixed list — so there is no field a user could
 // accidentally paste or dictate patient information into.
 //
+// CONFLICT RULE: if a user has explicitly changed a field on the Checklist
+// tab, picking a Report Style that would touch that same field leaves it
+// alone — Checklist choices always win. See touchedRef below.
+//
 // Props:
 //   dm           — dark mode boolean
 //   prefs        — current preferences object (from reportPreferencesUtils.loadReportPrefs)
-//   onSave(prefs)— callback: persists + applies the updated preferences in the parent
+//   onSave(prefs)— async callback: persists the updated preferences (Supabase)
 //   onClose()    — callback: hides the panel
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   NORMAL_TERM_OPTIONS,
   DEFAULT_MASS_MODE_OPTIONS,
@@ -19,14 +25,26 @@ import {
   DEFAULT_REPORT_PREFS,
 } from './reportPreferencesData';
 import { IMPRESSION_LENGTH_OPTIONS, IMPRESSION_STYLE_OPTIONS, DIGIT_NAMING_OPTIONS, HEDGING_LANGUAGE_OPTIONS } from './reportStyleRules';
-import ImpressionStyleModal from './ImpressionStyleModal';
+import { SAMPLE_SHOULDER_FINDINGS, REPORT_STYLE_EXAMPLES } from './sampleReportExamples';
 
 export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
-  const [draft, setDraft] = useState({ ...DEFAULT_REPORT_PREFS, ...prefs });
+  const initial = { ...DEFAULT_REPORT_PREFS, ...prefs };
+  const [draft, setDraft] = useState(initial);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [showPreview, setShowPreview] = useState(false);
+  const [tab, setTab] = useState('checklist'); // 'checklist' | 'styles'
+  const [showSample, setShowSample] = useState(false);
+  const [appliedStyleId, setAppliedStyleId] = useState(null);
+  const [skippedNote, setSkippedNote] = useState('');
+
+  // Fields the user has explicitly set via the Checklist tab THIS session,
+  // plus anything already non-default when the panel opened (best-effort —
+  // we can't know whether a saved non-default value originally came from a
+  // Checklist edit or a prior style pick, so we protect it either way).
+  const touchedRef = useRef(new Set(
+    Object.keys(DEFAULT_REPORT_PREFS).filter(k => initial[k] !== DEFAULT_REPORT_PREFS[k])
+  ));
 
   const c = {
     bg:     dm ? '#0f172a' : '#ffffff',
@@ -36,9 +54,29 @@ export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
     sub:    dm ? '#94a3b8' : '#64748b',
     accent: '#2563eb',
     green:  dm ? '#4ade80' : '#16a34a',
+    red:    dm ? '#f87171' : '#dc2626',
   };
 
-  const set = (key, val) => { setDraft(d => ({ ...d, [key]: val })); setSaved(false); setSaveError(''); };
+  const set = (key, val) => {
+    touchedRef.current.add(key);
+    setDraft(d => ({ ...d, [key]: val }));
+    setSaved(false); setSaveError('');
+  };
+
+  const handleUseStyle = (card) => {
+    const applied = {};
+    const skipped = [];
+    Object.entries(card.patch).forEach(([key, val]) => {
+      if (touchedRef.current.has(key)) skipped.push(key);
+      else applied[key] = val;
+    });
+    setDraft(d => ({ ...d, ...applied }));
+    setAppliedStyleId(card.id);
+    setSaved(false); setSaveError('');
+    setSkippedNote(skipped.length
+      ? `Kept your Checklist setting for ${skipped.join(', ')} — everything else from "${card.label}" was applied.`
+      : '');
+  };
 
   const handleSave = async () => {
     setSaving(true); setSaveError(''); setSaved(false);
@@ -52,9 +90,14 @@ export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
     setSaving(false);
   };
 
-  const handleReset = () => setDraft({ ...DEFAULT_REPORT_PREFS });
+  const handleReset = () => {
+    touchedRef.current = new Set();
+    setDraft({ ...DEFAULT_REPORT_PREFS });
+    setAppliedStyleId(null);
+    setSkippedNote('');
+  };
 
-  // ── Reusable button-group control ───────────────────────────────────────
+  // ── Reusable controls ─────────────────────────────────────────────────
   const ButtonGroup = ({ options, value, onChange }) => (
     <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
       {options.map(opt => {
@@ -84,10 +127,126 @@ export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
     </div>
   );
 
+  const TabBtn = ({ id, label }) => (
+    <button onClick={() => setTab(id)}
+      style={{ flex:1, padding:'8px 0', border:'none', borderRadius:8, background: tab===id ? c.accent : 'transparent', color: tab===id ? 'white' : c.sub, fontWeight: tab===id ? 700 : 500, fontSize:13, cursor:'pointer', transition:'all 0.12s' }}>
+      {label}
+    </button>
+  );
+
+  // ── Checklist tab ─────────────────────────────────────────────────────
+  const ChecklistTab = () => (
+    <>
+      <div style={{ fontSize:11, color:c.sub, background:c.bgCard, borderRadius:8, padding:'8px 12px', margin:'10px 0', border:`1px solid ${c.border}` }}>
+        All settings here are fixed toggles — there's no text field, so there's no way to accidentally enter patient information.
+      </div>
+
+      <Section title="Normal / negative finding wording">
+        <ButtonGroup options={NORMAL_TERM_OPTIONS} value={draft.normalTerm} onChange={v => set('normalTerm', v)} />
+      </Section>
+
+      <Section title="Impression length" hint="Standard follows the built-in report rules as-is.">
+        <ButtonGroup options={IMPRESSION_LENGTH_OPTIONS} value={draft.impressionLength} onChange={v => set('impressionLength', v)} />
+      </Section>
+
+      <Section title="Impression structure style">
+        <ButtonGroup options={IMPRESSION_STYLE_OPTIONS} value={draft.impressionStyle} onChange={v => set('impressionStyle', v)} />
+      </Section>
+
+      <Section title="Pertinent negatives in impression" hint="By default, negative findings stay in FINDINGS only. This adds one brief negatives line to the impression too.">
+        <ButtonGroup
+          options={[{ val:false, label:'Off' }, { val:true, label:'On' }]}
+          value={draft.includePertinentNegatives}
+          onChange={v => set('includePertinentNegatives', v)}
+        />
+      </Section>
+
+      <Section title="Closing impression line" hint={'Adds "Please see above for additional observations." as the final impression item.'}>
+        <ButtonGroup
+          options={[{ val:false, label:'Off' }, { val:true, label:'On' }]}
+          value={draft.appendSeeAboveLine}
+          onChange={v => set('appendSeeAboveLine', v)}
+        />
+      </Section>
+
+      <Section title="Finger naming" hint="How individual fingers are referred to in descriptive finding text.">
+        <ButtonGroup options={DIGIT_NAMING_OPTIONS} value={draft.digitNaming} onChange={v => set('digitNaming', v)} />
+      </Section>
+
+      <Section title="Ambiguous / hedging language" hint={'Controls phrases like "cannot exclude," "unclear," "clinical correlation recommended."'}>
+        <ButtonGroup options={HEDGING_LANGUAGE_OPTIONS} value={draft.hedgingLanguage} onChange={v => set('hedgingLanguage', v)} />
+      </Section>
+
+      <Section title="Include differential for indeterminate findings" hint="Beyond mass/tumor cases, which already include a differential when appropriate.">
+        <ButtonGroup
+          options={[{ val:false, label:'Off' }, { val:true, label:'On' }]}
+          value={draft.alwaysDifferential}
+          onChange={v => set('alwaysDifferential', v)}
+        />
+      </Section>
+
+      <Section title="Default: patient-friendly summary" hint="Sets the starting state of the “Understanding Your Results” checkbox — you can still toggle it per report.">
+        <ButtonGroup options={DEFAULT_LAY_SUMMARY_OPTIONS} value={draft.defaultLayPersonSummary} onChange={v => set('defaultLayPersonSummary', v)} />
+      </Section>
+
+      <Section title="Default: mass / tumor case type" hint="Sets the starting selection — still changeable per report.">
+        <ButtonGroup options={DEFAULT_MASS_MODE_OPTIONS} value={draft.defaultMassMode} onChange={v => set('defaultMassMode', v)} />
+      </Section>
+    </>
+  );
+
+  // ── Report Styles tab ─────────────────────────────────────────────────
+  const StylesTab = () => (
+    <>
+      <div style={{ fontSize:11, color:c.sub, background:c.bgCard, borderRadius:8, padding:'8px 12px', margin:'10px 0', border:`1px solid ${c.border}` }}>
+        These are the same fixed, fictional sample case (not your dictation or any patient data) written out once in each style — pick whichever reads closest to how you write.
+      </div>
+
+      <button onClick={() => setShowSample(s => !s)}
+        style={{ alignSelf:'flex-start', background:'transparent', border:'none', color:c.accent, fontSize:11, fontWeight:600, cursor:'pointer', padding:0, marginBottom:8 }}>
+        {showSample ? '▾ Hide sample FINDINGS' : '▸ Show sample FINDINGS'}
+      </button>
+      {showSample && (
+        <div style={{ fontSize:11, color:c.sub, background:c.bgCard, border:`1px solid ${c.border}`, borderRadius:8, padding:'10px 12px', whiteSpace:'pre-wrap', lineHeight:1.6, fontFamily:'ui-monospace, monospace', marginBottom:10 }}>
+          {SAMPLE_SHOULDER_FINDINGS}
+        </div>
+      )}
+
+      {skippedNote && (
+        <div style={{ fontSize:11, color:dm?'#fb923c':'#c2410c', background:dm?'#3b0f02':'#fff7ed', border:`1px solid ${dm?'#7c2d12':'#fed7aa'}`, borderRadius:8, padding:'8px 12px', marginBottom:10 }}>
+          {skippedNote}
+        </div>
+      )}
+
+      <div style={{ display:'flex', flexDirection:'column', gap:10, paddingBottom:8 }}>
+        {REPORT_STYLE_EXAMPLES.map(card => {
+          const isApplied = appliedStyleId === card.id;
+          return (
+            <div key={card.id} style={{ background:c.bgCard, border:`1px solid ${isApplied ? c.accent : c.border}`, borderRadius:10, padding:'10px 12px', display:'flex', flexDirection:'column', gap:6 }}>
+              <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8 }}>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:c.txt }}>{card.label}</div>
+                  <div style={{ fontSize:11, color:c.sub }}>{card.desc}</div>
+                </div>
+                <button onClick={() => handleUseStyle(card)}
+                  style={{ flexShrink:0, padding:'5px 10px', borderRadius:7, border:`1px solid ${c.accent}`, background: isApplied ? c.accent : 'transparent', color: isApplied ? 'white' : c.accent, fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                  {isApplied ? '✓ Applied' : 'Use This Style'}
+                </button>
+              </div>
+              <div style={{ fontSize:12, color:c.txt, whiteSpace:'pre-wrap', lineHeight:1.7, borderTop:`1px solid ${c.border}`, paddingTop:6 }}>
+                {card.impressionText}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+
   return (
     <div style={{ position:'fixed', inset:0, zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:16, background:'rgba(0,0,0,0.55)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background:c.bg, borderRadius:16, boxShadow:'0 8px 40px rgba(0,0,0,0.35)', width:'100%', maxWidth:480, maxHeight:'85vh', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div style={{ background:c.bg, borderRadius:16, boxShadow:'0 8px 40px rgba(0,0,0,0.35)', width:'100%', maxWidth:520, maxHeight:'88vh', display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
         {/* Header */}
         <div style={{ padding:'14px 16px', borderBottom:`1px solid ${c.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', background:'linear-gradient(135deg,#1d4ed8,#4f46e5)', flexShrink:0 }}>
@@ -95,74 +254,23 @@ export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
             <span style={{ fontSize:18 }}>⚙️</span>
             <div>
               <div style={{ fontSize:14, fontWeight:800, color:'white', letterSpacing:'0.02em' }}>Report Style Preferences</div>
-              <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)' }}>Applies to every report you generate on this device</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)' }}>Syncs to your account across devices</div>
             </div>
           </div>
           <button onClick={onClose} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:8, width:30, height:30, color:'white', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
         </div>
 
+        {/* Tabs */}
+        <div style={{ padding:'10px 16px 0', borderBottom:`1px solid ${c.border}`, flexShrink:0 }}>
+          <div style={{ display:'flex', gap:4, background:c.bgCard, borderRadius:10, padding:3 }}>
+            <TabBtn id="checklist" label="✅ Checklist" />
+            <TabBtn id="styles" label="📋 Report Styles" />
+          </div>
+        </div>
+
         {/* Body */}
         <div style={{ padding:'4px 16px', overflowY:'auto', flex:1 }}>
-          <div style={{ fontSize:11, color:c.sub, background:c.bgCard, borderRadius:8, padding:'8px 12px', margin:'10px 0', border:`1px solid ${c.border}` }}>
-            All settings here are fixed toggles — there's no text field, so there's no way to accidentally enter patient information.
-          </div>
-
-          <Section title="Normal / negative finding wording">
-            <ButtonGroup options={NORMAL_TERM_OPTIONS} value={draft.normalTerm} onChange={v => set('normalTerm', v)} />
-          </Section>
-
-          <Section title="Impression length" hint="Standard follows the built-in report rules as-is.">
-            <ButtonGroup options={IMPRESSION_LENGTH_OPTIONS} value={draft.impressionLength} onChange={v => set('impressionLength', v)} />
-          </Section>
-
-          <Section title="Impression structure style">
-            <ButtonGroup options={IMPRESSION_STYLE_OPTIONS} value={draft.impressionStyle} onChange={v => set('impressionStyle', v)} />
-          </Section>
-
-          <Section title="Pertinent negatives in impression" hint="By default, negative findings stay in FINDINGS only. This adds one brief negatives line to the impression too.">
-            <ButtonGroup
-              options={[{ val:false, label:'Off' }, { val:true, label:'On' }]}
-              value={draft.includePertinentNegatives}
-              onChange={v => set('includePertinentNegatives', v)}
-            />
-          </Section>
-
-          <Section title="Closing impression line" hint={'Adds "Please see above for additional observations." as the final impression item.'}>
-            <ButtonGroup
-              options={[{ val:false, label:'Off' }, { val:true, label:'On' }]}
-              value={draft.appendSeeAboveLine}
-              onChange={v => set('appendSeeAboveLine', v)}
-            />
-          </Section>
-
-          <Section title="Finger naming" hint="How individual fingers are referred to in descriptive finding text.">
-            <ButtonGroup options={DIGIT_NAMING_OPTIONS} value={draft.digitNaming} onChange={v => set('digitNaming', v)} />
-          </Section>
-
-          <Section title="Ambiguous / hedging language" hint={'Controls phrases like "cannot exclude," "unclear," "clinical correlation recommended."'}>
-            <ButtonGroup options={HEDGING_LANGUAGE_OPTIONS} value={draft.hedgingLanguage} onChange={v => set('hedgingLanguage', v)} />
-          </Section>
-
-          <button onClick={() => setShowPreview(true)}
-            style={{ padding:'9px 0', borderRadius:9, border:`1.5px solid ${c.accent}`, background:'transparent', color:c.accent, fontSize:12, fontWeight:700, cursor:'pointer', margin:'10px 0 4px' }}>
-            🔍 Preview Impression Styles on a Sample Case
-          </button>
-
-          <Section title="Include differential for indeterminate findings" hint="Beyond mass/tumor cases, which already include a differential when appropriate.">
-            <ButtonGroup
-              options={[{ val:false, label:'Off' }, { val:true, label:'On' }]}
-              value={draft.alwaysDifferential}
-              onChange={v => set('alwaysDifferential', v)}
-            />
-          </Section>
-
-          <Section title="Default: patient-friendly summary" hint="Sets the starting state of the “Understanding Your Results” checkbox — you can still toggle it per report.">
-            <ButtonGroup options={DEFAULT_LAY_SUMMARY_OPTIONS} value={draft.defaultLayPersonSummary} onChange={v => set('defaultLayPersonSummary', v)} />
-          </Section>
-
-          <Section title="Default: mass / tumor case type" hint="Sets the starting selection — still changeable per report.">
-            <ButtonGroup options={DEFAULT_MASS_MODE_OPTIONS} value={draft.defaultMassMode} onChange={v => set('defaultMassMode', v)} />
-          </Section>
+          {tab === 'checklist' ? <ChecklistTab /> : <StylesTab />}
         </div>
 
         {/* Footer */}
@@ -182,13 +290,6 @@ export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
           </div>
         </div>
       </div>
-      {showPreview && (
-        <ImpressionStyleModal
-          dm={dm}
-          onApply={patch => { setDraft(d => ({ ...d, ...patch })); setSaved(false); }}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
     </div>
   );
 }
