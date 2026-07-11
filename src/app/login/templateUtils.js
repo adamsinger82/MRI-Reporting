@@ -67,6 +67,7 @@ export function buildTemplateMergeInstruction(templateContent) {
 
 CRITICAL — do exactly this instead:
 - Reproduce the TEMPLATE's headings, subheadings, and section order EXACTLY as written below — the same number of sections, the same section names, in the same sequence. Do not add sections the template doesn't have. Do not omit sections the template does have. Do not consolidate or split sections differently than the template does.
+- NEVER invent a new heading or subheading that isn't already in the template — not even one that seems clinically reasonable (e.g. "Postsurgical Change:", "Distal Radioulnar Joint:"). If a dictated finding doesn't fit cleanly under any existing template heading, fold it into the text of the single MOST clinically related existing heading instead (e.g. a DRUJ/ulnar subluxation finding belongs under whichever existing heading already covers that ligament/joint/compartment — TFCC, ligament, or joint-effusion heading — not a new one). The finding can also appear in the IMPRESSION regardless of where it lands in FINDINGS.
 - For each line/section, keep the template's exact wording UNLESS the dictated findings below explicitly describe something different for that specific line (a new finding, different severity, location, or measurement) — in that case, replace only that line's content, still using the template's heading for it.
 - Any template line the dictation does not address must be copied through completely unchanged.
 - Do not invent findings beyond what the template and dictation together specify.
