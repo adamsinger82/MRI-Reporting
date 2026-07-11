@@ -63,13 +63,15 @@ export async function cleanupTemplateDictation(rawText) {
 export function buildTemplateMergeInstruction(templateContent) {
   const template = (templateContent || '').trim();
   if (!template) return '';
-  return `\n\nTEMPLATE MODE — a saved report template is provided below. Use it as the structural scaffold for this report:
-- Preserve its section order, headings, and exact wording wherever the dictated findings below do not address that line.
-- Only change or add content where the dictated findings explicitly describe something different (a new finding, a different severity, a different location, a different measurement, etc.).
-- Any template line the dictation does NOT mention must be kept exactly as written in the template — treat it as still normal/negative, don't delete it or reword it.
-- Do not invent findings beyond what the template and dictation together specify.
-- Still follow all formatting/section rules above for the final output.
+  return `\n\nTEMPLATE MODE — THIS SECTION OVERRIDES THE STRUCTURAL RULES ABOVE. A saved report template is provided below, and it takes full precedence over every heading/section/structure requirement stated earlier in this prompt — including (but not limited to) the required heading list for this joint, the "Bones:" consolidation rule, any rule against per-structure subheadings (individual bones, individual nerves, individual muscles, etc.), and the joint-space/articular-cartilage section rules. Ignore all of those when they conflict with the template below.
 
-TEMPLATE:
+CRITICAL — do exactly this instead:
+- Reproduce the TEMPLATE's headings, subheadings, and section order EXACTLY as written below — the same number of sections, the same section names, in the same sequence. Do not add sections the template doesn't have. Do not omit sections the template does have. Do not consolidate or split sections differently than the template does.
+- For each line/section, keep the template's exact wording UNLESS the dictated findings below explicitly describe something different for that specific line (a new finding, different severity, location, or measurement) — in that case, replace only that line's content, still using the template's heading for it.
+- Any template line the dictation does not address must be copied through completely unchanged.
+- Do not invent findings beyond what the template and dictation together specify.
+- The accuracy rules still apply within this structure: for genuinely new findings, use the radiologist's exact dictated wording rather than adding morphology/signal/measurement detail they didn't say.
+
+TEMPLATE (reproduce this exact structure, merging in the dictated findings):
 ${template}`;
 }
