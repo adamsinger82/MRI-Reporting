@@ -20,11 +20,12 @@
 import { useState, useRef } from 'react';
 import {
   NORMAL_TERM_OPTIONS,
-  DEFAULT_MASS_MODE_OPTIONS,
-  DEFAULT_LAY_SUMMARY_OPTIONS,
   DEFAULT_REPORT_PREFS,
 } from './reportPreferencesData';
-import { IMPRESSION_LENGTH_OPTIONS, IMPRESSION_STYLE_OPTIONS, DIGIT_NAMING_OPTIONS, HEDGING_LANGUAGE_OPTIONS } from './reportStyleRules';
+import {
+  IMPRESSION_LENGTH_OPTIONS, IMPRESSION_STYLE_OPTIONS, DIGIT_NAMING_OPTIONS, HEDGING_LANGUAGE_OPTIONS,
+  NERVE_LISTING_OPTIONS, SPINE_CANAL_TERM_OPTIONS, GRADING_SYSTEMS_OPTIONS, IMPRESSION_NUMBERING_OPTIONS,
+} from './reportStyleRules';
 import { SAMPLE_SHOULDER_FINDINGS, REPORT_STYLE_EXAMPLES } from './sampleReportExamples';
 
 export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
@@ -185,12 +186,20 @@ export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
         />
       </Section>
 
-      <Section title="Default: patient-friendly summary" hint="Sets the starting state of the “Understanding Your Results” checkbox — you can still toggle it per report.">
-        <ButtonGroup options={DEFAULT_LAY_SUMMARY_OPTIONS} value={draft.defaultLayPersonSummary} onChange={v => set('defaultLayPersonSummary', v)} />
+      <Section title="Nerve listing" hint="Lumped keeps the default single Regional Neurovascular Structures heading; Separate gives each nerve its own heading.">
+        <ButtonGroup options={NERVE_LISTING_OPTIONS} value={draft.nerveListing} onChange={v => set('nerveListing', v)} />
       </Section>
 
-      <Section title="Default: mass / tumor case type" hint="Sets the starting selection — still changeable per report.">
-        <ButtonGroup options={DEFAULT_MASS_MODE_OPTIONS} value={draft.defaultMassMode} onChange={v => set('defaultMassMode', v)} />
+      <Section title="Spine canal / foraminal terminology" hint="Applies to cervical, thoracic, and lumbar spine — MRI and CT.">
+        <ButtonGroup options={SPINE_CANAL_TERM_OPTIONS} value={draft.spineCanalForaminalTerm} onChange={v => set('spineCanalForaminalTerm', v)} />
+      </Section>
+
+      <Section title="Named grading systems" hint="E.g. Goutallier, Kellgren-Lawrence, Outerbridge. Disabled describes findings descriptively instead.">
+        <ButtonGroup options={GRADING_SYSTEMS_OPTIONS} value={draft.useGradingSystems} onChange={v => set('useGradingSystems', v)} />
+      </Section>
+
+      <Section title="Impression numbering style">
+        <ButtonGroup options={IMPRESSION_NUMBERING_OPTIONS} value={draft.impressionNumbering} onChange={v => set('impressionNumbering', v)} />
       </Section>
     </>
   );

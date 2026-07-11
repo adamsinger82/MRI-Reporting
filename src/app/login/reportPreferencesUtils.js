@@ -9,7 +9,12 @@
 // this. Preferences now sync across devices/browsers for a given account.
 
 import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
-import { LENGTH_RULE_TEXT, STYLE_RULE_TEXT, DIFFERENTIAL_RULE_TEXT, NEGATIVES_RULE_TEXT, SEE_ABOVE_RULE_TEXT, DIGIT_NAMING_RULE_TEXT, HEDGING_AVOID_RULE_TEXT } from './reportStyleRules';
+import {
+  LENGTH_RULE_TEXT, STYLE_RULE_TEXT, DIFFERENTIAL_RULE_TEXT, NEGATIVES_RULE_TEXT,
+  SEE_ABOVE_RULE_TEXT, DIGIT_NAMING_RULE_TEXT, HEDGING_AVOID_RULE_TEXT,
+  NERVE_LISTING_RULE_TEXT, SPINE_CANAL_TERM_RULE_TEXT, GRADING_SYSTEMS_DISABLED_RULE_TEXT,
+  IMPRESSION_NUMBERING_RULE_TEXT,
+} from './reportStyleRules';
 
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
 const getAnonKey = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -35,8 +40,10 @@ function toRow(userId, prefs) {
     digit_naming: prefs.digitNaming,
     hedging_language: prefs.hedgingLanguage,
     always_differential: prefs.alwaysDifferential,
-    default_lay_person_summary: prefs.defaultLayPersonSummary,
-    default_mass_mode: prefs.defaultMassMode,
+    nerve_listing: prefs.nerveListing,
+    spine_canal_foraminal_term: prefs.spineCanalForaminalTerm,
+    use_grading_systems: prefs.useGradingSystems,
+    impression_numbering: prefs.impressionNumbering,
   };
 }
 
@@ -51,8 +58,10 @@ function fromRow(row) {
     digitNaming: row.digit_naming ?? DEFAULT_REPORT_PREFS.digitNaming,
     hedgingLanguage: row.hedging_language ?? DEFAULT_REPORT_PREFS.hedgingLanguage,
     alwaysDifferential: row.always_differential ?? DEFAULT_REPORT_PREFS.alwaysDifferential,
-    defaultLayPersonSummary: row.default_lay_person_summary ?? DEFAULT_REPORT_PREFS.defaultLayPersonSummary,
-    defaultMassMode: row.default_mass_mode ?? DEFAULT_REPORT_PREFS.defaultMassMode,
+    nerveListing: row.nerve_listing ?? DEFAULT_REPORT_PREFS.nerveListing,
+    spineCanalForaminalTerm: row.spine_canal_foraminal_term ?? DEFAULT_REPORT_PREFS.spineCanalForaminalTerm,
+    useGradingSystems: row.use_grading_systems ?? DEFAULT_REPORT_PREFS.useGradingSystems,
+    impressionNumbering: row.impression_numbering ?? DEFAULT_REPORT_PREFS.impressionNumbering,
   };
 }
 
@@ -120,6 +129,22 @@ export function buildPreferenceInstruction(prefs) {
 
   if (prefs.hedgingLanguage === 'avoid') {
     lines.push(`- ${HEDGING_AVOID_RULE_TEXT}`);
+  }
+
+  if (NERVE_LISTING_RULE_TEXT[prefs.nerveListing]) {
+    lines.push(`- ${NERVE_LISTING_RULE_TEXT[prefs.nerveListing]}`);
+  }
+
+  if (SPINE_CANAL_TERM_RULE_TEXT[prefs.spineCanalForaminalTerm]) {
+    lines.push(`- ${SPINE_CANAL_TERM_RULE_TEXT[prefs.spineCanalForaminalTerm]}`);
+  }
+
+  if (prefs.useGradingSystems === false) {
+    lines.push(`- ${GRADING_SYSTEMS_DISABLED_RULE_TEXT}`);
+  }
+
+  if (IMPRESSION_NUMBERING_RULE_TEXT[prefs.impressionNumbering]) {
+    lines.push(`- ${IMPRESSION_NUMBERING_RULE_TEXT[prefs.impressionNumbering]}`);
   }
 
   // Kept last so the model applies it after every other impression-shaping

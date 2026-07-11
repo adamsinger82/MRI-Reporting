@@ -157,6 +157,42 @@ function buildReportHeading(modality, part, lat, con, spineRegion) {
   return (isCT ? 'CT' : 'MRI') + ' ' + latPart + partLabel + (conLabel ? ' ' + conLabel : '');
 }
 
+// POST-PROCESSING SAFETY NET — this exists because prompt-level "don't do
+// this" rules alone have not reliably prevented two related failure modes:
+// (1) the model occasionally narrates its reasoning as plain visible text
+//     instead of resolving ambiguity silently, and
+// (2) the model occasionally re-derives a value from ambiguous/garbled
+//     dictation (body part, contrast status) instead of using the value the
+//     user actually selected in the UI — even though that value is already
+//     fixed and shown to it as a literal template in the prompt.
+// Since the correct heading and contrast phrase are deterministic — we
+// already computed them in code from the user's own selections — we don't
+// need the model to reproduce them correctly. We enforce them here instead.
+// This runs on every generated report regardless of how well the prompt
+// rules are followed on a given call.
+function sanitizeReportOutput(text, expectedHeading, contrastLabel) {
+  if (!text) return text;
+  const historyMatch = text.match(/^HISTORY:/im);
+  if (!historyMatch) return text; // doesn't look like a formal report — leave untouched rather than risk mangling it
+  const beforeHistory = text.slice(0, historyMatch.index);
+  const headingMatches = [...beforeHistory.matchAll(/^(MRI|CT|RADIOGRAPHS)\b.*$/gim)];
+  if (!headingMatches.length) return text; // no recognizable heading line — leave untouched
+  // Use the LAST heading-shaped line before HISTORY: — the one immediately
+  // preceding HISTORY: is the real one; anything before it is leaked preamble.
+  const lastHeading = headingMatches[headingMatches.length - 1];
+  let cleaned = text.slice(lastHeading.index);
+  if (expectedHeading) {
+    cleaned = cleaned.replace(/^(MRI|CT|RADIOGRAPHS)\b.*/i, expectedHeading);
+  }
+  if (contrastLabel) {
+    cleaned = cleaned.replace(
+      /(TECHNIQUE:[^\n]*?)\b(with and without|without|with)\s+IV contrast\b/i,
+      (_m, pre) => `${pre}${contrastLabel} IV contrast`
+    );
+  }
+  return cleaned;
+}
+
 function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, massMode = 'auto') {
   const isCT = modality === 'CT';
   const modalityName = isCT ? 'CT' : 'MRI';
@@ -186,11 +222,12 @@ function buildPrompt(part, lat, con, spineRegion, modality, doseOpt = true, mass
 CRITICAL FORMATTING RULES:
 - NEVER use markdown. No asterisks, no bold, no dashes, no bullet points.
 - ABSOLUTE RULE — ZERO TOLERANCE: NEVER include any commentary, interpretation notes, correction notices, clarification notes, or meta-statements anywhere in the output. This includes — but is not limited to — phrases like "I interpreted X as Y", "I assumed you meant Z", "Note: I understood [term] to mean [term]", "I corrected [word] to [word]", "[term] interpreted as [term]", or any similar phrasing. If speech recognition produced garbled text, silently use your best clinical interpretation without any comment. The output must contain ONLY the formal radiology report sections: the exam heading, HISTORY, COMPARISON, TECHNIQUE, FINDINGS, IMPRESSION, and optionally FOOTNOTE/REFERENCES. Any sentence that is not part of the formal report is strictly forbidden.
-- NO VISIBLE DELIBERATION — ZERO TOLERANCE: NEVER write out your reasoning, planning, or decision process as part of the response. This includes any sentence that narrates how you are analyzing the dictation, resolving ambiguity, or choosing between options — phrases like "I need to determine...", "Let me...", "Actually...", "Wait...", "Re-reading the dictation...", "Per the rules...", "I'll use...", "I think I should...", or any similar first-person deliberative language. Resolve all ambiguity, uncertainty, and rule conflicts SILENTLY before producing a single character of output. The very first characters of your response must be the exam heading (e.g. "MRI RIGHT SHOULDER WITHOUT CONTRAST") — nothing may precede it, not even a single sentence of setup or reasoning.
+- NO VISIBLE DELIBERATION — ZERO TOLERANCE: NEVER write out your reasoning, planning, or decision process as part of the response. This includes any sentence that narrates how you are analyzing the dictation, resolving ambiguity, or choosing between options — phrases like "I need to determine...", "Let me...", "Actually...", "Wait...", "Re-reading the dictation...", "Per the rules...", "I'll use...", "I think I should...", "Key interpretations:", "This is a follow-up/mass case with prior comparison — apply...", or any similar first-person deliberative or meta-analytical language, no matter how garbled or ambiguous the dictation is. Garbled dictation is common and expected — resolve it silently using your best clinical judgment; it is never a reason to narrate your interpretation process. Resolve all ambiguity, uncertainty, and rule conflicts SILENTLY before producing a single character of output. The very first characters of your response must be the exam heading (e.g. "MRI RIGHT SHOULDER WITHOUT CONTRAST") — nothing may precede it, not even a single sentence of setup or reasoning.
 - Section headers (TECHNIQUE, FINDINGS, LEVELS, IMPRESSION) on their own line in ALL CAPS with colon.
 - Subheadings: "Structure Name: finding text" — Title Case, colon, finding on same line.
 - TECHNIQUE FORMATTING — STRICT: The technique text must immediately follow "TECHNIQUE:" on the SAME line, separated only by a single space. NEVER put a line break between "TECHNIQUE:" and the technique sentence. Example: "TECHNIQUE: Multiplanar multisequence MRI of the right knee without IV contrast." — never "TECHNIQUE:\nMultiplanar multisequence MRI..."
 - TITLE/TECHNIQUE CONTRAST CONSISTENCY — CRITICAL: The contrast wording in the exam title heading (e.g. "WITH CONTRAST", "WITHOUT CONTRAST", "WITH AND WITHOUT CONTRAST") MUST exactly match the contrast wording used in the TECHNIQUE line below it. Do NOT independently re-derive or rephrase the contrast status for the title — copy it verbatim/consistently from the technique sentence's contrast phrase. A title reading "WITHOUT AND WITHOUT CONTRAST" or any wording that does not exactly correspond to the technique's contrast statement is a critical error and must never occur.
+- CONTRAST STATUS IS ALREADY FIXED — NEVER IN QUESTION: The contrast status shown in the FORMAT template below is not an example — it is fixed by the user's own UI selection and is never in question, regardless of what the dictation does or doesn't say about contrast, enhancement, or signal characteristics. Never re-derive, second-guess, or default away from it based on dictation content — including when dictation is heavily garbled or ambiguous. Enhancement/signal-characteristic language in the dictation (e.g. "central signal increase," T1/T2 changes) describes a FINDING to report under the relevant heading — it never changes the exam's contrast status in the title or TECHNIQUE line.
 
 ANATOMY TO COVER for ${part}: ${getAnatomy(part, isCT, spineRegion)}
 Generate a subheading for EVERY structure listed above, EXCEPT Soft Tissues — see the Soft Tissues rule under GLOBAL DEFAULTS below, which can require omitting that heading entirely.
@@ -7578,7 +7615,13 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else { setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.'); setMobileTab(1); }
+      else {
+        const rawText = data?.content?.[0]?.text || 'Error generating report.';
+        const expectedHeading = isRheum ? null : buildReportHeading(modality, selectedBodyPart, lat, contrast, spineRegion);
+        const contrastLbl = isRheum ? null : (contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without');
+        setGeneratedReport(sanitizeReportOutput(rawText, expectedHeading, contrastLbl));
+        setMobileTab(1);
+      }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGenerating(false);
   };
@@ -7615,7 +7658,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else { setGeneratedReport(data?.content?.[0]?.text || 'Error generating report.'); setMobileTab(1); }
+      else { setGeneratedReport(sanitizeReportOutput(data?.content?.[0]?.text || 'Error generating report.')); setMobileTab(1); }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGeneratingRheum(false);
   };
@@ -7733,24 +7776,17 @@ export default function DashboardPage() {
     saveUserPrefs(authUser.id, userPrefs);
   }, [userPrefs, authUser?.id]);
 
-  // Load this user's saved report-style preferences on login, and seed the
-  // session's starting mass-mode / lay-summary state from them exactly once
-  // (does not fight with the user's own in-session toggle changes afterward).
-  // Fetched from Supabase now, so this is async — falls back to defaults
-  // instantly via loadReportPrefs's own error handling if the fetch fails.
-  const reportPrefsSeeded = useRef(false);
+  // Load this user's saved report-style preferences on login. Fetched from
+  // Supabase, so this is async — falls back to defaults instantly via
+  // loadReportPrefs's own error handling if the fetch fails. (Mass-mode and
+  // lay-person-summary defaults were removed from this preference set —
+  // those already have their own per-report controls in the main UI.)
   useEffect(() => {
-    if (!authUser?.id) { reportPrefsSeeded.current = false; return; }
+    if (!authUser?.id) return;
     let cancelled = false;
     (async () => {
       const loaded = await loadReportPrefs(authUser.id, authUser.access_token);
-      if (cancelled) return;
-      setReportPrefs(loaded);
-      if (!reportPrefsSeeded.current) {
-        reportPrefsSeeded.current = true;
-        setMassMode(loaded.defaultMassMode);
-        setLayPersonSummary(loaded.defaultLayPersonSummary);
-      }
+      if (!cancelled) setReportPrefs(loaded);
     })();
     return () => { cancelled = true; };
   }, [authUser?.id]);

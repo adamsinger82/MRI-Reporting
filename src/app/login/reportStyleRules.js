@@ -50,3 +50,39 @@ export const HEDGING_LANGUAGE_OPTIONS = [
 ];
 
 export const HEDGING_AVOID_RULE_TEXT = 'AMBIGUOUS/HEDGING LANGUAGE OVERRIDE: Avoid hedging or noncommittal phrasing — such as "cannot exclude," "not excluded," "unclear," "possible," "questionable," or "clinical correlation recommended" — wherever the dictated findings support a more definitive statement. State findings and impression items as directly and definitively as the described imaging features allow. This does not apply where the dictation itself is genuinely ambiguous and no more definitive statement is actually supported by the findings described — do not manufacture false certainty in a truly indeterminate case.';
+
+export const NERVE_LISTING_OPTIONS = [
+  { val: 'lumped', label: 'Lumped (Regional Neurovascular)' },
+  { val: 'separate', label: 'Separate, Named Nerves' },
+];
+
+export const NERVE_LISTING_RULE_TEXT = {
+  separate: 'NERVE LISTING OVERRIDE — SEPARATE, NAMED HEADINGS: Instead of a single lumped "Regional Neurovascular Structures" heading, generate a separate heading for each named nerve relevant to the imaged region (e.g. shoulder: "Axillary Nerve," "Suprascapular Nerve"; elbow: "Ulnar Nerve," "Radial Nerve," "Median Nerve"; wrist/hand: "Median Nerve," "Ulnar Nerve"; knee: "Peroneal Nerve," "Tibial Nerve"; ankle/foot: "Tibial Nerve," "Peroneal Nerve," "Sural Nerve," as applicable to the region). Each nerve heading defaults to "Normal caliber and signal. No compression or mass effect." when not otherwise dictated. Regional vessels (arteries/veins) still get their own "Regional Vascular Structures" heading in this mode rather than being combined with any nerve heading.',
+};
+
+export const SPINE_CANAL_TERM_OPTIONS = [
+  { val: 'narrowing', label: 'Narrowing' },
+  { val: 'stenosis', label: 'Stenosis' },
+];
+
+export const SPINE_CANAL_TERM_RULE_TEXT = {
+  stenosis: 'SPINE CANAL/FORAMINAL TERMINOLOGY OVERRIDE — STENOSIS: Wherever this report would otherwise use the word "narrowing" to describe central canal or neural foraminal caliber at a level (e.g. "No significant canal or foraminal narrowing," "moderate foraminal narrowing"), use "stenosis" instead (e.g. "No significant canal or foraminal stenosis," "moderate foraminal stenosis"). Applies to cervical, thoracic, and lumbar spine, on both MRI and CT.',
+};
+
+export const GRADING_SYSTEMS_OPTIONS = [
+  { val: true, label: 'Enabled' },
+  { val: false, label: 'Disabled' },
+];
+
+export const GRADING_SYSTEMS_DISABLED_RULE_TEXT = 'NAMED GRADING SYSTEMS — DISABLED: Do not cite any named grading/classification system anywhere in this report (e.g. Goutallier, Patte, Favard, Hamada, Outerbridge, Kellgren-Lawrence, Modic, Tönnis, Ficat, or any other eponymous grading/staging scale) — even where the built-in rules elsewhere in this prompt would normally reference one. Describe the underlying finding descriptively instead (e.g. describe the degree of fatty atrophy, osteoarthrosis, or cartilage loss in plain descriptive terms rather than citing a grade/stage number tied to a named system).';
+
+export const IMPRESSION_NUMBERING_OPTIONS = [
+  { val: 'numbered', label: 'Numbered (1. 2. 3.)' },
+  { val: 'hyphen', label: 'Hyphen, No Numbers' },
+  { val: 'plain', label: 'Plain, No Numbers/Hyphens' },
+];
+
+export const IMPRESSION_NUMBERING_RULE_TEXT = {
+  hyphen: 'IMPRESSION FORMAT OVERRIDE — HYPHEN, NO NUMBERS: Do not number impression items (no "1.", "2.", etc.). Instead, write each impression item on its own line preceded by a hyphen and a space (e.g. "- Massive rotator cuff tear.") with a blank line between items — only the numeral is replaced by a hyphen; the one-item-per-line structure is otherwise unchanged.',
+  plain: 'IMPRESSION FORMAT OVERRIDE — NO NUMBERS, NO HYPHENS: Do not number or bullet impression items in any way. Write each impression item on its own line/sentence with a blank line between items for clear visual separation — no numeral, hyphen, or bullet character preceding any item.',
+};
