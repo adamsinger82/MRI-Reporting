@@ -13,7 +13,8 @@ import {
   LENGTH_RULE_TEXT, STYLE_RULE_TEXT, DIFFERENTIAL_RULE_TEXT, NEGATIVES_RULE_TEXT,
   SEE_ABOVE_RULE_TEXT, DIGIT_NAMING_RULE_TEXT, HEDGING_AVOID_RULE_TEXT,
   NERVE_LISTING_RULE_TEXT, SPINE_CANAL_TERM_RULE_TEXT, GRADING_SYSTEMS_DISABLED_RULE_TEXT,
-  IMPRESSION_NUMBERING_RULE_TEXT,
+  IMPRESSION_NUMBERING_RULE_TEXT, CONCISE_ITEMIZED_RECONCILIATION_TEXT,
+  GRADING_DISABLED_FOCUS_RECONCILIATION_TEXT, HEDGING_DIFFERENTIAL_RECONCILIATION_TEXT,
 } from './reportStyleRules';
 
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tqwdkisqqvbujcjvzdlw.supabase.co';
@@ -145,6 +146,21 @@ export function buildPreferenceInstruction(prefs) {
 
   if (IMPRESSION_NUMBERING_RULE_TEXT[prefs.impressionNumbering]) {
     lines.push(`- ${IMPRESSION_NUMBERING_RULE_TEXT[prefs.impressionNumbering]}`);
+  }
+
+  // Reconciliation lines — only fire when both sides of a genuinely conflicting
+  // preference pair are active together; otherwise the individual rules above
+  // never contradict each other.
+  if (prefs.impressionLength === 'concise' && prefs.impressionStyle === 'itemizedNumbered') {
+    lines.push(`- ${CONCISE_ITEMIZED_RECONCILIATION_TEXT}`);
+  }
+
+  if (prefs.useGradingSystems === false && prefs.impressionStyle === 'gradingFocus') {
+    lines.push(`- ${GRADING_DISABLED_FOCUS_RECONCILIATION_TEXT}`);
+  }
+
+  if (prefs.hedgingLanguage === 'avoid' && prefs.alwaysDifferential) {
+    lines.push(`- ${HEDGING_DIFFERENTIAL_RECONCILIATION_TEXT}`);
   }
 
   // Kept last so the model applies it after every other impression-shaping

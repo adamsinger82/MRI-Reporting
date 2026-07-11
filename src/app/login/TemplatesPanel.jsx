@@ -1,6 +1,6 @@
 'use client';
 // TemplatesPanel.jsx — LucidMSK Custom Dictation Templates
-// Save, load, delete, and share report templates per body part + modality.
+// Save, edit, load, delete, and share report templates per body part + modality.
 // Props:
 //   authUser         — { id, access_token }
 //   generatedReport  — string (Col 2 content)
@@ -173,6 +173,7 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
   const [saveName, setSaveName] = useState('');
   const [saveContent, setSaveContent] = useState('');
   const [saveShared, setSaveShared] = useState(false);
+  const [editingId, setEditingId] = useState(null); // non-null while editing an existing saved template (Save button becomes Update)
 
   // ── Standalone dictation for the Create Template tab ───────────────────────
   // Self-contained per LucidMSK architecture note — does not touch page.js's dictation state.
@@ -352,37 +353,79 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
     setIsCleaning(false);
   };
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  // ── Save / Update ────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!saveName.trim()) { setError('Please enter a template name.'); return; }
     if (!saveContent.trim()) { setError('Template content is empty — dictate, type, or import a report.'); return; }
-    if (templates.length >= MAX_TEMPLATES_PER_USER) {
+    if (!editingId && templates.length >= MAX_TEMPLATES_PER_USER) {
       setError(`Template limit reached (${MAX_TEMPLATES_PER_USER}). Delete one to add more.`); return;
     }
     setSaving(true); setError(''); setSuccess('');
     try {
-      const res = await fetch(`${SUPA_URL}/rest/v1/${TEMPLATES_TABLE}`, {
-        method: 'POST',
-        headers: supaHeaders(accessToken),
-        body: JSON.stringify({
-          user_id: userId,
-          name: saveName.trim(),
-          body_part: selectedBodyPart,
-          modality,
-          content: saveContent.trim(),
-          is_shared: saveShared,
-        }),
-      });
-      if (!res.ok) throw new Error('Save failed');
-      setSuccess('Template saved!');
+      if (editingId) {
+        const res = await fetch(`${SUPA_URL}/rest/v1/${TEMPLATES_TABLE}?id=eq.${editingId}&user_id=eq.${userId}`, {
+          method: 'PATCH',
+          headers: supaHeaders(accessToken),
+          body: JSON.stringify({
+            name: saveName.trim(),
+            content: saveContent.trim(),
+            is_shared: saveShared,
+          }),
+        });
+        if (!res.ok) throw new Error('Update failed');
+        setSuccess('Template updated!');
+      } else {
+        const res = await fetch(`${SUPA_URL}/rest/v1/${TEMPLATES_TABLE}`, {
+          method: 'POST',
+          headers: supaHeaders(accessToken),
+          body: JSON.stringify({
+            user_id: userId,
+            name: saveName.trim(),
+            body_part: selectedBodyPart,
+            modality,
+            content: saveContent.trim(),
+            is_shared: saveShared,
+          }),
+        });
+        if (!res.ok) throw new Error('Save failed');
+        setSuccess('Template saved!');
+      }
       setSaveName('');
+      setSaveContent('');
       setSaveShared(false);
+      setEditingId(null);
+      setIsLocked(false);
+      finalTranscriptRef.current = '';
       await fetchTemplates();
       setTimeout(() => { setSuccess(''); setTab('load'); }, 1200);
     } catch {
-      setError('Failed to save template.');
+      setError(editingId ? 'Failed to update template.' : 'Failed to save template.');
     }
     setSaving(false);
+  };
+
+  // ── Edit ──────────────────────────────────────────────────────────────────
+  // Loads an existing template's name/content into the Create Template tab for
+  // in-place editing; handleSave() will PATCH instead of INSERT while editingId is set.
+  const handleEditClick = (t) => {
+    setEditingId(t.id);
+    setSaveName(t.name);
+    setSaveContent(t.content);
+    setSaveShared(!!t.is_shared);
+    setIsLocked(false); // plain textarea, ready to type-edit immediately
+    finalTranscriptRef.current = t.content ? t.content + ' ' : '';
+    setError(''); setSuccess('');
+    setTab('save');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setSaveName('');
+    setSaveContent('');
+    setSaveShared(false);
+    setIsLocked(false);
+    finalTranscriptRef.current = '';
+    setError(''); setSuccess('');
   };
 
   // ── Delete ────────────────────────────────────────────────────────────────
@@ -420,7 +463,10 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
   };
 
   const TabBtn = ({ id, label }) => (
-    <button onClick={() => { setTab(id); setError(''); setSuccess(''); }}
+    <button onClick={() => {
+        if (id === 'save' && editingId) cancelEdit();
+        setTab(id); setError(''); setSuccess('');
+      }}
       style={{ flex:1, padding:'8px 0', border:'none', borderRadius:8, background: tab===id ? c.accent : 'transparent', color: tab===id ? 'white' : c.sub, fontWeight: tab===id ? 700 : 500, fontSize:13, cursor:'pointer', transition:'all 0.12s' }}>
       {label}
     </button>
@@ -444,13 +490,20 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
             <button onClick={() => { onLoad(t.content); onClose(); }}
               title="Load directly into Col 2 to edit as-is"
               style={{ padding:'5px 10px', borderRadius:7, border:`1px solid ${c.accent}`, background:'transparent', color:c.accent, fontSize:12, fontWeight:700, cursor:'pointer' }}>
-              Load
+              Load w/ Typing
             </button>
             {onUseAsDictationTemplate && (
               <button onClick={() => { onUseAsDictationTemplate(t); onClose(); }}
                 title="Load into Col 1 — dictate patient-specific findings, then Generate merges them into this template"
                 style={{ padding:'5px 10px', borderRadius:7, border:`1px solid ${c.green}`, background:'transparent', color:c.green, fontSize:12, fontWeight:700, cursor:'pointer' }}>
                 🎤 Use w/ Dictation
+              </button>
+            )}
+            {!isCommunity && (
+              <button onClick={() => handleEditClick(t)}
+                title="Edit this template's name, sharing, or content"
+                style={{ padding:'5px 10px', borderRadius:7, border:`1px solid ${c.border}`, background:'transparent', color:c.txt, fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                ✏️ Edit
               </button>
             )}
             {!isCommunity && (
@@ -571,12 +624,17 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
           {tab === 'save' && (
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               <div style={{ fontSize:12, color:c.sub, lineHeight:1.6 }}>
-                Build a new template here — separate from your current report. Type it directly, or switch to <strong style={{ color:c.txt }}>🎤 Dictate Edit</strong> to dictate, import your last report, and clean up dictation errors.
+                {editingId
+                  ? <>Editing <strong style={{ color:c.txt }}>{saveName || 'this template'}</strong> — update the name, sharing, or content below, then tap <strong style={{ color:c.txt }}>Update Template</strong>. <button onClick={cancelEdit} style={{ color:c.accent, background:'transparent', border:'none', cursor:'pointer', fontWeight:600, textDecoration:'underline', padding:0, fontSize:12 }}>Cancel edit</button></>
+                  : <>Build a new template here — separate from your current report. Type it directly, or switch to <strong style={{ color:c.txt }}>🎤 Dictate Edit</strong> to dictate, import your last report, and clean up dictation errors.</>
+                }
               </div>
 
-              <div style={{ fontSize:12, color:c.sub, background:c.bgCard, borderRadius:8, padding:'8px 12px', border:`1px solid ${c.border}` }}>
-                Will be saved for: <strong style={{ color:c.txt }}>{selectedBodyPart}</strong> · <strong style={{ color:c.txt }}>{modality}</strong>
-              </div>
+              {!editingId && (
+                <div style={{ fontSize:12, color:c.sub, background:c.bgCard, borderRadius:8, padding:'8px 12px', border:`1px solid ${c.border}` }}>
+                  Will be saved for: <strong style={{ color:c.txt }}>{selectedBodyPart}</strong> · <strong style={{ color:c.txt }}>{modality}</strong>
+                </div>
+              )}
 
               {micError && <div style={{ fontSize:12, color:c.red, background:dm?'rgba(248,113,113,0.1)':'#fef2f2', border:`1px solid ${dm?'#991b1b':'#fca5a5'}`, borderRadius:8, padding:'8px 12px' }}>{micError}</div>}
 
@@ -657,11 +715,13 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
                 </div>
               </label>
 
-              <div style={{ fontSize:11, color:c.sub, textAlign:'right' }}>{templates.length} / {MAX_TEMPLATES_PER_USER} templates used</div>
+              {!editingId && (
+                <div style={{ fontSize:11, color:c.sub, textAlign:'right' }}>{templates.length} / {MAX_TEMPLATES_PER_USER} templates used</div>
+              )}
 
               <button onClick={handleSave} disabled={saving || !saveName.trim() || !saveContent.trim()}
                 style={{ width:'100%', padding:'11px 0', borderRadius:9, border:'none', background:(saving||!saveName.trim()||!saveContent.trim())?'#9ca3af':'linear-gradient(135deg,#2563eb,#4f46e5)', color:'white', fontSize:14, fontWeight:700, cursor:(saving||!saveName.trim()||!saveContent.trim())?'not-allowed':'pointer', boxShadow:saving?'none':'0 4px 16px rgba(37,99,235,0.35)', transition:'all 0.12s' }}>
-                {saving ? '⏳ Saving…' : '💾 Save Template'}
+                {saving ? (editingId ? '⏳ Updating…' : '⏳ Saving…') : (editingId ? '💾 Update Template' : '💾 Save Template')}
               </button>
             </div>
           )}

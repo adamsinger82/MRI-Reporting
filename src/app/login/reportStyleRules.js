@@ -33,7 +33,7 @@ export const DIFFERENTIAL_RULE_TEXT = 'DIFFERENTIAL PREFERENCE: When any finding
 
 export const NEGATIVES_RULE_TEXT = 'PERTINENT NEGATIVES IN IMPRESSION — USER OVERRIDE: This explicitly overrides the default rule elsewhere in this prompt that excludes pertinent negatives from the impression. Add ONE brief additional impression item listing the most clinically relevant pertinent negative(s) actually dictated (e.g. "No fracture, dislocation, or quadrilateral space abnormality."). Keep it to a single concise sentence — do not list every negative finding dictated, only the one(s) most relevant to the clinical question.';
 
-export const SEE_ABOVE_RULE_TEXT = 'CLOSING IMPRESSION LINE — USER OVERRIDE: After the last substantive impression item, add one final impression line reading exactly: "Please see above for additional observations." This is a closing reference line, not a clinical finding — it must always come last, numbered as the final item, and must never be combined with or attached to another impression item on the same line.';
+export const SEE_ABOVE_RULE_TEXT = 'CLOSING IMPRESSION LINE — USER OVERRIDE: After the last substantive impression item, add one final impression line reading exactly: "Please see above for additional observations." This is a closing reference line, not a clinical finding — it must always come last, formatted using whichever impression numbering style (numbered, hyphenated, or plain) is already being used for the rest of the impression in this report, and must never be combined with or attached to another impression item on the same line.';
 
 export const DIGIT_NAMING_OPTIONS = [
   { val: 'numbered', label: 'Numbered (1st–5th)' },
@@ -59,6 +59,15 @@ export const NERVE_LISTING_OPTIONS = [
 export const NERVE_LISTING_RULE_TEXT = {
   separate: 'NERVE LISTING OVERRIDE — SEPARATE, NAMED HEADINGS: Instead of a single lumped "Regional Neurovascular Structures" heading, generate a separate heading for each named nerve relevant to the imaged region (e.g. shoulder: "Axillary Nerve," "Suprascapular Nerve"; elbow: "Ulnar Nerve," "Radial Nerve," "Median Nerve"; wrist/hand: "Median Nerve," "Ulnar Nerve"; knee: "Peroneal Nerve," "Tibial Nerve"; ankle/foot: "Tibial Nerve," "Peroneal Nerve," "Sural Nerve," as applicable to the region). Each nerve heading defaults to "Normal caliber and signal. No compression or mass effect." when not otherwise dictated. Do NOT also generate a separate "Regional Vascular Structures" (or similarly named vessel-only) heading in this mode — that would be redundant with the per-nerve compression assessment above. If a dictated finding specifically concerns a named vessel (artery/vein), fold it into the most anatomically related nerve heading\'s text rather than creating its own heading.',
 };
+
+// Cross-preference reconciliation text — used ONLY when two independently-toggleable
+// preferences would otherwise instruct the model to do contradictory things. Referenced
+// conditionally (both sides active) from reportPreferencesUtils.js's buildPreferenceInstruction().
+export const CONCISE_ITEMIZED_RECONCILIATION_TEXT = 'INTERACTION — CONCISE LENGTH + ITEMIZED, NUMBERED STYLE: Both overrides above are active together. The instruction to give every distinct abnormal structure its own numbered line is still capped by the concise preference\'s 1-2 item limit — itemize only the 1-2 most clinically significant structures as separate numbered items (acute findings first) and omit the rest entirely, rather than itemizing every affected structure.';
+
+export const GRADING_DISABLED_FOCUS_RECONCILIATION_TEXT = 'INTERACTION — GRADING SYSTEMS DISABLED + GRADING-SCALE FOCUS STYLE: Both overrides above are active together. Still state the severity/grade descriptively wherever a grading convention would normally apply (e.g. "high-grade partial-thickness tear," "severe cartilage loss," "severe fatty atrophy with volume loss") but never name the underlying eponymous or classification system itself (e.g. do not write "Goutallier 3" or "Outerbridge grade IV" — use the descriptive equivalent instead).';
+
+export const HEDGING_DIFFERENTIAL_RECONCILIATION_TEXT = 'INTERACTION — AVOID HEDGING LANGUAGE + ALWAYS DIFFERENTIAL: Both overrides above are active together. Present the differential with direct, structured language rather than hedging qualifiers — e.g. "Findings most consistent with X; differential includes Y" rather than "possibly X, but Y cannot be excluded." Ranking items by likelihood is not itself hedging language and should still be used.';
 
 export const SPINE_CANAL_TERM_OPTIONS = [
   { val: 'narrowing', label: 'Narrowing' },
