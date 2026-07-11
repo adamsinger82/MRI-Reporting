@@ -54,3 +54,22 @@ export async function cleanupTemplateDictation(rawText) {
   if (!text) throw new Error('No response from cleanup service.');
   return text;
 }
+
+// Builds the system-prompt addendum used when a saved template is loaded into
+// Col 1 alongside fresh dictation ("Template + Dictation" mode). Appended to the
+// normal buildPrompt(...) output in generateReport(). Keeps any template line the
+// radiologist didn't address as-is (normal/negative), per LucidMSK design: dictation
+// only overrides what it explicitly mentions.
+export function buildTemplateMergeInstruction(templateContent) {
+  const template = (templateContent || '').trim();
+  if (!template) return '';
+  return `\n\nTEMPLATE MODE — a saved report template is provided below. Use it as the structural scaffold for this report:
+- Preserve its section order, headings, and exact wording wherever the dictated findings below do not address that line.
+- Only change or add content where the dictated findings explicitly describe something different (a new finding, a different severity, a different location, a different measurement, etc.).
+- Any template line the dictation does NOT mention must be kept exactly as written in the template — treat it as still normal/negative, don't delete it or reword it.
+- Do not invent findings beyond what the template and dictation together specify.
+- Still follow all formatting/section rules above for the final output.
+
+TEMPLATE:
+${template}`;
+}

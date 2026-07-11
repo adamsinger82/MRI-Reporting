@@ -6,7 +6,10 @@
 //   generatedReport  — string (Col 2 content)
 //   selectedBodyPart — string
 //   modality         — 'MRI' | 'CT' | 'XR'
-//   onLoad(content)  — callback: sets generatedReport in parent
+//   onLoad(content)  — callback: sets generatedReport in parent (loads straight into Col 2 for direct editing)
+//   onUseAsDictationTemplate(template) — callback: template is { name, content }. Loads it as a
+//                       hidden scaffold — Col 1 stays empty for normal dictation; Generate merges
+//                       what's dictated into the template structure, keeping unmentioned lines as-is
 //   onClose()        — callback: hides the panel
 //   dm               — dark mode boolean
 
@@ -155,7 +158,7 @@ function supaHeaders(accessToken) {
   };
 }
 
-export default function TemplatesPanel({ authUser, generatedReport, selectedBodyPart, modality, onLoad, onClose, dm }) {
+export default function TemplatesPanel({ authUser, generatedReport, selectedBodyPart, modality, onLoad, onUseAsDictationTemplate, onClose, dm }) {
   const [tab, setTab] = useState('load'); // 'load' | 'save'
   const [templates, setTemplates] = useState([]);
   const [communityTemplates, setCommunityTemplates] = useState([]);
@@ -439,9 +442,17 @@ export default function TemplatesPanel({ authUser, generatedReport, selectedBody
           </div>
           <div style={{ display:'flex', gap:6, flexShrink:0, alignItems:'center' }}>
             <button onClick={() => { onLoad(t.content); onClose(); }}
+              title="Load directly into Col 2 to edit as-is"
               style={{ padding:'5px 10px', borderRadius:7, border:`1px solid ${c.accent}`, background:'transparent', color:c.accent, fontSize:12, fontWeight:700, cursor:'pointer' }}>
               Load
             </button>
+            {onUseAsDictationTemplate && (
+              <button onClick={() => { onUseAsDictationTemplate(t); onClose(); }}
+                title="Load into Col 1 — dictate patient-specific findings, then Generate merges them into this template"
+                style={{ padding:'5px 10px', borderRadius:7, border:`1px solid ${c.green}`, background:'transparent', color:c.green, fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                🎤 Use w/ Dictation
+              </button>
+            )}
             {!isCommunity && (
               isConfirming ? (
                 <div style={{ display:'flex', gap:4 }}>

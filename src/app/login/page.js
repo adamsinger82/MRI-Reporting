@@ -31,6 +31,7 @@ import CopyButton from './CopyButton';
 
 import { MRI_GRADING_DATA, CT_GRADING_DATA } from './gradingData';
 import TemplatesPanel from './TemplatesPanel';
+import { buildTemplateMergeInstruction } from './templateUtils';
 import ReportPreferencesPanel from './ReportPreferencesPanel';
 import { loadReportPrefs, saveReportPrefs, buildPreferenceInstruction } from './reportPreferencesUtils';
 import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
@@ -7410,6 +7411,7 @@ export default function DashboardPage() {
   const [contrast, setContrast] = useState('without');
   const [modality, setModality] = useState('MRI');
   const [dictationText, setDictationText] = useState('');
+  const [activeTemplate, setActiveTemplate] = useState(null); // { name, content } — loaded via "Use w/ Dictation"; merged into the prompt at Generate time, never shown in the Col 1 text box
   const [generatedReport, setGeneratedReport] = useState('');
   const [isEditingReport, setIsEditingReport] = useState(false); // Col 2 edit toggle
   const [isGenerating, setIsGenerating] = useState(false);
@@ -7568,6 +7570,7 @@ export default function DashboardPage() {
     setRheumChecks({}); setRheumFreeText('');
     setGeneratedReport('');
     setDictationText('');
+    setActiveTemplate(null);
     setIsEditingReport(false);
   };
 
@@ -7579,6 +7582,7 @@ export default function DashboardPage() {
     resetArthroplasty();
     setGeneratedReport('');
     setDictationText('');
+    setActiveTemplate(null);
     setIsEditingReport(false);
   };
 
@@ -7609,7 +7613,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:3000,
-          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs),
+          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs) + buildTemplateMergeInstruction(activeTemplate?.content),
           messages:[{role:'user',content:`Dictated findings:\n\n${isRheum ? rheumFreeText : dictationText}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS — PLACEMENT INSTRUCTIONS:\nFor each incidental finding below: (1) add a brief descriptive sentence in the FINDINGS section under the most relevant existing heading (for spine MRI use "Paraspinal Soft Tissues:"; for non-spine joints use "Soft Tissues:" or "Regional Neurovascular Structures:" as appropriate for aortic findings) — e.g. "Incidentally noted simple-appearing right adnexal cyst measuring up to X cm." (2) add a corresponding numbered line in the IMPRESSION. (3) include the management recommendation and citation in REFERENCES/FOOTNOTE as detailed below. Do NOT place these findings ONLY in the impression — they must also appear in FINDINGS.\n\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
@@ -7872,7 +7876,7 @@ export default function DashboardPage() {
       {showDdx && <DdxModal onClose={() => setShowDdx(false)} />}
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showHub && <MSKHubModal initialTab={hubTab} initialModuleId={hubInitialModuleId} onClose={() => { setShowHub(false); setHubInitialModuleId(null); }} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
-      {showTemplates && <TemplatesPanel authUser={authUser} generatedReport={generatedReport} selectedBodyPart={selectedBodyPart} modality={modality} onLoad={r => setGeneratedReport(r)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
+      {showTemplates && <TemplatesPanel authUser={authUser} generatedReport={generatedReport} selectedBodyPart={selectedBodyPart} modality={modality} onLoad={r => setGeneratedReport(r)} onUseAsDictationTemplate={t => setActiveTemplate(t)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
       {showReportPrefs && <ReportPreferencesPanel dm={darkMode} prefs={reportPrefs} onSave={handleSaveReportPrefs} onClose={() => setShowReportPrefs(false)} />}
 
       {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
@@ -8298,6 +8302,12 @@ export default function DashboardPage() {
                 patientSex={patientSex} setPatientSex={setPatientSex}
                 isPostmenopausal={isPostmenopausal}
               />
+            )}
+            {activeTemplate && (
+              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,fontSize:11,fontWeight:600,color:'#15803d',background:'#f0fdf4',border:'1px solid #86efac',borderRadius:7,padding:'6px 10px' }}>
+                <span>📄 Template active: {activeTemplate.name} — dictate findings below, unmentioned lines stay normal/negative</span>
+                <button onClick={() => setActiveTemplate(null)} title="Clear template" style={{ background:'none',border:'none',color:'#15803d',fontSize:13,fontWeight:700,cursor:'pointer',flexShrink:0 }}>✕</button>
+              </div>
             )}
             <div style={{ flex:1,display:'flex',flexDirection:'column' }}><label style={lbl}>Findings</label>
               <textarea className="msk-textarea" style={{ ...inp,flex:1,minHeight:160,resize:'vertical',lineHeight:1.7,fontFamily:'inherit',border:isListening?'1.5px solid #ef4444':'1px solid #dde3ed',boxShadow:isListening?'0 0 0 3px rgba(239,68,68,0.1)':'none',transition:'all 0.15s' }}
