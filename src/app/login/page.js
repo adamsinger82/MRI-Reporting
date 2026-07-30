@@ -34,6 +34,7 @@ import TemplatesPanel from './TemplatesPanel';
 import { buildTemplateMergeInstruction } from './templateUtils';
 import ReportPreferencesPanel from './ReportPreferencesPanel';
 import { loadReportPrefs, saveReportPrefs, buildPreferenceInstruction } from './reportPreferencesUtils';
+import { loadNeverUseTerms, buildNeverUseInstruction } from './neverUseTermsUtils';
 import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
 import ResearchAdminForm from './ResearchAdminForm';
 import { fetchResearchPosts, deleteResearchPost } from './researchUtils';
@@ -7427,6 +7428,7 @@ export default function DashboardPage() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showReportPrefs, setShowReportPrefs] = useState(false);
   const [reportPrefs, setReportPrefs] = useState(DEFAULT_REPORT_PREFS);
+  const [neverUseTerms, setNeverUseTerms] = useState([]); // this user's personal never-use word list
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
   const [hubInitialModuleId, setHubInitialModuleId] = useState(null); // set when jumping straight to a specific CME module
@@ -7617,7 +7619,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:3000,
-          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs) + buildTemplateMergeInstruction(activeTemplate?.content),
+          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs) + buildNeverUseInstruction(neverUseTerms) + buildTemplateMergeInstruction(activeTemplate?.content),
           messages:[{role:'user',content:`Dictated findings:\n\n${isRheum ? rheumFreeText : dictationText}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS — PLACEMENT INSTRUCTIONS:\nFor each incidental finding below: (1) add a brief descriptive sentence in the FINDINGS section under the most relevant existing heading (for spine MRI use "Paraspinal Soft Tissues:"; for non-spine joints use "Soft Tissues:" or "Regional Neurovascular Structures:" as appropriate for aortic findings) — e.g. "Incidentally noted simple-appearing right adnexal cyst measuring up to X cm." (2) add a corresponding numbered line in the IMPRESSION. (3) include the management recommendation and citation in REFERENCES/FOOTNOTE as detailed below. Do NOT place these findings ONLY in the impression — they must also appear in FINDINGS.\n\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
@@ -7660,7 +7662,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:1500,
-          system: buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + buildPreferenceInstruction(reportPrefs),
+          system: buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + buildPreferenceInstruction(reportPrefs) + buildNeverUseInstruction(neverUseTerms),
           messages:[{role:'user',content:`Radiographic findings checked by the radiologist:\n\n${findingsSummary}\n\nPlease generate a structured X-ray report. For the impression (2-3 sentences maximum): use SINGULAR — "The imaging pattern is most consistent with the diagnosis of [X]." If there is a secondary consideration add "Next consideration includes [Y]." (brief). If two entities coexist: "The imaging pattern is most consistent with [X] superimposed with [Y]." KNEE CPPD vs OA: if chondrocalcinosis + isolated patellofemoral narrowing or prominent subchondral cysts → favor CPPD primary; if chondrocalcinosis + tricompartmental or medial narrowing + osteophytes → favor OA primary with CPPD next. Do NOT repeat findings from FINDINGS. Do NOT reference ABCDE or ABCDEs.`}],
         }),
       });
@@ -7799,6 +7801,18 @@ export default function DashboardPage() {
     return () => { cancelled = true; };
   }, [authUser?.id]);
 
+  // Load this user's personal never-use word list on login. Same pattern as
+  // reportPrefs above — never throws, falls back to an empty list.
+  useEffect(() => {
+    if (!authUser?.id) return;
+    let cancelled = false;
+    (async () => {
+      const loaded = await loadNeverUseTerms(authUser.id, authUser.access_token);
+      if (!cancelled) setNeverUseTerms(loaded);
+    })();
+    return () => { cancelled = true; };
+  }, [authUser?.id]);
+
   // Passed to ReportPreferencesPanel as onSave — async, and intentionally
   // lets errors propagate (rather than catching them here) so the panel's
   // Save button can show "Failed to save" instead of silently no-op'ing.
@@ -7881,7 +7895,17 @@ export default function DashboardPage() {
       {showResearch && <ResearchModal onClose={() => setShowResearch(false)} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showHub && <MSKHubModal initialTab={hubTab} initialModuleId={hubInitialModuleId} onClose={() => { setShowHub(false); setHubInitialModuleId(null); }} currentUser={authUser} isAdmin={['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase())} />}
       {showTemplates && <TemplatesPanel authUser={authUser} generatedReport={generatedReport} selectedBodyPart={selectedBodyPart} modality={modality} onLoad={r => setGeneratedReport(r)} onUseAsDictationTemplate={t => setActiveTemplate(t)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
-      {showReportPrefs && <ReportPreferencesPanel dm={darkMode} prefs={reportPrefs} onSave={handleSaveReportPrefs} onClose={() => setShowReportPrefs(false)} />}
+      {showReportPrefs && (
+        <ReportPreferencesPanel
+          dm={darkMode}
+          prefs={reportPrefs}
+          onSave={handleSaveReportPrefs}
+          onClose={() => setShowReportPrefs(false)}
+          authUser={authUser}
+          neverUseTerms={neverUseTerms}
+          onNeverUseTermsChange={setNeverUseTerms}
+        />
+      )}
 
       {showAdminPanel && ['admin@lucidmsk.com','adamsinger82@gmail.com'].includes(authUser?.email?.toLowerCase()) && (
         <AdminPanel currentUser={authUser} onClose={() => setShowAdminPanel(false)} />

@@ -1,21 +1,28 @@
 'use client';
 // ReportPreferencesPanel.jsx — LucidMSK Report Style Preferences
-// Two tabs:
-//   Checklist     — every toggle/select preference, explicit per-field control
-//   Report Styles — pick a starting point by reading static example reports
-// Deliberately has NO free-text input anywhere — every control is a
-// button/select from a fixed list — so there is no field a user could
-// accidentally paste or dictate patient information into.
+// Three tabs:
+//   Checklist       — every toggle/select preference, explicit per-field control
+//   Report Styles   — pick a starting point by reading static example reports
+//   Never Use Words — personal per-user word/phrase blocklist (own file: NeverUseTermsTab.jsx)
+// The Checklist and Report Styles tabs deliberately have NO free-text input
+// anywhere — every control is a button/select from a fixed list — so there
+// is no field a user could accidentally paste or dictate patient
+// information into. The Never Use Words tab is the one exception: it's a
+// short-phrase style dictionary (not a place for patient data), and it
+// saves each entry immediately rather than through the panel's Save button.
 //
 // CONFLICT RULE: if a user has explicitly changed a field on the Checklist
 // tab, picking a Report Style that would touch that same field leaves it
 // alone — Checklist choices always win. See touchedRef below.
 //
 // Props:
-//   dm           — dark mode boolean
-//   prefs        — current preferences object (from reportPreferencesUtils.loadReportPrefs)
-//   onSave(prefs)— async callback: persists the updated preferences (Supabase)
-//   onClose()    — callback: hides the panel
+//   dm                    — dark mode boolean
+//   prefs                 — current preferences object (from reportPreferencesUtils.loadReportPrefs)
+//   onSave(prefs)         — async callback: persists the updated Checklist/Styles preferences (Supabase)
+//   onClose()             — callback: hides the panel
+//   authUser              — current auth user ({ id, access_token, ... }) — needed by the Never Use Words tab
+//   neverUseTerms         — string[] — this user's current never-use list (owned by page.js state)
+//   onNeverUseTermsChange — callback: page.js updates its own state after any add/edit/remove
 
 import { useState, useRef } from 'react';
 import {
@@ -27,14 +34,15 @@ import {
   NERVE_LISTING_OPTIONS, SPINE_CANAL_TERM_OPTIONS, GRADING_SYSTEMS_OPTIONS, IMPRESSION_NUMBERING_OPTIONS,
 } from './reportStyleRules';
 import { SAMPLE_SHOULDER_FINDINGS, REPORT_STYLE_EXAMPLES } from './sampleReportExamples';
+import NeverUseTermsTab from './NeverUseTermsTab';
 
-export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
+export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose, authUser, neverUseTerms, onNeverUseTermsChange }) {
   const initial = { ...DEFAULT_REPORT_PREFS, ...prefs };
   const [draft, setDraft] = useState(initial);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [tab, setTab] = useState('checklist'); // 'checklist' | 'styles'
+  const [tab, setTab] = useState('checklist'); // 'checklist' | 'styles' | 'neverUse'
   const [showSample, setShowSample] = useState(false);
   const [appliedStyleId, setAppliedStyleId] = useState(null);
   const [skippedNote, setSkippedNote] = useState('');
@@ -274,29 +282,48 @@ export default function ReportPreferencesPanel({ dm, prefs, onSave, onClose }) {
           <div style={{ display:'flex', gap:4, background:c.bgCard, borderRadius:10, padding:3 }}>
             <TabBtn id="checklist" label="✅ Checklist" />
             <TabBtn id="styles" label="📋 Report Styles" />
+            <TabBtn id="neverUse" label="🚫 Never Use Words" />
           </div>
         </div>
 
         {/* Body */}
         <div style={{ padding:'4px 16px', overflowY:'auto', flex:1 }}>
-          {tab === 'checklist' ? <ChecklistTab /> : <StylesTab />}
+          {tab === 'checklist' && <ChecklistTab />}
+          {tab === 'styles' && <StylesTab />}
+          {tab === 'neverUse' && (
+            <NeverUseTermsTab
+              dm={dm}
+              userId={authUser?.id}
+              accessToken={authUser?.access_token}
+              terms={neverUseTerms}
+              onChange={onNeverUseTermsChange}
+            />
+          )}
         </div>
 
-        {/* Footer */}
+        {/* Footer — Reset/Save apply only to Checklist & Report Styles;
+            Never Use Words saves each entry instantly (see NeverUseTermsTab),
+            so it gets a short status note instead of these buttons. */}
         <div style={{ padding:'12px 16px', borderTop:`1px solid ${c.border}`, display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
-          {saveError && <div style={{ fontSize:11, color:'#dc2626', background:dm?'rgba(239,68,68,0.1)':'#fef2f2', border:`1px solid ${dm?'#991b1b':'#fca5a5'}`, borderRadius:8, padding:'6px 10px' }}>{saveError}</div>}
-          <div style={{ display:'flex', gap:8 }}>
-            <button onClick={handleReset} disabled={saving}
-              style={{ padding:'9px 14px', borderRadius:9, border:`1.5px solid ${c.border}`, background:'transparent', color:c.sub, fontSize:12, fontWeight:600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
-              Reset to defaults
-            </button>
-            <div style={{ flex:1 }} />
-            {saved && <span style={{ fontSize:12, color:c.green, fontWeight:600, alignSelf:'center' }}>✓ Saved</span>}
-            <button onClick={handleSave} disabled={saving}
-              style={{ padding:'9px 18px', borderRadius:9, border:'none', background:'linear-gradient(135deg,#2563eb,#4f46e5)', color:'white', fontSize:13, fontWeight:700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow:'0 4px 12px rgba(37,99,235,0.3)' }}>
-              {saving ? 'Saving…' : 'Save Preferences'}
-            </button>
-          </div>
+          {tab === 'neverUse' ? (
+            <div style={{ fontSize:11, color:c.sub, textAlign:'center' }}>Never Use Words save automatically — no need to click Save.</div>
+          ) : (
+            <>
+              {saveError && <div style={{ fontSize:11, color:'#dc2626', background:dm?'rgba(239,68,68,0.1)':'#fef2f2', border:`1px solid ${dm?'#991b1b':'#fca5a5'}`, borderRadius:8, padding:'6px 10px' }}>{saveError}</div>}
+              <div style={{ display:'flex', gap:8 }}>
+                <button onClick={handleReset} disabled={saving}
+                  style={{ padding:'9px 14px', borderRadius:9, border:`1.5px solid ${c.border}`, background:'transparent', color:c.sub, fontSize:12, fontWeight:600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+                  Reset to defaults
+                </button>
+                <div style={{ flex:1 }} />
+                {saved && <span style={{ fontSize:12, color:c.green, fontWeight:600, alignSelf:'center' }}>✓ Saved</span>}
+                <button onClick={handleSave} disabled={saving}
+                  style={{ padding:'9px 18px', borderRadius:9, border:'none', background:'linear-gradient(135deg,#2563eb,#4f46e5)', color:'white', fontSize:13, fontWeight:700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow:'0 4px 12px rgba(37,99,235,0.3)' }}>
+                  {saving ? 'Saving…' : 'Save Preferences'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
