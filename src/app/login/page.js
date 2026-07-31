@@ -34,6 +34,8 @@ import TemplatesPanel from './TemplatesPanel';
 import { buildTemplateMergeInstruction } from './templateUtils';
 import ReportPreferencesPanel from './ReportPreferencesPanel';
 import { loadReportPrefs, saveReportPrefs, buildPreferenceInstruction } from './reportPreferencesUtils';
+import { loadCustomHeader, saveCustomHeader, saveCustomHeaderKeepalive, applyCustomHeader } from './reportHeaderUtils';
+import { autoCopyReport } from './clipboardUtils';
 import { loadNeverUseTerms, buildNeverUseInstruction } from './neverUseTermsUtils';
 import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
 import ResearchAdminForm from './ResearchAdminForm';
@@ -7428,6 +7430,10 @@ export default function DashboardPage() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showReportPrefs, setShowReportPrefs] = useState(false);
   const [reportPrefs, setReportPrefs] = useState(DEFAULT_REPORT_PREFS);
+  const [customHeader, setCustomHeader] = useState('');
+  const [headerSaveStatus, setHeaderSaveStatus] = useState(''); // '' | 'saving' | 'saved' | 'error'
+  const customHeaderRef = useRef('');       // always holds the latest customHeader for the beforeunload closure
+  const lastSavedHeaderRef = useRef('');    // last value actually persisted — used to skip no-op saves
   const [neverUseTerms, setNeverUseTerms] = useState([]); // this user's personal never-use word list
   const [showResearch, setShowResearch] = useState(false);
   const [showHub, setShowHub] = useState(false);
@@ -7629,7 +7635,9 @@ export default function DashboardPage() {
         const rawText = data?.content?.[0]?.text || 'Error generating report.';
         const expectedHeading = isRheum ? null : buildReportHeading(modality, selectedBodyPart, lat, contrast, spineRegion);
         const contrastLbl = isRheum ? null : (contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without');
-        setGeneratedReport(sanitizeReportOutput(rawText, expectedHeading, contrastLbl));
+        const cleanReport = applyCustomHeader(sanitizeReportOutput(rawText, expectedHeading, contrastLbl), customHeader);
+        setGeneratedReport(cleanReport);
+        autoCopyReport(cleanReport);
         setMobileTab(1);
       }
     } catch { setGeneratedReport('Network error. Please try again.'); }
@@ -7668,7 +7676,12 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data?.error) setGeneratedReport('Error: ' + data.error);
-      else { setGeneratedReport(sanitizeReportOutput(data?.content?.[0]?.text || 'Error generating report.')); setMobileTab(1); }
+      else {
+        const cleanReport = applyCustomHeader(sanitizeReportOutput(data?.content?.[0]?.text || 'Error generating report.'), customHeader);
+        setGeneratedReport(cleanReport);
+        autoCopyReport(cleanReport);
+        setMobileTab(1);
+      }
     } catch { setGeneratedReport('Network error. Please try again.'); }
     setIsGeneratingRheum(false);
   };
@@ -7800,6 +7813,59 @@ export default function DashboardPage() {
     })();
     return () => { cancelled = true; };
   }, [authUser?.id]);
+
+  // Load this user's saved report header (letterhead line) on login. Same
+  // pattern as reportPrefs above — never throws, falls back to empty string.
+  useEffect(() => {
+    if (!authUser?.id) return;
+    let cancelled = false;
+    (async () => {
+      const loaded = await loadCustomHeader(authUser.id, authUser.access_token);
+      if (!cancelled) {
+        setCustomHeader(loaded);
+        customHeaderRef.current = loaded;
+        lastSavedHeaderRef.current = loaded;
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authUser?.id]);
+
+  // Keep a ref mirror of customHeader so the beforeunload listener below
+  // (added once per authUser, not per keystroke) always reads the latest
+  // typed value instead of a stale closure.
+  useEffect(() => { customHeaderRef.current = customHeader; }, [customHeader]);
+
+  // Auto-saves the header on blur — no separate Save button needed. Skips
+  // the network call entirely if nothing actually changed since last save,
+  // and shows a brief "Saving…" / "✓ Saved" status next to the field.
+  const handleSaveCustomHeader = async () => {
+    if (!authUser?.id) return;
+    if (customHeader === lastSavedHeaderRef.current) return;
+    setHeaderSaveStatus('saving');
+    try {
+      await saveCustomHeader(authUser.id, authUser.access_token, customHeader);
+      lastSavedHeaderRef.current = customHeader;
+      setHeaderSaveStatus('saved');
+      setTimeout(() => setHeaderSaveStatus(s => s === 'saved' ? '' : s), 2000);
+    } catch {
+      setHeaderSaveStatus('error');
+      setTimeout(() => setHeaderSaveStatus(s => s === 'error' ? '' : s), 3000);
+    }
+  };
+
+  // Safety net: if the user edits the header and closes/refreshes the tab
+  // without clicking away from the field first (so onBlur never fires),
+  // this catches the unsaved change on the way out. keepalive:true lets the
+  // browser finish the request even after the page starts unloading.
+  useEffect(() => {
+    const handleUnload = () => {
+      if (!authUser?.id) return;
+      if (customHeaderRef.current === lastSavedHeaderRef.current) return;
+      saveCustomHeaderKeepalive(authUser.id, authUser.access_token, customHeaderRef.current);
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    return () => window.removeEventListener('beforeunload', handleUnload);
+  }, [authUser?.id, authUser?.access_token]);
 
   // Load this user's personal never-use word list on login. Same pattern as
   // reportPrefs above — never throws, falls back to an empty list.
@@ -8235,6 +8301,28 @@ export default function DashboardPage() {
           )}
           {colHdr(isRheum?'linear-gradient(135deg,#7c2d92,#a855f7)':isCT?'linear-gradient(135deg,#0e7490,#0891b2)':'linear-gradient(135deg,#1d4ed8,#2563eb)', isRheum?'🩻':isCT?'🔬':'📝', isRheum?'X-Ray Dictation (Rheum)':isCT?'CT Dictation Input':'MRI Dictation Input')}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
+            <div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <label style={lbl}>Report Header (optional)</label>
+                {headerSaveStatus === 'saving' && (
+                  <span style={{ fontSize:11, color:dm?'#94a3b8':'#64748b' }}>Saving…</span>
+                )}
+                {headerSaveStatus === 'saved' && (
+                  <span style={{ fontSize:11, fontWeight:600, color:dm?'#4ade80':'#16a34a' }}>✓ Saved</span>
+                )}
+                {headerSaveStatus === 'error' && (
+                  <span style={{ fontSize:11, fontWeight:600, color:dm?'#f87171':'#dc2626' }}>Save failed — try again</span>
+                )}
+              </div>
+              <input
+                style={inp}
+                placeholder="e.g. LUCID MSK ORTHOPEDIC IMAGING"
+                value={customHeader}
+                onChange={e => setCustomHeader(e.target.value)}
+                onBlur={handleSaveCustomHeader}
+                maxLength={120}
+              />
+            </div>
             <div style={{ display:'flex',gap:8 }}>
               {isRheum ? (<>
                 <div style={{ flex:2 }}><label style={lbl}>Joint / Region</label>
