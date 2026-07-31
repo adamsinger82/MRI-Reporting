@@ -35,7 +35,7 @@ import { buildTemplateMergeInstruction } from './templateUtils';
 import ReportPreferencesPanel from './ReportPreferencesPanel';
 import { loadReportPrefs, saveReportPrefs, buildPreferenceInstruction } from './reportPreferencesUtils';
 import { loadCustomHeader, saveCustomHeader, saveCustomHeaderKeepalive, applyCustomHeader } from './reportHeaderUtils';
-import { autoCopyReport } from './clipboardUtils';
+import { primeClipboardPermission, autoCopyReport } from './clipboardUtils';
 import { loadNeverUseTerms, buildNeverUseInstruction } from './neverUseTermsUtils';
 import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
 import ResearchAdminForm from './ResearchAdminForm';
@@ -7421,6 +7421,7 @@ export default function DashboardPage() {
   const [activeTemplate, setActiveTemplate] = useState(null); // { name, content } — loaded via "Use w/ Dictation"; merged into the prompt at Generate time, never shown in the Col 1 text box
   const [generatedReport, setGeneratedReport] = useState('');
   const [isEditingReport, setIsEditingReport] = useState(false); // Col 2 edit toggle
+  const [clipboardStatus, setClipboardStatus] = useState(null); // null | 'copied' | 'failed' — drives CopyButton
   const [isGenerating, setIsGenerating] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [micError, setMicError] = useState('');
@@ -7599,10 +7600,12 @@ export default function DashboardPage() {
   };
 
   const generateReport = async () => {
+    primeClipboardPermission(); // must run synchronously, before any await — see clipboardUtils.js
     const textToUse = isRheum ? rheumFreeText : dictationText;
     if (!textToUse.trim()) return;
     setGeneratedReport(''); // always clears center col — any button can override
     setIsEditingReport(false);
+    setClipboardStatus(null);
     setIsGenerating(true);
     const lat = showSide ? side : '';
     // ── Mass mode resolution ─────────────────────────────────────────────────
@@ -7637,7 +7640,8 @@ export default function DashboardPage() {
         const contrastLbl = isRheum ? null : (contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without');
         const cleanReport = applyCustomHeader(sanitizeReportOutput(rawText, expectedHeading, contrastLbl), customHeader);
         setGeneratedReport(cleanReport);
-        autoCopyReport(cleanReport);
+        const copied = await autoCopyReport(cleanReport);
+        setClipboardStatus(copied ? 'copied' : 'failed');
         setMobileTab(1);
       }
     } catch { setGeneratedReport('Network error. Please try again.'); }
@@ -7646,9 +7650,11 @@ export default function DashboardPage() {
 
   // ── Generate Report from DDx checkboxes ───────────────────────────────────
   const generateRheumReport = async () => {
+    primeClipboardPermission(); // must run synchronously, before any await — see clipboardUtils.js
     setIsGeneratingRheum(true);
     setGeneratedReport(''); // always clears and replaces center col
     setIsEditingReport(false);
+    setClipboardStatus(null);
     const jLabel = RHEUM_JOINTS[rheumJoint]?.label || rheumJoint;
     // Build a structured finding list from checked boxes
     const checkedFindings = [];
@@ -7679,7 +7685,8 @@ export default function DashboardPage() {
       else {
         const cleanReport = applyCustomHeader(sanitizeReportOutput(data?.content?.[0]?.text || 'Error generating report.'), customHeader);
         setGeneratedReport(cleanReport);
-        autoCopyReport(cleanReport);
+        const copied = await autoCopyReport(cleanReport);
+        setClipboardStatus(copied ? 'copied' : 'failed');
         setMobileTab(1);
       }
     } catch { setGeneratedReport('Network error. Please try again.'); }
@@ -8514,7 +8521,15 @@ export default function DashboardPage() {
           )}
           {colHdr('linear-gradient(135deg,#5b21b6,#7c3aed)', '📄', 'Generated Report',
             generatedReport && !isGenerating ? (
-              <button onClick={() => setIsEditingReport(e => !e)}
+              <button onClick={() => {
+                  const wasEditing = isEditingReport;
+                  setIsEditingReport(e => !e);
+                  if (wasEditing) {
+                    // Was editing, now locking — copy the (possibly edited) report.
+                    setClipboardStatus(null);
+                    autoCopyReport(generatedReport).then(copied => setClipboardStatus(copied ? 'copied' : 'failed'));
+                  }
+                }}
                 style={{ display:'flex',alignItems:'center',gap:5,padding:'5px 11px',borderRadius:7,border:'1px solid rgba(255,255,255,0.35)',background:isEditingReport?'rgba(255,255,255,0.22)':'rgba(255,255,255,0.1)',color:'white',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s' }}>
                 {isEditingReport ? '🔒 Lock' : '✏️ Edit'}
               </button>
@@ -8550,7 +8565,8 @@ export default function DashboardPage() {
                   : <div style={{ color:'#94a3b8',fontStyle:'italic',fontSize:13,textAlign:'center',paddingTop:40,lineHeight:1.8 }}><div style={{ fontSize:32,marginBottom:10 }}>📋</div>Report will appear here after generation.</div>
               }
             </div>
-            <CopyButton generatedReport={generatedReport} dm={dm} />
+            <CopyButton generatedReport={generatedReport} dm={dm} copyStatus={clipboardStatus}
+              onRetryCopy={() => autoCopyReport(generatedReport).then(copied => setClipboardStatus(copied ? 'copied' : 'failed'))} />
           </div>
         </div>
 
