@@ -170,6 +170,7 @@ const JOINT_DATA = {
         citations: [
           { label: "Moor BK et al. Critical shoulder angle and rotator cuff tears / glenohumeral OA. Bone Joint J 2013", url: "https://scholar.google.com/scholar?q=Moor%20Bouaicha%20Rothenfluh%20critical%20shoulder%20angle%20rotator%20cuff%20osteoarthritis%202013" },
           { label: "Gerber C et al. Supraspinatus tendon load is dependent on the critical shoulder angle. J Orthop Res 2014", url: "https://scholar.google.com/scholar?q=Gerber%20supraspinatus%20tendon%20load%20critical%20shoulder%20angle%20biomechanical%202014" },
+          { label: "CSA measurements obtained from radiographs have shown better interobserver agreement compared to MRI. Spiegl UJ et al. The critical shoulder angle is associated with rotator cuff tears and shoulder osteoarthritis and is better assessed with radiographs over MRI. Knee Surg Sports Traumatol Arthrosc 2016;24(7):2244-51.", url: "https://pubmed.ncbi.nlm.nih.gov/25820655/" },
         ],
         diagram: null,
         singleImage: '/images/msk/criticalangleshoulder.jpg',
