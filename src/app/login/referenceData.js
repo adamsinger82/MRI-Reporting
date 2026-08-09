@@ -172,6 +172,7 @@ const JOINT_DATA = {
           { label: "Gerber C et al. Supraspinatus tendon load is dependent on the critical shoulder angle. J Orthop Res 2014", url: "https://scholar.google.com/scholar?q=Gerber%20supraspinatus%20tendon%20load%20critical%20shoulder%20angle%20biomechanical%202014" },
         ],
         diagram: null,
+        singleImage: '/images/msk/criticalangleshoulder.jpg',
       },
       {
         id: 'goutallier',
