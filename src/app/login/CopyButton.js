@@ -32,7 +32,7 @@ export function formatForPSOne(reportText) {
     .replace(/^\s*[-•]\s+/gm, '')
     .replace(/^---+$/gm, '')
     .replace(/\bunremarkable\b/gi, 'intact')
-    .replace(/^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS):/gm, '\n$1:')
+    .replace(/^(TECHNIQUE|FINDINGS|IMPRESSION|LEVELS|NUMBERING CONVENTION):/gm, '\n$1:')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
@@ -89,4 +89,3 @@ export default function CopyButton({ generatedReport, dm, copyStatus, onRetryCop
     </p>
   );
 }
-
