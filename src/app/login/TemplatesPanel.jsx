@@ -118,11 +118,14 @@ function formatReport(txt, colors = {}) {
         /^intact\.?$/i.test(value) ||
         /^no significant canal or foraminal narrowing\.?$/i.test(value) ||
         /^no fracture or contusion\. no osteonecrosis\. no marrow infiltration or bone lesion\.?$/i.test(value) ||
-        /^no fracture or cortical disruption\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value);
+        /^no fracture or cortical disruption\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value) ||
+        /^no acute fracture,?\s*avn,?\s*(or|and)\s*marrow infiltration\.?$/i.test(value) ||
+        /^no acute fracture,?\s*avn,?\s*(or|and)\s*suspicious lytic\/blastic lesion\.?$/i.test(value) ||
+        /^vertebral body heights preserved\. no acute fracture,?\s*avn,?\s*(or|and)\s*(marrow infiltration|suspicious lytic\/blastic lesion)\.?$/i.test(value);
       const isBones = /^bones/i.test(label);
       if (isBones && !isAllNeg) {
         const sentences = value.match(/[^.!?]+[.!?]*/g) || [value];
-        const negPattern = /^(no fracture|no osteonecrosis|no marrow|no avascular|no bone lesion|no aggressive|no cortical)/i;
+        const negPattern = /^(vertebral body heights preserved|no acute fracture|no fracture|no osteonecrosis|no avn|no marrow|no avascular|no bone lesion|no aggressive|no suspicious|no cortical)/i;
         return (
           <div key={i} style={{ marginTop: 8, paddingLeft: 4 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: lblColor }}>{label} </span>

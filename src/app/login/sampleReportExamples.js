@@ -16,7 +16,7 @@ Biceps Tendon: Full-thickness rupture of the long head of the biceps tendon.
 Labrum: SLAP tear of the superior labrum.
 AC Joint: Mild AC joint osteoarthrosis.
 Joint Effusion: Moderate glenohumeral joint effusion.
-Bones: No fracture or acute osseous abnormality. No aggressive osseous lesion.
+Bones: No acute fracture, AVN or marrow infiltration.
 Regional Neurovascular Structures: Axillary nerve and quadrilateral space are normal.`;
 
 // Each card's `patch` is what gets merged into the user's preference draft
@@ -83,6 +83,6 @@ export const REPORT_STYLE_EXAMPLES = [
 `1. Massive full-thickness rotator cuff tear involving the supraspinatus and infraspinatus tendons, with Goutallier grade 3-4 muscle atrophy and findings of rotator cuff tear arthropathy.
 2. Severe glenohumeral osteoarthrosis secondary to rotator cuff arthropathy.
 3. Associated SLAP tear with rupture of the long head of the biceps tendon.
-4. No fracture or acute osseous abnormality. Axillary nerve and quadrilateral space are normal.`,
+4. No acute fracture, AVN or marrow infiltration. Axillary nerve and quadrilateral space are normal.`,
   },
 ];
