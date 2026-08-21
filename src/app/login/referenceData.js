@@ -1256,6 +1256,7 @@ const JOINT_DATA = {
           { label: "Wiltse LL et al. Classification of spondylolysis and spondylolisthesis. Clin Orthop 1976", url: "https://scholar.google.com/scholar?q=Wiltse+Newman+Macnab+classification+spondylolysis+spondylolisthesis+1976" },
         ],
         diagram: null,
+        singleImage: '/images/msk/meyerding.jpg',
       },
     ],
   },
