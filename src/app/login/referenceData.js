@@ -213,7 +213,8 @@ const JOINT_DATA = {
           { label: "Patte D. Classification of rotator cuff lesions. Clin Orthop Relat Res 1990", url: "https://scholar.google.com/scholar?q=Patte%20classification%20rotator%20cuff%20lesions%20clinical%20orthopaedics%201990" },
           { label: "Thomazeau H et al. Atrophy of the supraspinatus belly: assessment by MRI. KSSTA 1996", url: "https://scholar.google.com/scholar?q=Thomazeau%20atrophy%20supraspinatus%20belly%20assessment%20MRI%201996" },
         ],
-        singleImage: '/images/msk/patte.jpg',
+        diagram: null,
+        singleImage: '/images/msk/goutallier.jpg',
       },
       {
         id: 'stump-length',
