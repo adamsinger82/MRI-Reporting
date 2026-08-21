@@ -69,30 +69,6 @@ const MRI_GRADING_DATA = {
     measurements: [
     ],
   },
-  // ── MRI: Shoulder ───────────────────────────────────────────────────────
-  shoulder: {
-    label: 'Shoulder — MRI',
-    measurements: [
-      {
-        id: 'patte_classification',
-        label: 'Patte Classification — Rotator Cuff Tendon Retraction',
-        isGradingScale: true,
-        plane: 'Coronal oblique',
-        description: 'Patte classification of supraspinatus tendon retraction after full-thickness rotator cuff tear, staged on coronal oblique MRI relative to the humeral head and glenoid. Higher stages correlate with reduced reparability and greater likelihood of associated fatty infiltration.',
-        diagram: null,
-        singleImage: '/images/msk/patte.jpg',
-        citations: [
-          { label: 'Patte D. — Classification of rotator cuff lesions. Clin Orthop Relat Res 1990;254:81-86.', url: 'https://scholar.google.com/scholar?q=Patte+classification+rotator+cuff+lesions+1990' },
-        ],
-        normalValues: [
-          { label: 'Stage 1', value: 'Tendon stump retracted to at/near the footprint (greater tuberosity) — usually repairable' },
-          { label: 'Stage 2', value: 'Tendon stump retracted to the level of the humeral head — usually repairable' },
-          { label: 'Stage 3', value: 'Tendon stump retracted to the level of the glenoid — often irreparable, especially with Goutallier ≥ 3 fatty infiltration' },
-          { label: 'Clinical note', value: 'Report stage alongside Goutallier fatty infiltration grade of the involved muscle belly; both factors drive reparability assessment' },
-        ],
-      },
-    ],
-  },
   // ── MRI: Forearm ────────────────────────────────────────────────────────
   forearm: {
     label: 'Forearm — MRI',
