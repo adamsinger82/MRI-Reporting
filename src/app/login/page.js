@@ -32,6 +32,7 @@ import CopyButton from './CopyButton';
 import { MRI_GRADING_DATA, CT_GRADING_DATA } from './gradingData';
 import TemplatesPanel from './TemplatesPanel';
 import { buildTemplateMergeInstruction } from './templateUtils';
+import { applyHardCorrections, buildDictionaryInstruction } from './mskDictionaryUtils';
 import ReportPreferencesPanel from './ReportPreferencesPanel';
 import { loadReportPrefs, saveReportPrefs, buildPreferenceInstruction } from './reportPreferencesUtils';
 import { loadCustomHeader, saveCustomHeader, saveCustomHeaderKeepalive, applyCustomHeader } from './reportHeaderUtils';
@@ -7619,7 +7620,12 @@ export default function DashboardPage() {
 
   const generateReport = async () => {
     primeClipboardPermission(); // must run synchronously, before any await — see clipboardUtils.js
-    const textToUse = isRheum ? rheumFreeText : dictationText;
+    // MSK DICTIONARY — STAGE 1: deterministic, zero-latency hard corrections
+    // (boost 10 + auto!==false entries only) applied to the raw dictated text
+    // before anything else touches it. applyHardCorrections() returns
+    // { text, corrections } — .text is the corrected string. See
+    // mskDictionaryUtils.js.
+    const textToUse = isRheum ? rheumFreeText : applyHardCorrections(dictationText, selectedBodyPart).text;
     if (!textToUse.trim()) return;
     setGeneratedReport(''); // always clears center col — any button can override
     setIsEditingReport(false);
@@ -7646,8 +7652,8 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:3000,
-          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs) + buildNeverUseInstruction(neverUseTerms) + buildTemplateMergeInstruction(activeTemplate?.content),
-          messages:[{role:'user',content:`Dictated findings:\n\n${isRheum ? rheumFreeText : dictationText}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS — PLACEMENT INSTRUCTIONS:\nFor each incidental finding below: (1) add a brief descriptive sentence in the FINDINGS section under the most relevant existing heading (for spine MRI use "Paraspinal Soft Tissues:"; for non-spine joints use "Soft Tissues:" or "Regional Neurovascular Structures:" as appropriate for aortic findings) — e.g. "Incidentally noted simple-appearing right adnexal cyst measuring up to X cm." (2) add a corresponding numbered line in the IMPRESSION. (3) include the management recommendation and citation in REFERENCES/FOOTNOTE as detailed below. Do NOT place these findings ONLY in the impression — they must also appear in FINDINGS.\n\n' + buildIncidentalBlock() : ''}`}],
+          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs) + buildNeverUseInstruction(neverUseTerms) + buildTemplateMergeInstruction(activeTemplate?.content) + buildDictionaryInstruction(selectedBodyPart),
+          messages:[{role:'user',content:`Dictated findings:\n\n${textToUse}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS — PLACEMENT INSTRUCTIONS:\nFor each incidental finding below: (1) add a brief descriptive sentence in the FINDINGS section under the most relevant existing heading (for spine MRI use "Paraspinal Soft Tissues:"; for non-spine joints use "Soft Tissues:" or "Regional Neurovascular Structures:" as appropriate for aortic findings) — e.g. "Incidentally noted simple-appearing right adnexal cyst measuring up to X cm." (2) add a corresponding numbered line in the IMPRESSION. (3) include the management recommendation and citation in REFERENCES/FOOTNOTE as detailed below. Do NOT place these findings ONLY in the impression — they must also appear in FINDINGS.\n\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
       const data = await res.json();
