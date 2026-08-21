@@ -214,7 +214,7 @@ const JOINT_DATA = {
           { label: "Thomazeau H et al. Atrophy of the supraspinatus belly: assessment by MRI. KSSTA 1996", url: "https://scholar.google.com/scholar?q=Thomazeau%20atrophy%20supraspinatus%20belly%20assessment%20MRI%201996" },
         ],
         diagram: null,
-        singleImage: '/images/msk/goutallier.jpg',
+        singleImage: '/images/msk/patte.jpg',
       },
       {
         id: 'stump-length',
