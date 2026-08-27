@@ -53,6 +53,7 @@ export const BOOST_MAX = 10;
 
 export const MSK_DICTIONARY = [
   // ───────────────────────── GLOBAL — pathology & tissue ─────────────────────
+  { term: 'bursal-sided', boost: 10, scope: 'global', heard: ['virtual sided', 'virtual-sided', 'verbal sided', 'verbal-sided'], note: 'CRITICAL — never conflate with articular-sided (opposite tendon surface, clinically distinct). "Virtual/verbal sided" is nonsense on its own in a tendon-tear context, so this is safe as an auto correction; the model must still never guess "articular-sided" for a genuinely ambiguous/ungarbled sidedness — see the buildPrompt() BURSAL-SIDED vs ARTICULAR-SIDED rule.' },
   { term: 'osteoarthrosis', boost: 7, scope: 'global', heard: ['osteo arthrosis', 'osteo arthrosis', 'austere arthrosis'] },
   { term: 'enthesopathy', boost: 9, scope: 'global', heard: ['in the sopathy', 'and the soft they', 'enthesis pathy', 'anthesopathy'] },
   { term: 'tenosynovitis', boost: 9, scope: 'global', heard: ['teno synovitis', 'ten o synovitis', 'tendo synovitis'] },
