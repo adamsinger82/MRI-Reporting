@@ -77,7 +77,7 @@ const ANATOMY_MRI = {
   hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Trochanteric Bursa, Proximal Hamstring Tendons, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
   wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Articular Cartilage, Bones, Muscles, Soft Tissues',
   elbow:'UCL (Ulnar Collateral Ligament — medial), LUCL (Lateral Ulnar Collateral Ligament — lateral), RCL (Radial Collateral Ligament — lateral), Annular Ligament, Common Flexor Tendon, Common Extensor Tendon, Distal Biceps Tendon, Brachialis Tendon, Triceps Tendon, Ulnar Nerve, Median Nerve, Radial Nerve / Posterior Interosseous Nerve, Articular Cartilage, Bones, Joint Effusion, Muscles, Soft Tissues',
-  ankle:'Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Deltoid Ligament Complex, Syndesmosis, Tibialis Anterior Tendon, Extensor Hallucis Longus Tendon, Extensor Digitorum Longus Tendon, Achilles Tendon, Posterior Tibial Tendon, Flexor Digitorum Longus Tendon, Peroneal Tendons, Flexor Hallucis Longus Tendon, Tarsal Tunnel, Sinus Tarsi, Plantar Fascia, Articular Cartilage, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  ankle:'Bones, Deltoid Ligament Complex, Spring Ligament Complex, Syndesmosis, Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Plantar Fascia, Bifurcate Ligament Complex, Posterior Tibial Tendon, Flexor Digitorum Longus Tendon, Flexor Hallucis Longus Tendon, Achilles Tendon, Peroneal Tendons, Tibialis Anterior Tendon, Extensor Hallucis Longus Tendon, Extensor Digitorum Longus Tendon, Sinus Tarsi, Tarsal Tunnel, Articular Cartilage, Muscles, Joint Effusion, Regional Neurovascular Structures, Soft Tissues',
   spine:'Vertebral Alignment, Intervertebral Discs, Paraspinal Soft Tissues, Bones, Cord / Conus / Cauda Equina',
   pelvis:'Sacroiliac Joints, Pubic Symphysis, Hip Joints, Iliopsoas, Gluteal Muscles, Proximal Hamstring Tendons, Pelvic Bones, Regional Neurovascular Structures, Soft Tissues',
   foot:'Plantar Fascia, Lisfranc Ligament Complex, MTP Joint Plantar Plate Complexes, Interdigital/Morton\'s Neuroma, Articular Cartilage, Bones, Muscles, Regional Neurovascular Structures, Soft Tissues',
@@ -325,11 +325,25 @@ ANKLE:
 - HAGLUND SYNDROME: Insertional Achilles tendinopathy + Haglund deformity + retrocalcaneal bursitis → "Haglund syndrome with insertional Achilles tendinopathy, Haglund deformity, and retrocalcaneal bursitis, as above."
 - OSTEOCHONDRAL LESION TALUS: OLT → always own line: "Osteochondral lesion of the talar [medial/lateral] dome, as above."
 
+ANKLE MRI — STANDARD HEADING ORDER (MANDATORY): Generate the FINDINGS section headings for ankle MRI in EXACTLY this order — do not reorder them even when the dictation discusses structures in a different sequence:
+1. Bones
+2. Ligaments group, in this order: Deltoid Ligament Complex, Spring Ligament Complex, Syndesmosis, Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Plantar Fascia, Bifurcate Ligament Complex
+3. Tendons group, in this order: Posterior Tibial Tendon, Flexor Digitorum Longus Tendon, Flexor Hallucis Longus Tendon, Achilles Tendon, Peroneal Tendons, Tibialis Anterior Tendon, Extensor Hallucis Longus Tendon, Extensor Digitorum Longus Tendon
+4. Sinus Tarsi
+5. Tarsal Tunnel
+6. Articular Cartilage
+7. Muscles
+8. Joint Effusion, Regional Neurovascular Structures, Soft Tissues (as applicable, per their own rules)
+Each ligament/tendon in groups 2-3 still gets its own individual subheading — "Ligaments"/"Tendons" are not headings themselves, just the grouping used to fix the order above.
+
 ANKLE MRI — FINDINGS HEADING RULES:
+- ALWAYS-LISTED LIGAMENTS: Deltoid Ligament Complex, Spring Ligament Complex, Syndesmosis, Anterior Talofibular Ligament, Calcaneofibular Ligament, Posterior Talofibular Ligament, Plantar Fascia, and Bifurcate Ligament Complex are ALWAYS listed/generated as their own subheadings on every ankle MRI, each with default "intact" language, even when not specifically called out in dictation. (Plantar Fascia defaults to "intact" on ANKLE MRI specifically — the different Foot MRI plantar fascia default below applies only to Foot MRI.)
 - ALWAYS-LISTED TENDONS: Tibialis Anterior, Extensor Hallucis Longus, Extensor Digitorum Longus, and Flexor Digitorum Longus are ALWAYS listed/generated as their own tendon subheadings on every ankle MRI, with default "intact" language, even when not specifically called out in dictation — this is in addition to the previously always-reported tendons (Tibialis Posterior, Peroneus Longus, Peroneus Brevis, Flexor Hallucis Longus, Achilles).
 - RETROCALCANEAL BURSA: report under/alongside the ACHILLES TENDON heading — do NOT generate retrocalcaneal bursa as its own standalone heading.
-- TARSAL TUNNEL: own separate heading. Default when not dictated: "No mass in the tarsal tunnel."
-- SINUS TARSI: own separate heading. Default when not dictated: "Normal."
+- SINUS TARSI: own separate heading. Default when not dictated: "No acute abnormality."
+- TARSAL TUNNEL: own separate heading. Default when not dictated: "No acute abnormality."
+- TARSAL TUNNEL — NEUROVASCULAR BUNDLE SILENCED BY DEFAULT: Because the tarsal tunnel contains the tibial neurovascular bundle, the Tarsal Tunnel default statement above must NOT mention the neurovascular bundle, tibial nerve, or any nerve/vessel by name. Only mention a nerve under the Tarsal Tunnel heading when dictation specifically calls out an individual nerve there by name (e.g. tibial nerve, sural nerve, superficial peroneal nerve, deep peroneal nerve, medial/lateral plantar nerve) — in that case, describe the dictated finding for that named nerve within the Tarsal Tunnel heading's text instead of the default. This silencing rule applies ONLY to the Tarsal Tunnel heading's default text — it does not change the separate "Regional Neurovascular Structures" heading, which still generates its own default per GLOBAL DEFAULTS regardless of what is or isn't dictated about the tarsal tunnel.
+- ARTICULAR CARTILAGE (ANKLE MRI ONLY — OVERRIDES GLOBAL DEFAULT): default when not dictated: "No high-grade cartilage loss." This replaces the GLOBAL DEFAULTS Articular Cartilage default ("Preserved.") for ankle MRI specifically; other joints keep the GLOBAL DEFAULTS "Preserved." default.
 
 FOOT MRI — FINDINGS HEADING RULES:
 - PLANTAR FASCIA: default when not dictated: "No fibroma or acute injury." Do NOT default to "intact."
@@ -808,7 +822,9 @@ function formatReport(txt, colors = {}) {
         /^no fracture\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value) ||
         /^no acute fracture,?\s*avn,?\s*(or|and)\s*marrow infiltration\.?$/i.test(value) ||
         /^no acute fracture,?\s*avn,?\s*(or|and)\s*suspicious lytic\/blastic lesion\.?$/i.test(value) ||
-        /^vertebral body heights preserved\. no acute fracture,?\s*avn,?\s*(or|and)\s*(marrow infiltration|suspicious lytic\/blastic lesion)\.?$/i.test(value);
+        /^vertebral body heights preserved\. no acute fracture,?\s*avn,?\s*(or|and)\s*(marrow infiltration|suspicious lytic\/blastic lesion)\.?$/i.test(value) ||
+        /^no acute abnormality\.?$/i.test(value) ||
+        /^no high-grade cartilage loss\.?$/i.test(value);
       const isBones = /^bones/i.test(label);
       if (isBones && !isAllNeg) {
         const sentences = value.match(/[^.!?]+[.!?]*/g) || [value];
