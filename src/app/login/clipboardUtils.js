@@ -41,18 +41,44 @@
 
 import { formatForPSOne } from './CopyButton';
 
+// ── Promised clipboard write (2026-10-23) ─────────────────────────────────
+// Chromium (Chrome/Edge) rejects clipboard writes whenever the tab is not
+// focused — e.g. you switch to PowerScribe while the AI is still generating,
+// which is the normal workflow. The fix: start the clipboard write RIGHT NOW,
+// inside the Generate click while the tab is focused, handing the browser a
+// ClipboardItem whose text is a Promise. The browser accepts the write at
+// click time, and autoCopyReport() fills the text in later when the report
+// arrives — even if focus has since moved to another window.
+let deferred = null; // { resolve, reject, writePromise }
+
+function dropDeferred(reason) {
+  if (!deferred) return;
+  try { deferred.reject(new Error(reason)); } catch {}
+  deferred.writePromise?.catch?.(() => {});
+  deferred = null;
+}
+
 export function primeClipboardPermission() {
   try {
-    // Fire-and-forget: writes a harmless single space to "unlock" persistent
-    // clipboard-write access for this origin. Must be called synchronously,
-    // before any await, inside the same click handler that starts generation.
-    // The .catch() below just silences an unhandled-rejection warning if this
-    // priming write itself gets rejected (e.g. document not focused yet) —
-    // autoCopyReport()'s own return value is what callers actually rely on.
-    navigator.clipboard?.writeText(' ')?.catch(() => {});
+    dropDeferred('superseded by a newer generate click');
+    if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+      // Older browsers: fall back to the old priming write.
+      navigator.clipboard?.writeText(' ')?.catch(() => {});
+      return;
+    }
+    let resolve, reject;
+    const textPromise = new Promise((res, rej) => { resolve = res; reject = rej; });
+    const blobPromise = textPromise.then((t) => new Blob([t], { type: 'text/plain' }));
+    blobPromise.catch(() => {});
+    // MUST be called synchronously inside the click handler (before any await).
+    const writePromise = navigator.clipboard.write([new ClipboardItem({ 'text/plain': blobPromise })]);
+    writePromise.catch(() => {});
+    const mine = { resolve, reject, writePromise };
+    deferred = mine;
+    // Safety: never leave a write hanging forever (e.g. generation errored out).
+    setTimeout(() => { if (deferred === mine) dropDeferred('timed out waiting for report'); }, 120000);
   } catch {
-    // Some browsers/contexts disallow this entirely — autoCopyReport's own
-    // return value still tells the caller whether the real copy succeeded.
+    deferred = null;
   }
 }
 
@@ -134,9 +160,15 @@ function armLateRetry(formatted, onLateSuccess) {
 // can show a fallback ("click to copy") instead of assuming success. If the
 // first attempt fails, a late retry is armed; onLateSuccess fires if it works.
 export async function autoCopyReport(reportText, onLateSuccess) {
-  if (!reportText?.trim()) return false;
+  const d = deferred; deferred = null;
+  if (!reportText?.trim()) { if (d) { try { d.reject(new Error('empty report')); } catch {} d.writePromise.catch(() => {}); } return false; }
   cancelPending(); // a newer report supersedes any pending older retry
   const formatted = formatForPSOne(reportText);
+  if (d) {
+    // Fill in the clipboard write that was started at click time.
+    d.resolve(formatted);
+    try { await d.writePromise; return true; } catch { /* fall through to the normal paths */ }
+  }
   if (await writeNow(formatted)) return true;
   armLateRetry(formatted, onLateSuccess);
   return false;
