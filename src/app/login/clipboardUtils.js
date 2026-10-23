@@ -79,17 +79,65 @@ function legacyCopy(text) {
   }
 }
 
-// Returns true if the copy succeeded, false if it silently failed — so
-// callers can show a fallback ("click to copy") instead of assuming success.
-export async function autoCopyReport(reportText) {
-  if (!reportText?.trim()) return false;
-  const formatted = formatForPSOne(reportText);
+// ── Late retry (2026-10-23) ───────────────────────────────────────────────
+// Most "Auto-copy failed" banners happen because the user switches to
+// PowerScribe/PACS while the AI call is running: the browser tab no longer has
+// focus when the report arrives, and BOTH clipboard APIs refuse to write while
+// the document is unfocused. Instead of just giving up, the copy is retried the
+// moment the user comes back to this tab/window (focus / visibilitychange), plus
+// a light poll while the tab is focused. onLateSuccess() lets page.js flip the
+// banner to the green "Ready to paste" state.
+let pending = null; // { cleanup }
+
+function cancelPending() {
+  if (pending) { pending.cleanup(); pending = null; }
+}
+
+async function writeNow(formatted) {
   try {
     await navigator.clipboard.writeText(formatted);
     return true;
   } catch {
-    // Modern Clipboard API failed (most often a lost-focus/activation
-    // issue) — try the legacy execCommand path before reporting failure.
     return legacyCopy(formatted);
   }
+}
+
+function armLateRetry(formatted, onLateSuccess) {
+  if (typeof window === 'undefined') return;
+  let done = false;
+  let poll = null;
+  let giveUp = null;
+  const attempt = async () => {
+    if (done) return;
+    if (typeof document !== 'undefined' && document.hasFocus && !document.hasFocus()) return;
+    if (await writeNow(formatted)) {
+      cleanup();
+      pending = null;
+      try { onLateSuccess?.(); } catch {}
+    }
+  };
+  const cleanup = () => {
+    done = true;
+    window.removeEventListener('focus', attempt);
+    document.removeEventListener('visibilitychange', attempt);
+    if (poll) clearInterval(poll);
+    if (giveUp) clearTimeout(giveUp);
+  };
+  window.addEventListener('focus', attempt);
+  document.addEventListener('visibilitychange', attempt);
+  poll = setInterval(attempt, 1500);
+  giveUp = setTimeout(() => { cleanup(); pending = null; }, 10 * 60 * 1000);
+  pending = { cleanup };
+}
+
+// Returns true if the copy succeeded, false if it did not (yet) — so callers
+// can show a fallback ("click to copy") instead of assuming success. If the
+// first attempt fails, a late retry is armed; onLateSuccess fires if it works.
+export async function autoCopyReport(reportText, onLateSuccess) {
+  if (!reportText?.trim()) return false;
+  cancelPending(); // a newer report supersedes any pending older retry
+  const formatted = formatForPSOne(reportText);
+  if (await writeNow(formatted)) return true;
+  armLateRetry(formatted, onLateSuccess);
+  return false;
 }

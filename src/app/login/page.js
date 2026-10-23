@@ -38,6 +38,7 @@ import { loadReportPrefs, saveReportPrefs, buildPreferenceInstruction } from './
 import { loadCustomHeader, saveCustomHeader, saveCustomHeaderKeepalive, applyCustomHeader } from './reportHeaderUtils';
 import { primeClipboardPermission, autoCopyReport } from './clipboardUtils';
 import { stripSpineImpressionViolations } from './spineReportGuard';
+import { enforceTechniqueSide, stripRedundantNeurovascular, KNEE_ITB_HEADING_RULE, NERVE_VS_NEUROVASCULAR_RULE } from './reportGuards';
 import { loadNeverUseTerms, buildNeverUseInstruction } from './neverUseTermsUtils';
 import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
 import ResearchAdminForm from './ResearchAdminForm';
@@ -72,7 +73,7 @@ const ABSENT_STRUCTURES = [
 
 // MRI anatomy — full soft tissue detail
 const ANATOMY_MRI = {
-  knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Muscles, Regional Neurovascular Structures, Soft Tissues',
+  knee:'Medial Meniscus, Lateral Meniscus, Anterior Cruciate Ligament, Posterior Cruciate Ligament, Medial Collateral Ligament Complex, Lateral Collateral Ligament Complex, IT band, biceps femoris and popliteus tendon [ONE single combined heading, exact text — see KNEE MRI IT BAND rule], Patellar Tendon, Quadriceps Tendon, Medial Compartment Articular Cartilage, Lateral Compartment Articular Cartilage, Patellofemoral Articular Cartilage, Bones, Joint Effusion, Baker Cyst, Muscles, Regional Neurovascular Structures, Soft Tissues',
   shoulder:'Supraspinatus and Infraspinatus Tendons, Subscapularis Tendon, Teres Minor Tendon, Biceps Tendon Long Head, Acromioclavicular Joint, Glenoid Labrum, Acromial Undersurface, Subacromial and Subdeltoid Bursa, Articular Cartilage, Bones, Joint Effusion, Capsulitis, Muscles, Regional Neurovascular Structures, Soft Tissues',
   hip:'Acetabular Labrum, Articular Cartilage, Iliopsoas Tendon, Gluteus Medius Tendon, Gluteus Minimus Tendon, Trochanteric Bursa, Proximal Hamstring Tendons, Bones, Joint Effusion, Muscles, Regional Neurovascular Structures, Soft Tissues',
   wrist:'Triangular Fibrocartilage Complex, Scapholunate Ligament, Lunotriquetral Ligament, Extrinsic Ligaments, Flexor Tendons, Extensor Tendons, Median Nerve (Carpal Tunnel), Ulnar Nerve (Guyon Canal), Articular Cartilage, Bones, Muscles, Soft Tissues',
@@ -285,6 +286,7 @@ KNEE:
 - ROTATOR CUFF ARTHROPATHY (if applicable): Superior migration humeral head + cuff tears → "Rotator cuff arthropathy with [massive cuff tear pattern], as above."
 
 
+${!isCT && part === 'knee' ? KNEE_ITB_HEADING_RULE : ''}${NERVE_VS_NEUROVASCULAR_RULE}
 SHOULDER-SPECIFIC FINDINGS DEFAULTS AND RULES:
 - Acromial Undersurface: default "Bigliani type 2 morphology." (change only if dictated otherwise)
 - Subacromial and Subdeltoid Bursa: SEPARATE heading — do NOT include in Soft Tissues. Default: "No subacromial or subdeltoid bursitis."
@@ -589,7 +591,7 @@ GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
 - MUSCLE EDEMA / ATROPHY — MUSCLES HEADING ONLY (ALL JOINTS, MANDATORY): Intramuscular edema, muscle strain/tear signal, fatty atrophy/infiltration, and denervation-pattern muscle signal changes belong exclusively under the MUSCLES heading — never under a tendon heading, even when the muscle is the muscle belly of a named tendon (e.g. supraspinatus or infraspinatus muscle edema or atrophy is reported under Muscles, not under the Supraspinatus and Infraspinatus Tendons heading, even though they share a name). Tendon headings are reserved for the tendon itself (tendinosis, partial/full-thickness tear, retraction) — never for its muscle belly's signal, edema, or bulk. This applies to every joint, not just shoulder.
 - Articular Cartilage: "Preserved." (NOT "intact" — use "preserved" for all joints)
 - Soft Tissues: default when nothing else applies: "No acute abnormality." (NOT "intact"). This default is for the Soft Tissues heading ONLY and must NOT be used to contradict findings reported elsewhere. If the dictation describes an injury to a muscle, tendon, or ligament, a joint effusion, a fluid collection, or a mass — these are reported under their own appropriate headings (Muscles, the specific tendon/ligament heading, Joint Effusion, Soft Tissues mass/collection description, etc.). If, after placing all dictated findings under their proper headings, there is no separate soft-tissue finding left to report and no unrelated incidental finding — OMIT THE SOFT TISSUES HEADING ENTIRELY. Do NOT generate a Soft Tissues heading just to write a qualified/hedged statement like "No acute abnormality beyond the above" or "No additional acute abnormality" — go silent instead. Only generate the Soft Tissues heading when either (a) there is a genuine, distinct soft tissue finding not captured by another heading, or (b) the EXCEPTION below applies. EXCEPTION — incidental findings unrelated to the joint being imaged (e.g. an incidentally noted renal or adnexal cyst) ARE appropriately described under Soft Tissues even when other acute findings exist elsewhere in the exam, since they are a separate, unrelated structure. SPINE EXCEPTION TO THIS EXCEPTION: for spine reports, do NOT generate a separate "Soft Tissues:" heading at all — route every such incidental/non-spine finding into the single mandatory "Paraspinal Soft Tissues:" heading instead (see the PARASPINAL SOFT TISSUES rule under SPINE-SPECIFIC FINDINGS RULES above, which already covers this exception for spine). A spine report must never contain both a "Paraspinal Soft Tissues:" heading and a separate "Soft Tissues:" heading.
-- Regional Neurovascular Structures (all non-spine, non-wrist MRI joints): default "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
+- Regional Neurovascular Structures (all non-spine, non-wrist MRI joints, EXCEPT any exam that already has separate individual-nerve headings — see NERVES vs NEUROVASCULAR BUNDLE rule: never both): default "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
 - POSTSURGICAL CHANGE (ALL MRI joints): If the dictation describes any surgical changes, postoperative findings, or hardware at any location, generate a separate "Postsurgical Change:" heading in the FINDINGS section and place ALL such findings there. Do NOT scatter postsurgical findings under other headings (e.g. Soft Tissues, Bones, joint-specific headings). If no surgical changes are dictated, do NOT generate this heading.
 
 STYLE RULES:
@@ -7691,12 +7693,12 @@ export default function DashboardPage() {
         const rawText = data?.content?.[0]?.text || 'Error generating report.';
         const expectedHeading = isRheum ? null : buildReportHeading(modality, selectedBodyPart, lat, contrast, spineRegion);
         const contrastLbl = isRheum ? null : (contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without');
-        const cleanReport = stripSpineImpressionViolations(
+        const cleanReport = stripRedundantNeurovascular(enforceTechniqueSide(stripSpineImpressionViolations(
           applyCustomHeader(sanitizeReportOutput(rawText, expectedHeading, contrastLbl), customHeader),
           selectedBodyPart
-        );
+        ), lat));
         setGeneratedReport(cleanReport);
-        const copied = await autoCopyReport(cleanReport);
+        const copied = await autoCopyReport(cleanReport, () => setClipboardStatus('copied'));
         setClipboardStatus(copied ? 'copied' : 'failed');
         setMobileTab(1);
       }
@@ -7741,7 +7743,7 @@ export default function DashboardPage() {
       else {
         const cleanReport = applyCustomHeader(sanitizeReportOutput(data?.content?.[0]?.text || 'Error generating report.'), customHeader);
         setGeneratedReport(cleanReport);
-        const copied = await autoCopyReport(cleanReport);
+        const copied = await autoCopyReport(cleanReport, () => setClipboardStatus('copied'));
         setClipboardStatus(copied ? 'copied' : 'failed');
         setMobileTab(1);
       }
@@ -7750,6 +7752,10 @@ export default function DashboardPage() {
   };
 
   const keepaliveTimerRef = useRef(null);
+  const latestTextRef = useRef('');      // always-current dictation text (for safe reseed on mic auto-restart)
+  latestTextRef.current = isRheumRef.current ? rheumFreeText : dictationText;
+  const speechWaitSinceRef = useRef(0);  // set when speech starts / last result arrives; cleared on speech end
+  const quickEndsRef = useRef(0);        // consecutive instant recognition endings (mic unplugged, etc.)
   const gracePeriodRef = useRef(false); // true after a final result — suppresses keepalive restart briefly
   const graceTimerRef = useRef(null);
 
@@ -7757,8 +7763,18 @@ export default function DashboardPage() {
     stopKeepalive();
     // Periodic forced restarts were fragmenting continuous speech into small chunks,
     // each transcribed without sentence context — causing both garbling and mid-word
-    // cutoffs. Rely solely on the natural onend auto-restart loop below, which already
-    // handles browser silence timeouts and reseeds from finalTranscriptPersistRef.
+    // cutoffs, so there is NO timed restart. The only forced restart is a STALL
+    // watchdog (2026-10-23): Chrome/Edge occasionally leave recognition "on" but stop
+    // returning results mid-dictation (the mic icon stays lit, nothing is recorded).
+    // If speech was detected but no result has arrived for 10 s, abort the stuck
+    // instance — onend then restarts a fresh one via the normal loop below.
+    keepaliveTimerRef.current = setInterval(() => {
+      const since = speechWaitSinceRef.current;
+      if (since && Date.now() - since > 10000) {
+        speechWaitSinceRef.current = 0;
+        try { getRecRef()?.abort(); } catch {}
+      }
+    }, 2000);
   };
 
   const stopKeepalive = () => {
@@ -7784,10 +7800,15 @@ export default function DashboardPage() {
       const rec = new SR();
       rec.continuous = true; rec.interimResults = true; rec.lang = 'en-US'; rec.maxAlternatives = 1;
 
+      const startedAt = Date.now();
+      let gotAnyResult = false;
       rec.onstart = () => setIsListening(true);
       rec.onaudiostart = () => setIsListening(true);
+      rec.onspeechstart = () => { speechWaitSinceRef.current = Date.now(); };
+      rec.onspeechend = () => { speechWaitSinceRef.current = 0; };
 
       rec.onresult = (event) => {
+        gotAnyResult = true; quickEndsRef.current = 0; speechWaitSinceRef.current = Date.now();
         let interim = '';
         let gotFinal = false;
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -7808,21 +7829,43 @@ export default function DashboardPage() {
       };
 
       rec.onerror = (event) => {
-        if (event.error === 'not-allowed') { stopKeepalive(); setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') { stopKeepalive(); recognitionRef.current = null; setMicError('Microphone access denied. Click the lock icon in your address bar.'); setIsListening(false); }
         // no-speech / audio-capture: silence timeout — onend fires next and restarts automatically
       };
 
       rec.onend = () => {
         // Only restart if we are still the active recognition instance
         if (recognitionRef.current !== rec) return;
-        setTimeout(() => {
-          if (recognitionRef.current !== rec) return;
-          try {
-            const next = makeRecognition(); // fresh instance — correct scope for Edge
-            next.start();
-            recognitionRef.current = next;
-          } catch { stopKeepalive(); setIsListening(false); }
-        }, 150);
+        speechWaitSinceRef.current = 0;
+        // Guard against an endless instant-restart loop (mic unplugged / blocked)
+        if (!gotAnyResult && Date.now() - startedAt < 1500) quickEndsRef.current += 1;
+        if (quickEndsRef.current > 8) {
+          quickEndsRef.current = 0; stopKeepalive(); recognitionRef.current = null; setIsListening(false);
+          setMicError('Dictation stopped — the microphone is not responding. Check the mic, then click the mic button to resume. Your text so far is kept.');
+          return;
+        }
+        // Restart with retries — start() can throw briefly right after an instance ends.
+        const tryRestart = (attempt) => {
+          setTimeout(() => {
+            if (recognitionRef.current !== rec) return;
+            try {
+              // Reseed from what is actually shown in the box: keeps any not-yet-finalized
+              // words from the instance that just ended AND any manual edits made while the mic was on.
+              const shown = latestTextRef.current || '';
+              finalTranscriptPersistRef.current = shown && !/\s$/.test(shown) ? shown + ' ' : shown;
+              const next = makeRecognition(); // fresh instance — correct scope for Edge
+              next.start();
+              recognitionRef.current = next;
+            } catch {
+              if (attempt < 6) tryRestart(attempt + 1);
+              else {
+                stopKeepalive(); recognitionRef.current = null; setIsListening(false);
+                setMicError('Dictation stopped unexpectedly — click the mic button to resume. Your text so far is kept.');
+              }
+            }
+          }, attempt === 0 ? 150 : 300 * attempt);
+        };
+        tryRestart(0);
       };
 
       return rec;
@@ -8032,7 +8075,7 @@ export default function DashboardPage() {
         setGeneratedReport(r);
         setIsEditingReport(false);
         setClipboardStatus(null);
-        autoCopyReport(r).then(copied => setClipboardStatus(copied ? 'copied' : 'failed'));
+        autoCopyReport(r, () => setClipboardStatus('copied')).then(copied => setClipboardStatus(copied ? 'copied' : 'failed'));
       }} onUseAsDictationTemplate={t => setActiveTemplate(t)} onClose={() => setShowTemplates(false)} dm={darkMode} />}
       {showReportPrefs && (
         <ReportPreferencesPanel
@@ -8593,7 +8636,7 @@ export default function DashboardPage() {
                   if (wasEditing) {
                     // Was editing, now locking — copy the (possibly edited) report.
                     setClipboardStatus(null);
-                    autoCopyReport(generatedReport).then(copied => setClipboardStatus(copied ? 'copied' : 'failed'));
+                    autoCopyReport(generatedReport, () => setClipboardStatus('copied')).then(copied => setClipboardStatus(copied ? 'copied' : 'failed'));
                   }
                 }}
                 style={{ display:'flex',alignItems:'center',gap:5,padding:'5px 11px',borderRadius:7,border:'1px solid rgba(255,255,255,0.35)',background:isEditingReport?'rgba(255,255,255,0.22)':'rgba(255,255,255,0.1)',color:'white',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.15s' }}>
@@ -8602,13 +8645,13 @@ export default function DashboardPage() {
             ) : null
           )}
           <div style={{ padding:16,display:'flex',flexDirection:'column',gap:12,flex:1 }}>
-            <div className="msk-report-box" style={{ flex:1,padding:isEditingReport?0:'14px 16px',border:'1px solid '+(dm?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,maxHeight:'65vh',background:dm?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
+            <div className="msk-report-box" style={{ flex:1,padding:isEditingReport?0:'14px 16px',border:'1px solid '+(dm?'#334155':'#e8edf5'),borderRadius:10,overflowY:'auto',minHeight:340,background:dm?'#0f172a':(generatedReport?'white':'#f8fafc') }}>
               {isGenerating
                 ? <div style={{ display:'flex',flexDirection:'column',gap:10,paddingTop:4 }}>{[55,80,65,90,50,72,60].map((w,i) => <div key={i} style={{ height:9,background:`rgba(37,99,235,${0.06+i*0.02})`,borderRadius:4,width:w+'%' }} />)}</div>
                 : generatedReport
                   ? (isEditingReport
                       ? <textarea value={generatedReport} onChange={e => setGeneratedReport(e.target.value)}
-                          style={{ width:'100%',height:'100%',minHeight:340,maxHeight:'65vh',padding:'14px 16px',border:'none',borderRadius:10,outline:'none',resize:'vertical',boxSizing:'border-box',background:dm?'#0f172a':'white',color:dm?'#e2e8f0':'#1e293b',fontFamily:"Georgia,'Times New Roman',serif",fontSize:13,lineHeight:1.7 }}
+                          style={{ width:'100%',height:'100%',minHeight:340,padding:'14px 16px',border:'none',borderRadius:10,outline:'none',resize:'vertical',boxSizing:'border-box',background:dm?'#0f172a':'white',color:dm?'#e2e8f0':'#1e293b',fontFamily:"Georgia,'Times New Roman',serif",fontSize:13,lineHeight:1.7 }}
                         />
                       : <div style={{ fontFamily:"Georgia,'Times New Roman',serif" }}>{formatReport(generatedReport, dm ? {
                           neg:'#64748b',   // dark mode normals: medium slate — visible but subdued
@@ -8632,7 +8675,7 @@ export default function DashboardPage() {
               }
             </div>
             <CopyButton generatedReport={generatedReport} dm={dm} copyStatus={clipboardStatus}
-              onRetryCopy={() => autoCopyReport(generatedReport).then(copied => setClipboardStatus(copied ? 'copied' : 'failed'))} />
+              onRetryCopy={() => autoCopyReport(generatedReport, () => setClipboardStatus('copied')).then(copied => setClipboardStatus(copied ? 'copied' : 'failed'))} />
           </div>
         </div>
 
