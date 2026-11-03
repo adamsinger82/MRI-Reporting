@@ -39,6 +39,8 @@ import { loadCustomHeader, saveCustomHeader, saveCustomHeaderKeepalive, applyCus
 import { primeClipboardPermission, autoCopyReport } from './clipboardUtils';
 import { stripSpineImpressionViolations } from './spineReportGuard';
 import { enforceTechniqueSide, stripRedundantNeurovascular, KNEE_ITB_HEADING_RULE, NERVE_VS_NEUROVASCULAR_RULE } from './reportGuards';
+import { buildSpineLevelsTemplate, buildSpineLevelIndex, ensureSpineLevelCoverage } from './spinePromptUtils';
+import { DICTATION_FIDELITY_RULE, MRI_SOFT_TISSUE_RULE, stripNormalSoftTissues } from './fidelityGuards';
 import { loadNeverUseTerms, buildNeverUseInstruction } from './neverUseTermsUtils';
 import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
 import ResearchAdminForm from './ResearchAdminForm';
@@ -238,7 +240,7 @@ CRITICAL FORMATTING RULES:
 - CONTRAST STATUS IS ALREADY FIXED — NEVER IN QUESTION: The contrast status shown in the FORMAT template below is not an example — it is fixed by the user's own UI selection and is never in question, regardless of what the dictation does or doesn't say about contrast, enhancement, or signal characteristics. Never re-derive, second-guess, or default away from it based on dictation content — including when dictation is heavily garbled or ambiguous. Enhancement/signal-characteristic language in the dictation (e.g. "central signal increase," T1/T2 changes) describes a FINDING to report under the relevant heading — it never changes the exam's contrast status in the title or TECHNIQUE line.
 
 ANATOMY TO COVER for ${part}: ${getAnatomy(part, isCT, spineRegion)}
-Generate a subheading for EVERY structure listed above, EXCEPT Soft Tissues — see the Soft Tissues rule under GLOBAL DEFAULTS below, which can require omitting that heading entirely.
+Generate a subheading for EVERY structure listed above, EXCEPT Soft Tissues${(!isCT && part === 'spine') ? ' and Paraspinal Soft Tissues' : ''} — see the Soft Tissues rule under GLOBAL DEFAULTS below, which can require omitting that heading entirely.
 ${findingsRules}
 IMPRESSION RULES:
 CORE PRINCIPLE: The impression must read like a subspecialty MSK radiologist's synthesis — not a transcription of the findings list. Group related findings under a single unifying clinical diagnosis whenever possible. Aim for 1-4 impression items. A laundry list is always wrong.
@@ -516,7 +518,7 @@ MODIC CHANGE PLACEMENT — REMINDER: Modic changes ALWAYS go under the Intervert
 
 LIGAMENTUM FLAVUM — TERMINOLOGY CORRECTION: The correct term is "ligamentum flavum infolding," never "ligamentum flavum folding." If dictation says "folding" (or a phonetically similar garbled form) in the context of ligamentum flavum, always generate "infolding" — never generate the word "folding" alone in this context.
 
-PARASPINAL SOFT TISSUES — SOLE NON-SPINE-STRUCTURE HEADING (MANDATORY, SPINE ONLY): This is the ONLY heading for any finding that is not one of the spine-specific structures (Vertebral Alignment, Intervertebral Discs, Bones, LEVELS, Cord / Conus / Cauda Equina, Facet Joints, Sacroiliac Joints). Consolidate ALL of the following into this single "Paraspinal Soft Tissues:" heading — never split them across more than one heading: incidental visceral/organ findings (e.g. renal cysts, hepatic or adnexal cysts, or other visceral findings incidentally seen on the field of view), paraspinal muscle inflammation/infection/edema or atrophy, vascular findings (e.g. aortic/vascular calcification or aneurysm incidentally seen), and any other non-spine soft tissue finding. Do NOT ALSO generate a separate "Soft Tissues:" heading on a spine report under any circumstance — for spine, "Paraspinal Soft Tissues" is the exclusive equivalent of the generic "Soft Tissues" heading used on other body parts, and the two must never both appear in the same report. Default text when nothing applies: "No acute abnormality." — NOT "intact."
+PARASPINAL SOFT TISSUES — SOLE NON-SPINE-STRUCTURE HEADING (MANDATORY, SPINE ONLY): This is the ONLY heading for any finding that is not one of the spine-specific structures (Vertebral Alignment, Intervertebral Discs, Bones, LEVELS, Cord / Conus / Cauda Equina, Facet Joints, Sacroiliac Joints). Consolidate ALL of the following into this single "Paraspinal Soft Tissues:" heading — never split them across more than one heading: incidental visceral/organ findings (e.g. renal cysts, hepatic or adnexal cysts, or other visceral findings incidentally seen on the field of view), paraspinal muscle inflammation/infection/edema or atrophy, vascular findings (e.g. aortic/vascular calcification or aneurysm incidentally seen), and any other non-spine soft tissue finding. Do NOT ALSO generate a separate "Soft Tissues:" heading on a spine report under any circumstance — for spine, "Paraspinal Soft Tissues" is the exclusive equivalent of the generic "Soft Tissues" heading used on other body parts, and the two must never both appear in the same report. Default text ONLY when the entire MRI exam is normal (see the SOFT TISSUES — MRI rule, which overrides this): "No acute abnormality." — NOT "intact."
 
 VERTEBRAL HEMANGIOMA — BENIGN, BONES HEADING, NOT IN IMPRESSION BY DEFAULT: When a hemangioma is described, it is a benign finding and is reported under the BONES heading. Do NOT promote a typical/benign hemangioma to the IMPRESSION. The ONLY exception is when the hemangioma is specifically dictated as "atypical" or "aggressive" — in that case it does belong in the IMPRESSION as it requires follow-up/clinical correlation.
 
@@ -590,7 +592,7 @@ GLOBAL DEFAULTS (apply to ALL joints unless dictation specifies otherwise):
 - Muscles: "No high-grade fatty infiltration or volume loss. No intramuscular edema to suggest denervation, myositis, or strain."
 - MUSCLE EDEMA / ATROPHY — MUSCLES HEADING ONLY (ALL JOINTS, MANDATORY): Intramuscular edema, muscle strain/tear signal, fatty atrophy/infiltration, and denervation-pattern muscle signal changes belong exclusively under the MUSCLES heading — never under a tendon heading, even when the muscle is the muscle belly of a named tendon (e.g. supraspinatus or infraspinatus muscle edema or atrophy is reported under Muscles, not under the Supraspinatus and Infraspinatus Tendons heading, even though they share a name). Tendon headings are reserved for the tendon itself (tendinosis, partial/full-thickness tear, retraction) — never for its muscle belly's signal, edema, or bulk. This applies to every joint, not just shoulder.
 - Articular Cartilage: "Preserved." (NOT "intact" — use "preserved" for all joints)
-- Soft Tissues: default when nothing else applies: "No acute abnormality." (NOT "intact"). This default is for the Soft Tissues heading ONLY and must NOT be used to contradict findings reported elsewhere. If the dictation describes an injury to a muscle, tendon, or ligament, a joint effusion, a fluid collection, or a mass — these are reported under their own appropriate headings (Muscles, the specific tendon/ligament heading, Joint Effusion, Soft Tissues mass/collection description, etc.). If, after placing all dictated findings under their proper headings, there is no separate soft-tissue finding left to report and no unrelated incidental finding — OMIT THE SOFT TISSUES HEADING ENTIRELY. Do NOT generate a Soft Tissues heading just to write a qualified/hedged statement like "No acute abnormality beyond the above" or "No additional acute abnormality" — go silent instead. Only generate the Soft Tissues heading when either (a) there is a genuine, distinct soft tissue finding not captured by another heading, or (b) the EXCEPTION below applies. EXCEPTION — incidental findings unrelated to the joint being imaged (e.g. an incidentally noted renal or adnexal cyst) ARE appropriately described under Soft Tissues even when other acute findings exist elsewhere in the exam, since they are a separate, unrelated structure. SPINE EXCEPTION TO THIS EXCEPTION: for spine reports, do NOT generate a separate "Soft Tissues:" heading at all — route every such incidental/non-spine finding into the single mandatory "Paraspinal Soft Tissues:" heading instead (see the PARASPINAL SOFT TISSUES rule under SPINE-SPECIFIC FINDINGS RULES above, which already covers this exception for spine). A spine report must never contain both a "Paraspinal Soft Tissues:" heading and a separate "Soft Tissues:" heading.
+- Soft Tissues: default when nothing else applies (CT; for MRI the SOFT TISSUES — MRI rule overrides this — no default line unless the whole exam is normal): "No acute abnormality." (NOT "intact"). This default is for the Soft Tissues heading ONLY and must NOT be used to contradict findings reported elsewhere. If the dictation describes an injury to a muscle, tendon, or ligament, a joint effusion, a fluid collection, or a mass — these are reported under their own appropriate headings (Muscles, the specific tendon/ligament heading, Joint Effusion, Soft Tissues mass/collection description, etc.). If, after placing all dictated findings under their proper headings, there is no separate soft-tissue finding left to report and no unrelated incidental finding — OMIT THE SOFT TISSUES HEADING ENTIRELY. Do NOT generate a Soft Tissues heading just to write a qualified/hedged statement like "No acute abnormality beyond the above" or "No additional acute abnormality" — go silent instead. Only generate the Soft Tissues heading when either (a) there is a genuine, distinct soft tissue finding not captured by another heading, or (b) the EXCEPTION below applies. EXCEPTION — incidental findings unrelated to the joint being imaged (e.g. an incidentally noted renal or adnexal cyst) ARE appropriately described under Soft Tissues even when other acute findings exist elsewhere in the exam, since they are a separate, unrelated structure. SPINE EXCEPTION TO THIS EXCEPTION: for spine reports, do NOT generate a separate "Soft Tissues:" heading at all — route every such incidental/non-spine finding into the single mandatory "Paraspinal Soft Tissues:" heading instead (see the PARASPINAL SOFT TISSUES rule under SPINE-SPECIFIC FINDINGS RULES above, which already covers this exception for spine). A spine report must never contain both a "Paraspinal Soft Tissues:" heading and a separate "Soft Tissues:" heading.
 - Regional Neurovascular Structures (all non-spine, non-wrist MRI joints, EXCEPT any exam that already has separate individual-nerve headings — see NERVES vs NEUROVASCULAR BUNDLE rule: never both): default "Normal caliber vessels and nerves. No neurovascular compression or abnormal signal identified."
 - POSTSURGICAL CHANGE (ALL MRI joints): If the dictation describes any surgical changes, postoperative findings, or hardware at any location, generate a separate "Postsurgical Change:" heading in the FINDINGS section and place ALL such findings there. Do NOT scatter postsurgical findings under other headings (e.g. Soft Tissues, Bones, joint-specific headings). If no surgical changes are dictated, do NOT generate this heading.
 
@@ -704,7 +706,7 @@ NUMBERING CONVENTION:
 ` : ''}
 FINDINGS:
 Structure Name: finding
-${part === 'spine' ? `
+${part === 'spine' ? (!isCT ? buildSpineLevelsTemplate(spineRegion) : `
 LEVELS:
 List each intervertebral level as: "L1-L2: finding" — one per line.
 If not mentioned write: "No significant canal or foraminal narrowing."
@@ -712,7 +714,7 @@ Cover all levels for the ${spineRegion} spine.${spineRegion === 'cervical' ? `
 CERVICAL LEVELS — COVERAGE AND FORMAT: Cover C1-C2, C2-C3, C3-C4, C4-C5, C5-C6, C6-C7, C7-T1, and T1-T2 — do NOT stop level coverage at C6-C7 or C7-T1; coverage must extend through T1-T2, since foraminal narrowing at the cervicothoracic junction can cause hand symptoms.
 C1-C2 — CANAL ONLY: The C1-C2 level has no intervertebral disc or true neural foramen in the standard sense. For the C1-C2 line, assess canal stenosis ONLY — do NOT include a foraminal narrowing assessment for this level. Default when not dictated: "No significant canal narrowing." (omit any mention of foraminal narrowing for C1-C2 specifically).
 All other cervical levels (C2-C3 through T1-T2) use the standard format and default: "No significant canal or foraminal narrowing."` : ''}
-` : ''}
+`) : ''}
 IMPRESSION:
 1. Finding one
 2. Finding two`;
@@ -820,6 +822,7 @@ function formatReport(txt, colors = {}) {
       const isAllNeg = isAbsent ||
         /^intact\.?$/i.test(value) ||
         /^no significant canal or foraminal narrowing\.?$/i.test(value) ||
+        /^(?:(?:canal\/thecal sac|right neural foramen|left neural foramen):\s*no significant (?:narrowing|stenosis)\.?\s*){1,3}$/i.test(value) ||
         /^no fracture or contusion\. no osteonecrosis\. no marrow infiltration or bone lesion\.?$/i.test(value) ||
         /^no fracture\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value) ||
         /^no acute fracture,?\s*avn,?\s*(or|and)\s*marrow infiltration\.?$/i.test(value) ||
@@ -7499,6 +7502,7 @@ export default function DashboardPage() {
   const recognitionRef = useRef(null);
   const isRheumRef = useRef(false); // tracks current modality for STT handler
   const finalTranscriptPersistRef = useRef(''); // persists transcript across recognition restarts
+  const genTokenRef = useRef(0); // bumped on every reset/new generate so a late response from an old dictation is ignored
 
   // ── Incidental findings state ──────────────────────────────────────────────
   // Fleischner (lung nodule)
@@ -7627,6 +7631,7 @@ export default function DashboardPage() {
   // Full reset when switching MRI/CT/Rheum modality — clears Col 1 module state,
   // Col 2 report, and (via clearing generatedReport) the Col 3 CME match banner.
   const resetForModalitySwitch = () => {
+    genTokenRef.current++; stopListening(); finalTranscriptPersistRef.current = ''; setMicError(''); setClipboardStatus(null); setIsGenerating(false);
     resetArthroplasty();
     resetIncidentals();
     setRheumJoint('knee'); setRheumLaterality('left'); setRheumViews('2');
@@ -7641,12 +7646,21 @@ export default function DashboardPage() {
   // region (C/T/L) sub-dropdown — clears Col 1 dictation text plus Col 2/3,
   // same as a modality switch, so no stale content carries over between parts.
   const resetForBodyPartSwitch = () => {
+    // 2026-11-03: also stop the mic and wipe its internal transcript copy (otherwise the old dictation
+    // is re-inserted on the next speech result / mic auto-restart), and discard any in-flight generation.
+    genTokenRef.current++; stopListening(); finalTranscriptPersistRef.current = ''; setMicError(''); setClipboardStatus(null); setIsGenerating(false);
     resetIncidentals();
     resetArthroplasty();
     setGeneratedReport('');
     setDictationText('');
     setActiveTemplate(null);
     setIsEditingReport(false);
+  };
+
+  // Rheum (XR) joint / laterality change: same clean slate for a new dictation
+  const resetForRheumSwitch = () => {
+    genTokenRef.current++; stopListening(); finalTranscriptPersistRef.current = ''; setMicError(''); setClipboardStatus(null);
+    setRheumChecks({}); setRheumFreeText(''); setGeneratedReport(''); setActiveTemplate(null); setIsEditingReport(false);
   };
 
   const generateReport = async () => {
@@ -7659,6 +7673,7 @@ export default function DashboardPage() {
     const textToUse = isRheum ? rheumFreeText : applyHardCorrections(dictationText, selectedBodyPart).text;
     if (!textToUse.trim()) return;
     setGeneratedReport(''); // always clears center col — any button can override
+    const myToken = ++genTokenRef.current;
     setIsEditingReport(false);
     setClipboardStatus(null);
     setIsGenerating(true);
@@ -7683,20 +7698,23 @@ export default function DashboardPage() {
         body: JSON.stringify({
           model:'claude-sonnet-4-6',
           max_tokens:3000,
-          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs) + buildNeverUseInstruction(neverUseTerms) + buildTemplateMergeInstruction(activeTemplate?.content) + buildDictionaryInstruction(selectedBodyPart),
-          messages:[{role:'user',content:`Dictated findings:\n\n${textToUse}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS — PLACEMENT INSTRUCTIONS:\nFor each incidental finding below: (1) add a brief descriptive sentence in the FINDINGS section under the most relevant existing heading (for spine MRI use "Paraspinal Soft Tissues:"; for non-spine joints use "Soft Tissues:" or "Regional Neurovascular Structures:" as appropriate for aortic findings) — e.g. "Incidentally noted simple-appearing right adnexal cyst measuring up to X cm." (2) add a corresponding numbered line in the IMPRESSION. (3) include the management recommendation and citation in REFERENCES/FOOTNOTE as detailed below. Do NOT place these findings ONLY in the impression — they must also appear in FINDINGS.\n\n' + buildIncidentalBlock() : ''}`}],
+          system: (isRheum ? buildRheumPrompt(rheumJoint, rheumLaterality, rheumViews) + layPersonInstruction : buildPrompt(selectedBodyPart, lat, contrast, spineRegion, modality, includeDoseOpt, resolvedMassMode) + layPersonInstruction) + buildPreferenceInstruction(reportPrefs) + buildNeverUseInstruction(neverUseTerms) + buildTemplateMergeInstruction(activeTemplate?.content) + buildDictionaryInstruction(selectedBodyPart) + (isRheum ? '' : DICTATION_FIDELITY_RULE + (!isCT ? MRI_SOFT_TISSUE_RULE : '')),
+          messages:[{role:'user',content:`Dictated findings:\n\n${textToUse}${(!isRheum && !isCT && selectedBodyPart === 'spine') ? buildSpineLevelIndex(textToUse, spineRegion) : ''}${(!isRheum && buildIncidentalBlock()) ? '\n\nINCIDENTAL FINDINGS — PLACEMENT INSTRUCTIONS:\nFor each incidental finding below: (1) add a brief descriptive sentence in the FINDINGS section under the most relevant existing heading (for spine MRI use "Paraspinal Soft Tissues:"; for non-spine joints use "Soft Tissues:" or "Regional Neurovascular Structures:" as appropriate for aortic findings) — e.g. "Incidentally noted simple-appearing right adnexal cyst measuring up to X cm." (2) add a corresponding numbered line in the IMPRESSION. (3) include the management recommendation and citation in REFERENCES/FOOTNOTE as detailed below. Do NOT place these findings ONLY in the impression — they must also appear in FINDINGS.\n\n' + buildIncidentalBlock() : ''}`}],
         }),
       });
       const data = await res.json();
+      if (genTokenRef.current !== myToken) { setIsGenerating(false); return; } // user changed body part/side/modality while this was generating — discard
       if (data?.error) setGeneratedReport('Error: ' + data.error);
       else {
         const rawText = data?.content?.[0]?.text || 'Error generating report.';
         const expectedHeading = isRheum ? null : buildReportHeading(modality, selectedBodyPart, lat, contrast, spineRegion);
         const contrastLbl = isRheum ? null : (contrast === 'without' ? 'without' : contrast === 'with' ? 'with' : 'with and without');
-        const cleanReport = stripRedundantNeurovascular(enforceTechniqueSide(stripSpineImpressionViolations(
+        const guardedReport = stripRedundantNeurovascular(enforceTechniqueSide(stripSpineImpressionViolations(
           applyCustomHeader(sanitizeReportOutput(rawText, expectedHeading, contrastLbl), customHeader),
           selectedBodyPart
         ), lat));
+        // 2026-11-03: spine MRI level coverage + MRI soft-tissue rule enforced in code
+        const cleanReport = stripNormalSoftTissues((!isRheum && !isCT && selectedBodyPart === 'spine') ? ensureSpineLevelCoverage(guardedReport, spineRegion) : guardedReport, isCT || isRheum);
         setGeneratedReport(cleanReport);
         const copied = await autoCopyReport(cleanReport, () => setClipboardStatus('copied'));
         setClipboardStatus(copied ? 'copied' : 'failed');
@@ -8442,12 +8460,12 @@ export default function DashboardPage() {
             <div style={{ display:'flex',gap:8 }}>
               {isRheum ? (<>
                 <div style={{ flex:2 }}><label style={lbl}>Joint / Region</label>
-                  <select style={inp} value={rheumJoint} onChange={e => { setRheumJoint(e.target.value); setRheumChecks({}); setGeneratedReport(''); setIsEditingReport(false); }}>
+                  <select style={inp} value={rheumJoint} onChange={e => { setRheumJoint(e.target.value); resetForRheumSwitch(); }}>
                     {[['hand','Hand'],['wrist','Wrist'],['elbow','Elbow'],['shoulder','Shoulder'],['hip','Hip'],['knee','Knee'],['foot','Foot'],['si','SI Joints'],['c-spine','Cervical Spine'],['t-spine','Thoracic Spine'],['l-spine','Lumbar Spine']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                 </div>
                 <div style={{ flex:1 }}><label style={lbl}>Laterality</label>
-                  <select style={inp} value={rheumLaterality} onChange={e => setRheumLaterality(e.target.value)}>
+                  <select style={inp} value={rheumLaterality} onChange={e => { setRheumLaterality(e.target.value); resetForRheumSwitch(); }}>
                     <option value="left">Left</option>
                     <option value="right">Right</option>
                     <option value="bilateral">Bilateral</option>
@@ -8473,7 +8491,7 @@ export default function DashboardPage() {
                   </select>
                 </div>
                 {showSide && <div style={{ flex:1 }}><label style={lbl}>Side</label>
-                  <select style={inp} value={side} onChange={e => setSide(e.target.value)}>
+                  <select style={inp} value={side} onChange={e => { setSide(e.target.value); resetForBodyPartSwitch(); }}>
                     <option value="left">Left</option><option value="right">Right</option><option value="bilateral">Bilateral</option>
                   </select>
                 </div>}

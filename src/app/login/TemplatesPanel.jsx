@@ -117,6 +117,7 @@ function formatReport(txt, colors = {}) {
       const isAllNeg = isAbsent ||
         /^intact\.?$/i.test(value) ||
         /^no significant canal or foraminal narrowing\.?$/i.test(value) ||
+        /^(?:(?:canal\/thecal sac|right neural foramen|left neural foramen):\s*no significant (?:narrowing|stenosis)\.?\s*){1,3}$/i.test(value) ||
         /^no fracture or contusion\. no osteonecrosis\. no marrow infiltration or bone lesion\.?$/i.test(value) ||
         /^no fracture or cortical disruption\. no osteonecrosis\. no aggressive osseous lesion\.?$/i.test(value) ||
         /^no acute fracture,?\s*avn,?\s*(or|and)\s*marrow infiltration\.?$/i.test(value) ||
