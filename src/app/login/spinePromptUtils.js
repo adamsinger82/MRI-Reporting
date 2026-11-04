@@ -1,14 +1,14 @@
-// spinePromptUtils.js — spine MRI LEVELS handling (added 2026-11-03).
+// spinePromptUtils.js — spine MRI LEVELS handling (v2, 2026-11-04).
 //
-// Three pieces, all used only for spine MRI (CT spine is unchanged):
-//   1. buildSpineLevelsTemplate(region)  — the LEVELS section of the prompt: every level
-//      always lists Canal/thecal sac + Right neural foramen + Left neural foramen,
-//      defaulting to "No significant narrowing." when not dictated.
-//   2. buildSpineLevelIndex(dictation, region) — deterministic, code-side index of which
-//      dictated sentences name which level. Appended to the user message so the model
-//      cannot shift findings from one level to another (e.g. C1-C2 pushing C2-C3... down).
-//   3. ensureSpineLevelCoverage(report, region) — post-generation guard that re-inserts any
-//      level (or canal / right foramen / left foramen statement) the model dropped.
+// Used only for spine MRI (CT spine is unchanged):
+//   1. buildSpineLevelsTemplate(region) — LEVELS section of the prompt. Each level reads as the
+//      radiologist dictated it; canal/thecal sac + right foramen + left foramen are an INTERNAL
+//      CHECKLIST (never written as labels). Anything not dictated is filled in as a natural
+//      "No significant ... narrowing." sentence.
+//   2. buildSpineLevelIndex(dictation, region) — code-built index of which dictated sentences name
+//      which level (appended to the user message so findings cannot shift between levels).
+//   3. ensureSpineLevelCoverage(report, region) — post-generation guard: re-adds a dropped level,
+//      or a missing canal / right foramen / left foramen statement, in natural wording.
 
 const CERVICAL = ['C1-C2', 'C2-C3', 'C3-C4', 'C4-C5', 'C5-C6', 'C6-C7', 'C7-T1', 'T1-T2'];
 const THORACIC = ['T1-T2', 'T2-T3', 'T3-T4', 'T4-T5', 'T5-T6', 'T6-T7', 'T7-T8', 'T8-T9', 'T9-T10', 'T10-T11', 'T11-T12', 'T12-L1'];
@@ -16,37 +16,38 @@ const LUMBAR = ['L1-L2', 'L2-L3', 'L3-L4', 'L4-L5', 'L5-S1'];
 export const SPINE_LEVELS = { cervical: CERVICAL, thoracic: THORACIC, lumbar: LUMBAR };
 const MASTER = [...CERVICAL, ...THORACIC.slice(1), ...LUMBAR];
 
-const NSN = 'No significant narrowing.';
-const CANAL = 'Canal/thecal sac';
-const RFOR = 'Right neural foramen';
-const LFOR = 'Left neural foramen';
-
 export function defaultLevelLine(level) {
-  if (level === 'C1-C2') return `${level}: ${CANAL}: ${NSN}`;
-  return `${level}: ${CANAL}: ${NSN} ${RFOR}: ${NSN} ${LFOR}: ${NSN}`;
+  return level === 'C1-C2'
+    ? `${level}: No significant canal narrowing.`
+    : `${level}: No significant canal or foraminal narrowing.`;
 }
 
 // ── 1. Prompt block (replaces the old LEVELS template for MRI spine) ─────────
 export function buildSpineLevelsTemplate(region) {
   const levels = SPINE_LEVELS[region] || LUMBAR;
-  const list = levels.join(', ');
   return `
 LEVELS:
-Write exactly one line for EACH of these levels, in this order, with no level skipped, merged or added: ${list}.
-EVERY level line, without exception, must contain all three statements below, in this order. If the dictation does not describe one of them for that level, write "${NSN}" for it:
-"[Level]: [dictated cause at that level, only if dictated, e.g. disc bulge / protrusion / facet hypertrophy / ligamentum flavum thickening]. ${CANAL}: [dictated or ${NSN}] ${RFOR}: [dictated or ${NSN}] ${LFOR}: [dictated or ${NSN}]"
-Example of a level with nothing dictated: "${defaultLevelLine(levels.find(l => l !== 'C1-C2'))}"${region === 'cervical' ? `
-C1-C2 is the one exception: it has no true neural foramen, so its line contains the ${CANAL} statement ONLY (default: "${defaultLevelLine('C1-C2')}") — unless the dictation itself describes foraminal narrowing at C1-C2.` : ''}
+Write exactly one line for EACH of these levels, in this order, with no level skipped, merged or added: ${levels.join(', ')}.
+Format: "[Level]: [the findings for that level, written as dictated, in ordinary sentences]". Do NOT use labels or a fill-in template. NEVER write "Canal:", "Thecal sac:", "Right foramen:", "Left foramen:" or any similar label inside a level line.
+
+INTERNAL CHECKLIST (never shown as labels): for EVERY level, make sure three things are accounted for in the sentences — (1) the spinal canal / thecal sac, (2) the RIGHT neural foramen, (3) the LEFT neural foramen. Put what was dictated about each into natural sentences in the radiologist's own words, as it was dictated. For any of the three that was NOT dictated for that level, add a short natural sentence saying there is no significant narrowing there:
+- nothing dictated for the level: "${levels.find(l => l !== 'C1-C2')}: No significant canal or foraminal narrowing."
+- canal not dictated: add "No significant canal narrowing."
+- both foramina not dictated: add "No significant right or left neural foraminal narrowing."
+- only one foramen not dictated: add "No significant right neural foraminal narrowing." or "No significant left neural foraminal narrowing." for that side only.
+- dictated "bilateral": "Mild bilateral neural foraminal narrowing." (use the dictated severity words).
+Example of a fully dictated level: "L4-L5: Disc bulge with facet hypertrophy causing mild canal narrowing and moderate right neural foraminal narrowing. No significant left neural foraminal narrowing."${region === 'cervical' ? `
+C1-C2 is the one exception: it has no true neural foramen, so account for the canal/thecal sac ONLY (default "C1-C2: No significant canal narrowing.") unless the dictation itself describes foraminal narrowing at C1-C2.` : ''}
 
 LEVEL ACCURACY RULES (MANDATORY — ZERO TOLERANCE):
-1. Each level's line is built ONLY from dictated text that names THAT level. A finding dictated at one level must never appear at any other level — not above it, not below it, and not as a "carry-over". Findings at one level never shift the levels below it: if C1-C2 has a finding, C2-C3 still gets only what was dictated for C2-C3.
+1. Each level's line is built ONLY from dictated text that names THAT level. A finding dictated at one level never appears at any other level — not above, not below, not as a carry-over. A finding at one level never shifts the levels below it (e.g. a C1-C2 finding does not change C2-C3 or any lower level).
 2. Never renumber, re-label, merge or skip levels. Use the dictated level exactly (normalize only spelling such as "C4-5" to "C4-C5").
 3. A range such as "C3-C4 through C5-C6" applies to every level inside the range. A list such as "C4-C5 and C5-C6" applies to each named level. Nothing else is inferred.
-4. Do NOT drop any dictated finding. Every dictated level-specific finding, severity word, side (right/left/bilateral) and cause must appear at its level, using the dictated words.
-5. SIDE: report right and left separately. "Bilateral" = write the dictated degree on BOTH the right and the left lines. If foraminal narrowing is dictated at a level with NO side stated, do not guess a side: replace the two foramen statements with one statement "Neural foramina: [dictated degree] (side not specified)."
-6. Canal stenosis and "thecal sac" compression/effacement go on the ${CANAL} statement. Foraminal narrowing goes on the matching foramen statement. Never put a foraminal finding on the canal statement or the reverse.
-7. A finding dictated for "multiple levels"/"throughout" with no level named is NOT distributed to individual levels; do not copy it onto each level.
-8. A "LEVEL-BY-LEVEL DICTATION INDEX" is appended to the dictation. Use it to double-check that each level's line matches the sentences listed for that level and that levels listed as "NOT mentioned" contain defaults only.
+4. Do NOT drop any dictated finding. Every dictated level-specific finding, severity word, side (right/left/bilateral) and cause appears at its level in the dictated words.
+5. SIDE: never guess a side. If foraminal narrowing is dictated at a level with no side stated, write it as dictated, e.g. "Mild neural foraminal narrowing (side not specified)."
+6. Canal stenosis and thecal sac compression/effacement are canal findings; foraminal narrowing is foraminal. Never put one in the place of the other.
+7. A finding dictated for "multiple levels"/"throughout" with no level named is NOT copied onto each level.
+8. A "LEVEL-BY-LEVEL DICTATION INDEX" is appended to the dictation. Use it to verify that each level's line matches the sentences listed for that level and that levels listed as NOT mentioned contain the no-significant-narrowing default only.
 `;
 }
 
@@ -90,13 +91,12 @@ export function buildSpineLevelIndex(dictation, region) {
   if (!text) return '';
   const regionLevels = SPINE_LEVELS[region] || LUMBAR;
   const sentences = text.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
-  const byLevel = {};        // level -> [sentence,...]
-  const multi = [];          // [{levels, sentence}]
+  const byLevel = {};
+  const multi = [];
   const mentioned = new Set();
   for (const s of sentences) {
     const toks = findTokens(s);
     if (!toks.length) continue;
-    // expand "A through B" ranges
     const levels = [];
     for (let k = 0; k < toks.length; k++) {
       const t = toks[k];
@@ -108,7 +108,6 @@ export function buildSpineLevelIndex(dictation, region) {
     }
     const uniq = [...new Set(levels)];
     uniq.forEach(l => mentioned.add(l));
-    // groups joined only by "and"/commas or ranges share the sentence; otherwise it is multi-level
     const joined = toks.every((t, k) => k === 0 || /^\s*(,|and|&|through|thru|to|-|\/|or|,\s*and)?\s*$/i.test(s.slice(toks[k - 1].end, t.start)));
     if (uniq.length === 1 || joined) uniq.forEach(l => { (byLevel[l] = byLevel[l] || []).push(s); });
     else multi.push({ levels: uniq, sentence: s });
@@ -126,7 +125,7 @@ export function buildSpineLevelIndex(dictation, region) {
   const none = regionLevels.filter(l => !mentioned.has(l));
   return `\n\nLEVEL-BY-LEVEL DICTATION INDEX (built automatically from the dictation above; use it only to verify level assignment — the dictation above is still the only source of findings):
 ${lines.length ? lines.join('\n') : '- (no level was named in the dictation)'}
-Levels NOT mentioned anywhere in the dictation — defaults only: ${none.length ? none.join(', ') : '(none)'}
+Levels NOT mentioned anywhere in the dictation — no-significant-narrowing default only: ${none.length ? none.join(', ') : '(none)'}
 A sentence that names no level is not level-specific unless it clearly continues the sentence just before it. Never move a listed sentence to a different level.`;
 }
 
@@ -146,7 +145,7 @@ export function ensureSpineLevelCoverage(text, region) {
   for (let i = start + 1; i < lines.length; i++) { if (SECTION_END.test(lines[i].trim())) { end = i; break; } }
   const body = lines.slice(start + 1, end);
   const preamble = [];
-  const blocks = []; // {key, lines}
+  const blocks = [];
   for (const l of body) {
     const m = l.match(LEVEL_LINE);
     const key = m ? canonLevel(m[1], m[2], m[3], m[4]) : null;
@@ -157,14 +156,24 @@ export function ensureSpineLevelCoverage(text, region) {
   }
   const fixBlock = (b) => {
     const joined = b.lines.join(' ');
-    const adds = [];
-    if (!/canal|thecal/i.test(joined)) adds.push(`${CANAL}: ${NSN}`);
+    const needCanal = !/canal|thecal/i.test(joined);
+    let needR = false, needL = false;
     if (b.key !== 'C1-C2' && !/side not specified/i.test(joined)) {
-      if (!/foram/i.test(joined)) { adds.push(`${RFOR}: ${NSN}`); adds.push(`${LFOR}: ${NSN}`); }
+      if (!/foram/i.test(joined)) { needR = true; needL = true; }
       else {
-        if (!/\bright\b|bilateral|\bboth\b/i.test(joined)) adds.push(`${RFOR}: ${NSN}`);
-        if (!/\bleft\b|bilateral|\bboth\b/i.test(joined)) adds.push(`${LFOR}: ${NSN}`);
+        const hasR = /\bright\b|bilateral|\bboth\b/i.test(joined);
+        const hasL = /\bleft\b|bilateral|\bboth\b/i.test(joined);
+        // a generic foraminal statement with no side at all (e.g. "No significant canal or foraminal narrowing") covers both foramina
+        if (hasR || hasL) { needR = !hasR; needL = !hasL; }
       }
+    }
+    const adds = [];
+    if (needCanal && needR && needL) adds.push('No significant canal or foraminal narrowing.');
+    else {
+      if (needCanal) adds.push('No significant canal narrowing.');
+      if (needR && needL) adds.push('No significant right or left neural foraminal narrowing.');
+      else if (needR) adds.push('No significant right neural foraminal narrowing.');
+      else if (needL) adds.push('No significant left neural foraminal narrowing.');
     }
     if (adds.length) b.lines[b.lines.length - 1] = b.lines[b.lines.length - 1].replace(/\s*$/, '') + ' ' + adds.join(' ');
     return b.lines;
@@ -176,6 +185,6 @@ export function ensureSpineLevelCoverage(text, region) {
     if (b) { used.add(b); outBody.push(...fixBlock(b)); }
     else outBody.push(defaultLevelLine(level));
   });
-  blocks.filter(b => !used.has(b)).forEach(b => outBody.push(...b.lines)); // levels outside the list: keep as written
+  blocks.filter(b => !used.has(b)).forEach(b => outBody.push(...b.lines));
   return [...lines.slice(0, start + 1), ...outBody, ...(end < lines.length ? [''] : []), ...lines.slice(end)].join('\n');
 }
