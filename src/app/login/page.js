@@ -39,7 +39,7 @@ import { loadCustomHeader, saveCustomHeader, saveCustomHeaderKeepalive, applyCus
 import { primeClipboardPermission, autoCopyReport } from './clipboardUtils';
 import { stripSpineImpressionViolations } from './spineReportGuard';
 import { enforceTechniqueSide, stripRedundantNeurovascular, KNEE_ITB_HEADING_RULE, NERVE_VS_NEUROVASCULAR_RULE } from './reportGuards';
-import { buildSpineLevelsTemplate, buildSpineLevelIndex, ensureSpineLevelCoverage } from './spinePromptUtils';
+import { buildSpineLevelsTemplate, buildSpineLevelIndex, ensureSpineLevelCoverage, prepareSpineDictation } from './spinePromptUtils';
 import { DICTATION_FIDELITY_RULE, MRI_SOFT_TISSUE_RULE, stripNormalSoftTissues } from './fidelityGuards';
 import { loadNeverUseTerms, buildNeverUseInstruction } from './neverUseTermsUtils';
 import { DEFAULT_REPORT_PREFS } from './reportPreferencesData';
@@ -7670,7 +7670,9 @@ export default function DashboardPage() {
     // before anything else touches it. applyHardCorrections() returns
     // { text, corrections } — .text is the corrected string. See
     // mskDictionaryUtils.js.
-    const textToUse = isRheum ? rheumFreeText : applyHardCorrections(dictationText, selectedBodyPart).text;
+    const _hardCorrected = isRheum ? rheumFreeText : applyHardCorrections(dictationText, selectedBodyPart).text;
+    // spine MRI: turn spoken "period" / "C3C4 colon" into real punctuation + level headers so levels stay separate
+    const textToUse = (!isRheum && !isCT && selectedBodyPart === 'spine') ? prepareSpineDictation(_hardCorrected) : _hardCorrected;
     if (!textToUse.trim()) return;
     setGeneratedReport(''); // always clears center col — any button can override
     const myToken = ++genTokenRef.current;
@@ -7774,6 +7776,8 @@ export default function DashboardPage() {
   latestTextRef.current = isRheumRef.current ? rheumFreeText : dictationText;
   const speechWaitSinceRef = useRef(0);  // set when speech starts / last result arrives; cleared on speech end
   const quickEndsRef = useRef(0);        // consecutive instant recognition endings (mic unplugged, etc.)
+  const lastActivityRef = useRef(0);     // last time the recognizer started / heard speech / returned a result
+  const idleStrikesRef = useRef(0);      // consecutive silent restarts with no result at all
   const gracePeriodRef = useRef(false); // true after a final result — suppresses keepalive restart briefly
   const graceTimerRef = useRef(null);
 
@@ -7791,6 +7795,13 @@ export default function DashboardPage() {
       if (since && Date.now() - since > 10000) {
         speechWaitSinceRef.current = 0;
         try { getRecRef()?.abort(); } catch {}
+      } else if (!since && lastActivityRef.current && Date.now() - lastActivityRef.current > 15000) {
+        // 2026-11-06: recognizer "on" (red light) but nothing heard for 15 s — it can be silently dead.
+        // Quietly restart it; after 3 empty restarts in a row, tell the user what to check.
+        lastActivityRef.current = Date.now();
+        idleStrikesRef.current += 1;
+        if (idleStrikesRef.current >= 3) setMicError('Mic is on but no speech is being recognized. If you are speaking, check the Windows input device, or restart Edge (an Edge update may be pending).');
+        try { getRecRef()?.abort(); } catch {}
       }
     }, 2000);
   };
@@ -7805,7 +7816,7 @@ export default function DashboardPage() {
     if (isListening) { stopKeepalive(); recognitionRef.current?.stop(); setIsListening(false); return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
     if (!SR) { alert('Speech recognition not supported. Please use Chrome or Edge.'); return; }
-    setMicError('');
+    setMicError(''); idleStrikesRef.current = 0; lastActivityRef.current = Date.now();
     // Seed from whatever is already in the box (rather than wiping it) so that
     // stopping and resuming dictation APPENDS to existing text instead of
     // erasing it — matches expected "continue where I left off" behavior.
@@ -7820,13 +7831,15 @@ export default function DashboardPage() {
 
       const startedAt = Date.now();
       let gotAnyResult = false;
-      rec.onstart = () => setIsListening(true);
+      rec.onstart = () => { lastActivityRef.current = Date.now(); setIsListening(true); };
       rec.onaudiostart = () => setIsListening(true);
-      rec.onspeechstart = () => { speechWaitSinceRef.current = Date.now(); };
+      rec.onspeechstart = () => { speechWaitSinceRef.current = Date.now(); lastActivityRef.current = Date.now(); };
       rec.onspeechend = () => { speechWaitSinceRef.current = 0; };
 
       rec.onresult = (event) => {
-        gotAnyResult = true; quickEndsRef.current = 0; speechWaitSinceRef.current = Date.now();
+        gotAnyResult = true; quickEndsRef.current = 0; speechWaitSinceRef.current = Date.now(); lastActivityRef.current = Date.now();
+        if (idleStrikesRef.current >= 3) setMicError('');
+        idleStrikesRef.current = 0;
         let interim = '';
         let gotFinal = false;
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -7881,7 +7894,7 @@ export default function DashboardPage() {
                 setMicError('Dictation stopped unexpectedly — click the mic button to resume. Your text so far is kept.');
               }
             }
-          }, attempt === 0 ? 150 : 300 * attempt);
+          }, attempt === 0 ? 20 : 300 * attempt); // was 150 ms — words spoken in the restart gap were lost
         };
         tryRestart(0);
       };

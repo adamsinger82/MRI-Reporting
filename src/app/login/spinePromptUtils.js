@@ -51,6 +51,29 @@ LEVEL ACCURACY RULES (MANDATORY — ZERO TOLERANCE):
 `;
 }
 
+// ── 1b. Clean up the raw dictation before it is sent (spine MRI only) ────────
+// Edge's recognizer writes spoken punctuation as WORDS ("... narrowing period", "C3C4 colon ...").
+// Convert them so the dictation has real sentences and level headers: "C3C4 colon" -> "C3-C4:" and
+// "period" -> ".". Also joins run-together level names ("C3C4" -> "C3-C4").
+export function prepareSpineDictation(text) {
+  if (!text) return text;
+  let t = text;
+  t = t.replace(/\b([CTLS])(\d{1,2})([CTLS])(\d{1,2})\b/gi, (m, a, b, c, d) => {
+    const key = canonLevel(a, b, c, d);
+    return key || m;
+  });
+  // "<level> colon" -> "<level>:"
+  t = t.replace(/(\b[CTLS]\s?\d{1,2}\s?(?:[-\/–]\s?)?(?:[CTLS]\s?)?\d{1,2})\s+colon\b/gi, (m, lv) => {
+    const mm = lv.match(/^([CTLS])\s?(\d{1,2})\s?(?:[-\/–]\s?)?(?:([CTLS])\s?)?(\d{1,2})$/i);
+    const key = mm ? canonLevel(mm[1], mm[2], mm[3], mm[4]) : null;
+    return key ? `${key}:` : m;
+  });
+  // spoken "period" -> "."
+  t = t.replace(/\s*\bperiod\b\.?\s*/gi, '. ').replace(/\.\s*\./g, '.').replace(/\s+\./g, '.');
+  t = t.replace(/,\s*\./g, '.').replace(/\.\s*,\s*/g, ', ').replace(/:\s*\./g, ':').replace(/\.\s*\./g, '.');
+  return t.trim();
+}
+
 // ── 2. Level index built in code from the raw dictation ──────────────────────
 function canonLevel(l1, n1, l2, n2) {
   l1 = l1.toUpperCase();
@@ -90,6 +113,31 @@ export function buildSpineLevelIndex(dictation, region) {
   const text = (dictation || '').trim();
   if (!text) return '';
   const regionLevels = SPINE_LEVELS[region] || LUMBAR;
+  // Dictation in "C3-C4: ...." header style: everything up to the next level header belongs to that level.
+  const HEADER_RE = /([CTLS]\s?\d{1,2}\s?(?:[-\/–]\s?)?(?:[CTLS]\s?)?\d{1,2})\s*:/gi;
+  const heads = [];
+  let hm;
+  while ((hm = HEADER_RE.exec(text)) !== null) {
+    const mm = hm[1].match(/^([CTLS])\s?(\d{1,2})\s?(?:[-\/–]\s?)?(?:([CTLS])\s?)?(\d{1,2})$/i);
+    const key = mm ? canonLevel(mm[1], mm[2], mm[3], mm[4]) : null;
+    if (key) heads.push({ key, start: hm.index, end: hm.index + hm[0].length });
+  }
+  if (heads.length) {
+    const seg = {};
+    heads.forEach((h, i) => {
+      const body = text.slice(h.end, i + 1 < heads.length ? heads[i + 1].start : text.length).trim();
+      if (body) (seg[h.key] = seg[h.key] || []).push(body);
+    });
+    const pre = text.slice(0, heads[0].start).trim();
+    const out = [];
+    regionLevels.forEach(l => { if (seg[l]) out.push(`- ${l}: "${seg[l].join(' ')}"`); });
+    Object.keys(seg).filter(l => !regionLevels.includes(l)).forEach(l => out.push(`- ${l} (outside the ${region} coverage list): "${seg[l].join(' ')}"`));
+    const none = regionLevels.filter(l => !seg[l]);
+    return `\n\nLEVEL-BY-LEVEL DICTATION INDEX (built automatically from the dictation above; every sentence after a level header up to the next level header belongs ONLY to that level; use it to verify level assignment — the dictation above is still the only source of findings):
+${out.join('\n')}
+Levels NOT mentioned anywhere in the dictation — no-significant-narrowing default only: ${none.length ? none.join(', ') : '(none)'}${pre ? `\nText before the first level header (history / general findings, not level-specific): "${pre}"` : ''}
+Never move a listed sentence to a different level.`;
+  }
   const sentences = text.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
   const byLevel = {};
   const multi = [];
